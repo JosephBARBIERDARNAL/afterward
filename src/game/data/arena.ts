@@ -1,4 +1,4 @@
-import type { EnemyKind } from './balance';
+import type { EliteKind, EnemyKind } from './balance';
 
 export interface ArenaObstacle {
   x: number;
@@ -12,6 +12,7 @@ interface EnemySpawn {
   kind: EnemyKind;
   x: number;
   y: number;
+  elite?: EliteKind;
 }
 
 export interface ArenaRoom {
@@ -52,6 +53,7 @@ export const ROOMS: ArenaRoom[] = [
       { id: 'pursuer-a', kind: 'melee', x: 494, y: 174 },
       { id: 'pursuer-b', kind: 'melee', x: 647, y: 383 },
       { id: 'slinger', kind: 'ranged', x: 757, y: 272 },
+      { id: 'charger', kind: 'charger', x: 710, y: 416 },
     ],
     obstacles: [
       { x: 302, y: 215, width: 74, height: 104 },
@@ -66,7 +68,7 @@ export const ROOMS: ArenaRoom[] = [
     playerStart: { x: 82, y: 270 },
     enemies: [
       { id: 'warden', kind: 'heavy', x: 570, y: 235 },
-      { id: 'pursuer', kind: 'melee', x: 504, y: 380 },
+      { id: 'bomber', kind: 'bomber', x: 504, y: 380 },
       { id: 'slinger', kind: 'ranged', x: 732, y: 376 },
     ],
     obstacles: [
@@ -82,7 +84,7 @@ export const ROOMS: ArenaRoom[] = [
     enemies: [
       { id: 'pursuer-a', kind: 'melee', x: 444, y: 160 },
       { id: 'warden', kind: 'heavy', x: 626, y: 280 },
-      { id: 'pursuer-b', kind: 'melee', x: 502, y: 397 },
+      { id: 'skirmisher', kind: 'skirmisher', x: 502, y: 397 },
       { id: 'slinger', kind: 'ranged', x: 762, y: 175 },
     ],
     obstacles: [
@@ -101,8 +103,8 @@ export const ROOMS: ArenaRoom[] = [
       { id: 'pursuer-a', kind: 'melee', x: 393, y: 184 },
       { id: 'slinger-a', kind: 'ranged', x: 375, y: 398 },
       { id: 'warden', kind: 'heavy', x: 646, y: 283 },
-      { id: 'pursuer-b', kind: 'melee', x: 728, y: 155 },
-      { id: 'slinger-b', kind: 'ranged', x: 744, y: 400 },
+      { id: 'charger-elite', kind: 'charger', x: 728, y: 155, elite: 'vanguard' },
+      { id: 'slinger-elite', kind: 'ranged', x: 744, y: 400, elite: 'volley' },
     ],
     obstacles: [
       { x: 280, y: 270, width: 70, height: 120 },

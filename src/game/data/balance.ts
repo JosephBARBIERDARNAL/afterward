@@ -47,9 +47,43 @@ export const ENEMIES = {
     damage: 23,
     tint: 0xa8864d,
   },
+  charger: {
+    maxHealth: 82,
+    moveSpeed: 78,
+    chargeRange: 270,
+    chargeSpeed: 375,
+    chargeDuration: 0.34,
+    attackWindup: 0.72,
+    attackCooldown: 1.75,
+    attackRadius: 31,
+    damage: 21,
+    tint: 0xc24c45,
+  },
+  skirmisher: {
+    maxHealth: 58,
+    moveSpeed: 132,
+    preferredDistance: 98,
+    attackRange: 84,
+    attackRadius: 32,
+    attackWindup: 0.34,
+    attackCooldown: 1.1,
+    damage: 13,
+    tint: 0x62aaa0,
+  },
+  bomber: {
+    maxHealth: 76,
+    moveSpeed: 54,
+    attackRange: 174,
+    attackRadius: 68,
+    attackWindup: 0.9,
+    attackCooldown: 2.05,
+    damage: 20,
+    tint: 0xc57d45,
+  },
 } as const;
 
 export type EnemyKind = keyof typeof ENEMIES;
+export type EliteKind = 'vanguard' | 'volley';
 
 export const COLORS = {
   ink: 0x18191c,

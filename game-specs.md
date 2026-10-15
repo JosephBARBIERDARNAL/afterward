@@ -105,7 +105,7 @@ The world primarily contains:
 
 Combat rooms are discrete encounters.
 
-When combat begins, exits lock. Defeating all enemies reopens them and grants a reward.
+When combat begins, exits lock. Defeating all enemies awards the room reward and makes the east door available. Approach that door and press E (or A on a controller) to open it; opening the door presents the room's bonus choice. Choosing a bonus lets the player pass through the open exit. Walking into a closed door never opens it by itself.
 
 Exploration occurs between encounters and inside non-combat areas.
 
@@ -147,13 +147,16 @@ The game is designed **controller-first**, particularly for handheld play.
 
 Core controls:
 
-- left stick — movement;
+- left stick — movement on controller;
 - right stick — aim;
 - primary attack;
 - heavy attack;
 - dash;
-- interact.
-- Escape — open or close the pause menu, which offers Continue, Restart, and Bonus.
+- E — interact with a nearby door on keyboard; A — interact on controller;
+- arrows or ZQSD — keyboard movement.
+- Escape — open or close the pause menu, which offers Continue, Restart Run, Bonus, and Back Home.
+
+Give each action one clear input path within each control scheme. Avoid adding redundant shortcuts or click alternatives for the same action. Keep the requested arrow and ZQSD movement bindings for keyboard play.
 
 Keyboard and mouse are supported during PC development.
 
@@ -269,9 +272,9 @@ The upgrade-selection system can only become more complicated if playtesting dem
 
 ## 14. Risk and Reward
 
-Some optional paths are visibly more dangerous than the standard route.
+Some optional paths may be visibly more dangerous than the standard route and can hold additional exploration rewards. These rewards are separate from the room-clear bonus choice.
 
-Dangerous paths provide better rewards.
+When a bonus choice appears, its options vary by effect—such as maximum health, attack damage, healing, or a new power—not by high-risk and low-risk reward tiers. Room clears continue to award a flat $1.
 
 Possible rewards include:
 
@@ -321,15 +324,15 @@ Examples:
 - improved healing;
 - improved dash properties.
 
-The prototype uses **Ashes** as its persistent resource. Earn one Ash for each room cleared. Ashes are saved immediately, survive death and browser restarts, and are spent only between runs.
+The prototype uses persistent money, displayed with the **$** symbol. Earn $1 for each room cleared. Money is saved immediately, survives death and browser restarts, and is spent only between runs. The interface uses `$` for all currency amounts.
 
 The first shop offers three capped permanent upgrades:
 
-- **Vitality:** +10 maximum health per level, up to five levels; level costs are 3, 4, 5, 6, and 7 Ashes;
-- **Sharpened:** +1 damage to each primary and heavy attack per level, up to five levels; costs 4, 5, 6, 7, and 8 Ashes;
-- **Quick Step:** reduce dash cooldown by 0.04 seconds per level, up to four levels; costs 4, 5, 6, and 7 Ashes.
+- **Vitality:** +10 maximum health per level, up to five levels; level costs are $3, $4, $5, $6, and $7;
+- **Sharpened:** +1 damage to each primary and heavy attack per level, up to five levels; costs $4, $5, $6, $7, and $8;
+- **Quick Step:** reduce dash cooldown by 0.04 seconds per level, up to four levels; costs $4, $5, $6, and $7.
 
-The level costs are shown in the shop. Each purchase takes effect on the next run. The shop explains how Ashes are earned and what each upgrade changes.
+The player clicks the shop fixture in the safe room to view its upgrade options. The level costs are shown there. Each purchase takes effect on the next run.
 
 The character should become substantially stronger over time.
 
@@ -341,13 +344,13 @@ Early enemies that were once dangerous should eventually become easy.
 
 ## 17. Between Runs
 
-There is **no physical hub**.
+The game opens in a safe room with no enemies. The room shows the $ balance and a shop fixture at the edge of the room, leaving its center open for movement. The player clicks the shop fixture to reveal upgrade options, then clicks a purchase button. Press E (or A on a controller) near the door to start a new run.
 
-After death or clearing the current run, the player enters a results screen containing the permanent upgrade shop.
+After death, clearing the run, or choosing Back Home in the pause menu, return to the same safe room. Preserve earned money and purchased upgrades there. Starting another run always requires an explicit door interaction.
 
 The flow is:
 
-**Run ends → results → buy upgrades → new run.**
+**Game starts / run ends → safe room → move, click the shop to view upgrades, then approach and interact with the door → new run.**
 
 The interface should make restarting extremely quick.
 
@@ -541,7 +544,7 @@ Add room completion and transitions.
 
 The current prototype uses a fixed sequence of five handcrafted rooms that gets harder from room to room. This is a prototype slice only. The end goal is a 100-room run divided into ten chapters, with a solo boss in every tenth room and a distinct world style for each chapter. Do not build all 100 rooms as part of the current prototype milestone.
 
-After eligible rooms, offer three different temporary bonuses such as increased max health, increased base damage, healing, or a new combat power. Show chosen bonuses in the run HUD and clear them when a new run starts. Ashes are a flat one-per-room progression reward; do not tie them to risk choices or high/low reward routes.
+After eligible rooms, offer three different temporary bonuses such as increased max health, increased base damage, healing, or a new combat power. Show chosen bonuses in the run HUD and clear them when a new run starts. Money is a flat $1-per-room progression reward; do not tie it to risk choices or high/low reward routes.
 
 Add death/reset and basic rewards.
 
@@ -559,11 +562,13 @@ The ranged enemy currently aims at the player's earlier position before firing. 
 
 ### Milestone 5 — Permanent Progression
 
-Award one saved Ash per cleared room. Save Ashes and permanent upgrade levels in browser storage, and provide a results-screen shop with Vitality, Sharpened, and Quick Step upgrades. Purchases affect the next run.
+Award $1 per cleared room. Save money and permanent upgrade levels in browser storage. Show a shop fixture in a no-enemy safe room at startup and between runs; clicking it reveals the Vitality, Sharpened, and Quick Step upgrades. Interacting with its door begins the next run. Purchases affect the next run.
 
 ### Milestone 6 — Full Enemy Roster
 
-Expand toward 6 enemies and 2 elites. Add exploration rewards that fit the ten-chapter progression.
+The current prototype has six enemy types: melee, ranged, heavy, charger, skirmisher, and bomber. It introduces two elite behaviors in later rooms: a faster, tougher Vanguard charger and a Volley ranged enemy that fires a three-shot spread. Playtest these patterns before tuning their balance.
+
+Continue expanding the roster toward the ten-chapter progression and add exploration rewards. Keep bonus choices differentiated by effect, with room clears paying a flat $1.
 
 ### Milestone 7 — Boss
 

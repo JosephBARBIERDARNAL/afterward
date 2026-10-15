@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import './style.css';
 import { CombatScene } from './game/CombatScene';
+import { HubScene } from './game/HubScene';
 
 const game = new Phaser.Game({
   type: Phaser.AUTO,
@@ -22,7 +23,7 @@ const game = new Phaser.Game({
     width: 960,
     height: 540,
   },
-  scene: [CombatScene],
+  scene: [HubScene, CombatScene],
 });
 
 window.addEventListener('beforeunload', () => game.destroy(true));

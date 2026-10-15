@@ -59,7 +59,9 @@ export const PERMANENT_UPGRADES: PermanentUpgrade[] = [
 
 const SAVE_KEY = 'too-late.progression.v1';
 
-export const RUN_RESOURCE_NAME = { singular: 'ASH', plural: 'ASHES' } as const;
+export function formatMoney(amount: number): string {
+  return `$${amount}`;
+}
 
 export function createProgressionSave(): ProgressionSave {
   return {

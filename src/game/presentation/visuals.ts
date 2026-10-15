@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { ARENA } from '../data/arena';
-import { COLORS } from '../data/balance';
+import { COLORS, type EnemyKind } from '../data/balance';
 
 export function drawArena(scene: Phaser.Scene): Phaser.GameObjects.Graphics {
   const art = scene.add.graphics().setDepth(-20);
@@ -91,7 +91,7 @@ export function drawEnemyMark(
   graphics: Phaser.GameObjects.Graphics,
   x: number,
   y: number,
-  kind: 'melee' | 'ranged' | 'heavy',
+  kind: EnemyKind,
   color: number,
 ): void {
   graphics.lineStyle(2, color, 1);
@@ -103,11 +103,23 @@ export function drawEnemyMark(
     graphics.strokeRect(x - 5, y - 5, 10, 10);
     graphics.lineBetween(x - 3, y, x + 3, y);
     graphics.lineBetween(x, y - 3, x, y + 3);
-  } else {
+  } else if (kind === 'heavy') {
     graphics.lineBetween(x, y - 8, x + 8, y);
     graphics.lineBetween(x + 8, y, x, y + 8);
     graphics.lineBetween(x, y + 8, x - 8, y);
     graphics.lineBetween(x - 8, y, x, y - 8);
+  } else if (kind === 'charger') {
+    graphics.fillTriangle(x + 9, y, x - 6, y - 7, x - 6, y + 7);
+    graphics.lineBetween(x - 10, y - 6, x - 6, y);
+    graphics.lineBetween(x - 10, y + 6, x - 6, y);
+  } else if (kind === 'skirmisher') {
+    graphics.lineBetween(x - 7, y + 6, x + 3, y - 6);
+    graphics.lineBetween(x - 1, y + 7, x + 9, y - 5);
+    graphics.lineBetween(x - 8, y - 3, x - 4, y - 7);
+  } else {
+    graphics.strokeCircle(x, y, 7);
+    graphics.lineBetween(x - 5, y - 5, x + 5, y + 5);
+    graphics.lineBetween(x + 5, y - 5, x - 5, y + 5);
   }
 }
 
