@@ -23,10 +23,13 @@ Run `bun run check` for formatting, lint, typecheck, and production-build checks
 | Heavy attack | Y or left trigger | K or right click |
 | Dash | B | Space |
 | Room bonus | D-pad + A | Left/right + Enter, 1/2/3, or click |
+| Pause menu | — | Esc |
 | Restart after death / clear | — | R or click the prompt |
 
 Heavy attacks hit hard, but slow movement through the windup and recovery. Dash briefly avoids damage. The melee enemy marks its strike area before attacking; the ranged enemy aims at the player's earlier position before firing; the heavy warden is slower and announces a wide strike. Damage floats briefly above enemies, while damage to the player appears in bold red.
 
 ## Current milestone
 
-Runs currently use five handcrafted rooms that grow harder. After the first four, choose one of three temporary bonuses from a pool of ten. Some improve stats or health; others widen heavy attacks, add a burning combo hit or burst, or restore health when attacking. The HUD tracks your picks until a new run starts. Health carries between rooms. The ranged enemy's predictable aim is recorded for a later tuning pass. Permanent progression, story, and the boss remain later work. See [`TODO.md`](./TODO.md) and [`AGENTS.md`](./AGENTS.md) for the current project state.
+The current prototype uses five handcrafted rooms that grow harder. After clearing a room, choose one of three temporary bonuses from a pool of ten. Picked bonuses appear by name on separate HUD lines; press Esc and choose Bonus to see the full catalog and effects. The pause menu also has Continue and Restart. A new run clears the picked bonuses, and health carries between rooms.
+
+The end goal is a 100-room run in ten themed chapters, with a visually distinct solo boss in every tenth room. Jungle, Hong Kong, and the moon are example chapter styles; not all 100 rooms or bosses are implemented in this prototype. The ranged enemy's predictable aim is recorded for a later tuning pass. See [`game-specs.md`](./game-specs.md), [`TODO.md`](./TODO.md), and [`AGENTS.md`](./AGENTS.md) for project scope and status.

@@ -2,9 +2,9 @@
 
 ## 1. Game
 
-**Too Late** is a small, single-player action roguelite set in a surreal reinterpretation of Egyptian mythology.
+**Too Late** is a single-player action roguelite set in a surreal world whose visual identity changes every ten rooms. Egyptian mythology remains a story influence across the journey rather than the look of every region.
 
-The player enters a procedurally generated world, explores branching paths, fights enemies in discrete arenas, creates a temporary build, collects permanent resources, and attempts to reach and defeat the final boss.
+The player enters a surreal world, fights through a 100-room run in ten themed chapters, creates a temporary build, collects permanent resources, and attempts to defeat the boss at the end of each chapter. The final boss waits in room 100.
 
 Death ends the run and destroys the temporary build. Collected permanent resources survive and are spent between runs to make the character stronger.
 
@@ -19,28 +19,28 @@ The game is a hobby/side project designed to be **finished**, not an attempt to 
 ## 2. Core Loop
 
 1. Start a run.
-2. Explore a procedurally generated branching world.
-3. Enter a combat room.
+2. Advance through a 100-room run divided into ten chapters of ten rooms each.
+3. Enter a combat room; the tenth room of every chapter is a solo boss encounter.
 4. Defeat all enemies.
 5. Receive resources and/or choose a temporary upgrade.
-6. Explore and choose the next path.
-7. Take optional risks for better rewards.
-8. Continue until the player dies or reaches the final boss.
+6. Continue to the next room and chapter.
+7. Choose among different temporary bonuses after eligible rooms.
+8. Continue until the player dies or defeats the boss in room 100.
 9. On death, lose all temporary upgrades but keep permanent resources.
 10. Spend resources on permanent upgrades.
 11. Start another run.
 
-A successful run ends by defeating the final boss.
+A successful run contains exactly **100 rooms** and ends by defeating the final boss in room 100. Rooms 10, 20, 30, 40, 50, 60, 70, 80, 90, and 100 are boss rooms.
 
 ---
 
 ## 3. Run Length
 
-Early runs should naturally last approximately **5–10 minutes** because the player is weak and inexperienced.
+The complete run is a 100-room journey divided into ten chapters. Early runs will often end before the player reaches later chapters because the player is weak and inexperienced.
 
 As the player improves and gains permanent upgrades, runs become longer.
 
-A successful late-game run should take approximately **40–60 minutes**.
+A successful late-game run should take approximately **40–60 minutes**, subject to playtesting across all 100 rooms and ten bosses.
 
 The game supports suspending and resuming an active run.
 
@@ -48,18 +48,16 @@ The game supports suspending and resuming an active run.
 
 ## 4. World
 
-The game contains **one world**.
+The game contains one surreal world divided into **ten chapters**. Each chapter covers ten rooms and has a distinct overall visual style. Example styles include jungle, Hong Kong, and the moon; the final set and order of all ten styles remain to be designed.
 
-It is a surreal reinterpretation of ancient Egypt and Egyptian mythology rather than a historically accurate representation.
-
-The world becomes mechanically richer as the player progresses instead of introducing separate biomes.
+Egyptian mythology remains a story influence, but does not restrict the look of each chapter. The visual changes can represent surreal shifts in the same connected world rather than separate playable worlds.
 
 Progression introduces:
 
 - new enemies;
 - stronger enemy combinations;
 - elite enemies;
-- new room layouts;
+- new room layouts and chapter art styles;
 - hazards;
 - optional challenges;
 - secrets;
@@ -71,21 +69,19 @@ Progression introduces:
 
 The world is procedurally generated for every run.
 
-The player physically explores it rather than selecting nodes from an abstract map.
+The player physically explores the rooms rather than selecting nodes from an abstract map.
 
-The structure is a branching network of rooms.
+The core run advances through exactly 100 rooms. Optional details inside rooms may reward exploration, but they do not change the fixed position of each tenth-room boss.
 
 Rooms themselves are built from **handcrafted templates and components** combined procedurally.
 
 The generator controls:
 
 - room selection;
-- room connections;
-- branching;
 - enemy encounters;
 - hazards;
 - rewards;
-- optional paths;
+- optional in-room paths;
 - secrets;
 - decorative variation.
 
@@ -139,7 +135,7 @@ Character creation is not included.
 
 Cosmetic customization is not required.
 
-The protagonist travels to the transformed Egyptian world seeking **vengeance**.
+The protagonist travels through the transformed surreal world seeking **vengeance**.
 
 During the journey, they gradually discover why the event they are avenging actually happened.
 
@@ -157,6 +153,7 @@ Core controls:
 - heavy attack;
 - dash;
 - interact.
+- Escape — open or close the pause menu, which offers Continue, Restart, and Bonus.
 
 Keyboard and mouse are supported during PC development.
 
@@ -232,6 +229,8 @@ Healing can appear as a room reward or exploration reward.
 Every run creates a new temporary build.
 
 The current prototype uses a pool of ten temporary room-clear bonuses. They may improve stats, restore health, or change how attacks work. These bonuses last for one run and are cleared when a new run starts.
+
+Each bonus has a distinct name. Picked bonuses appear in the run HUD on separate lines. The pause menu's Bonus button opens a catalog of all bonuses and their effects, with the current run's picks marked. Both the HUD list and picked status reset when a new run starts.
 
 Later upgrades should primarily **modify existing actions** so that they visibly change how the player fights, instead of relying only on numerical increases.
 
@@ -352,7 +351,7 @@ The finished game contains:
 
 - **6 standard enemy types**;
 - **2 elite variants**;
-- **1 final boss**.
+- **10 handcrafted bosses**, one for each ten-room chapter.
 
 Standard enemies have clearly different behaviors rather than primarily different statistics.
 
@@ -365,7 +364,7 @@ The roster should include approximately:
 5. area-denial enemy;
 6. support/control enemy.
 
-Their actual designs are derived from the Egyptian setting.
+Their designs fit the visual style of the chapter where they appear, with recurring motifs connecting them to the Egyptian mythology story influence.
 
 Not every enemy appears from the beginning. New enemies enter the encounter pool as progression advances.
 
@@ -393,19 +392,15 @@ Elite encounters provide increased rewards.
 
 ## 20. Boss
 
-There is **one handcrafted final boss**.
+There are **10 handcrafted solo bosses**, in rooms 10, 20, 30, 40, 50, 60, 70, 80, 90, and 100. Every boss room contains only its boss. Each boss looks distinct from standard enemies and has its own skillset, attack patterns, telegraphs, and mechanics. Bosses are never procedurally generated.
 
-The boss is never procedurally generated.
-
-The encounter has deliberate attack patterns, phases, telegraphs, and mechanics.
-
-The boss is directly connected to the protagonist's vengeance and the mystery behind it.
+The bosses are connected to the protagonist's vengeance and the mystery behind it. The room 100 boss resolves the central conflict.
 
 The design principle is:
 
-> **Procedural journey. Handcrafted destination.**
+> **Procedural rooms. Handcrafted bosses.**
 
-Defeating the boss completes the game's primary objective.
+Defeating the boss in room 100 completes the game's primary objective.
 
 The player may continue playing afterward.
 
@@ -437,12 +432,12 @@ A player paying attention should gradually understand that the protagonist's ini
 
 The finished game contains approximately:
 
-- 1 world/theme;
+- 1 connected world with 10 chapter styles, each covering 10 rooms;
 - 1 playable character;
 - 1 combat style;
 - 6 standard enemies;
 - 2 elite variants;
-- 1 boss;
+- 10 handcrafted solo bosses, with the room 100 boss as the final boss;
 - 15–25 reusable room templates;
 - 20–30 temporary upgrades;
 - 10–15 permanent upgrades;
@@ -536,7 +531,9 @@ Add room completion and transitions.
 
 ### Milestone 3 — Runs
 
-For the current prototype, use a fixed sequence of five handcrafted rooms that gets harder from room to room. After clearing each non-final room, offer three different temporary bonuses such as increased max health, increased base damage, healing, or a new combat power. Show chosen bonuses in the run HUD and clear them when a new run starts. Do not use high-risk/low-risk routes or Ash rewards in this prototype.
+The current prototype uses a fixed sequence of five handcrafted rooms that gets harder from room to room. This is a prototype slice only. The end goal is a 100-room run divided into ten chapters, with a solo boss in every tenth room and a distinct world style for each chapter. Do not build all 100 rooms as part of the current prototype milestone.
+
+After eligible rooms, offer three different temporary bonuses such as increased max health, increased base damage, healing, or a new combat power. Show chosen bonuses in the run HUD and clear them when a new run starts. Do not use high-risk/low-risk routes or Ash rewards in the prototype.
 
 Add death/reset and basic rewards.
 
@@ -558,21 +555,17 @@ Add persistent resources, saving and the between-run upgrade shop.
 
 ### Milestone 6 — Full Enemy Roster
 
-Expand toward 6 enemies and 2 elites.
-
-Add optional dangerous paths and exploration rewards.
+Expand toward 6 enemies and 2 elites. Add exploration rewards that fit the ten-chapter progression.
 
 ### Milestone 7 — Boss
 
-Create the final boss and make the game completable from beginning to end.
+Create handcrafted solo bosses for rooms 10 through 100, each with a distinct look and skillset. Make room 100 the final boss and the end of the 100-room run.
 
 At this point, **Too Late is a game**.
 
 ### Milestone 8 — Content & Identity
 
-Expand room/upgrades toward target numbers.
-
-Introduce the surreal Egyptian setting and narrative discoveries.
+Expand the prototype toward the complete 100-room, ten-chapter run and the target content numbers. Give each ten-room chapter its own visual style and introduce narrative discoveries across the journey.
 
 Replace placeholder assets where worthwhile.
 
@@ -595,7 +588,7 @@ Too Late does **not** include:
 - character creation;
 - large physical hub;
 - NPC relationship systems;
-- multiple worlds/biomes;
+- an open-ended or infinite run beyond the 100-room ending;
 - open world;
 - climbing;
 - meaningful vertical exploration;
@@ -616,12 +609,12 @@ Too Late does **not** include:
 Too Late is finished when:
 
 - combat feels responsive and satisfying;
-- a complete run can be played from start to boss;
+- a complete 100-room run can be played from start to the final boss in room 100;
 - procedural runs provide meaningful variation;
 - temporary builds noticeably change combat;
 - permanent progression makes later runs easier;
 - exploration creates meaningful risk/reward decisions;
-- the final boss can be defeated;
+- all ten solo bosses can be defeated, including the final boss in room 100;
 - the vengeance story has a simple beginning, revelation and ending;
 - progression saves correctly;
 - the game is stable enough to give to friends;

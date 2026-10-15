@@ -23,20 +23,22 @@
 - [x] Show selected bonuses in the HUD and reset them when a new run starts.
 - [x] Show bold floating damage numbers for hits dealt and bold red numbers for damage received.
 - [x] Strengthen the enemy-hit sound.
-- [x] User approved the five-room run and bonus-choice direction.
+- [x] User approved the five-room prototype and the direction of different run bonuses.
 
 ## Milestone 4 — Builds (in progress)
 
 - [x] Expand the bonus pool to ten choices with both stat bonuses and combat-changing upgrades.
 - [x] Add a wider heavy swing, a burning final combo hit, a final-hit burst, and life-stealing attacks.
+- [x] Give bonuses unique names, list picked bonuses on separate HUD lines, and add a full effect catalog.
+- [x] Add an Escape pause menu with Continue, Restart, and Bonus actions.
 - [ ] Ask the user to playtest the new upgrades and how different builds feel; tune from feedback.
 
 ## Later milestones
 
 - [ ] Milestone 5: add permanent resources, saving, and a between-run upgrade shop.
 - [ ] Milestone 6: add more enemy types, behavior-changing elites, optional risky paths, and exploration rewards.
-- [ ] Milestone 7: create the final boss and a completable run.
-- [ ] Milestone 8: add the surreal Egyptian setting, story discoveries, and selectively replace placeholder assets.
+- [ ] Milestone 7: build ten distinct solo bosses for rooms 10, 20, …, 100; make room 100 the final boss.
+- [ ] Milestone 8: expand from the five-room prototype toward the 100-room run across ten distinct chapter styles, add story discoveries, and selectively replace placeholder assets.
 - [ ] Milestone 9: balance, polish effects/audio/UI, optimize, and playtest with friends.
 
 ## Future combat tuning

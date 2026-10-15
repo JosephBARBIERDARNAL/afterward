@@ -64,20 +64,81 @@ interface RunBonus {
   id: BonusId;
   title: string;
   detail: string;
+  description: string;
   limit: number;
 }
 
 const RUN_BONUSES: RunBonus[] = [
-  { id: 'vitality', title: 'VITALITY', detail: '+20 MAX LIFE', limit: 3 },
-  { id: 'edge', title: 'SHARPENED', detail: '+3 BASE DAMAGE', limit: 4 },
-  { id: 'mend', title: 'MENDING', detail: 'RESTORE 35 LIFE', limit: 4 },
-  { id: 'dashNova', title: 'DASH NOVA', detail: 'DASH ENDS IN A BURST', limit: 1 },
-  { id: 'quickStep', title: 'QUICK STEP', detail: 'DASH RECHARGE -0.1S', limit: 3 },
-  { id: 'reach', title: 'LONG REACH', detail: '+10 ATTACK RANGE', limit: 3 },
-  { id: 'wideHeavy', title: 'WIDE SWING', detail: 'HEAVY ATTACK HITS A WIDER ARC', limit: 1 },
-  { id: 'cinderCombo', title: 'CINDER COMBO', detail: 'FINAL COMBO HIT BURNS', limit: 1 },
-  { id: 'comboBlast', title: 'COMBO BLAST', detail: 'FINAL COMBO HIT BURSTS', limit: 1 },
-  { id: 'siphon', title: 'SIPHON', detail: 'ATTACKS RESTORE 2 LIFE', limit: 3 },
+  {
+    id: 'vitality',
+    title: 'VITALITY',
+    detail: '+20 MAX LIFE',
+    description: 'Gain 20 maximum health and restore 20 health immediately.',
+    limit: 3,
+  },
+  {
+    id: 'edge',
+    title: 'SHARPENED',
+    detail: '+3 BASE DAMAGE',
+    description: 'Primary and heavy attacks deal 3 more damage.',
+    limit: 4,
+  },
+  {
+    id: 'mend',
+    title: 'MENDING',
+    detail: 'RESTORE 35 LIFE',
+    description: 'Restore up to 35 health, without exceeding your maximum.',
+    limit: 4,
+  },
+  {
+    id: 'dashNova',
+    title: 'DASH NOVA',
+    detail: 'DASH ENDS IN A BURST',
+    description: 'Your dash ends with a burst that deals 18 damage to enemies within 88 pixels.',
+    limit: 1,
+  },
+  {
+    id: 'quickStep',
+    title: 'QUICK STEP',
+    detail: 'DASH RECHARGE -0.1S',
+    description: 'Reduce dash cooldown by 0.1 seconds per stack, up to 0.3 seconds.',
+    limit: 3,
+  },
+  {
+    id: 'reach',
+    title: 'LONG REACH',
+    detail: '+10 ATTACK RANGE',
+    description: 'Increase the reach of primary and heavy attacks by 10 pixels per stack.',
+    limit: 3,
+  },
+  {
+    id: 'wideHeavy',
+    title: 'WIDE SWING',
+    detail: 'HEAVY ATTACK HITS A WIDER ARC',
+    description: 'Heavy attacks cover a wider 128-degree arc.',
+    limit: 1,
+  },
+  {
+    id: 'cinderCombo',
+    title: 'CINDER COMBO',
+    detail: 'FINAL COMBO HIT BURNS',
+    description: 'The third primary hit burns its target for 6 damage every 0.45 seconds, up to four times.',
+    limit: 1,
+  },
+  {
+    id: 'comboBlast',
+    title: 'COMBO BLAST',
+    detail: 'FINAL COMBO HIT BURSTS',
+    description: 'The third primary hit bursts for 14 damage to enemies within 78 pixels.',
+    limit: 1,
+  },
+  {
+    id: 'siphon',
+    title: 'SIPHON',
+    detail: 'ATTACKS RESTORE 2 LIFE',
+    description: 'Each attack hit restores 2 health per stack.',
+    limit: 3,
+  },
 ];
 
 export class CombatScene extends Phaser.Scene {
@@ -100,6 +161,8 @@ export class CombatScene extends Phaser.Scene {
   private roomCleared = false;
   private transitioning = false;
   private bonusOpen = false;
+  private pauseOpen = false;
+  private catalogOpen = false;
   private bonusChoiceIndex = 0;
   private bonusChoices: RunBonus[] = [];
   private bonusCards: Phaser.GameObjects.Container[] = [];
@@ -155,7 +218,7 @@ export class CombatScene extends Phaser.Scene {
   private queuedDash = false;
   private previousPadButtons: boolean[] = [];
   private readonly handlePointerDown = (pointer: Phaser.Input.Pointer): void => {
-    if (this.state !== 'playing' || this.bonusOpen) return;
+    if (this.state !== 'playing' || this.bonusOpen || this.pauseOpen || this.catalogOpen) return;
     if (pointer.button === 0) this.queuedPrimary = true;
     if (pointer.button === 2) this.queuedHeavy = true;
   };
@@ -171,6 +234,7 @@ export class CombatScene extends Phaser.Scene {
     | 'heavy'
     | 'dash'
     | 'restart'
+    | 'pause'
     | 'bonusOne'
     | 'bonusTwo'
     | 'bonusThree'
@@ -212,6 +276,8 @@ export class CombatScene extends Phaser.Scene {
   }
 
   private resetRunState(): void {
+    this.physics.world.resume();
+    this.tweens.resumeAll();
     this.state = 'playing';
     this.playerHealth = PLAYER.maxHealth;
     this.dashCooldown = 0;
@@ -253,6 +319,8 @@ export class CombatScene extends Phaser.Scene {
     this.roomCleared = false;
     this.transitioning = false;
     this.bonusOpen = false;
+    this.pauseOpen = false;
+    this.catalogOpen = false;
     this.bonusChoiceIndex = 0;
     this.bonusChoices = [];
     this.bonusCards = [];
@@ -273,8 +341,20 @@ export class CombatScene extends Phaser.Scene {
       if (Phaser.Input.Keyboard.JustDown(this.keys.restart)) this.scene.restart();
       return;
     }
+    if (this.catalogOpen) {
+      if (Phaser.Input.Keyboard.JustDown(this.keys.pause)) this.showPauseMenu();
+      return;
+    }
+    if (this.pauseOpen) {
+      if (Phaser.Input.Keyboard.JustDown(this.keys.pause)) this.closePauseMenu();
+      return;
+    }
     if (this.bonusOpen) {
       this.updateBonusChoice();
+      return;
+    }
+    if (Phaser.Input.Keyboard.JustDown(this.keys.pause)) {
+      this.openPauseMenu();
       return;
     }
     if (this.transitioning) return;
@@ -567,6 +647,138 @@ export class CombatScene extends Phaser.Scene {
     this.updateExitMark();
   }
 
+  private openPauseMenu(): void {
+    if (this.pauseOpen || this.bonusOpen || this.transitioning) return;
+    this.pauseOpen = true;
+    this.physics.world.pause();
+    this.tweens.pauseAll();
+    this.showPauseMenu();
+  }
+
+  private closePauseMenu(): void {
+    this.pauseOpen = false;
+    this.catalogOpen = false;
+    this.overlay.removeAll(true).setVisible(false);
+    this.physics.world.resume();
+    this.tweens.resumeAll();
+  }
+
+  private showPauseMenu(): void {
+    this.catalogOpen = false;
+    this.overlay.removeAll(true);
+    const shade = this.add.rectangle(0, 0, ARENA.width, ARENA.height, 0x0a0b0d, 0.82).setOrigin(0);
+    const panel = this.add.rectangle(480, 270, 410, 350, 0x1c1c1e, 0.99).setStrokeStyle(1, 0x695b46, 0.95);
+    const title = this.add
+      .text(480, 157, 'PAUSED', {
+        fontFamily: 'Manrope, sans-serif',
+        fontSize: '26px',
+        fontStyle: 'bold',
+        color: '#e3c88f',
+      })
+      .setOrigin(0.5);
+    this.overlay.add([shade, panel, title]);
+    this.addMenuButton('CONTINUE', 480, 224, () => this.closePauseMenu());
+    this.addMenuButton('RESTART', 480, 292, () => this.scene.restart());
+    this.addMenuButton('BONUS', 480, 360, () => this.showBonusCatalog());
+    const hint = this.add
+      .text(480, 425, 'PRESS ESC TO CONTINUE', {
+        fontFamily: 'DM Mono, monospace',
+        fontSize: '9px',
+        color: '#8b8882',
+        letterSpacing: 0.8,
+      })
+      .setOrigin(0.5);
+    this.overlay.add(hint);
+    this.overlay.setVisible(true);
+  }
+
+  private showBonusCatalog(): void {
+    this.catalogOpen = true;
+    this.overlay.removeAll(true);
+    const shade = this.add.rectangle(0, 0, ARENA.width, ARENA.height, 0x0a0b0d, 0.86).setOrigin(0);
+    const panel = this.add.rectangle(480, 270, 870, 470, 0x1c1c1e, 0.99).setStrokeStyle(1, 0x695b46, 0.95);
+    const title = this.add
+      .text(480, 61, 'RUN BONUS CATALOG', {
+        fontFamily: 'Manrope, sans-serif',
+        fontSize: '22px',
+        fontStyle: 'bold',
+        color: '#e3c88f',
+      })
+      .setOrigin(0.5);
+    const subtitle = this.add
+      .text(480, 87, 'EFFECTS AND BONUSES COLLECTED THIS RUN', {
+        fontFamily: 'DM Mono, monospace',
+        fontSize: '8px',
+        color: '#b9a47f',
+        letterSpacing: 0.8,
+      })
+      .setOrigin(0.5);
+    this.overlay.add([shade, panel, title, subtitle]);
+
+    RUN_BONUSES.forEach((bonus, index) => {
+      const column = Math.floor(index / 5);
+      const row = index % 5;
+      const x = column === 0 ? 265 : 695;
+      const y = 125 + row * 66;
+      const card = this.add.rectangle(x, y + 21, 405, 62, 0x272522, 1).setStrokeStyle(1, 0x514a3f, 0.9);
+      const heading = this.add
+        .text(x - 183, y, bonus.title, {
+          fontFamily: 'Manrope, sans-serif',
+          fontSize: '10px',
+          fontStyle: 'bold',
+          color: '#f0e7d7',
+        })
+        .setOrigin(0, 0.5);
+      const description = this.add
+        .text(x - 183, y + 18, bonus.description, {
+          fontFamily: 'DM Mono, monospace',
+          fontSize: '8px',
+          color: '#b9b1a4',
+          lineSpacing: 1,
+          wordWrap: { width: 310, useAdvancedWrap: true },
+        })
+        .setOrigin(0, 0);
+      const count = this.bonusCounts[bonus.id];
+      const status = this.add
+        .text(x + 184, y, count > 0 ? `×${count}` : '—', {
+          fontFamily: 'DM Mono, monospace',
+          fontSize: '9px',
+          fontStyle: 'bold',
+          color: count > 0 ? '#d6b678' : '#77736d',
+        })
+        .setOrigin(1, 0.5);
+      this.overlay.add([card, heading, description, status]);
+    });
+    this.addMenuButton('BACK TO PAUSE', 480, 470, () => this.showPauseMenu(), 300);
+    this.overlay.setVisible(true);
+  }
+
+  private addMenuButton(label: string, x: number, y: number, onClick: () => void, width = 270): void {
+    const button = this.add.container(x, y);
+    const background = this.add.rectangle(0, 0, width, 48, 0x292722, 1).setStrokeStyle(1, 0x6d6250, 0.95);
+    const text = this.add
+      .text(0, 0, label, {
+        fontFamily: 'Manrope, sans-serif',
+        fontSize: '12px',
+        fontStyle: 'bold',
+        color: '#eee4d1',
+        letterSpacing: 1,
+      })
+      .setOrigin(0.5);
+    button.add([background, text]);
+    button.setSize(width, 48).setInteractive({ useHandCursor: true });
+    button.on('pointerover', () => {
+      background.setFillStyle(0x393328, 1).setStrokeStyle(2, COLORS.gold, 1);
+      text.setColor('#f5dca6');
+    });
+    button.on('pointerout', () => {
+      background.setFillStyle(0x292722, 1).setStrokeStyle(1, 0x6d6250, 0.95);
+      text.setColor('#eee4d1');
+    });
+    button.on('pointerdown', onClick);
+    this.overlay.add(button);
+  }
+
   private applyBonus(bonus: RunBonus): void {
     this.bonusCounts[bonus.id] += 1;
     switch (bonus.id) {
@@ -606,17 +818,19 @@ export class CombatScene extends Phaser.Scene {
 
   private updateBonusHud(): void {
     const labels: string[] = [];
-    if (this.bonusCounts.vitality > 0) labels.push(`MAX HP +${this.bonusCounts.vitality * 20}`);
-    if (this.bonusCounts.edge > 0) labels.push(`DAMAGE +${this.bonusDamage}`);
-    if (this.bonusCounts.mend > 0) labels.push(`MEND ×${this.bonusCounts.mend}`);
+    if (this.bonusCounts.vitality > 0)
+      labels.push(`VITALITY ×${this.bonusCounts.vitality}  MAX LIFE +${this.bonusCounts.vitality * 20}`);
+    if (this.bonusCounts.edge > 0) labels.push(`SHARPENED ×${this.bonusCounts.edge}  DAMAGE +${this.bonusDamage}`);
+    if (this.bonusCounts.mend > 0) labels.push(`MENDING ×${this.bonusCounts.mend}`);
     if (this.dashNovaUnlocked) labels.push('DASH NOVA');
-    if (this.bonusCounts.quickStep > 0) labels.push(`DASH -${this.bonusDashCooldownReduction.toFixed(1)}S`);
-    if (this.bonusCounts.reach > 0) labels.push(`RANGE +${this.bonusRange}`);
-    if (this.wideHeavyUnlocked) labels.push('WIDE HEAVY');
+    if (this.bonusCounts.quickStep > 0)
+      labels.push(`QUICK STEP ×${this.bonusCounts.quickStep}  DASH -${this.bonusDashCooldownReduction.toFixed(1)}S`);
+    if (this.bonusCounts.reach > 0) labels.push(`LONG REACH ×${this.bonusCounts.reach}  RANGE +${this.bonusRange}`);
+    if (this.wideHeavyUnlocked) labels.push('WIDE SWING');
     if (this.cinderComboUnlocked) labels.push('CINDER COMBO');
     if (this.comboBlastUnlocked) labels.push('COMBO BLAST');
-    if (this.siphonStacks > 0) labels.push(`SIPHON ×${this.siphonStacks}`);
-    this.bonusText.setText(labels.length > 0 ? labels.join('  ·  ') : 'NONE YET');
+    if (this.siphonStacks > 0) labels.push(`SIPHON ×${this.siphonStacks}  HEAL +${this.siphonStacks * 2}`);
+    this.bonusText.setText(labels.length > 0 ? labels.join('\n') : 'NONE YET');
   }
 
   private healPlayer(amount: number): void {
@@ -666,6 +880,7 @@ export class CombatScene extends Phaser.Scene {
     fixed('RUN BONUSES', 34, 101, '8px', '#b9a47f');
     this.bonusText = fixed('NONE YET', 34, 114, '8px', '#d6b678', {
       maxWidth: 520,
+      lineSpacing: 2,
       wordWrap: { width: 520, useAdvancedWrap: true },
     });
     this.enemyText = fixed('HOSTILES  02', 758, 28, '10px', '#e9e1d4', { align: 'right' });
@@ -701,6 +916,7 @@ export class CombatScene extends Phaser.Scene {
       heavy: keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.K),
       dash: keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE),
       restart: keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R),
+      pause: keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC),
       bonusOne: keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ONE),
       bonusTwo: keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.TWO),
       bonusThree: keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.THREE),
