@@ -207,6 +207,10 @@ There is **no block or parry system**.
 
 Movement and dash mastery are major components of player skill.
 
+### Hit Feedback
+
+Show a brief floating damage number whenever the player damages an enemy or takes damage. Damage dealt appears over the enemy; damage received appears over the player in bold red. Use a quick pop, upward drift, and fade so the numbers are easy to notice without lingering over the fight.
+
 ---
 
 ## 11. Health
@@ -227,7 +231,9 @@ Healing can appear as a room reward or exploration reward.
 
 Every run creates a new temporary build.
 
-Temporary upgrades primarily **modify existing actions** instead of providing simple numerical bonuses.
+The current prototype uses a small set of temporary room-clear bonuses. They may improve stats, restore health, or add a combat power. These bonuses last for one run and are cleared when a new run starts.
+
+Later upgrades should primarily **modify existing actions** so that they visibly change how the player fights, instead of relying only on numerical increases.
 
 Examples:
 
@@ -530,7 +536,7 @@ Add room completion and transitions.
 
 ### Milestone 3 — Runs
 
-Generate branching sequences of rooms.
+For the current prototype, use a fixed sequence of five handcrafted rooms that gets harder from room to room. After clearing each non-final room, offer three different temporary bonuses such as increased max health, increased base damage, healing, or a new combat power. Show chosen bonuses in the run HUD and clear them when a new run starts. Do not use high-risk/low-risk routes or Ash rewards in this prototype.
 
 Add death/reset and basic rewards.
 
@@ -541,6 +547,10 @@ Add the randomized three-choice temporary-upgrade system.
 Create approximately 10 upgrades initially.
 
 Prove that different builds meaningfully change combat.
+
+### Current combat tuning note
+
+The ranged enemy currently aims at the player's earlier position before firing. Its attack feels too predictable; revisit its aim timing or variation in a later combat-tuning pass.
 
 ### Milestone 5 — Permanent Progression
 

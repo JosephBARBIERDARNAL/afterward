@@ -2,7 +2,15 @@ import Phaser from 'phaser';
 import { ARENA, ROOMS, type ArenaObstacle } from './data/arena';
 import { COLORS, ENEMIES, PLAYER, type EnemyKind } from './data/balance';
 import { Sound } from './presentation/sound';
-import { createFighter, destroyActorShadow, drawArena, drawEnemyMark, drawHealthBar, drawPlayerMark, syncActorShadow } from './presentation/visuals';
+import {
+  createFighter,
+  destroyActorShadow,
+  drawArena,
+  drawEnemyMark,
+  drawHealthBar,
+  drawPlayerMark,
+  syncActorShadow,
+} from './presentation/visuals';
 
 type RunState = 'playing' | 'dead' | 'clear';
 
@@ -38,6 +46,24 @@ interface InputFrame {
   aimY: number;
 }
 
+type BonusId = 'vitality' | 'edge' | 'mend' | 'dashNova' | 'quickStep' | 'reach';
+
+interface RunBonus {
+  id: BonusId;
+  title: string;
+  detail: string;
+  limit: number;
+}
+
+const RUN_BONUSES: RunBonus[] = [
+  { id: 'vitality', title: 'VITALITY', detail: '+20 MAX LIFE', limit: 3 },
+  { id: 'edge', title: 'SHARPENED', detail: '+3 BASE DAMAGE', limit: 4 },
+  { id: 'mend', title: 'MENDING', detail: 'RESTORE 35 LIFE', limit: 4 },
+  { id: 'dashNova', title: 'DASH NOVA', detail: 'DASH ENDS IN A BURST', limit: 1 },
+  { id: 'quickStep', title: 'QUICK STEP', detail: 'DASH RECHARGE -0.1S', limit: 3 },
+  { id: 'reach', title: 'LONG REACH', detail: '+10 ATTACK RANGE', limit: 3 },
+];
+
 export class CombatScene extends Phaser.Scene {
   private player!: Phaser.GameObjects.Arc;
   private playerBody!: Phaser.Physics.Arcade.Body;
@@ -52,11 +78,32 @@ export class CombatScene extends Phaser.Scene {
   private obstacleBodies: Phaser.GameObjects.Rectangle[] = [];
   private obstacleDecor: Phaser.GameObjects.GameObject[] = [];
   private roomColliders: Phaser.Physics.Arcade.Collider[] = [];
-  private roomArt!: Phaser.GameObjects.Graphics;
-  private exitMark!: Phaser.GameObjects.Graphics;
+  private roomArt?: Phaser.GameObjects.Graphics;
+  private exitMark?: Phaser.GameObjects.Graphics;
   private roomIndex = 0;
   private roomCleared = false;
   private transitioning = false;
+  private bonusOpen = false;
+  private bonusChoiceIndex = 0;
+  private bonusChoices: RunBonus[] = [];
+  private bonusCards: Phaser.GameObjects.Container[] = [];
+  private bonusCardBackgrounds: Phaser.GameObjects.Rectangle[] = [];
+  private previousBonusPadButtons: boolean[] = [];
+  private damageNumbers: Phaser.GameObjects.Text[] = [];
+  private playerMaxHealth = PLAYER.maxHealth;
+  private bonusDamage = 0;
+  private bonusRange = 0;
+  private bonusDashCooldownReduction = 0;
+  private dashNovaUnlocked = false;
+  private dashNovaEffect = 0;
+  private readonly bonusCounts: Record<BonusId, number> = {
+    vitality: 0,
+    edge: 0,
+    mend: 0,
+    dashNova: 0,
+    quickStep: 0,
+    reach: 0,
+  };
   private sfx!: Sound;
   private state: RunState = 'playing';
   private playerHealth: number = PLAYER.maxHealth;
@@ -81,15 +128,32 @@ export class CombatScene extends Phaser.Scene {
   private queuedDash = false;
   private previousPadButtons: boolean[] = [];
   private readonly handlePointerDown = (pointer: Phaser.Input.Pointer): void => {
-    if (this.state !== 'playing') return;
+    if (this.state !== 'playing' || this.bonusOpen) return;
     if (pointer.button === 0) this.queuedPrimary = true;
     if (pointer.button === 2) this.queuedHeavy = true;
   };
-  private readonly handlePointerMove = (): void => { this.pointerHasAimed = true; };
-  private keys!: Record<'up' | 'down' | 'left' | 'right' | 'primary' | 'heavy' | 'dash' | 'restart', Phaser.Input.Keyboard.Key>;
+  private readonly handlePointerMove = (): void => {
+    this.pointerHasAimed = true;
+  };
+  private keys!: Record<
+    | 'up'
+    | 'down'
+    | 'left'
+    | 'right'
+    | 'primary'
+    | 'heavy'
+    | 'dash'
+    | 'restart'
+    | 'bonusOne'
+    | 'bonusTwo'
+    | 'bonusThree'
+    | 'confirm',
+    Phaser.Input.Keyboard.Key
+  >;
   private arrowKeys!: Record<'up' | 'down' | 'left' | 'right', Phaser.Input.Keyboard.Key>;
   private healthText!: Phaser.GameObjects.Text;
   private enemyText!: Phaser.GameObjects.Text;
+  private bonusText!: Phaser.GameObjects.Text;
   private roomText!: Phaser.GameObjects.Text;
   private roomTitleText!: Phaser.GameObjects.Text;
   private gateText!: Phaser.GameObjects.Text;
@@ -135,6 +199,7 @@ export class CombatScene extends Phaser.Scene {
     this.heavyRecovery = 0;
     this.heavyHit = false;
     this.attackEffect = 0;
+    this.dashNovaEffect = 0;
     this.attackEffectAngle = 0;
     this.attackEffectKind = 'primary';
     this.playerAngle = 0;
@@ -150,17 +215,34 @@ export class CombatScene extends Phaser.Scene {
     this.obstacleBodies = [];
     this.obstacleDecor = [];
     this.roomColliders = [];
-    this.roomArt = undefined!;
-    this.exitMark = undefined!;
+    this.roomArt = undefined;
+    this.exitMark = undefined;
     this.roomIndex = 0;
     this.roomCleared = false;
     this.transitioning = false;
+    this.bonusOpen = false;
+    this.bonusChoiceIndex = 0;
+    this.bonusChoices = [];
+    this.bonusCards = [];
+    this.bonusCardBackgrounds = [];
+    this.previousBonusPadButtons = [];
+    this.damageNumbers = [];
+    this.playerMaxHealth = PLAYER.maxHealth;
+    this.bonusDamage = 0;
+    this.bonusRange = 0;
+    this.bonusDashCooldownReduction = 0;
+    this.dashNovaUnlocked = false;
+    for (const id of Object.keys(this.bonusCounts) as BonusId[]) this.bonusCounts[id] = 0;
     this.cameras.main.setScroll(0, 0).resetFX();
   }
 
   update(_time: number, deltaMs: number): void {
     if (this.state !== 'playing') {
       if (Phaser.Input.Keyboard.JustDown(this.keys.restart)) this.scene.restart();
+      return;
+    }
+    if (this.bonusOpen) {
+      this.updateBonusChoice();
       return;
     }
     if (this.transitioning) return;
@@ -175,20 +257,24 @@ export class CombatScene extends Phaser.Scene {
 
     if (this.enemies.length === 0 && !this.roomCleared) {
       this.roomCleared = true;
-      this.gateText.setText('EAST GATE OPEN');
-      this.updateExitMark();
       this.sfx.play('clear');
       if (this.roomIndex === ROOMS.length - 1) {
+        this.gateText.setText('ALL ROOMS CLEAR');
+        this.updateExitMark();
         this.finish('clear');
         return;
       }
+      this.showBonusChoices();
+      return;
     }
 
     if (
-      this.roomCleared
-      && this.player.x >= ARENA.exit.triggerX
-      && Math.abs(this.player.y - ARENA.exit.y) <= ARENA.exit.halfHeight
-    ) this.transitionToNextRoom();
+      this.roomCleared &&
+      this.player.x >= ARENA.exit.triggerX &&
+      Math.abs(this.player.y - ARENA.exit.y) <= ARENA.exit.halfHeight
+    ) {
+      this.transitionToNextRoom();
+    }
 
     this.updatePresentation(delta);
   }
@@ -196,11 +282,25 @@ export class CombatScene extends Phaser.Scene {
   private createObstacles(obstacles: ArenaObstacle[]): void {
     for (const obstacle of obstacles) {
       this.obstacles.push(obstacle);
-      const shadow = this.add.rectangle(obstacle.x + 4, obstacle.y + 8, obstacle.width + 5, obstacle.height + 4, 0x090a0c, 0.55);
+      const shadow = this.add.rectangle(
+        obstacle.x + 4,
+        obstacle.y + 8,
+        obstacle.width + 5,
+        obstacle.height + 4,
+        0x090a0c,
+        0.55,
+      );
       shadow.setDepth(obstacle.y - obstacle.height / 2);
       const block = this.add.rectangle(obstacle.x, obstacle.y, obstacle.width, obstacle.height, 0x544c43, 1);
       block.setStrokeStyle(2, 0x82745f, 0.85).setDepth(obstacle.y + obstacle.height / 2);
-      const top = this.add.rectangle(obstacle.x, obstacle.y - obstacle.height / 2 + 5, obstacle.width - 8, 4, 0x9c8867, 0.7);
+      const top = this.add.rectangle(
+        obstacle.x,
+        obstacle.y - obstacle.height / 2 + 5,
+        obstacle.width - 8,
+        4,
+        0x9c8867,
+        0.7,
+      );
       top.setDepth(obstacle.y + obstacle.height / 2 + 1);
       this.physics.add.existing(block, true);
       this.obstacleBodies.push(block);
@@ -219,7 +319,7 @@ export class CombatScene extends Phaser.Scene {
     this.fx = this.add.graphics().setDepth(40);
   }
 
-  private createEnemies(spawns: typeof ROOMS[number]['enemies']): void {
+  private createEnemies(spawns: (typeof ROOMS)[number]['enemies']): void {
     for (const entry of spawns) {
       const { kind } = entry;
       const data = ENEMIES[kind];
@@ -250,9 +350,10 @@ export class CombatScene extends Phaser.Scene {
 
   private enterRoom(index: number): void {
     if (this.roomArt) this.clearRoom();
+    const room = ROOMS[index];
+    if (!room) throw new Error(`Unknown room index: ${index}`);
     this.roomIndex = index;
     this.roomCleared = false;
-    const room = ROOMS[index];
     this.roomArt = drawArena(this);
     this.exitMark = this.add.graphics().setDepth(18);
     this.createObstacles(room.obstacles);
@@ -277,15 +378,20 @@ export class CombatScene extends Phaser.Scene {
       enemy.body.destroy();
     }
     for (const projectile of this.projectiles) projectile.body.destroy();
+    for (const number of this.damageNumbers) {
+      this.tweens.killTweensOf(number);
+      number.destroy();
+    }
     for (const object of [...this.obstacleDecor, ...this.obstacleBodies]) object.destroy();
-    this.roomArt.destroy();
-    this.exitMark.destroy();
+    this.roomArt?.destroy();
+    this.exitMark?.destroy();
     this.enemies = [];
     this.projectiles = [];
     this.obstacles = [];
     this.obstacleBodies = [];
     this.obstacleDecor = [];
     this.roomColliders = [];
+    this.damageNumbers = [];
   }
 
   private transitionToNextRoom(): void {
@@ -294,10 +400,173 @@ export class CombatScene extends Phaser.Scene {
     const camera = this.cameras.main;
     camera.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
       this.enterRoom(this.roomIndex + 1);
-      camera.once(Phaser.Cameras.Scene2D.Events.FADE_IN_COMPLETE, () => { this.transitioning = false; });
+      camera.once(Phaser.Cameras.Scene2D.Events.FADE_IN_COMPLETE, () => {
+        this.transitioning = false;
+      });
       camera.fadeIn(220, 10, 10, 12);
     });
     camera.fadeOut(180, 10, 10, 12);
+  }
+
+  private showBonusChoices(): void {
+    this.bonusOpen = true;
+    this.bonusChoiceIndex = 0;
+    this.previousBonusPadButtons = [];
+    const eligible = RUN_BONUSES.filter(
+      (bonus) =>
+        this.bonusCounts[bonus.id] < bonus.limit && (bonus.id !== 'mend' || this.playerHealth < this.playerMaxHealth),
+    );
+    this.bonusChoices = Phaser.Utils.Array.Shuffle([...eligible]).slice(0, 3);
+    this.overlay.removeAll(true);
+    const shade = this.add.rectangle(0, 0, ARENA.width, ARENA.height, 0x0a0b0d, 0.82).setOrigin(0);
+    const panel = this.add.rectangle(480, 270, 720, 260, 0x1c1c1e, 0.99).setStrokeStyle(1, 0x695b46, 0.95);
+    const title = this.add
+      .text(480, 166, 'CHOOSE A BONUS', {
+        fontFamily: 'Manrope, sans-serif',
+        fontSize: '24px',
+        fontStyle: 'bold',
+        color: '#e3c88f',
+      })
+      .setOrigin(0.5);
+    const subtitle = this.add
+      .text(480, 198, 'ROOM CLEARED  ·  PICK ONE TO CARRY INTO THE NEXT ROOM', {
+        fontFamily: 'DM Mono, monospace',
+        fontSize: '9px',
+        color: '#b9a47f',
+        letterSpacing: 0.8,
+      })
+      .setOrigin(0.5);
+    this.overlay.add([shade, panel, title, subtitle]);
+    this.bonusCards = [];
+    this.bonusCardBackgrounds = [];
+    this.bonusChoices.forEach((bonus, index) => {
+      const card = this.add.container(240 + index * 240, 286);
+      const background = this.add.rectangle(0, 0, 218, 132, 0x272522, 1).setStrokeStyle(1, 0x6d6250, 0.9);
+      const heading = this.add
+        .text(0, -36, bonus.title, {
+          fontFamily: 'Manrope, sans-serif',
+          fontSize: '15px',
+          fontStyle: 'bold',
+          color: '#f0e7d7',
+        })
+        .setOrigin(0.5);
+      const detail = this.add
+        .text(0, 0, bonus.detail, {
+          fontFamily: 'DM Mono, monospace',
+          fontSize: '9px',
+          color: '#d6b678',
+          align: 'center',
+        })
+        .setOrigin(0.5);
+      const context = this.bonusCounts[bonus.id] > 0 ? `OWNED  ×${this.bonusCounts[bonus.id]}` : 'NEW BONUS';
+      const status = this.add
+        .text(0, 29, context, {
+          fontFamily: 'DM Mono, monospace',
+          fontSize: '8px',
+          color: '#aaa39a',
+          letterSpacing: 0.5,
+        })
+        .setOrigin(0.5);
+      const key = this.add
+        .text(0, 51, `PRESS ${index + 1}  /  CLICK`, {
+          fontFamily: 'DM Mono, monospace',
+          fontSize: '8px',
+          color: '#817d75',
+          letterSpacing: 0.8,
+        })
+        .setOrigin(0.5);
+      card.add([background, heading, detail, status, key]);
+      card.setSize(218, 132).setInteractive({ useHandCursor: true });
+      card.on('pointerover', () => this.highlightBonus(index));
+      card.on('pointerdown', () => this.selectBonus(index));
+      this.overlay.add(card);
+      this.bonusCards.push(card);
+      this.bonusCardBackgrounds.push(background);
+    });
+    const instructions = this.add
+      .text(480, 382, 'LEFT / RIGHT OR D-PAD TO CHOOSE  ·  ENTER / A TO CONFIRM', {
+        fontFamily: 'DM Mono, monospace',
+        fontSize: '9px',
+        color: '#8b8882',
+        letterSpacing: 0.8,
+      })
+      .setOrigin(0.5);
+    this.overlay.add(instructions);
+    this.highlightBonus(0);
+    this.overlay.setVisible(true);
+  }
+
+  private updateBonusChoice(): void {
+    const pad = navigator.getGamepads?.().find((candidate) => candidate?.connected) ?? null;
+    const buttons = pad?.buttons.map((button) => button.pressed) ?? [];
+    const justPressed = (index: number) => Boolean(buttons[index] && !this.previousBonusPadButtons[index]);
+    if (Phaser.Input.Keyboard.JustDown(this.keys.bonusOne)) this.selectBonus(0);
+    else if (Phaser.Input.Keyboard.JustDown(this.keys.bonusTwo)) this.selectBonus(1);
+    else if (Phaser.Input.Keyboard.JustDown(this.keys.bonusThree)) this.selectBonus(2);
+    else if (Phaser.Input.Keyboard.JustDown(this.arrowKeys.left) || justPressed(14))
+      this.highlightBonus(this.bonusChoiceIndex - 1);
+    else if (Phaser.Input.Keyboard.JustDown(this.arrowKeys.right) || justPressed(15))
+      this.highlightBonus(this.bonusChoiceIndex + 1);
+    else if (Phaser.Input.Keyboard.JustDown(this.keys.confirm) || justPressed(0))
+      this.selectBonus(this.bonusChoiceIndex);
+    this.previousBonusPadButtons = buttons;
+  }
+
+  private highlightBonus(index: number): void {
+    if (this.bonusCardBackgrounds.length === 0) return;
+    const selected = Phaser.Math.Wrap(index, 0, this.bonusCardBackgrounds.length);
+    this.bonusChoiceIndex = selected;
+    this.bonusCardBackgrounds.forEach((background, cardIndex) => {
+      background.setStrokeStyle(cardIndex === selected ? 2 : 1, cardIndex === selected ? COLORS.gold : 0x6d6250, 0.95);
+      background.setFillStyle(cardIndex === selected ? 0x342f27 : 0x272522, 1);
+    });
+  }
+
+  private selectBonus(index: number): void {
+    const bonus = this.bonusChoices[index];
+    if (!bonus || !this.bonusOpen) return;
+    this.bonusOpen = false;
+    this.overlay.removeAll(true);
+    this.applyBonus(bonus);
+    this.updateBonusHud();
+    this.gateText.setText('EAST GATE OPEN');
+    this.updateExitMark();
+  }
+
+  private applyBonus(bonus: RunBonus): void {
+    this.bonusCounts[bonus.id] += 1;
+    switch (bonus.id) {
+      case 'vitality':
+        this.playerMaxHealth += 20;
+        this.playerHealth = Math.min(this.playerMaxHealth, this.playerHealth + 20);
+        break;
+      case 'edge':
+        this.bonusDamage += 3;
+        break;
+      case 'mend':
+        this.playerHealth = Math.min(this.playerMaxHealth, this.playerHealth + 35);
+        break;
+      case 'dashNova':
+        this.dashNovaUnlocked = true;
+        break;
+      case 'quickStep':
+        this.bonusDashCooldownReduction = Math.min(0.3, this.bonusDashCooldownReduction + 0.1);
+        break;
+      case 'reach':
+        this.bonusRange += 10;
+        break;
+    }
+  }
+
+  private updateBonusHud(): void {
+    const labels: string[] = [];
+    if (this.bonusCounts.vitality > 0) labels.push(`MAX HP +${this.bonusCounts.vitality * 20}`);
+    if (this.bonusCounts.edge > 0) labels.push(`DAMAGE +${this.bonusDamage}`);
+    if (this.bonusCounts.mend > 0) labels.push(`MEND ×${this.bonusCounts.mend}`);
+    if (this.dashNovaUnlocked) labels.push('DASH NOVA');
+    if (this.bonusCounts.quickStep > 0) labels.push(`DASH -${this.bonusDashCooldownReduction.toFixed(1)}S`);
+    if (this.bonusCounts.reach > 0) labels.push(`RANGE +${this.bonusRange}`);
+    this.bonusText.setText(labels.length > 0 ? labels.join('  ·  ') : 'NONE YET');
   }
 
   private updateExitMark(): void {
@@ -315,24 +584,46 @@ export class CombatScene extends Phaser.Scene {
   }
 
   private createHud(): void {
-    const fixed = (text: string, x: number, y: number, size: string, color: string, extra: Record<string, unknown> = {}) =>
-      this.add.text(x, y, text, {
-        fontFamily: '"DM Mono", ui-monospace, monospace',
-        fontSize: size,
-        color,
-        letterSpacing: 1,
-        ...extra,
-      }).setScrollFactor(0).setDepth(1000);
+    const fixed = (
+      text: string,
+      x: number,
+      y: number,
+      size: string,
+      color: string,
+      extra: Record<string, unknown> = {},
+    ) =>
+      this.add
+        .text(x, y, text, {
+          fontFamily: '"DM Mono", ui-monospace, monospace',
+          fontSize: size,
+          color,
+          letterSpacing: 1,
+          ...extra,
+        })
+        .setScrollFactor(0)
+        .setDepth(1000);
 
-    this.roomText = fixed('ROOM  01 / 03', 34, 27, '11px', '#d6b678', { fontStyle: 'bold' });
+    this.roomText = fixed('ROOM  01 / 05', 34, 27, '11px', '#d6b678', { fontStyle: 'bold' });
     this.roomTitleText = fixed('THE ENTRY', 34, 44, '9px', '#8b8882');
     this.healthText = fixed('VITALITY  100 / 100', 34, 66, '10px', '#e9e1d4');
+    fixed('RUN BONUSES', 34, 101, '8px', '#b9a47f');
+    this.bonusText = fixed('NONE YET', 34, 114, '8px', '#d6b678', {
+      maxWidth: 520,
+      wordWrap: { width: 520, useAdvancedWrap: true },
+    });
     this.enemyText = fixed('HOSTILES  02', 758, 28, '10px', '#e9e1d4', { align: 'right' });
     this.gateText = fixed('EAST GATE LOCKED', 758, 45, '9px', '#8b8882', { align: 'right' });
     this.comboText = fixed('COMBO  —', 34, 493, '9px', '#d6b678');
     this.dashText = fixed('DASH', 758, 477, '8px', '#8b8882');
     this.actionText = fixed('HEAVY READY', 758, 497, '8px', '#d7cdbd');
-    this.hintText = fixed('ARROWS / ZQSD MOVE  ·  MOUSE AIM  ·  J ATTACK  ·  K HEAVY  ·  SPACE DASH', 480, 519, '8px', '#77736d', { align: 'center' });
+    this.hintText = fixed(
+      'ARROWS / ZQSD MOVE  ·  MOUSE AIM  ·  J ATTACK  ·  K HEAVY  ·  SPACE DASH',
+      480,
+      519,
+      '8px',
+      '#77736d',
+      { align: 'center' },
+    );
     this.hud = this.add.graphics().setScrollFactor(0).setDepth(999);
 
     this.overlay = this.add.container(0, 0).setDepth(2000).setScrollFactor(0).setVisible(false);
@@ -353,6 +644,10 @@ export class CombatScene extends Phaser.Scene {
       heavy: keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.K),
       dash: keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE),
       restart: keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R),
+      bonusOne: keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ONE),
+      bonusTwo: keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.TWO),
+      bonusThree: keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.THREE),
+      confirm: keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER),
     };
     this.arrowKeys = {
       up: keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP),
@@ -363,8 +658,12 @@ export class CombatScene extends Phaser.Scene {
   }
 
   private readInput(): InputFrame {
-    let moveX = Number(this.keys.right.isDown || this.arrowKeys.right.isDown) - Number(this.keys.left.isDown || this.arrowKeys.left.isDown);
-    let moveY = Number(this.keys.down.isDown || this.arrowKeys.down.isDown) - Number(this.keys.up.isDown || this.arrowKeys.up.isDown);
+    let moveX =
+      Number(this.keys.right.isDown || this.arrowKeys.right.isDown) -
+      Number(this.keys.left.isDown || this.arrowKeys.left.isDown);
+    let moveY =
+      Number(this.keys.down.isDown || this.arrowKeys.down.isDown) -
+      Number(this.keys.up.isDown || this.arrowKeys.up.isDown);
 
     const pad = navigator.getGamepads?.().find((candidate) => candidate?.connected) ?? null;
     const buttons = pad?.buttons.map((button) => button.pressed) ?? [];
@@ -404,13 +703,9 @@ export class CombatScene extends Phaser.Scene {
     aimY /= aimLength;
 
     const primary = this.keys.primary.isDown || this.queuedPrimary || Boolean(buttons[2] || buttons[5]);
-    const heavyPressed = Phaser.Input.Keyboard.JustDown(this.keys.heavy)
-      || this.queuedHeavy
-      || justPressed(3)
-      || justPressed(6);
-    const dashPressed = Phaser.Input.Keyboard.JustDown(this.keys.dash)
-      || this.queuedDash
-      || justPressed(1);
+    const heavyPressed =
+      Phaser.Input.Keyboard.JustDown(this.keys.heavy) || this.queuedHeavy || justPressed(3) || justPressed(6);
+    const dashPressed = Phaser.Input.Keyboard.JustDown(this.keys.dash) || this.queuedDash || justPressed(1);
 
     this.queuedPrimary = false;
     this.queuedHeavy = false;
@@ -428,11 +723,14 @@ export class CombatScene extends Phaser.Scene {
     this.comboTimer = Math.max(0, this.comboTimer - delta);
     if (this.comboTimer === 0) this.comboIndex = 0;
     this.dashCooldown = Math.max(0, this.dashCooldown - delta);
+    const previousDashTime = this.dashTime;
     this.dashTime = Math.max(0, this.dashTime - delta);
+    if (previousDashTime > 0 && this.dashTime === 0 && this.dashNovaUnlocked) this.performDashNova();
     this.invulnerability = Math.max(0, this.invulnerability - delta);
     this.heavyRecovery = Math.max(0, this.heavyRecovery - delta);
     this.damageFlash = Math.max(0, this.damageFlash - delta);
     this.attackEffect = Math.max(0, this.attackEffect - delta);
+    this.dashNovaEffect = Math.max(0, this.dashNovaEffect - delta);
   }
 
   private updatePlayer(controls: InputFrame, delta: number): void {
@@ -441,7 +739,7 @@ export class CombatScene extends Phaser.Scene {
       this.dashX = directionLength > 0.1 ? controls.moveX / directionLength : controls.aimX;
       this.dashY = directionLength > 0.1 ? controls.moveY / directionLength : controls.aimY;
       this.dashTime = PLAYER.dashDuration;
-      this.dashCooldown = PLAYER.dashCooldown;
+      this.dashCooldown = Math.max(0.25, PLAYER.dashCooldown - this.bonusDashCooldownReduction);
       this.invulnerability = Math.max(this.invulnerability, PLAYER.dashInvulnerability);
       this.sfx.play('dash');
     }
@@ -459,7 +757,13 @@ export class CombatScene extends Phaser.Scene {
       }
     }
 
-    if (controls.primary && this.primaryCooldown <= 0 && this.heavyWindup <= 0 && this.heavyRecovery <= 0 && this.dashTime <= 0) {
+    if (
+      controls.primary &&
+      this.primaryCooldown <= 0 &&
+      this.heavyWindup <= 0 &&
+      this.heavyRecovery <= 0 &&
+      this.dashTime <= 0
+    ) {
       if (this.comboTimer <= 0) this.comboIndex = 0;
       this.performAttack('primary');
       this.comboIndex = (this.comboIndex + 1) % PLAYER.primaryDamage.length;
@@ -471,7 +775,10 @@ export class CombatScene extends Phaser.Scene {
     if (this.dashTime > 0) {
       this.playerBody.setVelocity(this.dashX * PLAYER.dashSpeed, this.dashY * PLAYER.dashSpeed);
     } else {
-      this.playerBody.setVelocity(controls.moveX * PLAYER.moveSpeed * actionSpeed, controls.moveY * PLAYER.moveSpeed * actionSpeed);
+      this.playerBody.setVelocity(
+        controls.moveX * PLAYER.moveSpeed * actionSpeed,
+        controls.moveY * PLAYER.moveSpeed * actionSpeed,
+      );
     }
 
     this.player.setDepth(this.player.y + 1);
@@ -486,9 +793,9 @@ export class CombatScene extends Phaser.Scene {
   private performAttack(kind: 'primary' | 'heavy'): void {
     const isHeavy = kind === 'heavy';
     const combo = this.comboIndex;
-    const reach = isHeavy ? PLAYER.heavyRange : PLAYER.primaryRange + (combo === 2 ? 8 : 0);
+    const reach = (isHeavy ? PLAYER.heavyRange : PLAYER.primaryRange + (combo === 2 ? 8 : 0)) + this.bonusRange;
     const halfArc = isHeavy ? 0.68 : combo === 2 ? 0.72 : 0.58;
-    const damage = isHeavy ? PLAYER.heavyDamage : PLAYER.primaryDamage[combo];
+    const damage = (isHeavy ? PLAYER.heavyDamage : PLAYER.primaryDamage[combo]) + this.bonusDamage;
     this.attackEffect = isHeavy ? 0.22 : 0.14;
     this.attackEffectAngle = this.playerAngle;
     this.attackEffectKind = kind;
@@ -500,16 +807,34 @@ export class CombatScene extends Phaser.Scene {
       const dy = enemy.body.y - this.player.y;
       const distance = Math.hypot(dx, dy);
       const angleDifference = Phaser.Math.Angle.Wrap(Math.atan2(dy, dx) - this.playerAngle);
-      if (distance > reach + (enemy.kind === 'heavy' ? 19 : enemy.kind === 'melee' ? 15 : 14) || Math.abs(angleDifference) > halfArc) continue;
+      if (
+        distance > reach + (enemy.kind === 'heavy' ? 19 : enemy.kind === 'melee' ? 15 : 14) ||
+        Math.abs(angleDifference) > halfArc
+      )
+        continue;
       if (!this.lineClear(this.player.x, this.player.y, enemy.body.x, enemy.body.y)) continue;
       this.damageEnemy(enemy, damage, dx / (distance || 1), dy / (distance || 1));
     }
+  }
+
+  private performDashNova(): void {
+    this.dashNovaEffect = 0.24;
+    this.sfx.play('dash-burst');
+    for (const enemy of [...this.enemies]) {
+      const dx = enemy.body.x - this.player.x;
+      const dy = enemy.body.y - this.player.y;
+      const distance = Math.hypot(dx, dy);
+      if (distance > 88 || !this.lineClear(this.player.x, this.player.y, enemy.body.x, enemy.body.y)) continue;
+      this.damageEnemy(enemy, 18, dx / (distance || 1), dy / (distance || 1));
+    }
+    this.cameras.main.shake(75, 0.0018);
   }
 
   private damageEnemy(enemy: Enemy, damage: number, knockX: number, knockY: number): void {
     enemy.hp -= damage;
     enemy.flash = 0.12;
     enemy.stun = Math.max(enemy.stun, 0.13);
+    this.showDamageNumber(enemy.body.x, enemy.body.y - (enemy.kind === 'heavy' ? 31 : 27), damage, false);
     const body = enemy.body.body as Phaser.Physics.Arcade.Body;
     body.setVelocity(knockX * 170, knockY * 170);
     this.sfx.play('enemy-hit');
@@ -520,6 +845,43 @@ export class CombatScene extends Phaser.Scene {
       enemy.body.destroy();
       this.enemies = this.enemies.filter((candidate) => candidate !== enemy);
     }
+  }
+
+  private showDamageNumber(x: number, y: number, damage: number, received: boolean): void {
+    const number = this.add
+      .text(x + Phaser.Math.Between(-8, 8), y, `-${damage}`, {
+        fontFamily: 'Manrope, sans-serif',
+        fontSize: received ? '25px' : '20px',
+        fontStyle: 'bold',
+        color: received ? '#ff514d' : '#f2dfb7',
+        stroke: '#171513',
+        strokeThickness: 4,
+        shadow: { color: '#000000', blur: 5, offsetX: 0, offsetY: 2, fill: true },
+      })
+      .setOrigin(0.5)
+      .setDepth(500)
+      .setScale(0.58);
+    this.damageNumbers.push(number);
+    this.tweens.add({
+      targets: number,
+      scale: 1.16,
+      duration: 115,
+      ease: 'Back.Out',
+      onComplete: () =>
+        this.tweens.add({
+          targets: number,
+          y: y - 44,
+          scale: 0.94,
+          alpha: 0,
+          delay: 80,
+          duration: 620,
+          ease: 'Cubic.Out',
+          onComplete: () => {
+            this.damageNumbers = this.damageNumbers.filter((candidate) => candidate !== number);
+            number.destroy();
+          },
+        }),
+    });
   }
 
   private updateEnemies(delta: number): void {
@@ -553,7 +915,8 @@ export class CombatScene extends Phaser.Scene {
           body.setVelocity(0, 0);
           continue;
         }
-        if (distance > attack.attackRange - 8) body.setVelocity((dx / distance) * data.moveSpeed, (dy / distance) * data.moveSpeed);
+        if (distance > attack.attackRange - 8)
+          body.setVelocity((dx / distance) * data.moveSpeed, (dy / distance) * data.moveSpeed);
         else body.setVelocity(0, 0);
       } else {
         const ideal = ENEMIES.ranged.keepDistance;
@@ -576,7 +939,9 @@ export class CombatScene extends Phaser.Scene {
       this.spawnProjectile(enemy.body.x, enemy.body.y, enemy.targetX, enemy.targetY);
     } else {
       const attack = ENEMIES[enemy.kind];
-      if (Phaser.Math.Distance.Between(this.player.x, this.player.y, enemy.targetX, enemy.targetY) < attack.attackRadius) {
+      if (
+        Phaser.Math.Distance.Between(this.player.x, this.player.y, enemy.targetX, enemy.targetY) < attack.attackRadius
+      ) {
         this.hurtPlayer(attack.damage, enemy.targetX, enemy.targetY);
       }
     }
@@ -601,15 +966,25 @@ export class CombatScene extends Phaser.Scene {
       projectile.body.x += projectile.vx * delta;
       projectile.body.y += projectile.vy * delta;
       projectile.life -= delta;
-      const hitsPlayer = Phaser.Math.Distance.Between(projectile.body.x, projectile.body.y, this.player.x, this.player.y) < 21;
-      const blocked = this.obstacles.some((obstacle) =>
-        projectile.body.x > obstacle.x - obstacle.width / 2 - 7
-        && projectile.body.x < obstacle.x + obstacle.width / 2 + 7
-        && projectile.body.y > obstacle.y - obstacle.height / 2 - 7
-        && projectile.body.y < obstacle.y + obstacle.height / 2 + 7,
+      const hitsPlayer =
+        Phaser.Math.Distance.Between(projectile.body.x, projectile.body.y, this.player.x, this.player.y) < 21;
+      const blocked = this.obstacles.some(
+        (obstacle) =>
+          projectile.body.x > obstacle.x - obstacle.width / 2 - 7 &&
+          projectile.body.x < obstacle.x + obstacle.width / 2 + 7 &&
+          projectile.body.y > obstacle.y - obstacle.height / 2 - 7 &&
+          projectile.body.y < obstacle.y + obstacle.height / 2 + 7,
       );
       if (hitsPlayer) this.hurtPlayer(ENEMIES.ranged.damage, projectile.body.x, projectile.body.y);
-      if (hitsPlayer || blocked || projectile.life <= 0 || projectile.body.x < 20 || projectile.body.x > 940 || projectile.body.y < 20 || projectile.body.y > 520) {
+      if (
+        hitsPlayer ||
+        blocked ||
+        projectile.life <= 0 ||
+        projectile.body.x < 20 ||
+        projectile.body.x > 940 ||
+        projectile.body.y < 20 ||
+        projectile.body.y > 520
+      ) {
         projectile.body.destroy();
         this.projectiles.splice(index, 1);
       }
@@ -619,6 +994,7 @@ export class CombatScene extends Phaser.Scene {
   private hurtPlayer(damage: number, sourceX: number, sourceY: number): void {
     if (this.invulnerability > 0 || this.state !== 'playing') return;
     this.playerHealth = Math.max(0, this.playerHealth - damage);
+    this.showDamageNumber(this.player.x, this.player.y - 27, damage, true);
     this.invulnerability = PLAYER.damageInvulnerability;
     this.damageFlash = 0.2;
     this.heavyWindup = 0;
@@ -636,7 +1012,13 @@ export class CombatScene extends Phaser.Scene {
 
   private updatePresentation(delta: number): void {
     this.playerMarks.clear();
-    drawPlayerMark(this.playerMarks, this.player.x, this.player.y - 2, this.playerAngle, this.heavyWindup > 0 ? COLORS.damage : 0x4a4034);
+    drawPlayerMark(
+      this.playerMarks,
+      this.player.x,
+      this.player.y - 2,
+      this.playerAngle,
+      this.heavyWindup > 0 ? COLORS.damage : 0x4a4034,
+    );
 
     this.arenaMarks.clear();
     for (const enemy of this.enemies) {
@@ -646,13 +1028,19 @@ export class CombatScene extends Phaser.Scene {
       drawHealthBar(enemy.marks, enemy.body.x - 21, enemy.body.y - 32, 42, enemy.hp / enemy.maxHp, healthColor);
       if (enemy.windup > 0) {
         if (enemy.kind === 'ranged') {
-          this.arenaMarks.lineStyle(2, COLORS.damage, 0.52).lineBetween(enemy.body.x, enemy.body.y, enemy.targetX, enemy.targetY);
+          this.arenaMarks
+            .lineStyle(2, COLORS.damage, 0.52)
+            .lineBetween(enemy.body.x, enemy.body.y, enemy.targetX, enemy.targetY);
           this.arenaMarks.fillStyle(COLORS.damage, 0.58).fillCircle(enemy.targetX, enemy.targetY, 8);
         } else {
           const attack = ENEMIES[enemy.kind];
           const warningColor = enemy.kind === 'heavy' ? COLORS.gold : COLORS.damage;
-          this.arenaMarks.lineStyle(enemy.kind === 'heavy' ? 3 : 2, warningColor, 0.68).strokeCircle(enemy.targetX, enemy.targetY, attack.attackRadius);
-          this.arenaMarks.lineStyle(1, 0xffca9a, 0.3).strokeCircle(enemy.targetX, enemy.targetY, attack.attackRadius + 9);
+          this.arenaMarks
+            .lineStyle(enemy.kind === 'heavy' ? 3 : 2, warningColor, 0.68)
+            .strokeCircle(enemy.targetX, enemy.targetY, attack.attackRadius);
+          this.arenaMarks
+            .lineStyle(1, 0xffca9a, 0.3)
+            .strokeCircle(enemy.targetX, enemy.targetY, attack.attackRadius + 9);
         }
       }
     }
@@ -664,6 +1052,13 @@ export class CombatScene extends Phaser.Scene {
     }
 
     this.fx.clear().setDepth(this.player.y + 8);
+    if (this.dashNovaEffect > 0) {
+      const progress = 1 - this.dashNovaEffect / 0.24;
+      const radius = 28 + progress * 66;
+      const alpha = 0.85 * (1 - progress);
+      this.fx.lineStyle(5, COLORS.gold, alpha).strokeCircle(this.player.x, this.player.y, radius);
+      this.fx.lineStyle(2, 0xffefc8, alpha * 0.8).strokeCircle(this.player.x, this.player.y, radius - 8);
+    }
     if (this.attackEffect > 0) {
       const heavy = this.attackEffectKind === 'heavy';
       const angle = this.attackEffectAngle;
@@ -682,11 +1077,11 @@ export class CombatScene extends Phaser.Scene {
     this.hud.clear();
     this.hud.fillStyle(0x111214, 0.92).fillRect(34, 84, 158, 7);
     const healthColor = this.playerHealth <= 30 ? COLORS.damage : COLORS.heal;
-    this.hud.fillStyle(healthColor, 1).fillRect(36, 86, 154 * (this.playerHealth / PLAYER.maxHealth), 3);
+    this.hud.fillStyle(healthColor, 1).fillRect(36, 86, 154 * (this.playerHealth / this.playerMaxHealth), 3);
     this.hud.fillStyle(0x111214, 0.95).fillRect(802, 478, 124, 8);
     const dashProgress = 1 - Phaser.Math.Clamp(this.dashCooldown / PLAYER.dashCooldown, 0, 1);
     this.hud.fillStyle(COLORS.gold, 1).fillRect(804, 480, 120 * dashProgress, 4);
-    this.healthText.setText(`VITALITY  ${String(this.playerHealth).padStart(3, '0')} / ${PLAYER.maxHealth}`);
+    this.healthText.setText(`VITALITY  ${String(this.playerHealth).padStart(3, '0')} / ${this.playerMaxHealth}`);
     this.enemyText.setText(`HOSTILES  ${String(this.enemies.length).padStart(2, '0')}`);
     this.comboText.setText(`COMBO  ${this.comboIndex === 0 ? '—' : `${this.comboIndex} / 3`}`);
     const heavy = this.heavyWindup > 0 || this.heavyRecovery > 0 ? 'HEAVY SETTLING' : 'HEAVY READY';
@@ -704,15 +1099,40 @@ export class CombatScene extends Phaser.Scene {
     this.overlay.removeAll(true);
     const shade = this.add.rectangle(0, 0, ARENA.width, ARENA.height, 0x0a0b0d, 0.76).setOrigin(0);
     const panel = this.add.rectangle(480, 271, 404, 198, 0x1c1c1e, 0.98).setStrokeStyle(1, 0x695b46, 0.9);
-    const title = this.add.text(480, 220, state === 'dead' ? 'TOO LATE.' : 'ALL ROOMS CLEAR.', {
-      fontFamily: 'Manrope, sans-serif', fontSize: '31px', fontStyle: 'bold', color: state === 'dead' ? '#e1896b' : '#e3c88f',
-    }).setOrigin(0.5);
-    const copy = this.add.text(480, 264, state === 'dead' ? 'The run ends here. Take one more.' : 'Three rooms cleared. There is always another.', {
-      fontFamily: 'DM Mono, monospace', fontSize: '10px', color: '#aaa39a', letterSpacing: 0.5,
-    }).setOrigin(0.5);
-    const prompt = this.add.text(480, 319, 'PRESS R   /   CLICK TO RUN IT AGAIN', {
-      fontFamily: 'DM Mono, monospace', fontSize: '10px', color: '#e1d0ae', letterSpacing: 1.1, backgroundColor: '#342d25', padding: { x: 15, y: 10 },
-    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    const title = this.add
+      .text(480, 220, state === 'dead' ? 'TOO LATE.' : 'ALL ROOMS CLEAR.', {
+        fontFamily: 'Manrope, sans-serif',
+        fontSize: '31px',
+        fontStyle: 'bold',
+        color: state === 'dead' ? '#e1896b' : '#e3c88f',
+      })
+      .setOrigin(0.5);
+    const copy = this.add
+      .text(
+        480,
+        264,
+        state === 'dead'
+          ? 'The bonuses from this run are lost.'
+          : `${ROOMS.length} rooms cleared. Your bonuses are reset when you begin again.`,
+        {
+          fontFamily: 'DM Mono, monospace',
+          fontSize: '10px',
+          color: '#aaa39a',
+          letterSpacing: 0.5,
+        },
+      )
+      .setOrigin(0.5);
+    const prompt = this.add
+      .text(480, 319, 'PRESS R   /   CLICK TO RUN IT AGAIN', {
+        fontFamily: 'DM Mono, monospace',
+        fontSize: '10px',
+        color: '#e1d0ae',
+        letterSpacing: 1.1,
+        backgroundColor: '#342d25',
+        padding: { x: 15, y: 10 },
+      })
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true });
     prompt.on('pointerdown', () => this.scene.restart());
     this.overlay.add([shade, panel, title, copy, prompt]);
     this.overlay.setVisible(true);
@@ -725,10 +1145,16 @@ export class CombatScene extends Phaser.Scene {
       const fraction = step / steps;
       const x = Phaser.Math.Linear(x1, x2, fraction);
       const y = Phaser.Math.Linear(y1, y2, fraction);
-      if (this.obstacles.some((obstacle) =>
-        x > obstacle.x - obstacle.width / 2 && x < obstacle.x + obstacle.width / 2
-        && y > obstacle.y - obstacle.height / 2 && y < obstacle.y + obstacle.height / 2,
-      )) return false;
+      if (
+        this.obstacles.some(
+          (obstacle) =>
+            x > obstacle.x - obstacle.width / 2 &&
+            x < obstacle.x + obstacle.width / 2 &&
+            y > obstacle.y - obstacle.height / 2 &&
+            y < obstacle.y + obstacle.height / 2,
+        )
+      )
+        return false;
     }
     return true;
   }
@@ -736,6 +1162,6 @@ export class CombatScene extends Phaser.Scene {
   private deadzone(value: number): number {
     const magnitude = Math.abs(value);
     if (magnitude < 0.18) return 0;
-    return Math.sign(value) * (magnitude - 0.18) / 0.82;
+    return (Math.sign(value) * (magnitude - 0.18)) / 0.82;
   }
 }
