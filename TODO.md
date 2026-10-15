@@ -16,18 +16,23 @@
 - [x] Open the east gate after each cleared room and transition while preserving health.
 - [x] User reports that the room transitions work well.
 
-## Milestone 3 — Runs (in progress)
+## Milestone 3 — Runs (complete for now)
 
 - [x] Offer three temporary bonus choices after each non-final room.
 - [x] Add max health, base damage, healing, dash nova, faster dash recharge, and increased attack range bonuses.
 - [x] Show selected bonuses in the HUD and reset them when a new run starts.
 - [x] Show bold floating damage numbers for hits dealt and bold red numbers for damage received.
 - [x] Strengthen the enemy-hit sound.
-- [ ] Ask the user to playtest the five-room run and bonus choices; tune from feedback.
+- [x] User approved the five-room run and bonus-choice direction.
+
+## Milestone 4 — Builds (in progress)
+
+- [x] Expand the bonus pool to ten choices with both stat bonuses and combat-changing upgrades.
+- [x] Add a wider heavy swing, a burning final combo hit, a final-hit burst, and life-stealing attacks.
+- [ ] Ask the user to playtest the new upgrades and how different builds feel; tune from feedback.
 
 ## Later milestones
 
-- [ ] Milestone 4: expand the temporary bonus pool and test how different builds change combat.
 - [ ] Milestone 5: add permanent resources, saving, and a between-run upgrade shop.
 - [ ] Milestone 6: add more enemy types, behavior-changing elites, optional risky paths, and exploration rewards.
 - [ ] Milestone 7: create the final boss and a completable run.

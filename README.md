@@ -29,4 +29,4 @@ Heavy attacks hit hard, but slow movement through the windup and recovery. Dash 
 
 ## Current milestone
 
-Runs currently use five handcrafted rooms that grow harder. After the first four, choose one of three temporary bonuses; the HUD tracks your picks until a new run starts. Health carries between rooms. The ranged enemy's predictable aim is recorded for a later tuning pass. Permanent progression, the broader upgrade system, story, and the boss remain later work. See [`TODO.md`](./TODO.md) and [`AGENTS.md`](./AGENTS.md) for the current project state.
+Runs currently use five handcrafted rooms that grow harder. After the first four, choose one of three temporary bonuses from a pool of ten. Some improve stats or health; others widen heavy attacks, add a burning combo hit or burst, or restore health when attacking. The HUD tracks your picks until a new run starts. Health carries between rooms. The ranged enemy's predictable aim is recorded for a later tuning pass. Permanent progression, story, and the boss remain later work. See [`TODO.md`](./TODO.md) and [`AGENTS.md`](./AGENTS.md) for the current project state.

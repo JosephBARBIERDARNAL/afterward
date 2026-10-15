@@ -27,6 +27,8 @@ interface Enemy {
   targetY: number;
   stun: number;
   flash: number;
+  burnTime: number;
+  burnTick: number;
 }
 
 interface Projectile {
@@ -46,7 +48,17 @@ interface InputFrame {
   aimY: number;
 }
 
-type BonusId = 'vitality' | 'edge' | 'mend' | 'dashNova' | 'quickStep' | 'reach';
+type BonusId =
+  | 'vitality'
+  | 'edge'
+  | 'mend'
+  | 'dashNova'
+  | 'quickStep'
+  | 'reach'
+  | 'wideHeavy'
+  | 'cinderCombo'
+  | 'comboBlast'
+  | 'siphon';
 
 interface RunBonus {
   id: BonusId;
@@ -62,6 +74,10 @@ const RUN_BONUSES: RunBonus[] = [
   { id: 'dashNova', title: 'DASH NOVA', detail: 'DASH ENDS IN A BURST', limit: 1 },
   { id: 'quickStep', title: 'QUICK STEP', detail: 'DASH RECHARGE -0.1S', limit: 3 },
   { id: 'reach', title: 'LONG REACH', detail: '+10 ATTACK RANGE', limit: 3 },
+  { id: 'wideHeavy', title: 'WIDE SWING', detail: 'HEAVY ATTACK HITS A WIDER ARC', limit: 1 },
+  { id: 'cinderCombo', title: 'CINDER COMBO', detail: 'FINAL COMBO HIT BURNS', limit: 1 },
+  { id: 'comboBlast', title: 'COMBO BLAST', detail: 'FINAL COMBO HIT BURSTS', limit: 1 },
+  { id: 'siphon', title: 'SIPHON', detail: 'ATTACKS RESTORE 2 LIFE', limit: 3 },
 ];
 
 export class CombatScene extends Phaser.Scene {
@@ -96,6 +112,13 @@ export class CombatScene extends Phaser.Scene {
   private bonusDashCooldownReduction = 0;
   private dashNovaUnlocked = false;
   private dashNovaEffect = 0;
+  private wideHeavyUnlocked = false;
+  private cinderComboUnlocked = false;
+  private comboBlastUnlocked = false;
+  private siphonStacks = 0;
+  private comboBlastEffect = 0;
+  private comboBlastX = 0;
+  private comboBlastY = 0;
   private readonly bonusCounts: Record<BonusId, number> = {
     vitality: 0,
     edge: 0,
@@ -103,6 +126,10 @@ export class CombatScene extends Phaser.Scene {
     dashNova: 0,
     quickStep: 0,
     reach: 0,
+    wideHeavy: 0,
+    cinderCombo: 0,
+    comboBlast: 0,
+    siphon: 0,
   };
   private sfx!: Sound;
   private state: RunState = 'playing';
@@ -200,6 +227,11 @@ export class CombatScene extends Phaser.Scene {
     this.heavyHit = false;
     this.attackEffect = 0;
     this.dashNovaEffect = 0;
+    this.comboBlastEffect = 0;
+    this.wideHeavyUnlocked = false;
+    this.cinderComboUnlocked = false;
+    this.comboBlastUnlocked = false;
+    this.siphonStacks = 0;
     this.attackEffectAngle = 0;
     this.attackEffectKind = 'primary';
     this.playerAngle = 0;
@@ -344,6 +376,8 @@ export class CombatScene extends Phaser.Scene {
         targetY: entry.y,
         stun: 0,
         flash: 0,
+        burnTime: 0,
+        burnTick: 0,
       });
     }
   }
@@ -372,7 +406,7 @@ export class CombatScene extends Phaser.Scene {
 
   private clearRoom(): void {
     for (const collider of this.roomColliders) this.physics.world.removeCollider(collider);
-    for (const enemy of this.enemies) {
+    for (const enemy of [...this.enemies]) {
       enemy.marks.destroy();
       destroyActorShadow(enemy.body);
       enemy.body.destroy();
@@ -538,13 +572,13 @@ export class CombatScene extends Phaser.Scene {
     switch (bonus.id) {
       case 'vitality':
         this.playerMaxHealth += 20;
-        this.playerHealth = Math.min(this.playerMaxHealth, this.playerHealth + 20);
+        this.healPlayer(20);
         break;
       case 'edge':
         this.bonusDamage += 3;
         break;
       case 'mend':
-        this.playerHealth = Math.min(this.playerMaxHealth, this.playerHealth + 35);
+        this.healPlayer(35);
         break;
       case 'dashNova':
         this.dashNovaUnlocked = true;
@@ -554,6 +588,18 @@ export class CombatScene extends Phaser.Scene {
         break;
       case 'reach':
         this.bonusRange += 10;
+        break;
+      case 'wideHeavy':
+        this.wideHeavyUnlocked = true;
+        break;
+      case 'cinderCombo':
+        this.cinderComboUnlocked = true;
+        break;
+      case 'comboBlast':
+        this.comboBlastUnlocked = true;
+        break;
+      case 'siphon':
+        this.siphonStacks += 1;
         break;
     }
   }
@@ -566,7 +612,18 @@ export class CombatScene extends Phaser.Scene {
     if (this.dashNovaUnlocked) labels.push('DASH NOVA');
     if (this.bonusCounts.quickStep > 0) labels.push(`DASH -${this.bonusDashCooldownReduction.toFixed(1)}S`);
     if (this.bonusCounts.reach > 0) labels.push(`RANGE +${this.bonusRange}`);
+    if (this.wideHeavyUnlocked) labels.push('WIDE HEAVY');
+    if (this.cinderComboUnlocked) labels.push('CINDER COMBO');
+    if (this.comboBlastUnlocked) labels.push('COMBO BLAST');
+    if (this.siphonStacks > 0) labels.push(`SIPHON ×${this.siphonStacks}`);
     this.bonusText.setText(labels.length > 0 ? labels.join('  ·  ') : 'NONE YET');
+  }
+
+  private healPlayer(amount: number): void {
+    const healed = Math.min(this.playerMaxHealth, this.playerHealth + amount) - this.playerHealth;
+    if (healed <= 0) return;
+    this.playerHealth += healed;
+    this.showDamageNumber(this.player.x, this.player.y - 44, healed, 'healed');
   }
 
   private updateExitMark(): void {
@@ -731,6 +788,7 @@ export class CombatScene extends Phaser.Scene {
     this.damageFlash = Math.max(0, this.damageFlash - delta);
     this.attackEffect = Math.max(0, this.attackEffect - delta);
     this.dashNovaEffect = Math.max(0, this.dashNovaEffect - delta);
+    this.comboBlastEffect = Math.max(0, this.comboBlastEffect - delta);
   }
 
   private updatePlayer(controls: InputFrame, delta: number): void {
@@ -794,7 +852,7 @@ export class CombatScene extends Phaser.Scene {
     const isHeavy = kind === 'heavy';
     const combo = this.comboIndex;
     const reach = (isHeavy ? PLAYER.heavyRange : PLAYER.primaryRange + (combo === 2 ? 8 : 0)) + this.bonusRange;
-    const halfArc = isHeavy ? 0.68 : combo === 2 ? 0.72 : 0.58;
+    const halfArc = isHeavy ? (this.wideHeavyUnlocked ? 1.12 : 0.68) : combo === 2 ? 0.72 : 0.58;
     const damage = (isHeavy ? PLAYER.heavyDamage : PLAYER.primaryDamage[combo]) + this.bonusDamage;
     this.attackEffect = isHeavy ? 0.22 : 0.14;
     this.attackEffectAngle = this.playerAngle;
@@ -802,6 +860,8 @@ export class CombatScene extends Phaser.Scene {
     this.sfx.play(isHeavy ? 'heavy' : 'primary');
     this.cameras.main.shake(isHeavy ? 95 : 48, isHeavy ? 0.0024 : 0.0012);
 
+    const hitEnemies: Enemy[] = [];
+    let blastOrigin: { x: number; y: number } | undefined;
     for (const enemy of [...this.enemies]) {
       const dx = enemy.body.x - this.player.x;
       const dy = enemy.body.y - this.player.y;
@@ -813,8 +873,33 @@ export class CombatScene extends Phaser.Scene {
       )
         continue;
       if (!this.lineClear(this.player.x, this.player.y, enemy.body.x, enemy.body.y)) continue;
+      if (!blastOrigin) blastOrigin = { x: enemy.body.x, y: enemy.body.y };
+      hitEnemies.push(enemy);
+      if (!isHeavy && combo === 2 && this.cinderComboUnlocked) {
+        enemy.burnTime = 1.9;
+        enemy.burnTick = 0.45;
+      }
       this.damageEnemy(enemy, damage, dx / (distance || 1), dy / (distance || 1));
     }
+    if (!isHeavy && combo === 2 && this.comboBlastUnlocked && blastOrigin) {
+      this.performComboBlast(blastOrigin.x, blastOrigin.y, hitEnemies);
+    }
+  }
+
+  private performComboBlast(x: number, y: number, directlyHit: Enemy[]): void {
+    this.comboBlastEffect = 0.24;
+    this.comboBlastX = x;
+    this.comboBlastY = y;
+    this.sfx.play('combo-burst');
+    for (const enemy of [...this.enemies]) {
+      if (directlyHit.includes(enemy)) continue;
+      const dx = enemy.body.x - x;
+      const dy = enemy.body.y - y;
+      const distance = Math.hypot(dx, dy);
+      if (distance > 78 || !this.lineClear(x, y, enemy.body.x, enemy.body.y)) continue;
+      this.damageEnemy(enemy, 14, dx / (distance || 1), dy / (distance || 1));
+    }
+    this.cameras.main.shake(80, 0.0018);
   }
 
   private performDashNova(): void {
@@ -830,11 +915,12 @@ export class CombatScene extends Phaser.Scene {
     this.cameras.main.shake(75, 0.0018);
   }
 
-  private damageEnemy(enemy: Enemy, damage: number, knockX: number, knockY: number): void {
+  private damageEnemy(enemy: Enemy, damage: number, knockX: number, knockY: number, grantSiphon = true): void {
     enemy.hp -= damage;
     enemy.flash = 0.12;
     enemy.stun = Math.max(enemy.stun, 0.13);
-    this.showDamageNumber(enemy.body.x, enemy.body.y - (enemy.kind === 'heavy' ? 31 : 27), damage, false);
+    this.showDamageNumber(enemy.body.x, enemy.body.y - (enemy.kind === 'heavy' ? 31 : 27), damage, 'dealt');
+    if (grantSiphon && this.siphonStacks > 0) this.healPlayer(this.siphonStacks * 2);
     const body = enemy.body.body as Phaser.Physics.Arcade.Body;
     body.setVelocity(knockX * 170, knockY * 170);
     this.sfx.play('enemy-hit');
@@ -847,13 +933,13 @@ export class CombatScene extends Phaser.Scene {
     }
   }
 
-  private showDamageNumber(x: number, y: number, damage: number, received: boolean): void {
+  private showDamageNumber(x: number, y: number, damage: number, kind: 'dealt' | 'received' | 'healed'): void {
     const number = this.add
-      .text(x + Phaser.Math.Between(-8, 8), y, `-${damage}`, {
+      .text(x + Phaser.Math.Between(-8, 8), y, `${kind === 'healed' ? '+' : '-'}${damage}`, {
         fontFamily: 'Manrope, sans-serif',
-        fontSize: received ? '25px' : '20px',
+        fontSize: kind === 'received' ? '25px' : '20px',
         fontStyle: 'bold',
-        color: received ? '#ff514d' : '#f2dfb7',
+        color: kind === 'received' ? '#ff514d' : kind === 'healed' ? '#9ecf8f' : '#f2dfb7',
         stroke: '#171513',
         strokeThickness: 4,
         shadow: { color: '#000000', blur: 5, offsetX: 0, offsetY: 2, fill: true },
@@ -885,7 +971,7 @@ export class CombatScene extends Phaser.Scene {
   }
 
   private updateEnemies(delta: number): void {
-    for (const enemy of this.enemies) {
+    for (const enemy of [...this.enemies]) {
       const data = ENEMIES[enemy.kind];
       const body = enemy.body.body as Phaser.Physics.Arcade.Body;
       const dx = this.player.x - enemy.body.x;
@@ -897,6 +983,16 @@ export class CombatScene extends Phaser.Scene {
       enemy.body.setAlpha(enemy.flash > 0 ? 0.5 : 1);
       enemy.body.setDepth(enemy.body.y + 1);
       syncActorShadow(enemy.body);
+
+      if (enemy.burnTime > 0) {
+        enemy.burnTime = Math.max(0, enemy.burnTime - delta);
+        enemy.burnTick -= delta;
+        if (enemy.burnTick <= 0) {
+          this.damageEnemy(enemy, 6, 0, 0, false);
+          enemy.burnTick = 0.45;
+          if (enemy.hp <= 0) continue;
+        }
+      }
 
       if (enemy.windup > 0) {
         enemy.windup = Math.max(0, enemy.windup - delta);
@@ -994,7 +1090,7 @@ export class CombatScene extends Phaser.Scene {
   private hurtPlayer(damage: number, sourceX: number, sourceY: number): void {
     if (this.invulnerability > 0 || this.state !== 'playing') return;
     this.playerHealth = Math.max(0, this.playerHealth - damage);
-    this.showDamageNumber(this.player.x, this.player.y - 27, damage, true);
+    this.showDamageNumber(this.player.x, this.player.y - 27, damage, 'received');
     this.invulnerability = PLAYER.damageInvulnerability;
     this.damageFlash = 0.2;
     this.heavyWindup = 0;
@@ -1024,6 +1120,9 @@ export class CombatScene extends Phaser.Scene {
     for (const enemy of this.enemies) {
       enemy.marks.clear().setDepth(enemy.body.y + 2);
       drawEnemyMark(enemy.marks, enemy.body.x, enemy.body.y - 1, enemy.kind, 0x241f1b);
+      if (enemy.burnTime > 0) {
+        enemy.marks.lineStyle(2, 0xe46d59, 0.72).strokeCircle(enemy.body.x, enemy.body.y, 23);
+      }
       const healthColor = enemy.kind === 'heavy' ? COLORS.gold : enemy.kind === 'melee' ? 0xd7775d : 0xb29bd0;
       drawHealthBar(enemy.marks, enemy.body.x - 21, enemy.body.y - 32, 42, enemy.hp / enemy.maxHp, healthColor);
       if (enemy.windup > 0) {
@@ -1059,11 +1158,18 @@ export class CombatScene extends Phaser.Scene {
       this.fx.lineStyle(5, COLORS.gold, alpha).strokeCircle(this.player.x, this.player.y, radius);
       this.fx.lineStyle(2, 0xffefc8, alpha * 0.8).strokeCircle(this.player.x, this.player.y, radius - 8);
     }
+    if (this.comboBlastEffect > 0) {
+      const progress = 1 - this.comboBlastEffect / 0.24;
+      const radius = 20 + progress * 58;
+      const alpha = 0.88 * (1 - progress);
+      this.fx.lineStyle(5, 0xf2dfb7, alpha).strokeCircle(this.comboBlastX, this.comboBlastY, radius);
+      this.fx.lineStyle(2, 0xffb775, alpha * 0.8).strokeCircle(this.comboBlastX, this.comboBlastY, radius - 7);
+    }
     if (this.attackEffect > 0) {
       const heavy = this.attackEffectKind === 'heavy';
       const angle = this.attackEffectAngle;
       const length = heavy ? 82 : 60;
-      const side = heavy ? 0.72 : 0.49;
+      const side = heavy ? (this.wideHeavyUnlocked ? 1.12 : 0.72) : 0.49;
       const fromX = this.player.x + Math.cos(angle - side) * 23;
       const fromY = this.player.y + Math.sin(angle - side) * 23;
       const toX = this.player.x + Math.cos(angle + side) * length;

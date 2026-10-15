@@ -231,7 +231,7 @@ Healing can appear as a room reward or exploration reward.
 
 Every run creates a new temporary build.
 
-The current prototype uses a small set of temporary room-clear bonuses. They may improve stats, restore health, or add a combat power. These bonuses last for one run and are cleared when a new run starts.
+The current prototype uses a pool of ten temporary room-clear bonuses. They may improve stats, restore health, or change how attacks work. These bonuses last for one run and are cleared when a new run starts.
 
 Later upgrades should primarily **modify existing actions** so that they visibly change how the player fights, instead of relying only on numerical increases.
 
@@ -542,11 +542,11 @@ Add death/reset and basic rewards.
 
 ### Milestone 4 — Builds
 
-Add the randomized three-choice temporary-upgrade system.
+Expand the randomized three-choice temporary-upgrade system to approximately ten options, mixing direct bonuses with upgrades that change attacks.
 
-Create approximately 10 upgrades initially.
+Use upgrades such as a wider heavy swing, a burning final combo hit, a final-hit burst, and life-stealing attacks to make builds feel different.
 
-Prove that different builds meaningfully change combat.
+Playtest whether different choices meaningfully change combat and tune from feedback.
 
 ### Current combat tuning note
 

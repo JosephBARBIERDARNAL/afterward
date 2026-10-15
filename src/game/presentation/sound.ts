@@ -1,4 +1,14 @@
-type Cue = 'primary' | 'heavy' | 'dash' | 'dash-burst' | 'player-hit' | 'enemy-hit' | 'enemy-down' | 'death' | 'clear';
+type Cue =
+  | 'primary'
+  | 'heavy'
+  | 'dash'
+  | 'dash-burst'
+  | 'combo-burst'
+  | 'player-hit'
+  | 'enemy-hit'
+  | 'enemy-down'
+  | 'death'
+  | 'clear';
 
 const CUES: Record<
   Cue,
@@ -8,6 +18,7 @@ const CUES: Record<
   heavy: { frequency: 112, endFrequency: 52, duration: 0.2, volume: 0.09, wave: 'sawtooth' },
   dash: { frequency: 410, endFrequency: 170, duration: 0.13, volume: 0.045, wave: 'sine' },
   'dash-burst': { frequency: 180, endFrequency: 58, duration: 0.2, volume: 0.1, wave: 'triangle' },
+  'combo-burst': { frequency: 285, endFrequency: 92, duration: 0.18, volume: 0.095, wave: 'triangle' },
   'player-hit': { frequency: 95, endFrequency: 42, duration: 0.21, volume: 0.11, wave: 'square' },
   'enemy-hit': { frequency: 155, endFrequency: 62, duration: 0.17, volume: 0.14, wave: 'triangle' },
   'enemy-down': { frequency: 165, endFrequency: 76, duration: 0.26, volume: 0.075, wave: 'triangle' },

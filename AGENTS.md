@@ -4,9 +4,9 @@ Updated: 2026-10-15
 
 ## Project status
 
-The user has played the three-room sequence and reports that rooms work well. Milestone 3 is in progress: the prototype now uses five progressively harder rooms and offers three temporary bonuses after each non-final room. Bonuses are shown in the HUD and reset with a new run. Damage feedback and a stronger enemy-hit sound are in place.
+The user reports that rooms and the run bonus direction feel good. Milestone 4 is in progress: the five-room run offers three choices from a ten-bonus pool, including upgrades that change attack behavior. Bonuses remain visible in the HUD and reset with a new run. Damage feedback and a stronger enemy-hit sound are in place.
 
-The ranged enemy's projectile aim feels too predictable; record it as future combat tuning and leave its current behavior in place for now. Ask the user to playtest the five-room run and bonus choices at the next playable check-in. Browser interaction could not be checked by the agent because browser-control tools were not available in this session.
+The ranged enemy's projectile aim feels too predictable; record it as future combat tuning and leave its current behavior in place for now. Ask the user to playtest the combat-changing upgrades at the next playable check-in. Browser interaction could not be checked by the agent because browser-control tools were not available in this session.
 
 ## Current stack
 
