@@ -46,7 +46,7 @@
 - [x] Expand the roster from three to six enemy types: melee, ranged, heavy, charger, skirmisher, and bomber.
 - [x] Add two marked elite behaviors: the faster, tougher Vanguard charger and the three-shot Volley ranged enemy.
 - [ ] Playtest the new enemy patterns and tune their health, damage, and timings from feedback.
-- [ ] Add exploration rewards that fit the ten-chapter progression. Keep these separate from room-clear bonus choices.
+- [x] Add an optional bonus cache to The Crossing. It offers a separate three-choice run bonus and no extra money.
 - [ ] Add optional dangerous paths with exploration rewards; keep room-clear money flat at $1 and bonus options based on different effects.
 
 ## Later milestones

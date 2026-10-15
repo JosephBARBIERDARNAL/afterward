@@ -260,6 +260,8 @@ Combat provides reliable opportunities to improve the build.
 
 Exploration and optional dangerous paths provide additional or rarer opportunities.
 
+The current prototype includes a bonus cache in The Crossing. After clearing the room, find the cache and press E (or A on controller) to open it and receive one additional three-choice run bonus. This reward is separate from the east-door bonus and does not add money.
+
 When receiving an upgrade, the player chooses from a **small randomized selection**.
 
 Use **three choices** initially.
@@ -568,7 +570,7 @@ Award $1 per cleared room. Save money and permanent upgrade levels in browser st
 
 The current prototype has six enemy types: melee, ranged, heavy, charger, skirmisher, and bomber. It introduces two elite behaviors in later rooms: a faster, tougher Vanguard charger and a Volley ranged enemy that fires a three-shot spread. Playtest these patterns before tuning their balance.
 
-Continue expanding the roster toward the ten-chapter progression and add exploration rewards. Keep bonus choices differentiated by effect, with room clears paying a flat $1.
+Continue expanding the roster toward the ten-chapter progression and add more exploration rewards. Keep bonus choices differentiated by effect, with room clears paying a flat $1.
 
 ### Milestone 7 — Boss
 

@@ -169,6 +169,8 @@ export class CombatScene extends Phaser.Scene {
   private roomColliders: Phaser.Physics.Arcade.Collider[] = [];
   private roomArt?: Phaser.GameObjects.Graphics;
   private exitMark?: Phaser.GameObjects.Graphics;
+  private explorationCache?: { x: number; y: number; claimed: boolean };
+  private explorationCacheMark?: Phaser.GameObjects.Graphics;
   private roomIndex = 0;
   private roomCleared = false;
   private doorOpen = false;
@@ -233,8 +235,7 @@ export class CombatScene extends Phaser.Scene {
   private queuedHeavy = false;
   private previousPadButtons: boolean[] = [];
   private readonly handlePointerDown = (pointer: Phaser.Input.Pointer): void => {
-    if (this.state !== 'playing' || this.bonusOpen || this.pauseOpen || this.catalogOpen)
-      return;
+    if (this.state !== 'playing' || this.bonusOpen || this.pauseOpen || this.catalogOpen) return;
     if (pointer.button === 0) this.queuedPrimary = true;
     if (pointer.button === 2) this.queuedHeavy = true;
   };
@@ -341,6 +342,8 @@ export class CombatScene extends Phaser.Scene {
     this.roomColliders = [];
     this.roomArt = undefined;
     this.exitMark = undefined;
+    this.explorationCache = undefined;
+    this.explorationCacheMark = undefined;
     this.roomIndex = 0;
     this.roomCleared = false;
     this.doorOpen = false;
@@ -408,14 +411,32 @@ export class CombatScene extends Phaser.Scene {
         return;
       }
       this.gateText.setText('DOOR READY · APPROACH TO OPEN');
+      this.drawExplorationCache();
       this.updateExitMark();
       return;
     }
 
     const nearExit =
       this.player.x >= ARENA.exit.triggerX - 52 && Math.abs(this.player.y - ARENA.exit.y) <= ARENA.exit.halfHeight;
-    if (this.roomCleared && !this.doorOpen) {
-      this.gateText.setText(nearExit ? 'PRESS E / A TO OPEN' : 'DOOR READY · APPROACH TO OPEN');
+    const cache = this.explorationCache;
+    const nearCache = Boolean(
+      cache &&
+        !cache.claimed &&
+        this.roomCleared &&
+        Phaser.Math.Distance.Between(this.player.x, this.player.y, cache.x, cache.y) <= 48,
+    );
+    if (nearCache) {
+      this.gateText.setText('PRESS E / A TO SEARCH CACHE');
+      if (controls.interactPressed) {
+        this.openExplorationCache();
+        return;
+      }
+    } else if (this.roomCleared && !this.doorOpen) {
+      if (cache && !cache.claimed) {
+        this.gateText.setText(nearExit ? 'E / A OPEN DOOR · CACHE AVAILABLE' : 'CACHE AVAILABLE · DOOR READY');
+      } else {
+        this.gateText.setText(nearExit ? 'PRESS E / A TO OPEN' : 'DOOR READY · APPROACH TO OPEN');
+      }
       if (nearExit && controls.interactPressed) {
         this.openExitDoor();
         return;
@@ -480,13 +501,7 @@ export class CombatScene extends Phaser.Scene {
       const data = ENEMIES[kind];
       const baseRadius = kind === 'heavy' ? 20 : kind === 'melee' ? 16 : kind === 'charger' ? 18 : 15;
       const radius = baseRadius + (elite ? 3 : 0);
-      const outline = elite
-        ? COLORS.gold
-        : kind === 'heavy'
-          ? 0xe7c17b
-          : kind === 'melee'
-            ? 0xe29a70
-            : data.tint;
+      const outline = elite ? COLORS.gold : kind === 'heavy' ? 0xe7c17b : kind === 'melee' ? 0xe29a70 : data.tint;
       const body = createFighter(this, entry.x, entry.y, radius, data.tint, outline);
       const marks = this.add.graphics().setDepth(entry.y + 2);
       this.physics.add.existing(body);
@@ -516,6 +531,34 @@ export class CombatScene extends Phaser.Scene {
     }
   }
 
+  private createExplorationCache(position?: { x: number; y: number }): void {
+    if (!position) return;
+    this.explorationCache = { ...position, claimed: false };
+    this.explorationCacheMark = this.add.graphics().setDepth(position.y + 2);
+    this.drawExplorationCache();
+  }
+
+  private drawExplorationCache(): void {
+    const cache = this.explorationCache;
+    const mark = this.explorationCacheMark;
+    if (!cache || !mark) return;
+
+    const available = this.roomCleared && !cache.claimed;
+    const trim = available ? COLORS.gold : 0x786f5e;
+    const alpha = cache.claimed ? 0.48 : available ? 0.95 : 0.5;
+    mark.clear();
+    if (available) mark.fillStyle(COLORS.gold, 0.15).fillCircle(cache.x, cache.y, 25);
+    mark.fillStyle(cache.claimed ? 0x1a1917 : 0x383127, 0.98).fillRect(cache.x - 15, cache.y - 4, 30, 15);
+    mark.lineStyle(2, trim, alpha).strokeRect(cache.x - 15, cache.y - 4, 30, 15);
+    mark.lineStyle(2, trim, alpha).lineBetween(cache.x - 17, cache.y - 7, cache.x + 17, cache.y - 7);
+    mark.lineBetween(cache.x, cache.y - 4, cache.x, cache.y + 11);
+    if (!cache.claimed) mark.fillStyle(trim, alpha).fillRect(cache.x - 2, cache.y + 1, 4, 5);
+    else {
+      mark.lineStyle(2, trim, alpha).lineBetween(cache.x - 12, cache.y - 6, cache.x - 8, cache.y - 13);
+      mark.lineBetween(cache.x + 12, cache.y - 6, cache.x + 8, cache.y - 13);
+    }
+  }
+
   private enterRoom(index: number): void {
     if (this.roomArt) this.clearRoom();
     const room = ROOMS[index];
@@ -527,6 +570,7 @@ export class CombatScene extends Phaser.Scene {
     this.exitMark = this.add.graphics().setDepth(18);
     this.createObstacles(room.obstacles);
     this.createEnemies(room.enemies);
+    this.createExplorationCache(room.explorationCache);
     this.playerBody.reset(room.playerStart.x, room.playerStart.y);
     this.player.setAlpha(1).setDepth(this.player.y + 1);
     this.playerMarks.clear();
@@ -554,6 +598,7 @@ export class CombatScene extends Phaser.Scene {
     for (const object of [...this.obstacleDecor, ...this.obstacleBodies]) object.destroy();
     this.roomArt?.destroy();
     this.exitMark?.destroy();
+    this.explorationCacheMark?.destroy();
     this.enemies = [];
     this.projectiles = [];
     this.obstacles = [];
@@ -561,6 +606,8 @@ export class CombatScene extends Phaser.Scene {
     this.obstacleDecor = [];
     this.roomColliders = [];
     this.damageNumbers = [];
+    this.explorationCache = undefined;
+    this.explorationCacheMark = undefined;
   }
 
   private transitionToNextRoom(): void {
@@ -577,7 +624,7 @@ export class CombatScene extends Phaser.Scene {
     camera.fadeOut(180, 10, 10, 12);
   }
 
-  private showBonusChoices(): void {
+  private showBonusChoices(source: 'door' | 'cache'): void {
     this.bonusOpen = true;
     this.bonusChoiceIndex = 0;
     this.previousBonusPadButtons = [];
@@ -598,12 +645,17 @@ export class CombatScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
     const subtitle = this.add
-      .text(480, 198, 'DOOR OPENED  ·  +$1 EARNED  ·  PICK ONE BONUS', {
-        fontFamily: 'DM Mono, monospace',
-        fontSize: '9px',
-        color: '#b9a47f',
-        letterSpacing: 0.8,
-      })
+      .text(
+        480,
+        198,
+        source === 'door' ? 'DOOR OPENED  ·  +$1 EARNED  ·  PICK ONE BONUS' : 'CACHE OPENED  ·  PICK ONE BONUS',
+        {
+          fontFamily: 'DM Mono, monospace',
+          fontSize: '9px',
+          color: '#b9a47f',
+          letterSpacing: 0.8,
+        },
+      )
       .setOrigin(0.5);
     this.overlay.add([shade, panel, title, subtitle]);
     this.bonusCardBackgrounds = [];
@@ -658,7 +710,17 @@ export class CombatScene extends Phaser.Scene {
     this.doorOpen = true;
     this.gateText.setText('CHOOSE A BONUS');
     this.updateExitMark();
-    this.showBonusChoices();
+    this.showBonusChoices('door');
+  }
+
+  private openExplorationCache(): void {
+    const cache = this.explorationCache;
+    if (!cache || cache.claimed || !this.roomCleared || this.bonusOpen || this.state !== 'playing') return;
+    cache.claimed = true;
+    this.drawExplorationCache();
+    this.sfx.play('clear');
+    this.gateText.setText('CACHE OPENED');
+    this.showBonusChoices('cache');
   }
 
   private updateBonusChoice(): void {
@@ -688,7 +750,7 @@ export class CombatScene extends Phaser.Scene {
     this.overlay.removeAll(true);
     this.applyBonus(bonus);
     this.updateBonusHud();
-    this.gateText.setText('EAST GATE OPEN');
+    this.gateText.setText(this.doorOpen ? 'EAST GATE OPEN' : 'DOOR READY · APPROACH TO OPEN');
     this.updateExitMark();
   }
 
@@ -1496,9 +1558,7 @@ export class CombatScene extends Phaser.Scene {
           this.arenaMarks
             .lineStyle(3, COLORS.damage, 0.62)
             .lineBetween(enemy.body.x, enemy.body.y, enemy.targetX, enemy.targetY);
-          this.arenaMarks
-            .lineStyle(2, COLORS.damage, 0.82)
-            .strokeCircle(enemy.targetX, enemy.targetY, 12);
+          this.arenaMarks.lineStyle(2, COLORS.damage, 0.82).strokeCircle(enemy.targetX, enemy.targetY, 12);
         } else if (enemy.kind === 'ranged') {
           this.arenaMarks
             .lineStyle(2, COLORS.damage, 0.52)

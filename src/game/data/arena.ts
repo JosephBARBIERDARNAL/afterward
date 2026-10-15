@@ -21,6 +21,7 @@ export interface ArenaRoom {
   playerStart: { x: number; y: number };
   enemies: EnemySpawn[];
   obstacles: ArenaObstacle[];
+  explorationCache?: { x: number; y: number };
 }
 
 export const ARENA = {
@@ -71,6 +72,7 @@ export const ROOMS: ArenaRoom[] = [
       { id: 'bomber', kind: 'bomber', x: 504, y: 380 },
       { id: 'slinger', kind: 'ranged', x: 732, y: 376 },
     ],
+    explorationCache: { x: 444, y: 454 },
     obstacles: [
       { x: 322, y: 163, width: 122, height: 46 },
       { x: 486, y: 270, width: 80, height: 94 },

@@ -211,7 +211,8 @@ export class HubScene extends Phaser.Scene {
 
   private renderShopRows(): void {
     if (!this.shopLayer) return;
-    this.shopLayer.removeAll(true);
+    const layer = this.shopLayer;
+    layer.removeAll(true);
     PERMANENT_UPGRADES.forEach((upgrade, index) => {
       const y = 184 + index * 84;
       const background = this.add.rectangle(480, y, 610, 72, 0x292722, 0.98).setStrokeStyle(1, 0x514a3f, 0.95);
@@ -240,9 +241,7 @@ export class HubScene extends Phaser.Scene {
         })
         .setOrigin(1, 0.5);
       const affordable = Boolean(nextLevel && this.progression.resources >= nextLevel.cost);
-      const actionLabel = nextLevel
-        ? `${affordable ? 'BUY' : 'NEED'}  ·  ${formatMoney(nextLevel.cost)}`
-        : 'MAX LEVEL';
+      const actionLabel = nextLevel ? `${affordable ? 'BUY' : 'NEED'}  ·  ${formatMoney(nextLevel.cost)}` : 'MAX LEVEL';
       const action = this.add.container(705, y + 16);
       const actionBackground = this.add
         .rectangle(0, 0, 124, 28, affordable ? 0x393328 : 0x211f1d, 1)
@@ -258,7 +257,7 @@ export class HubScene extends Phaser.Scene {
       action.add([actionBackground, actionText]);
       action.setSize(124, 28).setInteractive({ useHandCursor: true });
       action.on('pointerdown', () => this.purchaseUpgrade(upgrade));
-      this.shopLayer.add([background, title, effect, status, action]);
+      layer.add([background, title, effect, status, action]);
     });
   }
 
