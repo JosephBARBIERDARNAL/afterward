@@ -1,6 +1,17 @@
 import Phaser from 'phaser';
 import { ARENA, ROOMS, type ArenaObstacle } from './data/arena';
 import { COLORS, ENEMIES, PLAYER, type EnemyKind } from './data/balance';
+import {
+  buyPermanentUpgrade,
+  createProgressionSave,
+  loadProgressionSave,
+  PERMANENT_UPGRADES,
+  RUN_RESOURCE_NAME,
+  saveProgression,
+  type PermanentUpgrade,
+  type PermanentUpgradeId,
+  type ProgressionSave,
+} from './progression';
 import { Sound } from './presentation/sound';
 import {
   createFighter,
@@ -169,12 +180,16 @@ export class CombatScene extends Phaser.Scene {
   private bonusCardBackgrounds: Phaser.GameObjects.Rectangle[] = [];
   private previousBonusPadButtons: boolean[] = [];
   private damageNumbers: Phaser.GameObjects.Text[] = [];
-  private playerMaxHealth = PLAYER.maxHealth;
+  private playerMaxHealth: number = PLAYER.maxHealth;
   private bonusDamage = 0;
   private bonusRange = 0;
   private bonusDashCooldownReduction = 0;
   private dashNovaUnlocked = false;
   private dashNovaEffect = 0;
+  private resourceText!: Phaser.GameObjects.Text;
+  private progression: ProgressionSave = createProgressionSave();
+  private resourcesEarnedThisRun = 0;
+  private saveUnavailable = false;
   private wideHeavyUnlocked = false;
   private cinderComboUnlocked = false;
   private comboBlastUnlocked = false;
@@ -259,6 +274,7 @@ export class CombatScene extends Phaser.Scene {
   }
 
   create(): void {
+    this.progression = loadProgressionSave();
     this.resetRunState();
     this.input.off('pointerdown', this.handlePointerDown);
     this.input.off('pointermove', this.handlePointerMove);
@@ -279,7 +295,7 @@ export class CombatScene extends Phaser.Scene {
     this.physics.world.resume();
     this.tweens.resumeAll();
     this.state = 'playing';
-    this.playerHealth = PLAYER.maxHealth;
+    this.playerHealth = PLAYER.maxHealth + this.progression.upgrades.vitality * 10;
     this.dashCooldown = 0;
     this.dashTime = 0;
     this.dashX = 1;
@@ -327,7 +343,8 @@ export class CombatScene extends Phaser.Scene {
     this.bonusCardBackgrounds = [];
     this.previousBonusPadButtons = [];
     this.damageNumbers = [];
-    this.playerMaxHealth = PLAYER.maxHealth;
+    this.playerMaxHealth = this.playerHealth;
+    this.resourcesEarnedThisRun = 0;
     this.bonusDamage = 0;
     this.bonusRange = 0;
     this.bonusDashCooldownReduction = 0;
@@ -369,6 +386,7 @@ export class CombatScene extends Phaser.Scene {
 
     if (this.enemies.length === 0 && !this.roomCleared) {
       this.roomCleared = true;
+      this.awardRoomResource();
       this.sfx.play('clear');
       if (this.roomIndex === ROOMS.length - 1) {
         this.gateText.setText('ALL ROOMS CLEAR');
@@ -543,7 +561,7 @@ export class CombatScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
     const subtitle = this.add
-      .text(480, 198, 'ROOM CLEARED  ·  PICK ONE TO CARRY INTO THE NEXT ROOM', {
+      .text(480, 198, `ROOM CLEARED  ·  +1 ${RUN_RESOURCE_NAME.singular}  ·  PICK ONE TO CARRY INTO THE NEXT ROOM`, {
         fontFamily: 'DM Mono, monospace',
         fontSize: '9px',
         color: '#b9a47f',
@@ -779,6 +797,154 @@ export class CombatScene extends Phaser.Scene {
     this.overlay.add(button);
   }
 
+  private awardRoomResource(): void {
+    this.resourcesEarnedThisRun += 1;
+    this.progression = { ...this.progression, resources: this.progression.resources + 1 };
+    this.saveUnavailable = !saveProgression(this.progression);
+  }
+
+  private purchasePermanentUpgrade(id: PermanentUpgradeId, result: Exclude<RunState, 'playing'>): void {
+    const next = buyPermanentUpgrade(this.progression, id);
+    if (!next) return;
+    this.progression = next;
+    this.saveUnavailable = !saveProgression(next);
+    this.showRunResults(result);
+  }
+
+  private showRunResults(result: Exclude<RunState, 'playing'>): void {
+    this.overlay.removeAll(true);
+    const shade = this.add.rectangle(0, 0, ARENA.width, ARENA.height, 0x0a0b0d, 0.82).setOrigin(0);
+    const panel = this.add.rectangle(480, 270, 860, 450, 0x1c1c1e, 0.99).setStrokeStyle(1, 0x695b46, 0.95);
+    const title = this.add
+      .text(480, 76, result === 'dead' ? 'TOO LATE.' : 'ALL ROOMS CLEAR.', {
+        fontFamily: 'Manrope, sans-serif',
+        fontSize: '27px',
+        fontStyle: 'bold',
+        color: result === 'dead' ? '#e1896b' : '#e3c88f',
+      })
+      .setOrigin(0.5);
+    const progress = this.add
+      .text(
+        480,
+        111,
+        result === 'dead'
+          ? `RUN ENDED IN ROOM ${this.roomIndex + 1} / ${ROOMS.length}`
+          : `${ROOMS.length} ROOMS CLEARED`,
+        {
+          fontFamily: 'DM Mono, monospace',
+          fontSize: '9px',
+          color: '#aaa39a',
+          letterSpacing: 0.8,
+        },
+      )
+      .setOrigin(0.5);
+    const resources = this.add
+      .text(
+        480,
+        149,
+        `${RUN_RESOURCE_NAME.plural}  ${this.progression.resources}   ·   +${this.resourcesEarnedThisRun} THIS RUN`,
+        {
+          fontFamily: 'Manrope, sans-serif',
+          fontSize: '17px',
+          fontStyle: 'bold',
+          color: '#d6b678',
+        },
+      )
+      .setOrigin(0.5);
+    const explanation = this.add
+      .text(
+        480,
+        177,
+        `EARN 1 ${RUN_RESOURCE_NAME.singular} PER ROOM CLEARED. SPEND ${RUN_RESOURCE_NAME.plural} HERE ON PERMANENT UPGRADES.`,
+        {
+          fontFamily: 'DM Mono, monospace',
+          fontSize: '8px',
+          color: '#8b8882',
+          letterSpacing: 0.55,
+        },
+      )
+      .setOrigin(0.5);
+    this.overlay.add([shade, panel, title, progress, resources, explanation]);
+
+    PERMANENT_UPGRADES.forEach((upgrade, index) => {
+      this.showUpgradeCard(upgrade, 240 + index * 240, 287, result);
+    });
+    const saveMessage = this.saveUnavailable
+      ? 'SAVE UNAVAILABLE — PROGRESS MAY NOT SURVIVE A RELOAD.'
+      : `UPGRADES AND ${RUN_RESOURCE_NAME.plural} CARRY INTO THE NEXT RUN.`;
+    const saveNote = this.add
+      .text(480, 396, saveMessage, {
+        fontFamily: 'DM Mono, monospace',
+        fontSize: '8px',
+        color: this.saveUnavailable ? '#e1896b' : '#8b8882',
+        letterSpacing: 0.55,
+      })
+      .setOrigin(0.5);
+    this.overlay.add(saveNote);
+    this.addMenuButton('START NEXT RUN', 480, 443, () => this.scene.restart(), 340);
+    this.overlay.setVisible(true);
+  }
+
+  private showUpgradeCard(upgrade: PermanentUpgrade, x: number, y: number, result: Exclude<RunState, 'playing'>): void {
+    const card = this.add.container(x, y);
+    const background = this.add.rectangle(0, 0, 224, 178, 0x272522, 1).setStrokeStyle(1, 0x6d6250, 0.9);
+    const title = this.add
+      .text(0, -63, upgrade.title, {
+        fontFamily: 'Manrope, sans-serif',
+        fontSize: '13px',
+        fontStyle: 'bold',
+        color: '#f0e7d7',
+      })
+      .setOrigin(0.5);
+    const effect = this.add
+      .text(0, -34, upgrade.effect.toUpperCase(), {
+        fontFamily: 'DM Mono, monospace',
+        fontSize: '8px',
+        color: '#b9a47f',
+        align: 'center',
+        wordWrap: { width: 196, useAdvancedWrap: true },
+      })
+      .setOrigin(0.5);
+    const level = this.progression.upgrades[upgrade.id];
+    const nextLevel = upgrade.levels[level];
+    const levelText = this.add
+      .text(0, -7, `LEVEL ${level} / ${upgrade.levels.length}`, {
+        fontFamily: 'DM Mono, monospace',
+        fontSize: '8px',
+        color: '#aaa39a',
+        letterSpacing: 0.6,
+      })
+      .setOrigin(0.5);
+    const affordable = Boolean(nextLevel && this.progression.resources >= nextLevel.cost);
+    const button = this.add.container(0, 49);
+    const buttonBackground = this.add
+      .rectangle(0, 0, 198, 40, affordable ? 0x393328 : 0x211f1d, 1)
+      .setStrokeStyle(1, affordable ? COLORS.gold : 0x49443b, 0.95);
+    const buttonLabel = nextLevel
+      ? affordable
+        ? `BUY · ${nextLevel.cost} ${nextLevel.cost === 1 ? RUN_RESOURCE_NAME.singular : RUN_RESOURCE_NAME.plural}`
+        : `COST · ${nextLevel.cost} ${RUN_RESOURCE_NAME.plural}`
+      : 'MAX LEVEL';
+    const buttonText = this.add
+      .text(0, 0, buttonLabel, {
+        fontFamily: 'DM Mono, monospace',
+        fontSize: '9px',
+        fontStyle: 'bold',
+        color: affordable ? '#f5dca6' : '#77736d',
+        letterSpacing: 0.6,
+      })
+      .setOrigin(0.5);
+    button.add([buttonBackground, buttonText]);
+    if (affordable) {
+      button.setSize(198, 40).setInteractive({ useHandCursor: true });
+      button.on('pointerover', () => buttonBackground.setFillStyle(0x51442f, 1));
+      button.on('pointerout', () => buttonBackground.setFillStyle(0x393328, 1));
+      button.on('pointerdown', () => this.purchasePermanentUpgrade(upgrade.id, result));
+    }
+    card.add([background, title, effect, levelText, button]);
+    this.overlay.add(card);
+  }
+
   private applyBonus(bonus: RunBonus): void {
     this.bonusCounts[bonus.id] += 1;
     switch (bonus.id) {
@@ -885,6 +1051,7 @@ export class CombatScene extends Phaser.Scene {
     });
     this.enemyText = fixed('HOSTILES  02', 758, 28, '10px', '#e9e1d4', { align: 'right' });
     this.gateText = fixed('EAST GATE LOCKED', 758, 45, '9px', '#8b8882', { align: 'right' });
+    this.resourceText = fixed(`${RUN_RESOURCE_NAME.plural}  0`, 758, 62, '9px', '#d6b678', { align: 'right' });
     this.comboText = fixed('COMBO  —', 34, 493, '9px', '#d6b678');
     this.dashText = fixed('DASH', 758, 477, '8px', '#8b8882');
     this.actionText = fixed('HEAVY READY', 758, 497, '8px', '#d7cdbd');
@@ -991,6 +1158,13 @@ export class CombatScene extends Phaser.Scene {
     if (Math.hypot(x, y) > 0.15) this.playerAngle = Math.atan2(y, x);
   }
 
+  private currentDashCooldown(): number {
+    return Math.max(
+      0.25,
+      PLAYER.dashCooldown - this.progression.upgrades.quickStep * 0.04 - this.bonusDashCooldownReduction,
+    );
+  }
+
   private updateTimers(delta: number): void {
     this.primaryCooldown = Math.max(0, this.primaryCooldown - delta);
     this.comboTimer = Math.max(0, this.comboTimer - delta);
@@ -1013,7 +1187,7 @@ export class CombatScene extends Phaser.Scene {
       this.dashX = directionLength > 0.1 ? controls.moveX / directionLength : controls.aimX;
       this.dashY = directionLength > 0.1 ? controls.moveY / directionLength : controls.aimY;
       this.dashTime = PLAYER.dashDuration;
-      this.dashCooldown = Math.max(0.25, PLAYER.dashCooldown - this.bonusDashCooldownReduction);
+      this.dashCooldown = this.currentDashCooldown();
       this.invulnerability = Math.max(this.invulnerability, PLAYER.dashInvulnerability);
       this.sfx.play('dash');
     }
@@ -1069,7 +1243,10 @@ export class CombatScene extends Phaser.Scene {
     const combo = this.comboIndex;
     const reach = (isHeavy ? PLAYER.heavyRange : PLAYER.primaryRange + (combo === 2 ? 8 : 0)) + this.bonusRange;
     const halfArc = isHeavy ? (this.wideHeavyUnlocked ? 1.12 : 0.68) : combo === 2 ? 0.72 : 0.58;
-    const damage = (isHeavy ? PLAYER.heavyDamage : PLAYER.primaryDamage[combo]) + this.bonusDamage;
+    const damage =
+      (isHeavy ? PLAYER.heavyDamage : PLAYER.primaryDamage[combo]) +
+      this.progression.upgrades.sharpened +
+      this.bonusDamage;
     this.attackEffect = isHeavy ? 0.22 : 0.14;
     this.attackEffectAngle = this.playerAngle;
     this.attackEffectKind = kind;
@@ -1401,9 +1578,10 @@ export class CombatScene extends Phaser.Scene {
     const healthColor = this.playerHealth <= 30 ? COLORS.damage : COLORS.heal;
     this.hud.fillStyle(healthColor, 1).fillRect(36, 86, 154 * (this.playerHealth / this.playerMaxHealth), 3);
     this.hud.fillStyle(0x111214, 0.95).fillRect(802, 478, 124, 8);
-    const dashProgress = 1 - Phaser.Math.Clamp(this.dashCooldown / PLAYER.dashCooldown, 0, 1);
+    const dashProgress = 1 - Phaser.Math.Clamp(this.dashCooldown / this.currentDashCooldown(), 0, 1);
     this.hud.fillStyle(COLORS.gold, 1).fillRect(804, 480, 120 * dashProgress, 4);
     this.healthText.setText(`VITALITY  ${String(this.playerHealth).padStart(3, '0')} / ${this.playerMaxHealth}`);
+    this.resourceText.setText(`${RUN_RESOURCE_NAME.plural}  ${this.progression.resources}`);
     this.enemyText.setText(`HOSTILES  ${String(this.enemies.length).padStart(2, '0')}`);
     this.comboText.setText(`COMBO  ${this.comboIndex === 0 ? '—' : `${this.comboIndex} / 3`}`);
     const heavy = this.heavyWindup > 0 || this.heavyRecovery > 0 ? 'HEAVY SETTLING' : 'HEAVY READY';
@@ -1418,46 +1596,7 @@ export class CombatScene extends Phaser.Scene {
     this.state = state;
     this.playerBody.setVelocity(0, 0);
     for (const enemy of this.enemies) (enemy.body.body as Phaser.Physics.Arcade.Body).setVelocity(0, 0);
-    this.overlay.removeAll(true);
-    const shade = this.add.rectangle(0, 0, ARENA.width, ARENA.height, 0x0a0b0d, 0.76).setOrigin(0);
-    const panel = this.add.rectangle(480, 271, 404, 198, 0x1c1c1e, 0.98).setStrokeStyle(1, 0x695b46, 0.9);
-    const title = this.add
-      .text(480, 220, state === 'dead' ? 'TOO LATE.' : 'ALL ROOMS CLEAR.', {
-        fontFamily: 'Manrope, sans-serif',
-        fontSize: '31px',
-        fontStyle: 'bold',
-        color: state === 'dead' ? '#e1896b' : '#e3c88f',
-      })
-      .setOrigin(0.5);
-    const copy = this.add
-      .text(
-        480,
-        264,
-        state === 'dead'
-          ? 'The bonuses from this run are lost.'
-          : `${ROOMS.length} rooms cleared. Your bonuses are reset when you begin again.`,
-        {
-          fontFamily: 'DM Mono, monospace',
-          fontSize: '10px',
-          color: '#aaa39a',
-          letterSpacing: 0.5,
-        },
-      )
-      .setOrigin(0.5);
-    const prompt = this.add
-      .text(480, 319, 'PRESS R   /   CLICK TO RUN IT AGAIN', {
-        fontFamily: 'DM Mono, monospace',
-        fontSize: '10px',
-        color: '#e1d0ae',
-        letterSpacing: 1.1,
-        backgroundColor: '#342d25',
-        padding: { x: 15, y: 10 },
-      })
-      .setOrigin(0.5)
-      .setInteractive({ useHandCursor: true });
-    prompt.on('pointerdown', () => this.scene.restart());
-    this.overlay.add([shade, panel, title, copy, prompt]);
-    this.overlay.setVisible(true);
+    this.showRunResults(state);
     this.sfx.play(state === 'dead' ? 'death' : 'clear');
   }
 

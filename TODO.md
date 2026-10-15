@@ -25,7 +25,7 @@
 - [x] Strengthen the enemy-hit sound.
 - [x] User approved the five-room prototype and the direction of different run bonuses.
 
-## Milestone 4 — Builds (in progress)
+## Milestone 4 — Builds (implemented; playtest pending)
 
 - [x] Expand the bonus pool to ten choices with both stat bonuses and combat-changing upgrades.
 - [x] Add a wider heavy swing, a burning final combo hit, a final-hit burst, and life-stealing attacks.
@@ -33,9 +33,15 @@
 - [x] Add an Escape pause menu with Continue, Restart, and Bonus actions.
 - [ ] Ask the user to playtest the new upgrades and how different builds feel; tune from feedback.
 
+## Milestone 5 — Permanent Progression (implemented; playtest pending)
+
+- [x] Award one persistent Ash for each room cleared.
+- [x] Save Ashes and permanent upgrade levels in browser storage.
+- [x] Add a between-run shop for maximum health, attack damage, and dash cooldown upgrades.
+- [ ] Ask the user to playtest resource pacing, upgrade effects, and save persistence.
+
 ## Later milestones
 
-- [ ] Milestone 5: add permanent resources, saving, and a between-run upgrade shop.
 - [ ] Milestone 6: add more enemy types, behavior-changing elites, optional risky paths, and exploration rewards.
 - [ ] Milestone 7: build ten distinct solo bosses for rooms 10, 20, …, 100; make room 100 the final boss.
 - [ ] Milestone 8: expand from the five-room prototype toward the 100-room run across ten distinct chapter styles, add story discoveries, and selectively replace placeholder assets.

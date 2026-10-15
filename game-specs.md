@@ -321,7 +321,15 @@ Examples:
 - improved healing;
 - improved dash properties.
 
-The player spends resources collected during runs to purchase these upgrades.
+The prototype uses **Ashes** as its persistent resource. Earn one Ash for each room cleared. Ashes are saved immediately, survive death and browser restarts, and are spent only between runs.
+
+The first shop offers three capped permanent upgrades:
+
+- **Vitality:** +10 maximum health per level, up to five levels; level costs are 3, 4, 5, 6, and 7 Ashes;
+- **Sharpened:** +1 damage to each primary and heavy attack per level, up to five levels; costs 4, 5, 6, 7, and 8 Ashes;
+- **Quick Step:** reduce dash cooldown by 0.04 seconds per level, up to four levels; costs 4, 5, 6, and 7 Ashes.
+
+The level costs are shown in the shop. Each purchase takes effect on the next run. The shop explains how Ashes are earned and what each upgrade changes.
 
 The character should become substantially stronger over time.
 
@@ -335,11 +343,11 @@ Early enemies that were once dangerous should eventually become easy.
 
 There is **no physical hub**.
 
-After death, the player enters a simple progression menu containing a shop/upgrade interface.
+After death or clearing the current run, the player enters a results screen containing the permanent upgrade shop.
 
 The flow is:
 
-**Death → results → buy upgrades → new run.**
+**Run ends → results → buy upgrades → new run.**
 
 The interface should make restarting extremely quick.
 
@@ -533,7 +541,7 @@ Add room completion and transitions.
 
 The current prototype uses a fixed sequence of five handcrafted rooms that gets harder from room to room. This is a prototype slice only. The end goal is a 100-room run divided into ten chapters, with a solo boss in every tenth room and a distinct world style for each chapter. Do not build all 100 rooms as part of the current prototype milestone.
 
-After eligible rooms, offer three different temporary bonuses such as increased max health, increased base damage, healing, or a new combat power. Show chosen bonuses in the run HUD and clear them when a new run starts. Do not use high-risk/low-risk routes or Ash rewards in the prototype.
+After eligible rooms, offer three different temporary bonuses such as increased max health, increased base damage, healing, or a new combat power. Show chosen bonuses in the run HUD and clear them when a new run starts. Ashes are a flat one-per-room progression reward; do not tie them to risk choices or high/low reward routes.
 
 Add death/reset and basic rewards.
 
@@ -551,7 +559,7 @@ The ranged enemy currently aims at the player's earlier position before firing. 
 
 ### Milestone 5 — Permanent Progression
 
-Add persistent resources, saving and the between-run upgrade shop.
+Award one saved Ash per cleared room. Save Ashes and permanent upgrade levels in browser storage, and provide a results-screen shop with Vitality, Sharpened, and Quick Step upgrades. Purchases affect the next run.
 
 ### Milestone 6 — Full Enemy Roster
 

@@ -4,7 +4,7 @@ Updated: 2026-10-15
 
 ## Project status
 
-The user reports that rooms and the run bonus direction feel good. The current five-room build is a prototype slice; the specified end goal is a 100-room run split into ten visual chapters, with solo bosses in rooms 10, 20, …, 100. Milestone 4 is in progress: the prototype offers three choices from a ten-bonus pool, lists picked bonuses by name on separate HUD lines, and has a pause menu with a full bonus catalog. Bonuses and their run counts reset with a new run. Damage feedback and a stronger enemy-hit sound are in place.
+The user reports that rooms and the run bonus direction feel good. The current five-room build is a prototype slice; the specified end goal is a 100-room run split into ten visual chapters, with solo bosses in rooms 10, 20, …, 100. Milestone 5 is implemented and awaiting playtest: each cleared room awards a saved Ash, and the results screen offers capped permanent health, damage, and dash cooldown upgrades. Ashes and upgrade levels persist in browser storage. The prototype still offers three choices from a ten-bonus pool, lists picks by name on separate HUD lines, and has a pause menu with a full bonus catalog. Temporary bonuses reset with a new run. Damage feedback and a stronger enemy-hit sound are in place.
 
 The ranged enemy's projectile aim feels too predictable; record it as future combat tuning and leave its current behavior in place for now. Ask the user to playtest the combat-changing upgrades at the next playable check-in. Browser interaction could not be checked by the agent because browser-control tools were not available in this session.
 
@@ -21,6 +21,7 @@ The ranged enemy's projectile aim feels too predictable; record it as future com
 - `src/game/CombatScene.ts` — arena simulation, combat state, HUD, and input wiring.
 - `src/game/data/arena.ts` — authored room layouts, geometry, and spawn points.
 - `src/game/data/balance.ts` — MVP combat tuning values.
+- `src/game/progression.ts` — permanent upgrade definitions and local save data.
 - `src/game/presentation/` — placeholder rendering and generated sound effects.
 - `game-specs.md` — authoritative product and scope specification.
 - `TODO.md` — milestone tracking and open work.
@@ -34,7 +35,7 @@ The ranged enemy's projectile aim feels too predictable; record it as future com
 
 ## Scope and implementation rules
 
-- Follow the milestone order in `game-specs.md`; keep the current prototype focused on its five-room slice, temporary bonuses, the catalog/pause UI, and clear combat feedback. Keep the 100-room, ten-chapter run and ten solo bosses explicit as the end goal without treating them as already implemented.
+- Follow the milestone order in `game-specs.md`; the current prototype is a five-room slice with temporary bonuses, a catalog/pause UI, persistent Ashes, and a between-run upgrade shop. Keep the 100-room, ten-chapter run and ten solo bosses explicit as the end goal without treating them as already implemented.
 - Core combat must keep player movement, explicit directional aiming, a primary melee combo, a vulnerable heavy attack, a defensive dash, health/damage, three enemy types, placeholder art/audio, and death/restart.
 - No block or parry, target auto-selection, mobile-specific controls, progression, upgrades, or generated rooms in Milestone 1.
 - Prefer data-driven tuning and authored arena geometry. Keep visual/audio assets behind presentation modules so replacements do not change gameplay rules.
