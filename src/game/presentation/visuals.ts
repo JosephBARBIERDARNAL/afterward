@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { ARENA } from '../data/arena';
 import { COLORS } from '../data/balance';
 
-export function drawArena(scene: Phaser.Scene): void {
+export function drawArena(scene: Phaser.Scene): Phaser.GameObjects.Graphics {
   const art = scene.add.graphics().setDepth(-20);
   const tile = 48;
 
@@ -20,14 +20,21 @@ export function drawArena(scene: Phaser.Scene): void {
     }
   }
 
-  art.lineStyle(2, 0x70634f, 0.72).strokeRect(27, 27, 906, 486);
-  art.lineStyle(1, 0x49433b, 0.78).strokeRect(33, 33, 894, 474);
+  art.lineStyle(2, 0x70634f, 0.72);
+  art.lineBetween(27, 27, 933, 27).lineBetween(933, 27, 933, 226);
+  art.lineBetween(933, 314, 933, 513).lineBetween(933, 513, 27, 513);
+  art.lineBetween(27, 513, 27, 27);
+  art.lineStyle(1, 0x49433b, 0.78);
+  art.lineBetween(33, 33, 927, 33).lineBetween(927, 33, 927, 228);
+  art.lineBetween(927, 312, 927, 507).lineBetween(927, 507, 33, 507);
+  art.lineBetween(33, 507, 33, 33);
   art.lineStyle(1, COLORS.seam, 0.75);
   for (let x = 68; x < 920; x += 96) art.lineBetween(x, 37, x, 47);
   for (let x = 116; x < 900; x += 144) art.lineBetween(x, 493, x, 503);
   for (let y = 86; y < 490; y += 96) art.lineBetween(37, y, 47, y);
   for (let y = 130; y < 480; y += 144) art.lineBetween(913, y, 923, y);
 
+  return art;
 }
 
 export function createFighter(
@@ -84,7 +91,7 @@ export function drawEnemyMark(
   graphics: Phaser.GameObjects.Graphics,
   x: number,
   y: number,
-  kind: 'melee' | 'ranged',
+  kind: 'melee' | 'ranged' | 'heavy',
   color: number,
 ): void {
   graphics.lineStyle(2, color, 1);
@@ -92,10 +99,15 @@ export function drawEnemyMark(
     graphics.lineBetween(x - 6, y - 3, x, y - 8);
     graphics.lineBetween(x, y - 8, x + 6, y - 3);
     graphics.lineBetween(x - 5, y + 3, x + 5, y + 3);
-  } else {
+  } else if (kind === 'ranged') {
     graphics.strokeRect(x - 5, y - 5, 10, 10);
     graphics.lineBetween(x - 3, y, x + 3, y);
     graphics.lineBetween(x, y - 3, x, y + 3);
+  } else {
+    graphics.lineBetween(x, y - 8, x + 8, y);
+    graphics.lineBetween(x + 8, y, x, y + 8);
+    graphics.lineBetween(x, y + 8, x - 8, y);
+    graphics.lineBetween(x - 8, y, x, y - 8);
   }
 }
 

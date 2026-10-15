@@ -37,7 +37,19 @@ export const ENEMIES = {
     damage: 13,
     tint: 0x9a83ba,
   },
+  heavy: {
+    maxHealth: 96,
+    moveSpeed: 58,
+    attackRange: 102,
+    attackRadius: 59,
+    attackWindup: 0.82,
+    attackCooldown: 1.48,
+    damage: 23,
+    tint: 0xa8864d,
+  },
 } as const;
+
+export type EnemyKind = keyof typeof ENEMIES;
 
 export const COLORS = {
   ink: 0x18191c,

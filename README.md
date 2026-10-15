@@ -22,8 +22,8 @@ Open the local URL printed by Vite. Build a static browser version with `bun run
 | Dash | B | Space |
 | Restart after death / clear | — | R or click the prompt |
 
-Heavy attacks hit hard, but slow movement through the windup and recovery. Dash briefly avoids damage. The melee enemy marks its strike area before attacking; the ranged enemy aims at the player's earlier position before firing.
+Heavy attacks hit hard, but slow movement through the windup and recovery. Dash briefly avoids damage. The melee enemy marks its strike area before attacking; the ranged enemy aims at the player's earlier position before firing; the heavy warden is slower and announces a wide strike.
 
 ## Current milestone
 
-This is Milestone 1 only: one arena, one melee pursuer, one ranged attacker, temporary combat actions, health, death, and restart. Roguelite rooms, run generation, upgrades, permanent progression, story, and the boss are intentionally later work. See [`TODO.md`](./TODO.md) and [`AGENTS.md`](./AGENTS.md) for the current project state.
+This is a fixed three-room combat sequence with three enemy types and health carried through room transitions. Procedural runs, rewards, upgrades, permanent progression, story, and the boss remain later work. See [`TODO.md`](./TODO.md) and [`AGENTS.md`](./AGENTS.md) for the current project state.

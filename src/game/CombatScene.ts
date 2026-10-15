@@ -1,10 +1,9 @@
 import Phaser from 'phaser';
-import { ARENA, type ArenaObstacle } from './data/arena';
-import { COLORS, ENEMIES, PLAYER } from './data/balance';
+import { ARENA, ROOMS, type ArenaObstacle } from './data/arena';
+import { COLORS, ENEMIES, PLAYER, type EnemyKind } from './data/balance';
 import { Sound } from './presentation/sound';
 import { createFighter, destroyActorShadow, drawArena, drawEnemyMark, drawHealthBar, drawPlayerMark, syncActorShadow } from './presentation/visuals';
 
-type EnemyKind = 'melee' | 'ranged';
 type RunState = 'playing' | 'dead' | 'clear';
 
 interface Enemy {
@@ -51,6 +50,13 @@ export class CombatScene extends Phaser.Scene {
   private projectiles: Projectile[] = [];
   private obstacles: ArenaObstacle[] = [];
   private obstacleBodies: Phaser.GameObjects.Rectangle[] = [];
+  private obstacleDecor: Phaser.GameObjects.GameObject[] = [];
+  private roomColliders: Phaser.Physics.Arcade.Collider[] = [];
+  private roomArt!: Phaser.GameObjects.Graphics;
+  private exitMark!: Phaser.GameObjects.Graphics;
+  private roomIndex = 0;
+  private roomCleared = false;
+  private transitioning = false;
   private sfx!: Sound;
   private state: RunState = 'playing';
   private playerHealth: number = PLAYER.maxHealth;
@@ -84,6 +90,9 @@ export class CombatScene extends Phaser.Scene {
   private arrowKeys!: Record<'up' | 'down' | 'left' | 'right', Phaser.Input.Keyboard.Key>;
   private healthText!: Phaser.GameObjects.Text;
   private enemyText!: Phaser.GameObjects.Text;
+  private roomText!: Phaser.GameObjects.Text;
+  private roomTitleText!: Phaser.GameObjects.Text;
+  private gateText!: Phaser.GameObjects.Text;
   private comboText!: Phaser.GameObjects.Text;
   private actionText!: Phaser.GameObjects.Text;
   private dashText!: Phaser.GameObjects.Text;
@@ -99,11 +108,10 @@ export class CombatScene extends Phaser.Scene {
     this.input.off('pointerdown', this.handlePointerDown);
     this.input.off('pointermove', this.handlePointerMove);
     this.physics.world.setBounds(ARENA.bounds.x, ARENA.bounds.y, ARENA.bounds.width, ARENA.bounds.height);
-    drawArena(this);
-    this.createObstacles();
-    this.createActors();
+    this.createPlayer();
     this.createHud();
     this.setupInput();
+    this.enterRoom(0);
     this.sfx = new Sound();
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.input.off('pointerdown', this.handlePointerDown);
@@ -140,6 +148,13 @@ export class CombatScene extends Phaser.Scene {
     this.projectiles = [];
     this.obstacles = [];
     this.obstacleBodies = [];
+    this.obstacleDecor = [];
+    this.roomColliders = [];
+    this.roomArt = undefined!;
+    this.exitMark = undefined!;
+    this.roomIndex = 0;
+    this.roomCleared = false;
+    this.transitioning = false;
     this.cameras.main.setScroll(0, 0).resetFX();
   }
 
@@ -148,6 +163,7 @@ export class CombatScene extends Phaser.Scene {
       if (Phaser.Input.Keyboard.JustDown(this.keys.restart)) this.scene.restart();
       return;
     }
+    if (this.transitioning) return;
 
     const delta = Math.min(deltaMs / 1000, 0.05);
     const controls = this.readInput();
@@ -156,13 +172,29 @@ export class CombatScene extends Phaser.Scene {
     this.updatePlayer(controls, delta);
     this.updateEnemies(delta);
     this.updateProjectiles(delta);
-    this.updatePresentation(delta);
 
-    if (this.enemies.length === 0) this.finish('clear');
+    if (this.enemies.length === 0 && !this.roomCleared) {
+      this.roomCleared = true;
+      this.gateText.setText('EAST GATE OPEN');
+      this.updateExitMark();
+      this.sfx.play('clear');
+      if (this.roomIndex === ROOMS.length - 1) {
+        this.finish('clear');
+        return;
+      }
+    }
+
+    if (
+      this.roomCleared
+      && this.player.x >= ARENA.exit.triggerX
+      && Math.abs(this.player.y - ARENA.exit.y) <= ARENA.exit.halfHeight
+    ) this.transitionToNextRoom();
+
+    this.updatePresentation(delta);
   }
 
-  private createObstacles(): void {
-    for (const obstacle of ARENA.obstacles) {
+  private createObstacles(obstacles: ArenaObstacle[]): void {
+    for (const obstacle of obstacles) {
       this.obstacles.push(obstacle);
       const shadow = this.add.rectangle(obstacle.x + 4, obstacle.y + 8, obstacle.width + 5, obstacle.height + 4, 0x090a0c, 0.55);
       shadow.setDepth(obstacle.y - obstacle.height / 2);
@@ -172,29 +204,33 @@ export class CombatScene extends Phaser.Scene {
       top.setDepth(obstacle.y + obstacle.height / 2 + 1);
       this.physics.add.existing(block, true);
       this.obstacleBodies.push(block);
+      this.obstacleDecor.push(shadow, top);
+      this.roomColliders.push(this.physics.add.collider(this.player, block));
     }
   }
 
-  private createActors(): void {
-    this.player = createFighter(this, ARENA.playerStart.x, ARENA.playerStart.y, 14, 0xd9c7a4, 0xf2e6ce);
+  private createPlayer(): void {
+    this.player = createFighter(this, 0, 0, 14, 0xd9c7a4, 0xf2e6ce);
     this.physics.add.existing(this.player);
     this.playerBody = this.player.body as Phaser.Physics.Arcade.Body;
     this.playerBody.setCircle(13).setCollideWorldBounds(true).setMaxVelocity(PLAYER.dashSpeed);
-    for (const block of this.obstacleBodies) this.physics.add.collider(this.player, block);
-
     this.playerMarks = this.add.graphics().setDepth(30);
     this.arenaMarks = this.add.graphics().setDepth(25);
     this.fx = this.add.graphics().setDepth(40);
+  }
 
-    for (const entry of ARENA.enemies) {
-      const kind = entry.kind;
+  private createEnemies(spawns: typeof ROOMS[number]['enemies']): void {
+    for (const entry of spawns) {
+      const { kind } = entry;
       const data = ENEMIES[kind];
-      const body = createFighter(this, entry.x, entry.y, kind === 'melee' ? 16 : 15, data.tint, kind === 'melee' ? 0xe29a70 : 0xd2b9ec);
+      const radius = kind === 'heavy' ? 20 : kind === 'melee' ? 16 : 15;
+      const outline = kind === 'heavy' ? 0xe7c17b : kind === 'melee' ? 0xe29a70 : 0xd2b9ec;
+      const body = createFighter(this, entry.x, entry.y, radius, data.tint, outline);
       const marks = this.add.graphics().setDepth(entry.y + 2);
       this.physics.add.existing(body);
       const physicsBody = body.body as Phaser.Physics.Arcade.Body;
-      physicsBody.setCircle(kind === 'melee' ? 15 : 14).setCollideWorldBounds(true);
-      for (const block of this.obstacleBodies) this.physics.add.collider(body, block);
+      physicsBody.setCircle(radius - 1).setCollideWorldBounds(true);
+      for (const block of this.obstacleBodies) this.roomColliders.push(this.physics.add.collider(body, block));
       this.enemies.push({
         id: entry.id,
         kind,
@@ -202,7 +238,7 @@ export class CombatScene extends Phaser.Scene {
         marks,
         hp: data.maxHealth,
         maxHp: data.maxHealth,
-        attackCooldown: kind === 'melee' ? 0.9 : 1.25,
+        attackCooldown: kind === 'ranged' ? 1.25 : kind === 'heavy' ? 1.1 : 0.9,
         windup: 0,
         targetX: entry.x,
         targetY: entry.y,
@@ -210,7 +246,72 @@ export class CombatScene extends Phaser.Scene {
         flash: 0,
       });
     }
+  }
 
+  private enterRoom(index: number): void {
+    if (this.roomArt) this.clearRoom();
+    this.roomIndex = index;
+    this.roomCleared = false;
+    const room = ROOMS[index];
+    this.roomArt = drawArena(this);
+    this.exitMark = this.add.graphics().setDepth(18);
+    this.createObstacles(room.obstacles);
+    this.createEnemies(room.enemies);
+    this.playerBody.reset(room.playerStart.x, room.playerStart.y);
+    this.player.setAlpha(1).setDepth(this.player.y + 1);
+    this.playerMarks.clear();
+    this.arenaMarks.clear();
+    this.fx.clear();
+    this.roomText.setText(`ROOM  ${String(index + 1).padStart(2, '0')} / ${String(ROOMS.length).padStart(2, '0')}`);
+    this.roomTitleText.setText(room.title);
+    this.enemyText.setText(`HOSTILES  ${String(this.enemies.length).padStart(2, '0')}`);
+    this.gateText.setText('EAST GATE LOCKED');
+    this.updateExitMark();
+  }
+
+  private clearRoom(): void {
+    for (const collider of this.roomColliders) this.physics.world.removeCollider(collider);
+    for (const enemy of this.enemies) {
+      enemy.marks.destroy();
+      destroyActorShadow(enemy.body);
+      enemy.body.destroy();
+    }
+    for (const projectile of this.projectiles) projectile.body.destroy();
+    for (const object of [...this.obstacleDecor, ...this.obstacleBodies]) object.destroy();
+    this.roomArt.destroy();
+    this.exitMark.destroy();
+    this.enemies = [];
+    this.projectiles = [];
+    this.obstacles = [];
+    this.obstacleBodies = [];
+    this.obstacleDecor = [];
+    this.roomColliders = [];
+  }
+
+  private transitionToNextRoom(): void {
+    if (this.transitioning) return;
+    this.transitioning = true;
+    const camera = this.cameras.main;
+    camera.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+      this.enterRoom(this.roomIndex + 1);
+      camera.once(Phaser.Cameras.Scene2D.Events.FADE_IN_COMPLETE, () => { this.transitioning = false; });
+      camera.fadeIn(220, 10, 10, 12);
+    });
+    camera.fadeOut(180, 10, 10, 12);
+  }
+
+  private updateExitMark(): void {
+    if (!this.exitMark) return;
+    this.exitMark.clear();
+    const color = this.roomCleared ? COLORS.gold : 0x786a54;
+    this.exitMark.fillStyle(this.roomCleared ? 0x30291e : 0x161719, 0.96).fillRect(914, 231, 14, 78);
+    this.exitMark.lineStyle(2, color, 0.92).strokeRect(914, 231, 14, 78);
+    if (this.roomCleared) {
+      this.exitMark.lineStyle(2, COLORS.gold, 0.9).lineBetween(918, 241, 918, 299).lineBetween(924, 241, 924, 299);
+    } else {
+      this.exitMark.lineStyle(2, color, 0.72).lineBetween(917, 244, 925, 252).lineBetween(925, 244, 917, 252);
+      this.exitMark.lineBetween(917, 288, 925, 296).lineBetween(925, 288, 917, 296);
+    }
   }
 
   private createHud(): void {
@@ -223,11 +324,11 @@ export class CombatScene extends Phaser.Scene {
         ...extra,
       }).setScrollFactor(0).setDepth(1000);
 
-    fixed('THE ARENA', 34, 27, '11px', '#d6b678', { fontStyle: 'bold' });
-    fixed('STAY MOVING', 34, 44, '9px', '#8b8882');
+    this.roomText = fixed('ROOM  01 / 03', 34, 27, '11px', '#d6b678', { fontStyle: 'bold' });
+    this.roomTitleText = fixed('THE ENTRY', 34, 44, '9px', '#8b8882');
     this.healthText = fixed('VITALITY  100 / 100', 34, 66, '10px', '#e9e1d4');
     this.enemyText = fixed('HOSTILES  02', 758, 28, '10px', '#e9e1d4', { align: 'right' });
-    fixed('BREAK THE SEAL', 758, 45, '9px', '#8b8882', { align: 'right' });
+    this.gateText = fixed('EAST GATE LOCKED', 758, 45, '9px', '#8b8882', { align: 'right' });
     this.comboText = fixed('COMBO  —', 34, 493, '9px', '#d6b678');
     this.dashText = fixed('DASH', 758, 477, '8px', '#8b8882');
     this.actionText = fixed('HEAVY READY', 758, 497, '8px', '#d7cdbd');
@@ -399,7 +500,7 @@ export class CombatScene extends Phaser.Scene {
       const dy = enemy.body.y - this.player.y;
       const distance = Math.hypot(dx, dy);
       const angleDifference = Phaser.Math.Angle.Wrap(Math.atan2(dy, dx) - this.playerAngle);
-      if (distance > reach + (enemy.kind === 'melee' ? 15 : 14) || Math.abs(angleDifference) > halfArc) continue;
+      if (distance > reach + (enemy.kind === 'heavy' ? 19 : enemy.kind === 'melee' ? 15 : 14) || Math.abs(angleDifference) > halfArc) continue;
       if (!this.lineClear(this.player.x, this.player.y, enemy.body.x, enemy.body.y)) continue;
       this.damageEnemy(enemy, damage, dx / (distance || 1), dy / (distance || 1));
     }
@@ -443,15 +544,16 @@ export class CombatScene extends Phaser.Scene {
       }
       if (enemy.stun > 0) continue;
 
-      if (enemy.kind === 'melee') {
-        if (distance <= ENEMIES.melee.attackRange && enemy.attackCooldown <= 0) {
-          enemy.windup = ENEMIES.melee.attackWindup;
+      if (enemy.kind !== 'ranged') {
+        const attack = ENEMIES[enemy.kind];
+        if (distance <= attack.attackRange && enemy.attackCooldown <= 0) {
+          enemy.windup = attack.attackWindup;
           enemy.targetX = this.player.x;
           enemy.targetY = this.player.y;
           body.setVelocity(0, 0);
           continue;
         }
-        if (distance > ENEMIES.melee.attackRange - 8) body.setVelocity((dx / distance) * data.moveSpeed, (dy / distance) * data.moveSpeed);
+        if (distance > attack.attackRange - 8) body.setVelocity((dx / distance) * data.moveSpeed, (dy / distance) * data.moveSpeed);
         else body.setVelocity(0, 0);
       } else {
         const ideal = ENEMIES.ranged.keepDistance;
@@ -470,12 +572,13 @@ export class CombatScene extends Phaser.Scene {
 
   private resolveEnemyAttack(enemy: Enemy): void {
     enemy.attackCooldown = ENEMIES[enemy.kind].attackCooldown;
-    if (enemy.kind === 'melee') {
-      if (Phaser.Math.Distance.Between(this.player.x, this.player.y, enemy.targetX, enemy.targetY) < ENEMIES.melee.attackRadius) {
-        this.hurtPlayer(ENEMIES.melee.damage, enemy.targetX, enemy.targetY);
-      }
-    } else {
+    if (enemy.kind === 'ranged') {
       this.spawnProjectile(enemy.body.x, enemy.body.y, enemy.targetX, enemy.targetY);
+    } else {
+      const attack = ENEMIES[enemy.kind];
+      if (Phaser.Math.Distance.Between(this.player.x, this.player.y, enemy.targetX, enemy.targetY) < attack.attackRadius) {
+        this.hurtPlayer(attack.damage, enemy.targetX, enemy.targetY);
+      }
     }
   }
 
@@ -539,14 +642,17 @@ export class CombatScene extends Phaser.Scene {
     for (const enemy of this.enemies) {
       enemy.marks.clear().setDepth(enemy.body.y + 2);
       drawEnemyMark(enemy.marks, enemy.body.x, enemy.body.y - 1, enemy.kind, 0x241f1b);
-      drawHealthBar(enemy.marks, enemy.body.x - 18, enemy.body.y - 28, 36, enemy.hp / enemy.maxHp, enemy.kind === 'melee' ? 0xd7775d : 0xb29bd0);
+      const healthColor = enemy.kind === 'heavy' ? COLORS.gold : enemy.kind === 'melee' ? 0xd7775d : 0xb29bd0;
+      drawHealthBar(enemy.marks, enemy.body.x - 21, enemy.body.y - 32, 42, enemy.hp / enemy.maxHp, healthColor);
       if (enemy.windup > 0) {
-        if (enemy.kind === 'melee') {
-          this.arenaMarks.lineStyle(2, COLORS.damage, 0.68).strokeCircle(enemy.targetX, enemy.targetY, ENEMIES.melee.attackRadius);
-          this.arenaMarks.lineStyle(1, 0xffca9a, 0.3).strokeCircle(enemy.targetX, enemy.targetY, ENEMIES.melee.attackRadius + 9);
-        } else {
+        if (enemy.kind === 'ranged') {
           this.arenaMarks.lineStyle(2, COLORS.damage, 0.52).lineBetween(enemy.body.x, enemy.body.y, enemy.targetX, enemy.targetY);
           this.arenaMarks.fillStyle(COLORS.damage, 0.58).fillCircle(enemy.targetX, enemy.targetY, 8);
+        } else {
+          const attack = ENEMIES[enemy.kind];
+          const warningColor = enemy.kind === 'heavy' ? COLORS.gold : COLORS.damage;
+          this.arenaMarks.lineStyle(enemy.kind === 'heavy' ? 3 : 2, warningColor, 0.68).strokeCircle(enemy.targetX, enemy.targetY, attack.attackRadius);
+          this.arenaMarks.lineStyle(1, 0xffca9a, 0.3).strokeCircle(enemy.targetX, enemy.targetY, attack.attackRadius + 9);
         }
       }
     }
@@ -598,10 +704,10 @@ export class CombatScene extends Phaser.Scene {
     this.overlay.removeAll(true);
     const shade = this.add.rectangle(0, 0, ARENA.width, ARENA.height, 0x0a0b0d, 0.76).setOrigin(0);
     const panel = this.add.rectangle(480, 271, 404, 198, 0x1c1c1e, 0.98).setStrokeStyle(1, 0x695b46, 0.9);
-    const title = this.add.text(480, 220, state === 'dead' ? 'TOO LATE.' : 'ARENA CLEAR.', {
+    const title = this.add.text(480, 220, state === 'dead' ? 'TOO LATE.' : 'ALL ROOMS CLEAR.', {
       fontFamily: 'Manrope, sans-serif', fontSize: '31px', fontStyle: 'bold', color: state === 'dead' ? '#e1896b' : '#e3c88f',
     }).setOrigin(0.5);
-    const copy = this.add.text(480, 264, state === 'dead' ? 'The run ends here. Take one more.' : 'A clean fight. There is always another.', {
+    const copy = this.add.text(480, 264, state === 'dead' ? 'The run ends here. Take one more.' : 'Three rooms cleared. There is always another.', {
       fontFamily: 'DM Mono, monospace', fontSize: '10px', color: '#aaa39a', letterSpacing: 0.5,
     }).setOrigin(0.5);
     const prompt = this.add.text(480, 319, 'PRESS R   /   CLICK TO RUN IT AGAIN', {

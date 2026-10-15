@@ -1,6 +1,6 @@
 # Too Late — Development TODO
 
-## Milestone 1 — Combat MVP (in progress)
+## Milestone 1 — Combat MVP (complete for now)
 
 - [x] Create one readable arena with placeholder visuals.
 - [x] Add movement and explicit directional aim for keyboard/mouse and controller.
@@ -11,11 +11,17 @@
 - [x] Add basic generated sound effects and combat feedback.
 - [x] Build and present a playable version for user feedback.
 - [x] Apply the first feedback pass: reliable run reset, AZERTY movement keys, dash recharge bar, cleaner arena corners, and wrapping footer copy.
-- [ ] Tune combat from user feedback until the core loop is worth restarting.
+- [x] Apply initial combat and usability feedback; user approved progressing to rooms.
 
-## Later milestones — blocked on combat feedback
+## Milestone 2 — Rooms (in progress)
 
-- [ ] Milestone 2: several handcrafted combat rooms, 3 enemy types, room completion and transitions.
+- [x] Add three handcrafted encounter layouts in a fixed sequence.
+- [x] Add a heavy attacker as the third enemy type.
+- [x] Open the east gate after each encounter and transition rooms while preserving health.
+- [ ] Playtest room transitions and tune the three-room difficulty.
+
+## Later milestones — after room-chain feedback
+
 - [ ] Milestone 3: branching run generation, death/reset, and basic rewards.
 - [ ] Milestone 4: randomized three-choice temporary upgrades; begin with about 10 upgrades.
 - [ ] Milestone 5: permanent resources, saving, and between-run upgrade shop.
@@ -26,5 +32,5 @@
 
 ## Open design decisions
 
-- Combat tuning remains provisional until the user tries the first arena.
-- The longer-run save format and browser hosting target are not needed for Milestone 1.
+- Room layouts and encounter balance remain provisional until the user tries the full sequence.
+- The longer-run save format and browser hosting target are not needed for Milestone 2.
