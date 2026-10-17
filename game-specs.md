@@ -181,7 +181,7 @@ The player has three core combat actions.
 
 ### Primary Attack
 
-A fast melee combo used as the standard offensive action.
+A fast melee combo used as the standard offensive action. Each strike is a broad horizontal sword sweep in the aimed direction, with a visible slash that covers the attack area.
 
 ### Heavy Attack
 
@@ -533,7 +533,9 @@ The ranged enemy currently aims at the player's earlier position before firing. 
 
 ### Milestone 5 — Bevy Migration
 
-Port the current five-room prototype to Bevy while preserving its combat, authored room sequence, six enemy types, run-only bonuses, safe-room door, pause flow, and hit feedback. Remove currency, the shop, permanent upgrades, and persistence between runs. Use replaceable Bevy 2D shape placeholders while assets are pending. Remove the Phaser/Vite/Bun implementation and its dependencies once feature parity is reached. Keep the browser/Wasm target explicit and document any remaining platform work.
+Port the current five-room prototype to Bevy while preserving its combat, authored room sequence and obstacles, six enemy types, run-only bonuses, Crossing bonus cache, safe-room door, pause flow, and hit feedback. Obstacle geometry must block player and enemy movement, projectile travel, and attacks without clear line of sight. Remove currency, the shop, permanent upgrades, and persistence between runs. Use replaceable Bevy 2D shape placeholders while assets are pending. Remove the Phaser/Vite/Bun implementation and its dependencies once feature parity is reached. Keep the browser/Wasm target explicit and document any remaining platform work.
+
+The current Bevy pass includes the five authored rooms and their obstacle geometry, basic collision and line-of-sight, the Crossing cache, and a reset that clears run bonuses when returning home or starting another run. Audio, mouse/controller support, browser/Wasm packaging, playtesting, and removal of the legacy Phaser implementation remain outstanding.
 
 ### Milestone 6 — Full Enemy Roster
 

@@ -23,6 +23,7 @@ fn main() {
             ..default()
         }))
         .init_resource::<Game>()
+        .init_resource::<ArenaGeometry>()
         .add_systems(Startup, (setup_camera, setup_art))
         .add_systems(
             Update,
@@ -76,6 +77,7 @@ struct Game {
     bonus_range: f32,
     combo_index: usize,
     combo_timer: f32,
+    cache_claimed: bool,
     bonus_seed: u64,
     last_scene_key: Option<(Scene, usize)>,
     last_overlay_key: String,
@@ -103,6 +105,7 @@ impl Default for Game {
             bonus_range: 0.0,
             combo_index: 0,
             combo_timer: 0.0,
+            cache_claimed: false,
             bonus_seed: 0,
             last_scene_key: None,
             last_overlay_key: String::new(),
@@ -121,8 +124,37 @@ enum Overlay {
     None,
     Pause(usize),
     Catalog,
-    BonusChoice(usize),
+    BonusChoice {
+        selected: usize,
+        source: BonusSource,
+    },
     Ended(bool),
+}
+
+#[derive(Clone, Copy, Debug)]
+enum BonusSource {
+    Door,
+    Cache,
+}
+
+#[derive(Resource, Default)]
+struct ArenaGeometry {
+    obstacles: Vec<ArenaObstacle>,
+    cache: Option<Vec2>,
+}
+
+#[derive(Clone, Copy)]
+struct ArenaObstacle {
+    center: Vec2,
+    size: Vec2,
+}
+
+struct RoomLayout {
+    title: &'static str,
+    player_start: Vec2,
+    enemies: Vec<EnemySpawn>,
+    obstacles: Vec<ArenaObstacle>,
+    cache: Option<Vec2>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -386,6 +418,7 @@ fn sync_scene(
     mut commands: Commands,
     art: Res<Art>,
     mut game: ResMut<Game>,
+    mut geometry: ResMut<ArenaGeometry>,
     old: Query<Entity, With<SceneEntity>>,
 ) {
     let key = (game.scene, game.room);
@@ -396,14 +429,24 @@ fn sync_scene(
         commands.entity(entity).despawn();
     }
     match game.scene {
-        Scene::Home => spawn_home(&mut commands, &art),
-        Scene::Run => spawn_room(&mut commands, &art, game.room, &game.bonuses),
+        Scene::Home => {
+            geometry.obstacles.clear();
+            geometry.cache = None;
+            spawn_home(&mut commands, &art);
+        }
+        Scene::Run => {
+            let layout = room_layout(game.room);
+            geometry.obstacles.clone_from(&layout.obstacles);
+            geometry.cache = layout.cache;
+            game.cache_claimed = false;
+            spawn_room(&mut commands, &art, game.room, &game.bonuses, layout);
+        }
     }
     game.last_scene_key = Some(key);
 }
 
 fn spawn_home(commands: &mut Commands, art: &Art) {
-    spawn_arena(commands, true);
+    spawn_arena(commands, true, &[]);
     spawn_disc(
         commands,
         art,
@@ -441,13 +484,32 @@ fn spawn_home(commands: &mut Commands, art: &Art) {
 #[derive(Component)]
 struct Door;
 
-fn spawn_room(commands: &mut Commands, art: &Art, room: usize, bonuses: &[Bonus]) {
-    spawn_arena(commands, false);
-    let (name, player_start, enemies) = room_layout(room);
-    spawn_disc(commands, art, &art.player, player_start, 16.0, 2.0, Player);
+#[derive(Component)]
+struct BonusCache;
+
+fn spawn_room(
+    commands: &mut Commands,
+    art: &Art,
+    room: usize,
+    bonuses: &[Bonus],
+    layout: RoomLayout,
+) {
+    spawn_arena(commands, false, &layout.obstacles);
+    spawn_disc(
+        commands,
+        art,
+        &art.player,
+        layout.player_start,
+        16.0,
+        2.0,
+        Player,
+    );
     spawn_player_weapon(commands);
     spawn_player_health_display(commands);
-    for (index, spawn) in enemies.into_iter().enumerate() {
+    if let Some(position) = layout.cache {
+        spawn_bonus_cache(commands, position);
+    }
+    for (index, spawn) in layout.enemies.into_iter().enumerate() {
         let EnemySpawn {
             kind,
             position,
@@ -503,7 +565,7 @@ fn spawn_room(commands: &mut Commands, art: &Art, room: usize, bonuses: &[Bonus]
     spawn_door(commands, Vec2::new(420.0, 0.0));
     spawn_text(
         commands,
-        &format!("ROOM {} / {}  ·  {name}", room + 1, ROOM_COUNT),
+        &format!("ROOM {} / {}  ·  {}", room + 1, ROOM_COUNT, layout.title),
         Vec2::new(0.0, 232.0),
         18.0,
         Color::srgb(0.89, 0.78, 0.56),
@@ -607,7 +669,7 @@ fn spawn_enemy_health_bar(
     ));
 }
 
-fn spawn_arena(commands: &mut Commands, home: bool) {
+fn spawn_arena(commands: &mut Commands, home: bool, obstacles: &[ArenaObstacle]) {
     commands.spawn((
         Sprite::from_color(Color::srgb(0.10, 0.10, 0.11), VIEW_SIZE),
         Transform::from_xyz(0.0, 0.0, -3.0),
@@ -623,6 +685,42 @@ fn spawn_arena(commands: &mut Commands, home: bool) {
                 SceneEntity,
             ));
         }
+    }
+    for obstacle in obstacles {
+        let shadow_position = obstacle.center + Vec2::new(5.0, -8.0);
+        commands.spawn((
+            Sprite::from_color(
+                Color::srgba(0.035, 0.035, 0.04, 0.75),
+                obstacle.size + Vec2::new(10.0, 10.0),
+            ),
+            Transform::from_xyz(shadow_position.x, shadow_position.y, -1.5),
+            SceneEntity,
+        ));
+        commands.spawn((
+            Sprite::from_color(
+                Color::srgb(0.51, 0.45, 0.36),
+                obstacle.size + Vec2::splat(4.0),
+            ),
+            Transform::from_xyz(obstacle.center.x, obstacle.center.y, 0.1),
+            SceneEntity,
+        ));
+        commands.spawn((
+            Sprite::from_color(Color::srgb(0.33, 0.30, 0.27), obstacle.size),
+            Transform::from_xyz(obstacle.center.x, obstacle.center.y, 0.2),
+            SceneEntity,
+        ));
+        commands.spawn((
+            Sprite::from_color(
+                Color::srgb(0.61, 0.53, 0.40),
+                Vec2::new((obstacle.size.x - 8.0).max(4.0), 4.0),
+            ),
+            Transform::from_xyz(
+                obstacle.center.x,
+                obstacle.center.y + obstacle.size.y * 0.5 - 5.0,
+                0.3,
+            ),
+            SceneEntity,
+        ));
     }
     let label = if home { "TOO LATE" } else { "THE ASHEN ARENA" };
     spawn_text(
@@ -641,56 +739,131 @@ fn spawn_arena(commands: &mut Commands, home: bool) {
     );
 }
 
-fn room_layout(room: usize) -> (&'static str, Vec2, Vec<EnemySpawn>) {
+fn spawn_bonus_cache(commands: &mut Commands, position: Vec2) {
+    for (offset, size, color, z) in [
+        (
+            Vec2::new(3.0, -5.0),
+            Vec2::new(40.0, 25.0),
+            Color::srgb(0.055, 0.05, 0.045),
+            0.5,
+        ),
+        (
+            Vec2::ZERO,
+            Vec2::new(34.0, 21.0),
+            Color::srgb(0.29, 0.25, 0.19),
+            0.6,
+        ),
+        (
+            Vec2::new(0.0, 3.0),
+            Vec2::new(34.0, 5.0),
+            Color::srgb(0.72, 0.59, 0.34),
+            0.7,
+        ),
+    ] {
+        commands.spawn((
+            Sprite::from_color(color, size),
+            Transform::from_xyz(position.x + offset.x, position.y + offset.y, z),
+            SceneEntity,
+            BonusCache,
+        ));
+    }
+}
+
+fn arena_position(x: f32, y: f32) -> Vec2 {
+    Vec2::new(x - 480.0, 270.0 - y)
+}
+
+fn arena_obstacle(x: f32, y: f32, width: f32, height: f32) -> ArenaObstacle {
+    ArenaObstacle {
+        center: arena_position(x, y),
+        size: Vec2::new(width, height),
+    }
+}
+
+fn room_layout(room: usize) -> RoomLayout {
     match room {
-        0 => (
-            "THE ENTRY",
-            Vec2::new(-390.0, -22.0),
-            vec![
-                enemy_spawn(EnemyKind::Melee, -230.0, 80.0),
+        0 => RoomLayout {
+            title: "THE ENTRY",
+            player_start: arena_position(480.0, 292.0),
+            enemies: vec![
+                enemy_spawn(EnemyKind::Melee, -235.0, 80.0),
                 enemy_spawn(EnemyKind::Ranged, 245.0, -65.0),
             ],
-        ),
-        1 => (
-            "THE OUTER WALK",
-            Vec2::new(-390.0, 0.0),
-            vec![
-                enemy_spawn(EnemyKind::Melee, 10.0, 95.0),
-                enemy_spawn(EnemyKind::Melee, 170.0, -110.0),
-                enemy_spawn(EnemyKind::Ranged, 300.0, 0.0),
-                enemy_spawn(EnemyKind::Charger, 245.0, -150.0),
+            obstacles: vec![
+                arena_obstacle(342.0, 226.0, 94.0, 54.0),
+                arena_obstacle(625.0, 343.0, 106.0, 52.0),
+                arena_obstacle(748.0, 164.0, 44.0, 44.0),
             ],
-        ),
-        2 => (
-            "THE CROSSING",
-            Vec2::new(-390.0, 0.0),
-            vec![
-                enemy_spawn(EnemyKind::Heavy, 95.0, 40.0),
-                enemy_spawn(EnemyKind::Bomber, 30.0, -110.0),
-                enemy_spawn(EnemyKind::Ranged, 260.0, -105.0),
+            cache: None,
+        },
+        1 => RoomLayout {
+            title: "THE OUTER WALK",
+            player_start: arena_position(82.0, 270.0),
+            enemies: vec![
+                enemy_spawn(EnemyKind::Melee, 14.0, 96.0),
+                enemy_spawn(EnemyKind::Melee, 167.0, -113.0),
+                enemy_spawn(EnemyKind::Ranged, 277.0, -2.0),
+                enemy_spawn(EnemyKind::Charger, 230.0, -146.0),
             ],
-        ),
-        3 => (
-            "THE LOWER GALLERY",
-            Vec2::new(-390.0, 0.0),
-            vec![
-                enemy_spawn(EnemyKind::Melee, -20.0, 100.0),
-                enemy_spawn(EnemyKind::Heavy, 155.0, 0.0),
-                enemy_spawn(EnemyKind::Skirmisher, 35.0, -120.0),
-                enemy_spawn(EnemyKind::Ranged, 300.0, 100.0),
+            obstacles: vec![
+                arena_obstacle(302.0, 215.0, 74.0, 104.0),
+                arena_obstacle(510.0, 150.0, 124.0, 44.0),
+                arena_obstacle(638.0, 378.0, 86.0, 48.0),
+                arena_obstacle(789.0, 243.0, 44.0, 44.0),
             ],
-        ),
-        _ => (
-            "THE INNER SEAL",
-            Vec2::new(-390.0, 0.0),
-            vec![
-                enemy_spawn(EnemyKind::Melee, -40.0, 100.0),
-                enemy_spawn(EnemyKind::Ranged, -55.0, -120.0),
-                enemy_spawn(EnemyKind::Heavy, 185.0, 0.0),
-                elite_spawn(EnemyKind::Charger, 300.0, 115.0, EliteKind::Vanguard),
-                elite_spawn(EnemyKind::Ranged, 305.0, -125.0, EliteKind::Volley),
+            cache: None,
+        },
+        2 => RoomLayout {
+            title: "THE CROSSING",
+            player_start: arena_position(82.0, 270.0),
+            enemies: vec![
+                enemy_spawn(EnemyKind::Heavy, 90.0, 35.0),
+                enemy_spawn(EnemyKind::Bomber, 24.0, -110.0),
+                enemy_spawn(EnemyKind::Ranged, 252.0, -106.0),
             ],
-        ),
+            obstacles: vec![
+                arena_obstacle(322.0, 163.0, 122.0, 46.0),
+                arena_obstacle(486.0, 270.0, 80.0, 94.0),
+                arena_obstacle(323.0, 377.0, 122.0, 46.0),
+            ],
+            cache: Some(arena_position(444.0, 454.0)),
+        },
+        3 => RoomLayout {
+            title: "THE LOWER GALLERY",
+            player_start: arena_position(82.0, 270.0),
+            enemies: vec![
+                enemy_spawn(EnemyKind::Melee, -36.0, 110.0),
+                enemy_spawn(EnemyKind::Heavy, 146.0, -10.0),
+                enemy_spawn(EnemyKind::Skirmisher, 22.0, -127.0),
+                enemy_spawn(EnemyKind::Ranged, 282.0, 95.0),
+            ],
+            obstacles: vec![
+                arena_obstacle(301.0, 160.0, 86.0, 56.0),
+                arena_obstacle(421.0, 270.0, 74.0, 116.0),
+                arena_obstacle(531.0, 155.0, 90.0, 48.0),
+                arena_obstacle(546.0, 395.0, 122.0, 42.0),
+                arena_obstacle(773.0, 365.0, 48.0, 48.0),
+            ],
+            cache: None,
+        },
+        _ => RoomLayout {
+            title: "THE INNER SEAL",
+            player_start: arena_position(82.0, 270.0),
+            enemies: vec![
+                enemy_spawn(EnemyKind::Melee, -87.0, 86.0),
+                enemy_spawn(EnemyKind::Ranged, -105.0, -128.0),
+                enemy_spawn(EnemyKind::Heavy, 166.0, -13.0),
+                elite_spawn(EnemyKind::Charger, 248.0, 115.0, EliteKind::Vanguard),
+                elite_spawn(EnemyKind::Ranged, 264.0, -130.0, EliteKind::Volley),
+            ],
+            obstacles: vec![
+                arena_obstacle(280.0, 270.0, 70.0, 120.0),
+                arena_obstacle(493.0, 143.0, 104.0, 46.0),
+                arena_obstacle(500.0, 392.0, 118.0, 46.0),
+                arena_obstacle(761.0, 270.0, 42.0, 120.0),
+            ],
+            cache: None,
+        },
     }
 }
 
@@ -941,10 +1114,18 @@ fn sync_overlay(
             "RUN BONUS CATALOG\n\n{}\n\nPRESS ESC OR ENTER TO RETURN",
             Bonus::ALL.map(Bonus::title).join("\n")
         ),
-        Overlay::BonusChoice(selected) => {
-            let choices = bonus_choices(game.bonus_seed, game.room);
+        Overlay::BonusChoice { selected, source } => {
+            let source_seed = match source {
+                BonusSource::Door => game.bonus_seed,
+                BonusSource::Cache => game.bonus_seed ^ 0xCA5E_CACE_5EED_0001,
+            };
+            let choices = bonus_choices(source_seed, game.room);
+            let heading = match source {
+                BonusSource::Door => "CHOOSE ONE RUN BONUS",
+                BonusSource::Cache => "BONUS CACHE  ·  CHOOSE ONE",
+            };
             format!(
-                "CHOOSE ONE RUN BONUS\n\n{}\n{}\n{}\n\nARROWS + ENTER",
+                "{heading}\n\n{}\n{}\n{}\n\nARROWS + ENTER",
                 mark_bonus(*selected, 0, choices[0]),
                 mark_bonus(*selected, 1, choices[1]),
                 mark_bonus(*selected, 2, choices[2])
@@ -1008,11 +1189,13 @@ fn update_game(mut commands: Commands, params: GameParams) {
         cameras,
         mut game,
         art,
+        geometry,
         mut player,
         mut weapon,
         mut enemies,
         mut projectiles,
         doors,
+        caches,
     } = params;
     let dt = time.delta_secs().min(0.05);
     if game.scene == Scene::Home {
@@ -1023,6 +1206,7 @@ fn update_game(mut commands: Commands, params: GameParams) {
                 &mut game.facing,
                 PLAYER_MOVE_SPEED,
                 dt,
+                &geometry.obstacles,
             );
             update_player_weapon(&mut weapon, transform.translation.truncate(), game.facing);
             let near_door = doors.iter().any(|door| {
@@ -1041,10 +1225,7 @@ fn update_game(mut commands: Commands, params: GameParams) {
     if !matches!(game.overlay, Overlay::None) {
         update_overlay_input(&keys, &mut game, time.elapsed_secs_f64().to_bits());
         if matches!(game.overlay, Overlay::Ended(_)) && keys.just_pressed(KeyCode::Enter) {
-            game.scene = Scene::Home;
-            game.overlay = Overlay::None;
-            game.room = 0;
-            game.last_scene_key = None;
+            return_home(&mut game);
         }
         return;
     }
@@ -1102,8 +1283,9 @@ fn update_game(mut commands: Commands, params: GameParams) {
                     facing: game.facing,
                     range: 88.0,
                     damage: 18.0,
-                    half_arc: -1.0,
+                    shape: AttackShape::Arc { half_arc: -1.0 },
                 },
+                &geometry.obstacles,
             );
         }
     }
@@ -1114,7 +1296,14 @@ fn update_game(mut commands: Commands, params: GameParams) {
     } else {
         PLAYER_MOVE_SPEED
     };
-    move_player(&keys, &mut player_transform, &mut game.facing, speed, dt);
+    move_player(
+        &keys,
+        &mut player_transform,
+        &mut game.facing,
+        speed,
+        dt,
+        &geometry.obstacles,
+    );
     let player_pos = player_transform.translation.truncate();
     update_player_weapon(&mut weapon, player_pos, game.facing);
 
@@ -1128,7 +1317,7 @@ fn update_game(mut commands: Commands, params: GameParams) {
             ActionVisual {
                 position: player_pos + game.facing * 38.0,
                 angle: game.facing.to_angle() + std::f32::consts::FRAC_PI_2,
-                size: Vec2::new(58.0, 9.0),
+                size: Vec2::new(78.0, 24.0),
                 rgba: [1.0, 0.93, 0.72, 0.96],
                 lifetime: 0.14,
                 start_scale: 0.38,
@@ -1156,8 +1345,9 @@ fn update_game(mut commands: Commands, params: GameParams) {
                 facing: game.facing,
                 range: 74.0 + game.bonus_range,
                 damage: combo_damage,
-                half_arc: 0.72,
+                shape: AttackShape::HorizontalSweep { half_width: 34.0 },
             },
+            &geometry.obstacles,
         );
         if final_hit && game.bonuses.contains(&Bonus::ComboBlast) {
             hit_enemies(
@@ -1168,8 +1358,9 @@ fn update_game(mut commands: Commands, params: GameParams) {
                     facing: game.facing,
                     range: 78.0,
                     damage: 14.0,
-                    half_arc: -1.0,
+                    shape: AttackShape::Arc { half_arc: -1.0 },
                 },
+                &geometry.obstacles,
             );
         }
         game.player_health = (game.player_health
@@ -1222,16 +1413,49 @@ fn update_game(mut commands: Commands, params: GameParams) {
                 facing: game.facing,
                 range: 100.0 + game.bonus_range,
                 damage: 44.0 + game.bonus_damage,
-                half_arc: if wide { -0.1 } else { 0.52 },
+                shape: AttackShape::Arc {
+                    half_arc: if wide { -0.1 } else { 0.52 },
+                },
             },
+            &geometry.obstacles,
         );
         game.player_health = (game.player_health
             + hit_count as f32 * bonus_count(&game, Bonus::Siphon) as f32 * 2.0)
             .min(game.max_health);
     }
 
-    update_enemies(&mut commands, &art, &mut game, &mut enemies, player_pos, dt);
-    update_projectiles(&mut commands, &mut game, &mut projectiles, player_pos, dt);
+    update_enemies(
+        &mut commands,
+        &art,
+        &mut game,
+        &mut enemies,
+        player_pos,
+        dt,
+        &geometry.obstacles,
+    );
+    update_projectiles(
+        &mut commands,
+        &mut game,
+        &mut projectiles,
+        player_pos,
+        dt,
+        &geometry.obstacles,
+    );
+    let near_cache = geometry
+        .cache
+        .is_some_and(|position| position.distance(player_pos) < 48.0);
+    if keys.just_pressed(KeyCode::KeyE) && near_cache && game.room_clear && !game.cache_claimed {
+        game.cache_claimed = true;
+        for entity in &caches {
+            commands.entity(entity).despawn();
+        }
+        game.overlay = Overlay::BonusChoice {
+            selected: 0,
+            source: BonusSource::Cache,
+        };
+        game.last_overlay_key.clear();
+        return;
+    }
     let near_door = doors
         .iter()
         .any(|door| door.translation.truncate().distance(player_pos) < 82.0);
@@ -1239,7 +1463,10 @@ fn update_game(mut commands: Commands, params: GameParams) {
         if game.room + 1 >= ROOM_COUNT {
             game.overlay = Overlay::Ended(true);
         } else {
-            game.overlay = Overlay::BonusChoice(0);
+            game.overlay = Overlay::BonusChoice {
+                selected: 0,
+                source: BonusSource::Door,
+            };
         }
         game.last_overlay_key.clear();
     }
@@ -1258,6 +1485,7 @@ fn move_player(
     facing: &mut Vec2,
     speed: f32,
     dt: f32,
+    obstacles: &[ArenaObstacle],
 ) {
     let mut direction = Vec2::ZERO;
     // KeyCode is physical: on AZERTY, the physical W/A positions are labeled Z/Q.
@@ -1278,8 +1506,73 @@ fn move_player(
         *facing = direction;
         transform.translation += (direction * speed * dt).extend(0.0);
     }
+    let mut position = transform.translation.truncate();
+    resolve_circle_obstacles(&mut position, 16.0, obstacles);
+    transform.translation.x = position.x;
+    transform.translation.y = position.y;
     transform.translation.x = transform.translation.x.clamp(-430.0, 430.0);
     transform.translation.y = transform.translation.y.clamp(-220.0, 220.0);
+}
+
+fn resolve_circle_obstacles(position: &mut Vec2, radius: f32, obstacles: &[ArenaObstacle]) {
+    for _ in 0..2 {
+        for obstacle in obstacles {
+            let half_size = obstacle.size * 0.5;
+            let min = obstacle.center - half_size;
+            let max = obstacle.center + half_size;
+            let nearest = position.clamp(min, max);
+            let away = *position - nearest;
+            let distance_squared = away.length_squared();
+            if distance_squared >= radius * radius {
+                continue;
+            }
+
+            if distance_squared > 0.0001 {
+                let distance = distance_squared.sqrt();
+                *position += away / distance * (radius - distance);
+            } else {
+                let distances = [
+                    (position.x - min.x, 0),
+                    (max.x - position.x, 1),
+                    (position.y - min.y, 2),
+                    (max.y - position.y, 3),
+                ];
+                let side = distances
+                    .into_iter()
+                    .min_by(|left, right| left.0.total_cmp(&right.0))
+                    .unwrap()
+                    .1;
+                match side {
+                    0 => position.x = min.x - radius,
+                    1 => position.x = max.x + radius,
+                    2 => position.y = min.y - radius,
+                    _ => position.y = max.y + radius,
+                }
+            }
+        }
+    }
+}
+
+fn point_hits_obstacle(point: Vec2, radius: f32, obstacle: ArenaObstacle) -> bool {
+    let half_size = obstacle.size * 0.5 + Vec2::splat(radius);
+    let delta = (point - obstacle.center).abs();
+    delta.x < half_size.x && delta.y < half_size.y
+}
+
+fn line_clear(start: Vec2, end: Vec2, obstacles: &[ArenaObstacle]) -> bool {
+    let distance = start.distance(end);
+    let steps = (distance / 8.0).ceil() as usize;
+    for step in 1..steps {
+        let point = start.lerp(end, step as f32 / steps as f32);
+        if obstacles
+            .iter()
+            .copied()
+            .any(|obstacle| point_hits_obstacle(point, 0.0, obstacle))
+        {
+            return false;
+        }
+    }
+    true
 }
 
 type PlayerQuery<'w, 's> =
@@ -1339,11 +1632,13 @@ struct GameParams<'w, 's> {
     cameras: Query<'w, 's, (&'static Camera, &'static GlobalTransform)>,
     game: ResMut<'w, Game>,
     art: Res<'w, Art>,
+    geometry: Res<'w, ArenaGeometry>,
     player: PlayerQuery<'w, 's>,
     weapon: WeaponQuery<'w, 's>,
     enemies: EnemyQuery<'w, 's>,
     projectiles: ProjectileQuery<'w, 's>,
     doors: Query<'w, 's, &'static Transform, With<Door>>,
+    caches: Query<'w, 's, Entity, With<BonusCache>>,
 }
 
 struct Attack {
@@ -1351,17 +1646,40 @@ struct Attack {
     facing: Vec2,
     range: f32,
     damage: f32,
-    half_arc: f32,
+    shape: AttackShape,
 }
 
-fn hit_enemies(commands: &mut Commands, enemies: &mut EnemyQuery<'_, '_>, attack: Attack) -> usize {
+#[derive(Clone, Copy)]
+enum AttackShape {
+    Arc { half_arc: f32 },
+    HorizontalSweep { half_width: f32 },
+}
+
+fn hit_enemies(
+    commands: &mut Commands,
+    enemies: &mut EnemyQuery<'_, '_>,
+    attack: Attack,
+    obstacles: &[ArenaObstacle],
+) -> usize {
     let mut hits = 0;
     for (entity, transform, mut enemy) in enemies.iter_mut() {
         let offset = transform.translation.truncate() - attack.origin;
-        let distance = offset.length();
-        if distance <= attack.range
-            && (distance < 1.0 || offset.normalize().dot(attack.facing) >= attack.half_arc)
-        {
+        let enemy_radius = if enemy.elite.is_some() { 17.0 } else { 15.0 };
+        let hit = match attack.shape {
+            AttackShape::Arc { half_arc } => {
+                let distance = offset.length();
+                distance <= attack.range
+                    && (distance < 1.0 || offset.normalize().dot(attack.facing) >= half_arc)
+            }
+            AttackShape::HorizontalSweep { half_width } => {
+                let forward = offset.dot(attack.facing);
+                let lateral = offset.perp_dot(attack.facing).abs();
+                forward >= -enemy_radius
+                    && forward <= attack.range + enemy_radius
+                    && lateral <= half_width + enemy_radius
+            }
+        };
+        if hit && line_clear(attack.origin, transform.translation.truncate(), obstacles) {
             enemy.health -= attack.damage;
             enemy.stun = enemy.stun.max(0.13);
             hits += 1;
@@ -1389,6 +1707,7 @@ fn update_enemies(
     enemies: &mut EnemyQuery<'_, '_>,
     player: Vec2,
     dt: f32,
+    obstacles: &[ArenaObstacle],
 ) {
     let mut count = 0;
     for (entity, mut transform, mut enemy) in enemies.iter_mut() {
@@ -1398,7 +1717,11 @@ fn update_enemies(
         count += 1;
         enemy.cooldown = (enemy.cooldown - dt).max(0.0);
         enemy.stun = (enemy.stun - dt).max(0.0);
-        let position = transform.translation.truncate();
+        let enemy_radius = if enemy.elite.is_some() { 17.0 } else { 15.0 };
+        let mut position = transform.translation.truncate();
+        resolve_circle_obstacles(&mut position, enemy_radius, obstacles);
+        transform.translation.x = position.x;
+        transform.translation.y = position.y;
         let delta = player - position;
         let distance = delta.length().max(0.01);
         let toward = delta / distance;
@@ -1424,6 +1747,14 @@ fn update_enemies(
             enemy.charge_time = (enemy.charge_time - dt).max(0.0);
             transform.translation +=
                 (enemy.charge_direction * 375.0 * speed_multiplier * dt).extend(0.0);
+            let attempted_position = transform.translation.truncate();
+            position = attempted_position;
+            resolve_circle_obstacles(&mut position, enemy_radius, obstacles);
+            transform.translation.x = position.x;
+            transform.translation.y = position.y;
+            if position.distance_squared(attempted_position) > 0.25 {
+                enemy.charge_time = 0.0;
+            }
             if transform.translation.truncate().distance(player) < 28.0 {
                 hurt_player(commands, game, player, enemy.kind.damage());
                 enemy.charge_time = 0.0;
@@ -1437,7 +1768,10 @@ fn update_enemies(
         match enemy.kind {
             EnemyKind::Ranged => {
                 let preferred_distance = 218.0;
-                if enemy.cooldown <= 0.0 && distance < preferred_distance + 95.0 {
+                if enemy.cooldown <= 0.0
+                    && distance < preferred_distance + 95.0
+                    && line_clear(position, player, obstacles)
+                {
                     begin_enemy_attack(commands, art, &mut enemy, player);
                     continue;
                 }
@@ -1451,7 +1785,10 @@ fn update_enemies(
                 transform.translation += (toward * enemy.kind.speed() * radial * dt).extend(0.0);
             }
             EnemyKind::Charger => {
-                if enemy.cooldown <= 0.0 && distance <= enemy.kind.attack_range() {
+                if enemy.cooldown <= 0.0
+                    && distance <= enemy.kind.attack_range()
+                    && line_clear(position, player, obstacles)
+                {
                     begin_enemy_attack(commands, art, &mut enemy, player);
                     continue;
                 }
@@ -1459,7 +1796,10 @@ fn update_enemies(
                     (toward * enemy.kind.speed() * speed_multiplier * dt).extend(0.0);
             }
             EnemyKind::Skirmisher => {
-                if enemy.cooldown <= 0.0 && distance <= enemy.kind.attack_range() {
+                if enemy.cooldown <= 0.0
+                    && distance <= enemy.kind.attack_range()
+                    && line_clear(position, player, obstacles)
+                {
                     begin_enemy_attack(commands, art, &mut enemy, player);
                     continue;
                 }
@@ -1481,7 +1821,10 @@ fn update_enemies(
             }
             EnemyKind::Melee | EnemyKind::Heavy | EnemyKind::Bomber => {
                 let attack_range = enemy.kind.attack_range();
-                if enemy.cooldown <= 0.0 && distance <= attack_range {
+                if enemy.cooldown <= 0.0
+                    && distance <= attack_range
+                    && line_clear(position, player, obstacles)
+                {
                     begin_enemy_attack(commands, art, &mut enemy, player);
                     continue;
                 }
@@ -1491,6 +1834,11 @@ fn update_enemies(
                 }
             }
         }
+
+        position = transform.translation.truncate();
+        resolve_circle_obstacles(&mut position, enemy_radius, obstacles);
+        transform.translation.x = position.x;
+        transform.translation.y = position.y;
 
         if enemy.health <= 0.0 {
             if let Some(telegraph) = enemy.telegraph.take() {
@@ -1622,11 +1970,19 @@ fn update_projectiles(
     projectiles: &mut ProjectileQuery<'_, '_>,
     player: Vec2,
     dt: f32,
+    obstacles: &[ArenaObstacle],
 ) {
     for (entity, mut transform, mut projectile) in projectiles.iter_mut() {
         projectile.lifetime -= dt;
         transform.translation += (projectile.velocity * dt).extend(0.0);
-        if transform.translation.truncate().distance(player) < 22.0 {
+        let position = transform.translation.truncate();
+        let blocked = obstacles
+            .iter()
+            .copied()
+            .any(|obstacle| point_hits_obstacle(position, 7.0, obstacle));
+        if blocked {
+            commands.entity(entity).despawn();
+        } else if position.distance(player) < 22.0 {
             hurt_player(commands, game, player, projectile.damage);
             commands.entity(entity).despawn();
         } else if projectile.lifetime <= 0.0 {
@@ -1709,12 +2065,39 @@ fn start_run(game: &mut Game, bonus_seed: u64) {
     game.bonus_range = 0.0;
     game.combo_index = 0;
     game.combo_timer = 0.0;
+    game.cache_claimed = false;
     game.room_clear = false;
     game.bonus_seed = bonus_seed;
     game.primary_cooldown = 0.0;
     game.heavy_windup = 0.0;
     game.heavy_recovery = 0.0;
+    game.heavy_pending = false;
+    game.dash_time = 0.0;
     game.dash_cooldown = 0.0;
+    game.invulnerable = 0.0;
+    game.overlay = Overlay::None;
+    game.last_scene_key = None;
+}
+
+fn return_home(game: &mut Game) {
+    game.scene = Scene::Home;
+    game.room = 0;
+    game.player_health = 100.0;
+    game.max_health = 100.0;
+    game.bonuses.clear();
+    game.bonus_damage = 0.0;
+    game.bonus_range = 0.0;
+    game.combo_index = 0;
+    game.combo_timer = 0.0;
+    game.cache_claimed = false;
+    game.room_clear = false;
+    game.primary_cooldown = 0.0;
+    game.heavy_windup = 0.0;
+    game.heavy_recovery = 0.0;
+    game.heavy_pending = false;
+    game.dash_time = 0.0;
+    game.dash_cooldown = 0.0;
+    game.invulnerable = 0.0;
     game.overlay = Overlay::None;
     game.last_scene_key = None;
 }
@@ -1745,11 +2128,7 @@ fn update_overlay_input(keys: &ButtonInput<KeyCode>, game: &mut Game, bonus_seed
                     0 => game.overlay = Overlay::None,
                     1 => start_run(game, bonus_seed),
                     2 => game.overlay = Overlay::Catalog,
-                    _ => {
-                        game.overlay = Overlay::None;
-                        game.scene = Scene::Home;
-                        game.last_scene_key = None;
-                    }
+                    _ => return_home(game),
                 }
             }
         }
@@ -1758,22 +2137,32 @@ fn update_overlay_input(keys: &ButtonInput<KeyCode>, game: &mut Game, bonus_seed
                 game.overlay = Overlay::Pause(0);
             }
         }
-        Overlay::BonusChoice(mut selected) => {
+        Overlay::BonusChoice {
+            mut selected,
+            source,
+        } => {
             if keys.just_pressed(KeyCode::ArrowLeft) {
                 selected = (selected + 2) % 3;
-                game.overlay = Overlay::BonusChoice(selected);
+                game.overlay = Overlay::BonusChoice { selected, source };
             }
             if keys.just_pressed(KeyCode::ArrowRight) {
                 selected = (selected + 1) % 3;
-                game.overlay = Overlay::BonusChoice(selected);
+                game.overlay = Overlay::BonusChoice { selected, source };
             }
             if keys.just_pressed(KeyCode::Enter) {
-                let choices = bonus_choices(game.bonus_seed, game.room);
+                let source_seed = match source {
+                    BonusSource::Door => game.bonus_seed,
+                    BonusSource::Cache => game.bonus_seed ^ 0xCA5E_CACE_5EED_0001,
+                };
+                let choices = bonus_choices(source_seed, game.room);
                 apply_bonus(game, choices[selected]);
-                game.room += 1;
-                game.room_clear = false;
+                if matches!(source, BonusSource::Door) {
+                    game.room += 1;
+                    game.room_clear = false;
+                    game.cache_claimed = false;
+                    game.last_scene_key = None;
+                }
                 game.overlay = Overlay::None;
-                game.last_scene_key = None;
             }
         }
         Overlay::Ended(_) | Overlay::None => {}
