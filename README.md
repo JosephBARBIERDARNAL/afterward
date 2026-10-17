@@ -14,6 +14,8 @@ The Rust port uses Bevy 0.19 and built-in 2D shape primitives as replaceable pla
 
 The native window opens at 1280×720. Its camera keeps the existing arena framing while rendering the game larger.
 
+The Rust entry point in `src/main.rs` only starts the app. `src/app.rs` configures the window, `src/bevy_game/` owns game state and gameplay systems, and `src/presentation/` contains replaceable visuals and generated audio. Arena layout, combat, progression, and UI are separated so gameplay rules do not depend on rendering details.
+
 Run Rust checks with:
 
 ```sh

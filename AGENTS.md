@@ -6,9 +6,9 @@ Updated: 2026-10-17
 
 The user wants a roguelike with no currency or power that persists between runs. The current prototype is five authored rooms; the end goal is 100 rooms across ten visual chapters, with solo bosses in rooms 10, 20, …, 100. The safe room appears at startup and between runs. Its door explicitly starts a fresh run. Room-clear bonuses exist only for the active run and are erased on death, Back Home, or restart.
 
-The Bevy/Rust port is in progress. `src/main.rs` is the current Rust entry point. The Phaser implementation is temporarily retained as a parity reference and must be removed once the Bevy version covers the current game. Do not add new features to Phaser.
+The Bevy/Rust port is in progress. `src/main.rs` is a thin entry point; application setup, game systems, and presentation live in focused modules. The Phaser implementation is temporarily retained as a parity reference and must be removed once the Bevy version covers the current game. Do not add new features to Phaser.
 
-The current Bevy pass uses 2D shape primitives as placeholder art. It now has the safe room, all five authored room layouts and obstacles, obstacle collision and line-of-sight, the Crossing bonus cache, run-only bonuses, and keyboard pause/bonus menus. The primary melee combo uses a broad horizontal sword sweep. Player and enemy health bars, animated dealt/received damage numbers, a visible directional weapon and action cues, sharper UI text, and all six enemy patterns with both elite behaviors are implemented. Remaining migration work includes audio, mouse/controller support, and browser/Wasm packaging. Ask the user to playtest the migrated rooms and cache before tuning balance.
+The current Bevy pass uses 2D shape primitives as placeholder art. It now has the safe room, all five authored room layouts and obstacles, obstacle collision and line-of-sight, the Crossing bonus cache, run-only bonuses, and keyboard pause/bonus menus. The primary melee combo uses a broad horizontal sword sweep. Player and enemy health bars, animated dealt/received damage numbers, a visible directional weapon and action cues, sharper UI text, six enemy patterns, both elite behaviors, and generated impact sounds are implemented. Remaining migration work includes the other gameplay sound cues, mouse/controller support, and browser/Wasm packaging. Ask the user to playtest the migrated rooms and cache before tuning balance.
 
 The ranged enemy's normal projectile aim is too predictable. Keep that behavior until the planned combat-tuning pass.
 
@@ -23,7 +23,15 @@ The ranged enemy's normal projectile aim is too predictable. Keep that behavior 
 
 ## Project layout
 
-- `src/main.rs` — current Bevy app and in-progress game loop.
+- `src/main.rs` — minimal executable entry point.
+- `src/app.rs` — Bevy window configuration and app startup.
+- `src/bevy_game/mod.rs` — game plugin and ordered system schedule.
+- `src/bevy_game/model.rs` — game state and gameplay components.
+- `src/bevy_game/arena.rs` — authored room layouts, spawning, and obstacle geometry.
+- `src/bevy_game/combat.rs` and `src/bevy_game/combat/enemies.rs` — player combat, enemy behavior, and projectile resolution.
+- `src/bevy_game/progression.rs` — run resets and temporary bonus rules.
+- `src/bevy_game/ui.rs` — menus, HUD, health displays, and text.
+- `src/presentation/` — replaceable visual and audio effects; keep combat rules out of this layer.
 - `game-specs.md` — authoritative product and scope specification.
 - `TODO.md` — migration and content milestone tracking.
 - `src/game/` — legacy Phaser implementation; remove after Bevy parity.

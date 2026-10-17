@@ -3,10 +3,12 @@
 ## Milestone 1 — Migrate the current prototype to Bevy (in progress)
 
 - [x] Add a Bevy 0.19 Rust application and Cargo lockfile.
+- [x] Split the Bevy entry point into app setup, game state, arena, combat, progression, UI, and presentation modules.
 - [x] Get Rust formatting, lint, and type checks clean in CI.
 - [x] Port the safe room, five authored room layouts and obstacles, room transitions, and fresh-run reset.
 - [x] Preserve keyboard movement, directional aim, combo, heavy attack, dash, health, and hit feedback.
-- [ ] Add combat hit audio and remaining sound effects.
+- [x] Add generated impact audio for player hits and enemy hits.
+- [ ] Add the remaining combat, movement, and UI sound effects.
 - [x] Add animated damage numbers for hits dealt and hits received, including projectile damage.
 - [x] Show the player's current/max health and each living enemy's remaining health during combat.
 - [x] Keep the player's directional weapon visible, show action cues, strengthen attack telegraphs, and sharpen UI text.
