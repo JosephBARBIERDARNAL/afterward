@@ -118,6 +118,8 @@ There is no third-person camera and no important vertical traversal.
 
 The visual target is **stylized pixel art**, with the readability and visual character of games such as _Dead Cells_, adapted to a Hades-like overhead perspective.
 
+Keep UI text crisp and readable at the target window size; avoid rendering or scaling that makes it look blurry.
+
 Existing asset packs are used during development.
 
 All visual and audio assets must remain replaceable without changing gameplay code.
@@ -210,11 +212,15 @@ Movement and dash mastery are major components of player skill.
 
 Show a brief floating damage number whenever the player damages an enemy or takes damage. Damage dealt appears over the enemy; damage received appears over the player in bold red. Use a quick pop, upward drift, and fade so the numbers are easy to notice without lingering over the fight.
 
+Keep the player's weapon visible in the direction they are facing, including when they take damage. Give primary attacks, the heavy attack windup and strike, and the dash a brief visual cue. Enemy attack warnings must clearly grow and pulse before the attack lands.
+
 ---
 
 ## 11. Health
 
 Health persists between rooms during a run.
+
+Keep the player's current and maximum health visible in the run HUD. Show the remaining health of each living enemy in a small bar above it, and remove the bar when that enemy is defeated.
 
 Health does not automatically regenerate after combat.
 
