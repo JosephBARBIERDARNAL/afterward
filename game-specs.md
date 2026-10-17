@@ -144,22 +144,19 @@ During the journey, they gradually discover why the event they are avenging actu
 
 ## 9. Controls
 
-The game is designed **controller-first**, particularly for handheld play.
+The current prototype and Bevy migration target native desktop play with keyboard and mouse.
 
 Core controls:
 
-- left stick — movement on controller;
-- right stick — aim;
-- primary attack;
-- heavy attack;
-- dash;
-- E — interact with a nearby door on keyboard; A — interact on controller;
-- arrows or ZQSD — keyboard movement.
+- arrows or ZQSD — movement;
+- mouse — aim;
+- J — primary attack;
+- K — heavy attack;
+- Space — dash;
+- E — interact with a nearby door.
 - Escape — open or close the pause menu, which offers Continue, Restart Run, Bonus, and Back Home.
 
-Give each action one clear input path within each control scheme. Avoid adding redundant shortcuts or click alternatives for the same action. Keep the requested arrow and ZQSD movement bindings for keyboard play.
-
-Keyboard and mouse are supported during PC development.
+Give each action one clear keyboard path. Avoid adding redundant shortcuts or click alternatives for the same action. Keep the requested arrow and ZQSD movement bindings for keyboard play. Controller input and browser/Wasm builds are outside the Bevy migration scope.
 
 Attacks use explicit directional aiming. The game does not automatically select targets for the player.
 
@@ -324,7 +321,7 @@ After death, completing room 100, or choosing Back Home in the pause menu, retur
 
 The flow is:
 
-**Game starts / run ends → safe room → move to the door and press E (or A on a controller) → new run.**
+**Game starts / run ends → safe room → move to the door and press E → new run.**
 
 The interface should make restarting extremely quick without carrying power from earlier runs.
 
@@ -435,7 +432,7 @@ Do not add content simply to reach them.
 
 ## 23. Platform
 
-The project is migrating to **Bevy with Rust**. Desktop builds are the immediate development target; a browser build through WebAssembly remains a desired cross-platform target and must be addressed during the migration.
+The project is migrating to **Bevy with Rust**. The current migration target is a native desktop build with keyboard and mouse controls.
 
 ---
 
@@ -533,9 +530,9 @@ The ranged enemy currently aims at the player's earlier position before firing. 
 
 ### Milestone 5 — Bevy Migration
 
-Port the current five-room prototype to Bevy while preserving its combat, authored room sequence and obstacles, six enemy types, run-only bonuses, Crossing bonus cache, safe-room door, pause flow, and hit feedback. Obstacle geometry must block player and enemy movement, projectile travel, and attacks without clear line of sight. Remove currency, the shop, permanent upgrades, and persistence between runs. Use replaceable Bevy 2D shape placeholders while assets are pending. Remove the Phaser/Vite/Bun implementation and its dependencies once feature parity is reached. Keep the browser/Wasm target explicit and document any remaining platform work.
+Port the current five-room prototype to Bevy for native desktop keyboard and mouse play while preserving its combat, authored room sequence and obstacles, six enemy types, run-only bonuses, Crossing bonus cache, safe-room door, pause flow, and hit feedback. Obstacle geometry must block player and enemy movement, projectile travel, and attacks without clear line of sight. Remove currency, the shop, permanent upgrades, and persistence between runs. Use replaceable Bevy 2D shape placeholders while assets are pending. Browser/Wasm builds and controller input are outside this migration. Remove the Phaser/Vite/Bun implementation and its dependencies once desktop feature parity is confirmed.
 
-The current Bevy pass includes the five authored rooms and their obstacle geometry, basic collision and line-of-sight, the Crossing cache, generated versions of the prototype's gameplay sound cues, and a reset that clears run bonuses when returning home or starting another run. Controller input, browser/Wasm packaging, playtesting, and removal of the legacy Phaser implementation remain outstanding.
+The current Bevy pass includes the five authored rooms and their obstacle geometry, basic collision and line-of-sight, the Crossing cache, generated versions of the prototype's gameplay sound cues, and a reset that clears run bonuses when returning home or starting another run. User playtesting and removal of the legacy Phaser implementation remain outstanding.
 
 ### Milestone 6 — Full Enemy Roster
 

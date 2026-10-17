@@ -24,7 +24,7 @@ cargo clippy --all-targets -- -D warnings
 cargo check
 ```
 
-The browser/Wasm target remains part of the migration scope and is not configured yet. The previous Phaser build is temporarily retained for parity reference while the port is incomplete; its `bun run dev` and `bun run check` commands still work during that period.
+The migration targets native desktop play with keyboard and mouse. Browser/Wasm builds and controller input are outside its scope. The previous Phaser build is temporarily retained for parity reference while the port is incomplete; its `bun run dev` and `bun run check` commands still work during that period.
 
 ## Controls
 
@@ -45,7 +45,7 @@ On AZERTY keyboards, movement follows the labeled ZQSD keys; arrow keys also wor
 
 ## Current migration status
 
-The Bevy implementation is a work in progress. It has the safe room, five authored rooms with visible obstacles and collision, the Crossing bonus cache, six enemy patterns, two elite behaviors, core movement and attacks, visible player and enemy health bars, a directional weapon with action cues, clearer UI text, animated damage numbers, generated gameplay sound cues, room-clear doors, temporary bonuses, and keyboard pause/selection menus. Controller input and browser/Wasm packaging still need parity work. The legacy Phaser app remains available as a reference until that work is done. Playtest the migrated rooms and cache before tuning their balance.
+The Bevy implementation is a work in progress. It has the safe room, five authored rooms with visible obstacles and collision, the Crossing bonus cache, six enemy patterns, two elite behaviors, core movement and attacks, visible player and enemy health bars, a directional weapon with action cues, clearer UI text, animated damage numbers, generated gameplay sound cues, room-clear doors, temporary bonuses, and keyboard pause/selection menus. Remaining migration work is to playtest the native build and remove the legacy Phaser app after desktop feature parity is confirmed.
 
 The ranged enemy's normal projectile aim is intentionally still too predictable; revisit it during a dedicated combat-tuning pass. Ask the user to play the migrated build at the next playable milestone before tuning balance.
 

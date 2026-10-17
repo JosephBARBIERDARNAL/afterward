@@ -16,9 +16,8 @@
 - [x] Port the optional Crossing cache as an additional run-only bonus choice.
 - [ ] Playtest all ten run-only bonuses and confirm they work as described.
 - [x] Match the bonus catalog and pause menu, including Continue, Restart Run, Bonus, and Back Home.
-- [ ] Preserve clear one-path-per-action controls and test mouse/gamepad input where supported.
+- [x] Preserve one clear keyboard path per action and mouse aiming; browser and controller support are outside migration scope.
 - [ ] Playtest the AZERTY mapping, larger window, and faster movement with the user.
-- [ ] Add the Bevy browser/Wasm build path.
 - [ ] Remove Phaser, TypeScript, Vite, Bun, and their legacy-only code after Bevy parity is complete.
 - [ ] Invite the user to play the migrated game before tuning combat balance.
 
