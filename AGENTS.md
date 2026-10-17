@@ -1,49 +1,47 @@
 # Too Late — Agent Notes
 
-Updated: 2026-10-15
+Updated: 2026-10-17
 
 ## Project status
 
-The user reports that rooms and the run bonus direction feel good. The current five-room build is a prototype slice; the specified end goal is a 100-room run split into ten visual chapters, with solo bosses in rooms 10, 20, …, 100. The safe room appears at game start and between runs. Clearing a room awards saved money displayed with `$`; click the shop fixture to reveal permanent upgrade options. After clearing a non-final room, approach and interact with the east door to open it and see the bonus choices. The prototype offers three choices from a ten-bonus pool, lists picks by name on separate HUD lines, and has a pause menu with a full bonus catalog, Restart Run, and Back Home. Temporary bonuses reset with a new run. Damage feedback and a stronger enemy-hit sound are in place. The prototype now has six enemy types, two elite behaviors, and an optional bonus cache in The Crossing; playtest these additions before tuning.
+The user wants a roguelike with no currency or power that persists between runs. The current prototype is five authored rooms; the end goal is 100 rooms across ten visual chapters, with solo bosses in rooms 10, 20, …, 100. The safe room appears at startup and between runs. Its door explicitly starts a fresh run. Room-clear bonuses exist only for the active run and are erased on death, Back Home, or restart.
 
-The ranged enemy's normal projectile aim feels too predictable; keep its current behavior for now. Ask the user to playtest the combat-changing upgrades, new enemy patterns, and cache at the next playable check-in. Browser interaction could not be checked by the agent because browser-control tools were not available in this session.
+The Bevy/Rust port is in progress. `src/main.rs` is the current Rust entry point. The Phaser implementation is temporarily retained as a parity reference and must be removed once the Bevy version covers the current game. Do not add new features to Phaser.
+
+The current Bevy pass uses 2D shape primitives as placeholder art. The player can move, attack, dash, clear rooms, choose temporary bonuses, and navigate keyboard menus. Finish parity for authored obstacles and layouts, full enemy patterns and elite behaviors, the bonus cache, damage animation/audio, mouse/controller support, and browser/Wasm packaging. Ask the user to play the next usable Bevy milestone before tuning balance.
+
+The ranged enemy's normal projectile aim is too predictable. Keep that behavior until the planned combat-tuning pass.
 
 ## Current stack
 
-- Phaser 4.2.1, TypeScript, and Vite.
-- Phaser is the browser-first 2D framework. Phaser Editor provides visual scene editing, animation tools, and physics inspectors for Phaser projects.
-- Desktop keyboard/mouse and standard browser Gamepad API inputs are supported. Keyboard movement uses arrows or ZQSD for AZERTY. The design remains controller-first.
-- The MVP uses generated placeholder shapes and Web Audio tones. Keep rendering and sound code replaceable without coupling it to combat rules.
-- Local-only project. No hosted Site or deployment has been requested.
+- Bevy 0.19.1 and Rust 2024.
+- The current executable is a native Bevy app. WebAssembly/browser output remains a migration requirement.
+- Use Bevy's built-in 2D primitives for placeholders. Start from the [Bevy learning index](https://bevy.org/assets/#learning), [2D assets index](https://bevy.org/assets/#2d), and [official 2D Shapes example](https://github.com/bevyengine/bevy/blob/latest/examples/2d/2d_shapes.rs). The assets index is a community plugin directory; do not mistake it for a sprite pack.
+- Keep rendering and audio replaceable without coupling them to combat rules.
+- Phaser, TypeScript, Vite, and Bun files remain only as temporary migration references.
 
 ## Project layout
 
-- `src/game/CombatScene.ts` — arena simulation, combat state, HUD, and input wiring.
-- `src/game/HubScene.ts` — no-enemy safe room, permanent upgrade shop, and start-run door.
-- `src/game/data/arena.ts` — authored room layouts, geometry, and spawn points.
-- `src/game/data/balance.ts` — MVP combat tuning values.
-- `src/game/progression.ts` — permanent upgrade definitions and local save data.
-- `src/game/presentation/` — placeholder rendering and generated sound effects.
+- `src/main.rs` — current Bevy app and in-progress game loop.
 - `game-specs.md` — authoritative product and scope specification.
-- `TODO.md` — milestone tracking and open work.
+- `TODO.md` — migration and content milestone tracking.
+- `src/game/` — legacy Phaser implementation; remove after Bevy parity.
 
-## Run and build
+## Run and check
 
-- `bun install` — install dependencies.
-- `bun run dev` — start the local browser game.
-- `bun run build` — create a static browser build in `dist/`.
-- `bun run check` — run formatting, lint, typecheck, and production-build checks.
+- `cargo run` — start the Bevy build.
+- `cargo fmt --check` — check Rust formatting.
+- `cargo clippy --all-targets -- -D warnings` — check Rust lint.
+- `cargo check` — typecheck the Rust project.
+- `bun run dev` and `bun run check` remain available for the legacy reference only.
 
 ## Scope and implementation rules
 
-- Follow the milestone order in `game-specs.md`; the current prototype is a five-room slice with temporary bonuses, a catalog/pause UI, persistent money, and a safe-room upgrade shop. Keep the 100-room, ten-chapter run and ten solo bosses explicit as the end goal without treating them as already implemented.
-- Core combat must keep player movement, explicit directional aiming, a primary melee combo, a vulnerable heavy attack, a defensive dash, health/damage, six current enemy types with two elite behaviors, placeholder art/audio, and death/restart.
-- No block or parry, target auto-selection, mobile-specific controls, progression, upgrades, or generated rooms in Milestone 1.
-- Prefer data-driven tuning and authored arena geometry. Keep visual/audio assets behind presentation modules so replacements do not change gameplay rules.
+- Keep the full 100-room, ten-chapter goal and all ten solo bosses explicit without claiming they are implemented.
+- Every run starts with base stats and no carried resources. Do not implement money, a shop, permanent upgrades, persistent unlocks, or bonuses that survive between runs.
+- Keep current run-only bonus choices and clear them when a new run starts.
+- Core combat retains directional movement and aim, a primary melee combo, a vulnerable heavy attack, a defensive dash, health/damage, six enemy types, two elite behaviors, and death/restart.
+- Preserve arrow and ZQSD movement. Give each action one clear path per control scheme; avoid redundant shortcuts and duplicate click/key actions.
+- Prefer data-driven tuning and authored arena geometry. Keep visual/audio assets behind presentation code so replacements do not change gameplay rules.
 - Always remove dead code as part of each change.
-- Ask the user when a design decision materially changes the specified game. At each useful playable milestone, invite the user to play and report what feels wrong.
-- UX preference from playtesting: keep one clear input path per action within a control scheme; do not add redundant shortcuts or click alternatives. Preserve the requested arrow and ZQSD keyboard movement bindings.
-
-## Verification notes
-
-Do not claim the bonuses or combat balance are tuned based on implementation alone; user play feedback is the gate to the next milestone.
+- Do not claim bonuses or balance are tuned based on implementation alone; the user's play feedback is the gate for tuning.

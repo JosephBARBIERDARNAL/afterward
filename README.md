@@ -1,39 +1,46 @@
 # Too Late
 
-Browser combat prototype for the game described in [`game-specs.md`](./game-specs.md).
+**Too Late** is a single-player action roguelike in active migration from Phaser/TypeScript to Bevy/Rust. The game is a five-room prototype today; the end goal remains a 100-room run across ten visual chapters, with a solo boss every tenth room.
 
-## Run locally
+## Bevy development
+
+Install a current stable Rust toolchain, then run:
 
 ```sh
-bun install
-bun run dev
+cargo run
 ```
 
-Open the local URL printed by Vite. Build a static browser version with `bun run build`; the output goes to `dist/`.
+The Rust port uses Bevy 0.19 and built-in 2D shape primitives as replaceable placeholders. The [Bevy learning resources](https://bevy.org/assets/#learning), [2D assets index](https://bevy.org/assets/#2d), and [2D Shapes example](https://github.com/bevyengine/bevy/blob/latest/examples/2d/2d_shapes.rs) are documented in [`game-specs.md`](./game-specs.md). The 2D assets index lists community plugins rather than art packs.
 
-Run `bun run check` for formatting, lint, typecheck, and production-build checks. GitHub Actions runs the same checks for pushes and pull requests.
+Run Rust checks with:
+
+```sh
+cargo fmt --check
+cargo clippy --all-targets -- -D warnings
+cargo check
+```
+
+The browser/Wasm target remains part of the migration scope and is not configured yet. The previous Phaser build is temporarily retained for parity reference while the port is incomplete; its `bun run dev` and `bun run check` commands still work during that period.
 
 ## Controls
 
-| Action | Controller | Keyboard / mouse |
-| --- | --- | --- |
-| Move | Left stick | Arrow keys or ZQSD (AZERTY) |
-| Aim | Right stick | Mouse |
-| Primary combo | X | J |
-| Heavy attack | Y | K |
-| Dash | B | Space |
-| Interact with cleared exit or cache | A near the object | E near the object |
-| Choose room bonus | D-pad + A | Left/right + Enter |
-| Pause menu | — | Esc |
-| Open shop / buy upgrade | — | Click shop, then click a purchase |
-| Start a run | A near door | E near door |
+| Action | Keyboard / mouse |
+| --- | --- |
+| Move | Arrow keys or ZQSD (AZERTY) |
+| Aim | Mouse |
+| Primary combo | J |
+| Heavy attack | K |
+| Dash | Space |
+| Interact with the door | E |
+| Choose a run bonus | Left/right arrows + Enter |
+| Pause menu | Esc |
 
-Heavy attacks hit hard, but slow movement through the windup and recovery. Dash briefly avoids damage. The melee enemy marks its strike area before attacking; the ranged enemy aims at the player's earlier position before firing; the heavy warden is slower and announces a wide strike. Damage floats briefly above enemies, while damage to the player appears in bold red.
+Movement and aiming are directional. The safe-room door starts a run. After clearing a non-final room, approach its east door and press E to choose a temporary bonus. Every bonus and stat change resets when a new run starts. There is no money, shop, permanent upgrade, or progression saved between runs.
 
-## Current milestone
+## Current migration status
 
-The current prototype uses five handcrafted rooms that grow harder and six enemy types: melee, ranged, heavy, charger, skirmisher, and bomber. The final room introduces two marked elite behaviors: a faster, tougher Vanguard charger and a Volley ranged enemy that fires three projectiles. After clearing The Crossing, explore for an optional cache and press E to receive an extra run-bonus choice; it adds no money. A safe room appears when the game starts and after each run. Move with arrows or ZQSD, click the shop fixture to reveal permanent upgrade options, then approach the door and press E to begin a run. After clearing a non-final room, approach the east door and press E to open it; this presents one of three temporary bonuses from a pool of ten. Use left/right and Enter to choose. The east exit can be crossed after the choice. Picked bonuses appear by name on separate HUD lines; press Esc and choose Bonus to see the full catalog and effects. The pause menu has Continue, Restart Run, Bonus, and Back Home. A new run clears the picked bonuses, and health carries between rooms.
+The Bevy implementation is a work in progress. It has a basic safe room, a five-room run, six enemy placeholders, core movement and attacks, room-clear doors, temporary bonuses, and keyboard pause/selection menus. Enemy behavior, authored room details, elite patterns, the Crossing cache, sound, click-friendly menu controls, and browser/Wasm packaging still need parity work. The legacy Phaser app remains available as a reference until that work is done.
 
-Each cleared room earns $1. Money and purchased upgrades save in this browser, including after death or a page reload. Spend money in the safe room on permanent maximum health, attack damage, or dash cooldown upgrades; purchases take effect next run.
+The ranged enemy's normal projectile aim is intentionally still too predictable; revisit it during a dedicated combat-tuning pass. Ask the user to play the migrated build at the next playable milestone before tuning balance.
 
-The end goal is a 100-room run in ten themed chapters, with a visually distinct solo boss in every tenth room. Jungle, Hong Kong, and the moon are example chapter styles; not all 100 rooms or bosses are implemented in this prototype. The ranged enemy's predictable aim is recorded for a later tuning pass. See [`game-specs.md`](./game-specs.md), [`TODO.md`](./TODO.md), and [`AGENTS.md`](./AGENTS.md) for project scope and status.
+See [`game-specs.md`](./game-specs.md), [`TODO.md`](./TODO.md), and [`AGENTS.md`](./AGENTS.md) for scope and implementation notes.

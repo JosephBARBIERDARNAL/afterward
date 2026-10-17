@@ -2,33 +2,32 @@
 
 ## 1. Game
 
-**Too Late** is a single-player action roguelite set in a surreal world whose visual identity changes every ten rooms. Egyptian mythology remains a story influence across the journey rather than the look of every region.
+**Too Late** is a single-player action roguelike set in a surreal world whose visual identity changes every ten rooms. Egyptian mythology remains a story influence across the journey rather than the look of every region.
 
-The player enters a surreal world, fights through a 100-room run in ten themed chapters, creates a temporary build, collects permanent resources, and attempts to defeat the boss at the end of each chapter. The final boss waits in room 100.
+The player enters a surreal world, fights through a 100-room run in ten themed chapters, creates a temporary build, and attempts to defeat the boss at the end of each chapter. The final boss waits in room 100.
 
-Death ends the run and destroys the temporary build. Collected permanent resources survive and are spent between runs to make the character stronger.
+Death ends the run and destroys the temporary build. Nothing earned or chosen in one run carries into another: there is no currency, permanent upgrade tree, unlock, or account progression.
 
 The central player feeling is:
 
 > **One more run.**
 
-The game is a hobby/side project designed to be **finished**, not an attempt to implement the full scope of a commercial roguelite.
+The game is a hobby/side project designed to be **finished**, not an attempt to implement the full scope of a commercial roguelike.
 
 ---
 
 ## 2. Core Loop
 
-1. Start a run.
+1. Start in the empty safe room and explicitly open its door to begin a run.
 2. Advance through a 100-room run divided into ten chapters of ten rooms each.
 3. Enter a combat room; the tenth room of every chapter is a solo boss encounter.
 4. Defeat all enemies.
-5. Receive resources and/or choose a temporary upgrade.
+5. Choose a temporary upgrade after eligible rooms.
 6. Continue to the next room and chapter.
 7. Choose among different temporary bonuses after eligible rooms.
 8. Continue until the player dies or defeats the boss in room 100.
-9. On death, lose all temporary upgrades but keep permanent resources.
-10. Spend resources on permanent upgrades.
-11. Start another run.
+9. On death, lose the entire temporary build and return to the safe room.
+10. Start another run from the safe room with base stats and no carried resources.
 
 A successful run contains exactly **100 rooms** and ends by defeating the final boss in room 100. Rooms 10, 20, 30, 40, 50, 60, 70, 80, 90, and 100 are boss rooms.
 
@@ -38,11 +37,11 @@ A successful run contains exactly **100 rooms** and ends by defeating the final 
 
 The complete run is a 100-room journey divided into ten chapters. Early runs will often end before the player reaches later chapters because the player is weak and inexperienced.
 
-As the player improves and gains permanent upgrades, runs become longer.
+Runs become longer as the player learns enemy patterns and improves their decisions and execution.
 
 A successful late-game run should take approximately **40–60 minutes**, subject to playtesting across all 100 rooms and ten bosses.
 
-The game supports suspending and resuming an active run.
+Suspending and resuming an active run is not part of the current prototype.
 
 ---
 
@@ -52,7 +51,7 @@ The game contains one surreal world divided into **ten chapters**. Each chapter 
 
 Egyptian mythology remains a story influence, but does not restrict the look of each chapter. The visual changes can represent surreal shifts in the same connected world rather than separate playable worlds.
 
-Progression introduces:
+The 100-room journey introduces:
 
 - new enemies;
 - stronger enemy combinations;
@@ -61,7 +60,7 @@ Progression introduces:
 - hazards;
 - optional challenges;
 - secrets;
-- new temporary upgrades.
+- new temporary upgrades that are lost at the end of the run.
 
 ---
 
@@ -260,7 +259,7 @@ Combat provides reliable opportunities to improve the build.
 
 Exploration and optional dangerous paths provide additional or rarer opportunities.
 
-The current prototype includes a bonus cache in The Crossing. After clearing the room, find the cache and press E (or A on controller) to open it and receive one additional three-choice run bonus. This reward is separate from the east-door bonus and does not add money.
+The current prototype includes a bonus cache in The Crossing. After clearing the room, find the cache and press E (or A on controller) to open it and receive one additional three-choice run bonus. This reward is separate from the east-door bonus. It has no currency value and does not persist after the run.
 
 When receiving an upgrade, the player chooses from a **small randomized selection**.
 
@@ -276,14 +275,12 @@ The upgrade-selection system can only become more complicated if playtesting dem
 
 Some optional paths may be visibly more dangerous than the standard route and can hold additional exploration rewards. These rewards are separate from the room-clear bonus choice.
 
-When a bonus choice appears, its options vary by effect—such as maximum health, attack damage, healing, or a new power—not by high-risk and low-risk reward tiers. Room clears continue to award a flat $1.
+When a bonus choice appears, its options vary by effect—such as maximum health, attack damage, healing, or a new power—not by high-risk and low-risk reward tiers. Bonuses last only for the current run.
 
 Possible rewards include:
 
 - stronger temporary upgrades;
-- permanent resources;
 - healing;
-- rare permanent bonuses;
 - secrets;
 - narrative discoveries.
 
@@ -303,58 +300,27 @@ The player loses:
 - the current build;
 - temporary run-specific effects.
 
-The player keeps:
-
-- permanent resources;
-- discoveries;
-- unlocked progression;
-- rare permanent bonuses.
-
-Death should hurt, but a failed run should still usually contribute to long-term progress.
+Nothing from the run carries over after death. There is no permanent progression between runs. Death should make the player want to understand what went wrong and try again.
 
 ---
 
-## 16. Permanent Progression
+## 16. Between-Run Progression
 
-Permanent progression primarily consists of **explicit numerical upgrades**.
-
-Examples:
-
-- increased maximum health;
-- increased base damage;
-- increased heavy-attack damage;
-- improved healing;
-- improved dash properties.
-
-The prototype uses persistent money, displayed with the **$** symbol. Earn $1 for each room cleared. Money is saved immediately, survives death and browser restarts, and is spent only between runs. The interface uses `$` for all currency amounts.
-
-The first shop offers three capped permanent upgrades:
-
-- **Vitality:** +10 maximum health per level, up to five levels; level costs are $3, $4, $5, $6, and $7;
-- **Sharpened:** +1 damage to each primary and heavy attack per level, up to five levels; costs $4, $5, $6, $7, and $8;
-- **Quick Step:** reduce dash cooldown by 0.04 seconds per level, up to four levels; costs $4, $5, $6, and $7.
-
-The player clicks the shop fixture in the safe room to view its upgrade options. The level costs are shown there. Each purchase takes effect on the next run.
-
-The character should become substantially stronger over time.
-
-The game does **not** scale old enemies to compensate.
-
-Early enemies that were once dangerous should eventually become easy.
+There is no persistent progression between runs. Do not add money, a shop, permanent stat upgrades, unlocks, or saved bonuses. A new run always starts with the same base character and a clean temporary build.
 
 ---
 
 ## 17. Between Runs
 
-The game opens in a safe room with no enemies. The room shows the $ balance and a shop fixture at the edge of the room, leaving its center open for movement. The player clicks the shop fixture to reveal upgrade options, then clicks a purchase button. Press E (or A on a controller) near the door to start a new run.
+The game opens in a safe room with no enemies. Its center stays open for movement, and its door is the sole interaction that starts a run. The safe room has no shop or currency display.
 
-After death, clearing the run, or choosing Back Home in the pause menu, return to the same safe room. Preserve earned money and purchased upgrades there. Starting another run always requires an explicit door interaction.
+After death, completing room 100, or choosing Back Home in the pause menu, return to the safe room. Starting another run always requires an explicit door interaction and resets health, stats, bonuses, and run-specific effects.
 
 The flow is:
 
-**Game starts / run ends → safe room → move, click the shop to view upgrades, then approach and interact with the door → new run.**
+**Game starts / run ends → safe room → move to the door and press E (or A on a controller) → new run.**
 
-The interface should make restarting extremely quick.
+The interface should make restarting extremely quick without carrying power from earlier runs.
 
 ---
 
@@ -453,7 +419,6 @@ The finished game contains approximately:
 - 10 handcrafted solo bosses, with the room 100 boss as the final boss;
 - 15–25 reusable room templates;
 - 20–30 temporary upgrades;
-- 10–15 permanent upgrades;
 - several optional challenge/secret room variants.
 
 These numbers are **scope limits**, not minimum quotas.
@@ -464,15 +429,13 @@ Do not add content simply to reach them.
 
 ## 23. Platform
 
-Development targets **browser**, cross-platform.
-
-Focus on a modern web stack for video games in the browser. If relevant, consider using Rust compiling to Wasm if that helps for performances.
+The project is migrating to **Bevy with Rust**. Desktop builds are the immediate development target; a browser build through WebAssembly remains a desired cross-platform target and must be addressed during the migration.
 
 ---
 
 ## 24. Technology Requirements
 
-The engine must support:
+Bevy must support:
 
 - strong 2D or 2.5D workflows;
 - visual scene/room editing;
@@ -481,16 +444,16 @@ The engine must support:
 - particles/effects;
 - straightforward collision/physics;
 - data-driven content;
-- save games;
+- replaceable placeholder assets;
 - good iteration speed.
 
-**Finishing takes priority over programming-language preference.**
+Use Bevy's built-in 2D shapes as temporary visuals. The [Bevy learning index](https://bevy.org/assets/#learning) and [Bevy 2D assets index](https://bevy.org/assets/#2d) are starting references. The 2D assets index is a community plugin directory, not a downloadable art pack; evaluate plugins only when a concrete need appears. Current placeholders follow the official [2D Shapes example](https://github.com/bevyengine/bevy/blob/latest/examples/2d/2d_shapes.rs). Keep visuals and audio replaceable without changing combat rules.
 
 ---
 
 ## 25. MVP
 
-The first milestone is **not the roguelite**.
+The first milestone is **not the full 100-room game**.
 
 It is one combat arena.
 
@@ -546,7 +509,7 @@ Add room completion and transitions.
 
 The current prototype uses a fixed sequence of five handcrafted rooms that gets harder from room to room. This is a prototype slice only. The end goal is a 100-room run divided into ten chapters, with a solo boss in every tenth room and a distinct world style for each chapter. Do not build all 100 rooms as part of the current prototype milestone.
 
-After eligible rooms, offer three different temporary bonuses such as increased max health, increased base damage, healing, or a new combat power. Show chosen bonuses in the run HUD and clear them when a new run starts. Money is a flat $1-per-room progression reward; do not tie it to risk choices or high/low reward routes.
+After eligible rooms, offer three different temporary bonuses such as increased max health, increased base damage, healing, or a new combat power. Show chosen bonuses in the run HUD and clear them when a new run starts. Do not add money or any other progression that persists between runs.
 
 Add death/reset and basic rewards.
 
@@ -562,15 +525,15 @@ Playtest whether different choices meaningfully change combat and tune from feed
 
 The ranged enemy currently aims at the player's earlier position before firing. Its attack feels too predictable; revisit its aim timing or variation in a later combat-tuning pass.
 
-### Milestone 5 — Permanent Progression
+### Milestone 5 — Bevy Migration
 
-Award $1 per cleared room. Save money and permanent upgrade levels in browser storage. Show a shop fixture in a no-enemy safe room at startup and between runs; clicking it reveals the Vitality, Sharpened, and Quick Step upgrades. Interacting with its door begins the next run. Purchases affect the next run.
+Port the current five-room prototype to Bevy while preserving its combat, authored room sequence, six enemy types, run-only bonuses, safe-room door, pause flow, and hit feedback. Remove currency, the shop, permanent upgrades, and persistence between runs. Use replaceable Bevy 2D shape placeholders while assets are pending. Remove the Phaser/Vite/Bun implementation and its dependencies once feature parity is reached. Keep the browser/Wasm target explicit and document any remaining platform work.
 
 ### Milestone 6 — Full Enemy Roster
 
 The current prototype has six enemy types: melee, ranged, heavy, charger, skirmisher, and bomber. It introduces two elite behaviors in later rooms: a faster, tougher Vanguard charger and a Volley ranged enemy that fires a three-shot spread. Playtest these patterns before tuning their balance.
 
-Continue expanding the roster toward the ten-chapter progression and add more exploration rewards. Keep bonus choices differentiated by effect, with room clears paying a flat $1.
+Continue expanding the roster toward the ten-chapter progression and add more exploration rewards. Keep bonus choices differentiated by effect; every reward is limited to its current run.
 
 ### Milestone 7 — Boss
 
@@ -627,11 +590,11 @@ Too Late is finished when:
 - a complete 100-room run can be played from start to the final boss in room 100;
 - procedural runs provide meaningful variation;
 - temporary builds noticeably change combat;
-- permanent progression makes later runs easier;
+- each new run starts from the same base stats with no carried currency or bonuses;
 - exploration creates meaningful risk/reward decisions;
 - all ten solo bosses can be defeated, including the final boss in room 100;
 - the vengeance story has a simple beginning, revelation and ending;
-- progression saves correctly;
+- the Bevy build runs reliably on its supported platforms;
 - the game is stable enough to give to friends;
 - the game has coherent visuals and audio, even if some third-party assets remain.
 
