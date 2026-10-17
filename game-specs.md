@@ -104,7 +104,7 @@ The world primarily contains:
 
 Combat rooms are discrete encounters.
 
-When combat begins, exits lock. Defeating all enemies awards the room reward and makes the east door available. Approach that door and press E (or A on a controller) to open it; opening the door presents the room's bonus choice. Choosing a bonus lets the player pass through the open exit. Walking into a closed door never opens it by itself.
+When combat begins, exits lock. Defeating all enemies awards the room reward and makes the east door available. Approach that door and press E to open it; opening the door presents the room's bonus choice. Choosing a bonus lets the player pass through the open exit. Walking into a closed door never opens it by itself.
 
 Exploration occurs between encounters and inside non-combat areas.
 
@@ -262,7 +262,7 @@ Combat provides reliable opportunities to improve the build.
 
 Exploration and optional dangerous paths provide additional or rarer opportunities.
 
-The current prototype includes a bonus cache in The Crossing. After clearing the room, find the cache and press E (or A on controller) to open it and receive one additional three-choice run bonus. This reward is separate from the east-door bonus. It has no currency value and does not persist after the run.
+The current prototype includes a bonus cache in The Crossing. After clearing the room, find the cache and press E to open it and receive one additional three-choice run bonus. This reward is separate from the east-door bonus. It has no currency value and does not persist after the run.
 
 When receiving an upgrade, the player chooses from a **small randomized selection**.
 
