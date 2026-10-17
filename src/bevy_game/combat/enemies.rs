@@ -4,17 +4,21 @@ use super::{EnemyQuery, hurt_player};
 use crate::bevy_game::arena::{ArenaObstacle, line_clear, resolve_circle_obstacles};
 use crate::bevy_game::model::*;
 use crate::bevy_game::ui::spawn_text;
-use crate::presentation::audio::HitSounds;
+use crate::presentation::audio::{GameSounds, SoundCue, play_sound};
 use crate::presentation::visual::{Art, AttackTelegraph};
 
 pub(super) struct EnemyUpdateContext<'a> {
     art: &'a Art,
-    sounds: &'a HitSounds,
+    sounds: &'a GameSounds,
     obstacles: &'a [ArenaObstacle],
 }
 
 impl<'a> EnemyUpdateContext<'a> {
-    pub(super) fn new(art: &'a Art, sounds: &'a HitSounds, obstacles: &'a [ArenaObstacle]) -> Self {
+    pub(super) fn new(
+        art: &'a Art,
+        sounds: &'a GameSounds,
+        obstacles: &'a [ArenaObstacle],
+    ) -> Self {
         Self {
             art,
             sounds,
@@ -179,6 +183,7 @@ pub(super) fn update_enemies(
     }
     if count == 0 && !game.room_clear {
         game.room_clear = true;
+        play_sound(commands, context.sounds, SoundCue::Clear);
         spawn_text(
             commands,
             "ROOM CLEAR  ·  APPROACH THE EAST DOOR AND PRESS E",
@@ -219,7 +224,7 @@ fn begin_enemy_attack(commands: &mut Commands, art: &Art, enemy: &mut Enemy, tar
 fn resolve_enemy_attack(
     commands: &mut Commands,
     art: &Art,
-    sounds: &HitSounds,
+    sounds: &GameSounds,
     game: &mut Game,
     enemy: &mut Enemy,
     origin: Vec2,

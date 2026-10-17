@@ -7,8 +7,8 @@
 - [x] Get Rust formatting, lint, and type checks clean in CI.
 - [x] Port the safe room, five authored room layouts and obstacles, room transitions, and fresh-run reset.
 - [x] Preserve keyboard movement, directional aim, combo, heavy attack, dash, health, and hit feedback.
-- [x] Add generated impact audio for player hits and enemy hits.
-- [ ] Add the remaining combat, movement, and UI sound effects.
+- [x] Port generated sound cues for primary/heavy attacks, dash, bonus bursts, hit/death, enemy defeat, and room clear.
+- [ ] Playtest generated sound levels and effects with the user.
 - [x] Add animated damage numbers for hits dealt and hits received, including projectile damage.
 - [x] Show the player's current/max health and each living enemy's remaining health during combat.
 - [x] Keep the player's directional weapon visible, show action cues, strengthen attack telegraphs, and sharpen UI text.

@@ -10,7 +10,7 @@ use super::config::ROOM_COUNT;
 use super::model::Scene;
 use super::model::*;
 use super::progression::{bonus_count, return_home, start_run, update_overlay_input};
-use crate::presentation::audio::{HitSounds, play_hit_sound};
+use crate::presentation::audio::{GameSounds, SoundCue, play_sound};
 use crate::presentation::visual::{
     ActionVisual, Art, WeaponQuery, spawn_action_effect, spawn_damage, update_player_weapon,
 };
@@ -84,7 +84,9 @@ pub(crate) fn update_game(mut commands: Commands, params: GameParams) {
     game.heavy_windup = (game.heavy_windup - dt).max(0.0);
     game.combo_timer = (game.combo_timer - dt).max(0.0);
     game.dash_cooldown = (game.dash_cooldown - dt).max(0.0);
+    let previous_dash_time = game.dash_time;
     game.dash_time = (game.dash_time - dt).max(0.0);
+    let dash_finished = previous_dash_time > 0.0 && game.dash_time == 0.0;
     game.invulnerable = (game.invulnerable - dt).max(0.0);
 
     if let (Ok(window), Ok((camera, camera_transform))) = (windows.single(), cameras.single())
@@ -98,6 +100,7 @@ pub(crate) fn update_game(mut commands: Commands, params: GameParams) {
     }
 
     if keys.just_pressed(KeyCode::Space) && game.dash_cooldown <= 0.0 {
+        play_sound(&mut commands, &sounds, SoundCue::Dash);
         spawn_action_effect(
             &mut commands,
             ActionVisual {
@@ -115,21 +118,6 @@ pub(crate) fn update_game(mut commands: Commands, params: GameParams) {
         game.dash_time = 0.18;
         game.dash_cooldown = (0.78 - bonus_count(&game, Bonus::QuickStep) as f32 * 0.1).max(0.25);
         game.invulnerable = 0.24;
-        if game.bonuses.contains(&Bonus::DashNova) {
-            hit_enemies(
-                &mut commands,
-                &sounds,
-                &mut enemies,
-                Attack {
-                    origin: player_transform.translation.truncate(),
-                    facing: game.facing,
-                    range: 88.0,
-                    damage: 18.0,
-                    shape: AttackShape::Arc { half_arc: -1.0 },
-                },
-                &geometry.obstacles,
-            );
-        }
     }
     let speed = if game.dash_time > 0.0 {
         DASH_MOVE_SPEED
@@ -149,10 +137,42 @@ pub(crate) fn update_game(mut commands: Commands, params: GameParams) {
     let player_pos = player_transform.translation.truncate();
     update_player_weapon(&mut weapon, player_pos, game.facing);
 
+    if dash_finished && game.bonuses.contains(&Bonus::DashNova) {
+        play_sound(&mut commands, &sounds, SoundCue::DashBurst);
+        spawn_action_effect(
+            &mut commands,
+            ActionVisual {
+                position: player_pos,
+                angle: 0.0,
+                size: Vec2::splat(88.0),
+                rgba: [1.0, 0.61, 0.24, 0.72],
+                lifetime: 0.22,
+                start_scale: 0.20,
+                end_scale: 1.15,
+                rise_speed: 0.0,
+                z: 4.2,
+            },
+        );
+        hit_enemies(
+            &mut commands,
+            &sounds,
+            &mut enemies,
+            Attack {
+                origin: player_pos,
+                facing: game.facing,
+                range: 88.0,
+                damage: 18.0,
+                shape: AttackShape::Arc { half_arc: -1.0 },
+            },
+            &geometry.obstacles,
+        );
+    }
+
     if keys.just_pressed(KeyCode::KeyJ)
         && game.primary_cooldown <= 0.0
         && game.heavy_recovery <= 0.0
     {
+        play_sound(&mut commands, &sounds, SoundCue::Primary);
         game.primary_cooldown = 0.31;
         spawn_action_effect(
             &mut commands,
@@ -193,6 +213,9 @@ pub(crate) fn update_game(mut commands: Commands, params: GameParams) {
             &geometry.obstacles,
         );
         if final_hit && game.bonuses.contains(&Bonus::ComboBlast) {
+            if hit_count > 0 {
+                play_sound(&mut commands, &sounds, SoundCue::ComboBurst);
+            }
             hit_enemies(
                 &mut commands,
                 &sounds,
@@ -232,6 +255,7 @@ pub(crate) fn update_game(mut commands: Commands, params: GameParams) {
         );
     }
     if game.heavy_pending && game.heavy_windup <= 0.0 && game.heavy_recovery <= 0.0 {
+        play_sound(&mut commands, &sounds, SoundCue::Heavy);
         game.heavy_recovery = 0.56;
         game.heavy_pending = false;
         spawn_action_effect(
@@ -383,7 +407,7 @@ pub(crate) struct GameParams<'w, 's> {
     pub(crate) cameras: Query<'w, 's, (&'static Camera, &'static GlobalTransform)>,
     pub(crate) game: ResMut<'w, Game>,
     pub(crate) art: Res<'w, Art>,
-    pub(crate) sounds: Res<'w, HitSounds>,
+    pub(crate) sounds: Res<'w, GameSounds>,
     pub(crate) geometry: Res<'w, ArenaGeometry>,
     pub(crate) player: PlayerQuery<'w, 's>,
     pub(crate) weapon: WeaponQuery<'w, 's>,
@@ -409,12 +433,13 @@ pub(crate) enum AttackShape {
 
 pub(crate) fn hit_enemies(
     commands: &mut Commands,
-    sounds: &HitSounds,
+    sounds: &GameSounds,
     enemies: &mut EnemyQuery<'_, '_>,
     attack: Attack,
     obstacles: &[ArenaObstacle],
 ) -> usize {
     let mut hits = 0;
+    let mut defeated = 0;
     for (entity, transform, mut enemy) in enemies.iter_mut() {
         let offset = transform.translation.truncate() - attack.origin;
         let enemy_radius = if enemy.elite.is_some() { 17.0 } else { 15.0 };
@@ -443,6 +468,7 @@ pub(crate) fn hit_enemies(
                 false,
             );
             if enemy.health <= 0.0 {
+                defeated += 1;
                 if let Some(telegraph) = enemy.telegraph.take() {
                     commands.entity(telegraph).despawn();
                 }
@@ -451,14 +477,17 @@ pub(crate) fn hit_enemies(
         }
     }
     if hits > 0 {
-        play_hit_sound(commands, &sounds.enemy, 0.86);
+        play_sound(commands, sounds, SoundCue::EnemyHit);
+    }
+    for _ in 0..defeated {
+        play_sound(commands, sounds, SoundCue::EnemyDown);
     }
     hits
 }
 
 pub(crate) fn hurt_player(
     commands: &mut Commands,
-    sounds: &HitSounds,
+    sounds: &GameSounds,
     game: &mut Game,
     position: Vec2,
     damage: f32,
@@ -468,7 +497,10 @@ pub(crate) fn hurt_player(
     }
     game.player_health = (game.player_health - damage).max(0.0);
     game.invulnerable = 0.72;
-    play_hit_sound(commands, &sounds.player, 0.82);
+    play_sound(commands, sounds, SoundCue::PlayerHit);
+    if game.player_health == 0.0 {
+        play_sound(commands, sounds, SoundCue::Death);
+    }
     spawn_damage(commands, position, damage, true);
     spawn_action_effect(
         commands,
@@ -488,7 +520,7 @@ pub(crate) fn hurt_player(
 
 pub(crate) fn update_projectiles(
     commands: &mut Commands,
-    sounds: &HitSounds,
+    sounds: &GameSounds,
     game: &mut Game,
     projectiles: &mut ProjectileQuery<'_, '_>,
     player: Vec2,

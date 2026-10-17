@@ -535,7 +535,7 @@ The ranged enemy currently aims at the player's earlier position before firing. 
 
 Port the current five-room prototype to Bevy while preserving its combat, authored room sequence and obstacles, six enemy types, run-only bonuses, Crossing bonus cache, safe-room door, pause flow, and hit feedback. Obstacle geometry must block player and enemy movement, projectile travel, and attacks without clear line of sight. Remove currency, the shop, permanent upgrades, and persistence between runs. Use replaceable Bevy 2D shape placeholders while assets are pending. Remove the Phaser/Vite/Bun implementation and its dependencies once feature parity is reached. Keep the browser/Wasm target explicit and document any remaining platform work.
 
-The current Bevy pass includes the five authored rooms and their obstacle geometry, basic collision and line-of-sight, the Crossing cache, and a reset that clears run bonuses when returning home or starting another run. Audio, mouse/controller support, browser/Wasm packaging, playtesting, and removal of the legacy Phaser implementation remain outstanding.
+The current Bevy pass includes the five authored rooms and their obstacle geometry, basic collision and line-of-sight, the Crossing cache, generated versions of the prototype's gameplay sound cues, and a reset that clears run bonuses when returning home or starting another run. Controller input, browser/Wasm packaging, playtesting, and removal of the legacy Phaser implementation remain outstanding.
 
 ### Milestone 6 — Full Enemy Roster
 

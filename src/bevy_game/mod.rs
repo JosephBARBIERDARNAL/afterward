@@ -10,7 +10,7 @@ mod ui;
 use crate::presentation::visual::{
     animate_action_effects, animate_attack_telegraphs, animate_damage_numbers,
 };
-use crate::presentation::{audio::setup_hit_sounds, visual::setup_art};
+use crate::presentation::{audio::setup_game_sounds, visual::setup_art};
 use arena::{ArenaGeometry, sync_scene};
 use combat::update_game;
 use model::Game;
@@ -22,7 +22,7 @@ impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Game>()
             .init_resource::<ArenaGeometry>()
-            .add_systems(Startup, (setup_camera, setup_art, setup_hit_sounds))
+            .add_systems(Startup, (setup_camera, setup_art, setup_game_sounds))
             .add_systems(
                 Update,
                 (

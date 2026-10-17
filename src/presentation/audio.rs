@@ -2,27 +2,83 @@ use bevy::audio::Volume;
 use bevy::prelude::*;
 
 #[derive(Resource)]
-pub(crate) struct HitSounds {
-    pub(crate) enemy: Handle<AudioSource>,
-    pub(crate) player: Handle<AudioSource>,
+pub(crate) struct GameSounds {
+    primary: Handle<AudioSource>,
+    heavy: Handle<AudioSource>,
+    dash: Handle<AudioSource>,
+    dash_burst: Handle<AudioSource>,
+    combo_burst: Handle<AudioSource>,
+    player_hit: Handle<AudioSource>,
+    enemy_hit: Handle<AudioSource>,
+    enemy_down: Handle<AudioSource>,
+    death: Handle<AudioSource>,
+    clear: Handle<AudioSource>,
 }
 
-pub(crate) fn setup_hit_sounds(mut commands: Commands, mut sources: ResMut<Assets<AudioSource>>) {
-    commands.insert_resource(HitSounds {
-        enemy: sources.add(AudioSource {
-            bytes: impact_wave(182.0, 72.0, 0.18, 0.32).into(),
-        }),
-        player: sources.add(AudioSource {
-            bytes: impact_wave(118.0, 42.0, 0.23, 0.24).into(),
-        }),
+#[derive(Clone, Copy)]
+pub(crate) enum SoundCue {
+    Primary,
+    Heavy,
+    Dash,
+    DashBurst,
+    ComboBurst,
+    PlayerHit,
+    EnemyHit,
+    EnemyDown,
+    Death,
+    Clear,
+}
+
+impl GameSounds {
+    fn source(&self, cue: SoundCue) -> (&Handle<AudioSource>, f32) {
+        match cue {
+            SoundCue::Primary => (&self.primary, 0.38),
+            SoundCue::Heavy => (&self.heavy, 0.60),
+            SoundCue::Dash => (&self.dash, 0.32),
+            SoundCue::DashBurst => (&self.dash_burst, 0.72),
+            SoundCue::ComboBurst => (&self.combo_burst, 0.70),
+            SoundCue::PlayerHit => (&self.player_hit, 0.82),
+            SoundCue::EnemyHit => (&self.enemy_hit, 0.86),
+            SoundCue::EnemyDown => (&self.enemy_down, 0.50),
+            SoundCue::Death => (&self.death, 0.72),
+            SoundCue::Clear => (&self.clear, 0.45),
+        }
+    }
+}
+
+pub(crate) fn setup_game_sounds(mut commands: Commands, mut sources: ResMut<Assets<AudioSource>>) {
+    commands.insert_resource(GameSounds {
+        primary: add_sound(&mut sources, 240.0, 130.0, 0.09, 0.06),
+        heavy: add_sound(&mut sources, 112.0, 52.0, 0.20, 0.10),
+        dash: add_sound(&mut sources, 410.0, 170.0, 0.13, 0.03),
+        dash_burst: add_sound(&mut sources, 180.0, 58.0, 0.20, 0.10),
+        combo_burst: add_sound(&mut sources, 285.0, 92.0, 0.18, 0.08),
+        player_hit: add_sound(&mut sources, 118.0, 42.0, 0.23, 0.24),
+        enemy_hit: add_sound(&mut sources, 182.0, 72.0, 0.18, 0.32),
+        enemy_down: add_sound(&mut sources, 165.0, 76.0, 0.26, 0.08),
+        death: add_sound(&mut sources, 120.0, 38.0, 0.48, 0.12),
+        clear: add_sound(&mut sources, 260.0, 520.0, 0.30, 0.02),
     });
 }
 
-pub(crate) fn play_hit_sound(commands: &mut Commands, sound: &Handle<AudioSource>, volume: f32) {
+pub(crate) fn play_sound(commands: &mut Commands, sounds: &GameSounds, cue: SoundCue) {
+    let (source, volume) = sounds.source(cue);
     commands.spawn((
-        AudioPlayer::new(sound.clone()),
+        AudioPlayer::new(source.clone()),
         PlaybackSettings::DESPAWN.with_volume(Volume::Linear(volume)),
     ));
+}
+
+fn add_sound(
+    sources: &mut Assets<AudioSource>,
+    start_frequency: f32,
+    end_frequency: f32,
+    duration: f32,
+    noise_level: f32,
+) -> Handle<AudioSource> {
+    sources.add(AudioSource {
+        bytes: impact_wave(start_frequency, end_frequency, duration, noise_level).into(),
+    })
 }
 
 fn impact_wave(
