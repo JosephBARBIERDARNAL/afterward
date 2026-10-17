@@ -530,9 +530,9 @@ The ranged enemy currently aims at the player's earlier position before firing. 
 
 ### Milestone 5 — Bevy Migration
 
-Port the current five-room prototype to Bevy for native desktop keyboard and mouse play while preserving its combat, authored room sequence and obstacles, six enemy types, run-only bonuses, Crossing bonus cache, safe-room door, pause flow, and hit feedback. Obstacle geometry must block player and enemy movement, projectile travel, and attacks without clear line of sight. Remove currency, the shop, permanent upgrades, and persistence between runs. Use replaceable Bevy 2D shape placeholders while assets are pending. Browser/Wasm builds and controller input are outside this migration. Remove the Phaser/Vite/Bun implementation and its dependencies once desktop feature parity is confirmed.
+Port the current five-room prototype to Bevy for native desktop keyboard and mouse play while preserving its combat, authored room sequence and obstacles, six enemy types, run-only bonuses, Crossing bonus cache, safe-room door, pause flow, and hit feedback. Obstacle geometry must block player and enemy movement, projectile travel, and attacks without clear line of sight. Remove currency, the shop, permanent upgrades, and persistence between runs. Use replaceable Bevy 2D shape placeholders while assets are pending. Browser/Wasm builds and controller input are outside this migration. The Phaser/Vite/Bun implementation and its dependencies have been removed.
 
-The current Bevy pass includes the five authored rooms and their obstacle geometry, basic collision and line-of-sight, the Crossing cache, generated versions of the prototype's gameplay sound cues, and a reset that clears run bonuses when returning home or starting another run. User playtesting and removal of the legacy Phaser implementation remain outstanding.
+The current Bevy build includes the five authored rooms and their obstacle geometry, basic collision and line-of-sight, the Crossing cache, generated versions of the prototype's gameplay sound cues, and a reset that clears run bonuses when returning home or starting another run. User playtesting remains outstanding before balance tuning.
 
 ### Milestone 6 — Full Enemy Roster
 

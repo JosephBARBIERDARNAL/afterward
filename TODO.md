@@ -1,10 +1,10 @@
 # Too Late — Development TODO
 
-## Milestone 1 — Migrate the current prototype to Bevy (in progress)
+## Milestone 1 — Migrate the current prototype to Bevy (implementation complete; playtesting pending)
 
 - [x] Add a Bevy 0.19 Rust application and Cargo lockfile.
 - [x] Split the Bevy entry point into app setup, game state, arena, combat, progression, UI, and presentation modules.
-- [x] Get Rust formatting, lint, and type checks clean in CI.
+- [x] Separate formatting/lint, tests, and native executable compilation in CI; build Linux, macOS Apple Silicon/Intel, and Windows targets.
 - [x] Port the safe room, five authored room layouts and obstacles, room transitions, and fresh-run reset.
 - [x] Preserve keyboard movement, directional aim, combo, heavy attack, dash, health, and hit feedback.
 - [x] Port generated sound cues for primary/heavy attacks, dash, bonus bursts, hit/death, enemy defeat, and room clear.
@@ -18,8 +18,7 @@
 - [x] Match the bonus catalog and pause menu, including Continue, Restart Run, Bonus, and Back Home.
 - [x] Preserve one clear keyboard path per action and mouse aiming; browser and controller support are outside migration scope.
 - [ ] Playtest the AZERTY mapping, larger window, and faster movement with the user.
-- [ ] Remove Phaser, TypeScript, Vite, Bun, and their legacy-only code after Bevy parity is complete.
-- [ ] Invite the user to play the migrated game before tuning combat balance.
+- [x] Remove Phaser, TypeScript, Vite, Bun, and their legacy-only code.
 
 ## Roguelike progression rule
 
@@ -38,7 +37,3 @@
 ## Future combat tuning
 
 - [ ] Make the ranged enemy's projectile aim less predictable; keep its current behavior until a dedicated tuning pass.
-
-## Development workflow
-
-- [x] Move GitHub Actions CI to Rust formatting, Clippy, and Cargo checks; remove legacy Bun checks.

@@ -6,9 +6,9 @@ Updated: 2026-10-17
 
 The user wants a roguelike with no currency or power that persists between runs. The current prototype is five authored rooms; the end goal is 100 rooms across ten visual chapters, with solo bosses in rooms 10, 20, …, 100. The safe room appears at startup and between runs. Its door explicitly starts a fresh run. Room-clear bonuses exist only for the active run and are erased on death, Back Home, or restart.
 
-The Bevy/Rust port is in progress for native desktop keyboard and mouse play. Browser/Wasm builds and controller input are outside the migration scope. `src/main.rs` is a thin entry point; application setup, game systems, and presentation live in focused modules. The Phaser implementation is temporarily retained as a parity reference and must be removed once the Bevy version covers the current game. Do not add new features to Phaser.
+The Bevy/Rust native desktop implementation is the only game client. Browser/Wasm builds and controller input are outside the current scope. `src/main.rs` is a thin entry point; application setup, game systems, and presentation live in focused modules.
 
-The current Bevy pass uses 2D shape primitives as placeholder art. It now has the safe room, all five authored room layouts and obstacles, obstacle collision and line-of-sight, the Crossing bonus cache, run-only bonuses, and keyboard pause/bonus menus. The primary melee combo uses a broad horizontal sword sweep. Player and enemy health bars, animated dealt/received damage numbers, a visible directional weapon and action cues, sharper UI text, six enemy patterns, both elite behaviors, and generated sound cues for the current prototype are implemented. Remaining migration work is user playtesting and removal of the legacy Phaser implementation after desktop feature parity is confirmed.
+The current Bevy build uses 2D shape primitives as placeholder art. It has the safe room, all five authored room layouts and obstacles, obstacle collision and line-of-sight, the Crossing bonus cache, run-only bonuses, and keyboard pause/bonus menus. The primary melee combo uses a broad horizontal sword sweep. Player and enemy health bars, animated dealt/received damage numbers, a visible directional weapon and action cues, sharper UI text, six enemy patterns, both elite behaviors, and generated sound cues are implemented. The former Phaser and TypeScript implementation has been removed. Playtest the migrated slice before tuning balance.
 
 The ranged enemy's normal projectile aim is too predictable. Keep that behavior until the planned combat-tuning pass.
 
@@ -19,7 +19,7 @@ The ranged enemy's normal projectile aim is too predictable. Keep that behavior 
 - The native window opens at 1280×720; the camera zoom preserves the prototype's 960×540 arena framing.
 - Use Bevy's built-in 2D primitives for placeholders. Start from the [Bevy learning index](https://bevy.org/assets/#learning), [2D assets index](https://bevy.org/assets/#2d), and [official 2D Shapes example](https://github.com/bevyengine/bevy/blob/latest/examples/2d/2d_shapes.rs). The assets index is a community plugin directory; do not mistake it for a sprite pack.
 - Keep rendering and audio replaceable without coupling them to combat rules.
-- Phaser, TypeScript, Vite, and Bun files remain only as temporary migration references.
+- The five-room build is a prototype slice; the 100-room, ten-chapter run remains the long-term content goal.
 
 ## Project layout
 
@@ -34,15 +34,14 @@ The ranged enemy's normal projectile aim is too predictable. Keep that behavior 
 - `src/presentation/` — replaceable visual and audio effects; keep combat rules out of this layer.
 - `game-specs.md` — authoritative product and scope specification.
 - `TODO.md` — migration and content milestone tracking.
-- `src/game/` — legacy Phaser implementation; remove after Bevy parity.
 
 ## Run and check
 
 - `cargo run` — start the Bevy build.
-- `cargo fmt --check` — check Rust formatting.
-- `cargo clippy --all-targets -- -D warnings` — check Rust lint.
-- `cargo check` — typecheck the Rust project.
-- `bun run dev` and `bun run check` remain available for the legacy reference only.
+- `cargo fmt --all -- --check` — check Rust formatting.
+- `cargo clippy --locked --all-targets -- -D warnings` — check Rust lint.
+- `cargo test --locked` — run Rust tests.
+- `cargo build --locked --bin too-late` — compile the native game.
 
 ## Scope and implementation rules
 

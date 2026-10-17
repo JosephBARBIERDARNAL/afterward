@@ -1,6 +1,6 @@
 # Too Late
 
-**Too Late** is a single-player action roguelike in active migration from Phaser/TypeScript to Bevy/Rust. The game is a five-room prototype today; the end goal remains a 100-room run across ten visual chapters, with a solo boss every tenth room.
+**Too Late** is a single-player action roguelike built with Bevy and Rust. The current playable slice has five rooms; the end goal remains a 100-room run across ten visual chapters, with a solo boss every tenth room.
 
 ## Bevy development
 
@@ -16,15 +16,16 @@ The native window opens at 1280×720. Its camera keeps the existing arena framin
 
 The Rust entry point in `src/main.rs` only starts the app. `src/app.rs` configures the window, `src/bevy_game/` owns game state and gameplay systems, and `src/presentation/` contains replaceable visuals and generated audio. Arena layout, combat, progression, and UI are separated so gameplay rules do not depend on rendering details.
 
-Run Rust checks with:
+Run the separate local quality, test, and compile checks with:
 
 ```sh
-cargo fmt --check
-cargo clippy --all-targets -- -D warnings
-cargo check
+cargo fmt --all -- --check
+cargo clippy --locked --all-targets -- -D warnings
+cargo test --locked
+cargo build --locked --bin too-late
 ```
 
-The migration targets native desktop play with keyboard and mouse. Browser/Wasm builds and controller input are outside its scope. The previous Phaser build is temporarily retained for parity reference while the port is incomplete; its `bun run dev` and `bun run check` commands still work during that period.
+The game targets native desktop play with keyboard and mouse. GitHub Actions checks formatting and lint, runs tests separately, and builds the desktop executable on Linux, macOS Apple Silicon, macOS Intel, and Windows.
 
 ## Controls
 
@@ -43,9 +44,9 @@ Movement and aiming are directional. The safe-room door starts a run. After clea
 
 On AZERTY keyboards, movement follows the labeled ZQSD keys; arrow keys also work.
 
-## Current migration status
+## Current playable slice
 
-The Bevy implementation is a work in progress. It has the safe room, five authored rooms with visible obstacles and collision, the Crossing bonus cache, six enemy patterns, two elite behaviors, core movement and attacks, visible player and enemy health bars, a directional weapon with action cues, clearer UI text, animated damage numbers, generated gameplay sound cues, room-clear doors, temporary bonuses, and keyboard pause/selection menus. Remaining migration work is to playtest the native build and remove the legacy Phaser app after desktop feature parity is confirmed.
+The Bevy implementation has the safe room, five authored rooms with visible obstacles and collision, the Crossing bonus cache, six enemy patterns, two elite behaviors, core movement and attacks, visible player and enemy health bars, a directional weapon with action cues, clearer UI text, animated damage numbers, generated gameplay sound cues, room-clear doors, temporary bonuses, and keyboard pause/selection menus. The Phaser and TypeScript implementation has been removed. Playtest the migrated slice before tuning its balance.
 
 The ranged enemy's normal projectile aim is intentionally still too predictable; revisit it during a dedicated combat-tuning pass. Ask the user to play the migrated build at the next playable milestone before tuning balance.
 
