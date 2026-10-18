@@ -14,17 +14,16 @@
 ## Player
 
 - There is one protagonist
-- The protagonist has no defined gender or sex
 - Character creation is not included
-- Cosmetic customization is not required
+- All player assets (png and aseprite files) live in `src/assets/player/`
 
 ## Combats
 
-- Player has a sword that does range damage (all enemies in a 150° range in front) and a bow that shoots an arrow
-- Default sword damage is 5, default bow damage is 15
+- Player has a sword that does range damage (all enemies in a 150° range in front) and a gun that shoots
+- Default sword damage is 5, default gun damage is 15
 - Combat must be fast, mobility-heavy, skill-based
 - Hitting an enemy should show a brief floating damage number whenever the player damages an enemy or takes damage. Damage dealt appears over the enemy; damage received appears over the player in bold red. It uses quick pop, upward drift, and fade so the numbers are easy to notice without lingering over the fight.
-- Every move (sword attack, arrow, dash, etc) should have its own dedicated animation
+- Every move (sword attack, gun, dash, etc) should have its own dedicated animation
 
 ## Health
 
@@ -37,14 +36,29 @@
 
 ## Bonuses
 
+## Assets
+
+- All game assets live in `src/assets/`. Current asset directory should contain enough material to get started, but more should be added throught the development.
+- Player assets are in `src/assets/player/`
+- Ennemies assets are in `src/assets/enemies/`. Each ennemy kind has its own subfolder: `src/assets/enemies/type1/`, `src/assets/enemies/type2`, etc. Boss assets live in `src/assets/enemies/boss1`, etc.
+- Background assets are in `src/assets/background/`
+- Assets are available as PNG files, PSD files or aseprite.
+
 ## Controls
+
+Default:
 
 - arrows or ZQSD — movement;
 - J — sword;
-- K — shoot an arrow;
+- K — shoot a bullet;
 - Space — dash;
 - E — interact with an element (get bonus, open door, etc).
-- Escape — open or close the pause menu, which offers Continue (stop the pause and continue the run), Restart (restart the run from the beginning), and Leave (go to the main menu that shows before a run).
+- Escape — open or close the pause menu, which offers Continue (stop the pause and continue the run), Restart (restart the run from the beginning), Settings (see below) and Leave (go to the main menu that shows before a run).
+
+The settings should let player control
+
+- sound level of music and game sounds (both default to 100, which is max value)
+- customize controls: every control can be remmapable to a different one
 
 ## Technical requirements
 

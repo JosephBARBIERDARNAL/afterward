@@ -1,6 +1,6 @@
 ## Game specifications
 
-The entire game specifications live in gdd/main.md.
+The entire game specifications live in `game-spec.md`. This is the reference for every specifications of the game.
 
 ## Run and check
 
