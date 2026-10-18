@@ -1,4 +1,4 @@
-# Too Late — Development TODO
+# Afterward — Development TODO
 
 ## Milestone 1 — Migrate the current prototype to Bevy (implementation complete; playtesting pending)
 

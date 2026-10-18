@@ -1,6 +1,6 @@
-# Too Late
+# Afterward
 
-**Too Late** is a single-player action roguelike built with Bevy and Rust. The current playable slice has five rooms; the end goal remains a 100-room run across ten visual chapters, with a solo boss every tenth room.
+**Afterward** is a single-player action roguelike built with Bevy and Rust. The current playable slice has five rooms; the end goal remains a 100-room run across ten visual chapters, with a solo boss every tenth room.
 
 ## Bevy development
 
@@ -29,16 +29,16 @@ The game targets native desktop play with keyboard and mouse. GitHub Actions che
 
 ## Controls
 
-| Action | Keyboard / mouse |
-| --- | --- |
-| Move | Arrow keys or ZQSD (AZERTY) |
-| Aim | Mouse |
-| Primary combo | J |
-| Heavy attack | K |
-| Dash | Space |
-| Interact with the door | E |
-| Choose a run bonus | Left/right arrows + Enter |
-| Pause menu | Esc |
+| Action                 | Keyboard / mouse            |
+| ---------------------- | --------------------------- |
+| Move                   | Arrow keys or ZQSD (AZERTY) |
+| Aim                    | Mouse                       |
+| Primary combo          | J                           |
+| Heavy attack           | K                           |
+| Dash                   | Space                       |
+| Interact with the door | E                           |
+| Choose a run bonus     | Left/right arrows + Enter   |
+| Pause menu             | Esc                         |
 
 Movement and aiming are directional. The safe-room door starts a run. After clearing a non-final room, approach its east door and press E to choose a temporary bonus. Every bonus and stat change resets when a new run starts. There is no money, shop, permanent upgrade, or progression saved between runs.
 

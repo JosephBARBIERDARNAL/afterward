@@ -7,7 +7,7 @@ pub(crate) fn run() {
     App::new()
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
-                title: "TOO LATE".into(),
+                title: "AFTERWARD".into(),
                 resolution: (VIEW_SIZE.x as u32, VIEW_SIZE.y as u32).into(),
                 resizable: false,
                 ..default()

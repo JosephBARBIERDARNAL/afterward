@@ -252,7 +252,7 @@ pub(crate) fn spawn_arena(commands: &mut Commands, home: bool, obstacles: &[Aren
             SceneEntity,
         ));
     }
-    let label = if home { "TOO LATE" } else { "THE ASHEN ARENA" };
+    let label = if home { "AFTERWARD" } else { "THE ASHEN ARENA" };
     spawn_text(
         commands,
         label,

@@ -1,4 +1,4 @@
-# Too Late — Agent Notes
+# Afterward — Agent Notes
 
 Updated: 2026-10-17
 

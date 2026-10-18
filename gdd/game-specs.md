@@ -1,8 +1,8 @@
-# Too Late — Game Specification
+# Afterward — Game Specification
 
 ## 1. Game
 
-**Too Late** is a single-player action roguelike set in a surreal world whose visual identity changes every ten rooms. Egyptian mythology remains a story influence across the journey rather than the look of every region.
+**Afterward** is a single-player action roguelike set in a surreal world whose visual identity changes every ten rooms. Egyptian mythology remains a story influence across the journey rather than the look of every region.
 
 The player enters a surreal world, fights through a 100-room run in ten themed chapters, creates a temporary build, and attempts to defeat the boss at the end of each chapter. The final boss waits in room 100.
 
@@ -544,7 +544,7 @@ Continue expanding the roster toward the ten-chapter progression and add more ex
 
 Create handcrafted solo bosses for rooms 10 through 100, each with a distinct look and skillset. Make room 100 the final boss and the end of the 100-room run.
 
-At this point, **Too Late is a game**.
+At this point, **Afterward is a game**.
 
 ### Milestone 8 — Content & Identity
 
@@ -562,7 +562,7 @@ Then call it finished.
 
 ## 27. Explicitly Out of Scope
 
-Too Late does **not** include:
+Afterward does **not** include:
 
 - multiplayer;
 - online features;
@@ -589,7 +589,7 @@ Too Late does **not** include:
 
 ## 28. Definition of Done
 
-Too Late is finished when:
+Afterward is finished when:
 
 - combat feels responsive and satisfying;
 - a complete 100-room run can be played from start to the final boss in room 100;
@@ -611,7 +611,7 @@ Anything beyond this is optional.
 
 When considering a new feature, ask:
 
-> **Does Too Late need this to deliver fast combat, meaningful progression, procedural exploration, or "one more run"?**
+> **Does Afterward need this to deliver fast combat, meaningful progression, procedural exploration, or "one more run"?**
 
 If the answer is no:
 
