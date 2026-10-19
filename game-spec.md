@@ -1,207 +1,127 @@
-# Afterward game specifications
+# Afterward Game Specifications
 
 ## Overview
 
-- Afterward is a single-player action 2D, roguelike pixel-art platformer game where player has to clean 100 rooms full of enemies
-- Each room is harder and harder because of 3 reasons: more enemies, more powerful and different kind of enemies
-- After cleaning a room, player can choose one bonus among two
-- Every 10th room, there is a boss and the environment changes on the next room
-- The player enters a surreal world, fights through a 100-room run in ten themed chapters, creates a temporary build, and attempts to defeat the boss at the end of each chapter. The final boss waits in room 100.
-- Death ends the run and destroys the temporary build. Nothing earned or chosen in one run carries into another: there is no currency, permanent upgrade tree, unlock, or account progression.
-- Early runs will often end before the player reaches later chapters because the player is weak and inexperienced.
-- The game has no account logic and no telemetry. It runs entirely offline and locally.
+- Afterward is a single-player, 2D action roguelike pixel-art platformer. The player fights through 100 rooms filled with enemies.
+- Difficulty escalates across the run through enemy count, enemy strength, and enemy variety.
+- The 100 rooms are divided into 10 chapters of 10 consecutive rooms each. Each chapter ends with a boss encounter in its tenth room (rooms 10, 20, ..., 100). Room 100 contains the final boss.
+- Each chapter has its own environment. The environment changes when the player enters the next chapter.
+- After clearing a room, the player chooses one of two bonuses.
+- The player creates a temporary build during each run. Death ends the run and removes that build. Nothing carries over between runs: there is no currency, permanent upgrade tree, unlock, or account progression.
+- Early runs may end before the player reaches later chapters because the player is weak and inexperienced.
+- The game runs offline and locally. It has no account system or telemetry.
 
 ## Player
 
-- There is one protagonist
-- Character creation is not included
-- All player assets (png and aseprite files) live in `src/assets/player/`
-- All player actions, including idle, must have its own dedicated animation
+- The game has one protagonist. Character creation is not included.
+- Player assets (PNG and Aseprite files) are stored in `src/assets/player/`.
+- Every player action, including idle, has a dedicated animation.
 
-## Combats
+## Combat
 
-- Player has a sword that does range damage (all enemies in a 150° range in front) and a gun that shoots a bullet
-- Default sword damage is 5, default gun damage is 15
-- Combat must be fast, mobility-heavy, skill-based
-- Hitting an enemy should show a brief floating damage number whenever the player damages an enemy or takes damage. Damage dealt appears over the enemy; damage received appears over the player in bold red. It uses quick pop, upward drift, and fade so the numbers are easy to notice without lingering over the fight.
-- Every move (sword attack, gun, dash, etc) should have its own dedicated animation and sound design
-- When combat finishes (all enemies killed in the room), there should be a 0.5 sec animation on the whole screen that makes it explicit for player, as well as display the bonus choice.
-- Once bonus choice has been maid, a door on the right of the room appears, user just has to touch it to open it and go in the next room, which starts the next combat.
+- The player has a sword and a gun. The sword damages all enemies within a 150-degree arc in front of the player. The gun fires bullets.
+- Default sword damage is 5; default gun damage is 15.
+- Combat is fast, mobility-heavy, and skill-based.
+- Whenever the player deals or receives damage, show a brief floating damage number. Damage dealt appears over the enemy; damage received appears over the player in bold red. Numbers pop up, drift upward, and fade quickly so they remain legible without obscuring combat.
+- Each player move, including sword attacks, shooting, and dashing, has a dedicated animation and corresponding sound effect.
+- After all enemies in a room are defeated, play a 0.5-second, full-screen room-clear animation, then show the bonus choices.
+- After the player chooses a bonus, a door appears on the right side of the room. Touching it opens the door and starts the next room's combat.
 
 ## Health
 
 - Health persists between rooms during a run.
-- Health is an horizontal bar at the top left of the screen, starting with 100/100
-- Enemies health appear above its head in red, disappearing when it dies. An enemy with 1/3 of its life means 1/3 of the bar is red and the rest is black
-- Healing is scarce enough that taking damage matters.
-- Every ennemy has a chance (1 out 25) of dropping a 10 hp heal
+- The player's health appears as a horizontal bar in the top-left corner, starting at 100/100.
+- Enemy health appears above its head as a red bar with a black remainder and disappears when the enemy dies.
+- Healing is scarce, so taking damage matters.
+- Each enemy has a 1-in-25 chance to drop a 10 HP health pickup.
 
 ## Rooms
 
-- Every room has a background and is between 2 and 4 as big as the game width (in order to make them vary).
-- They have a background, with parallax effects that give illusion of deep.
-- There are platforms at different places in each room in order to jump on ennemies, move around the room, etc.
-- Taking the door to go to the next room has its own transition animation.
+- Each room is 2 to 4 times the game viewport's width.
+- Each room has a distinct background with parallax layers that create a sense of depth.
+- Platforms are placed throughout each room to support jumping and movement during combat.
+- Moving through the exit door to the next room has its own transition animation.
 
-## Ennemies
+## Enemies
 
-- Ennemies should have different behavior depending on how they look. One ennemy kind = one specific behavior.
-- There are between 5 and 15 enemies per room.
-- Killing one enemy is quite easy, especially in the first rooms.
-- Hitting an ennemy interrupts what it was doing
-- Each room has at least 2 different kind of enemies
-- All enemies must have an idle, move, hit, being hited and dying animation
+- Enemy behavior is determined by enemy type; each type has a distinct behavior matching its appearance.
+- Each room contains 5 to 15 enemies and at least two different enemy types.
+- Individual enemies should be relatively easy to defeat, especially in the early rooms.
+- Taking a hit interrupts an enemy's current action.
+- Every enemy has idle, movement, hit-reaction, and death animations.
 
 ## Bonuses
 
-- A bonus cannot be offered if the player already has it
-- All bonuses must have a name, a description and a category
-- Categories are: combat, defense, agility, intelligence and combined (a mix of a least 2 other categories)
-- Each category has its own icon and its own color: red for combat, blue for defense, green for agility, pale yellow for intelligence and orange for combined
-
-Here is the list of all bonuses available:
+- A bonus cannot be offered if the player already has it.
+- Every bonus has a name, description, and category.
+- Categories: combat, defense, agility, intelligence, and combined (a mix of at least two other categories).
+- Each category has its own icon and color: red for combat, blue for defense, green for agility, pale yellow for intelligence, and orange for combined.
+- The bonus catalog has not yet been defined.
 
 ## Assets
 
-- All game assets live in `src/assets/`. Current asset directory should contain enough material to get started, but more should be added throught the development.
-- Player assets are in `src/assets/player/`
-- Ennemies assets are in `src/assets/enemies/`. Each ennemy kind has its own subfolder: `src/assets/enemies/type1/`, `src/assets/enemies/type2`, etc. Boss assets live in `src/assets/enemies/boss1`, etc.
-- Background assets are in `src/assets/background/`
-- Assets are available as PNG files, PSD files or aseprite.
+- Game assets are stored in `src/assets/`. Add more assets as development proceeds.
+- Player assets are stored in `src/assets/player/`.
+- Enemy assets are stored in `src/assets/enemies/`. Each enemy type has its own subfolder (for example, `src/assets/enemies/type1/` and `src/assets/enemies/type2/`). Boss assets are stored in corresponding boss folders (for example, `src/assets/enemies/boss1/`).
+- Background assets are stored in `src/assets/background/`.
+- Assets may be provided as PNG, PSD, or Aseprite files.
 
-## Controls
+## Controls and Settings
 
-Default:
+Default controls:
 
-- arrows or ZQSD — movement;
-- J — sword;
-- K — shoot a bullet;
-- Space — dash;
-- E — interact with an element (get bonus, open door, etc).
-- Escape — open or close the pause menu, which offers Continue (stop the pause and continue the run), Restart (restart the run from the beginning), Settings (see below) and Leave (go to the main menu that shows before a run).
+- Arrow keys or ZQSD: move.
+- J: use the sword.
+- K: fire the gun.
+- Space: dash.
+- E: interact with an element, such as a bonus or door.
+- Escape: open or close the pause menu. The menu offers Continue, Restart, Settings, and Leave. Leave returns to the main menu shown before a run.
 
-The settings should let player control
+Settings:
 
-- sound level of music and game sounds (both default to 100, which is max value)
-- customize controls: every control can be remmapable to a different one
+- Music and sound-effect volume have separate sliders, each ranging from 0 to 100 and defaulting to 100.
+- Volume changes apply immediately and persist locally between sessions.
+- Every control can be remapped.
 
 ## Sound Design
 
-### Overview
+### Principles and Music
 
-- Afterward must have a distinctive, immersive sound identity that combines fast-paced combat with a surreal, mysterious atmosphere.
-- The sound design should be inspired by retro pixel-art games, using modern audio effects while preserving a slightly nostalgic feel.
-- Every important player action, enemy action, interaction, and game event must have its own sound effect.
-- Sound effects must provide immediate feedback without overwhelming the player, especially during intense combat with many enemies.
-- All audio assets must be stored in `src/assets/audio/`, organized by category.
-- The game must work entirely offline, including all music and sound effects.
-- The game must have a soundtrack that evolves throughout the 100 rooms.
-- Each of the 10 chapters must have its own musical identity, matching its environment, enemies, and atmosphere.
-- Music should be energetic during combat, with a strong rhythm that supports fast and mobility-heavy gameplay.
-- Each chapter must have at least one exploration/ambient track, one combat track, and one boss track.
-- Music should transition smoothly between different gameplay states, without abrupt cuts.
-- Boss music must feel more intense and threatening than regular combat music.
-- The final boss in room 100 must have a unique soundtrack.
-- The main menu, pause menu, death screen, and victory screen must have appropriate music or ambient sound.
-- Music must loop seamlessly.
-- Music should never restart unnecessarily when transitioning between rooms within the same chapter.
+- The sound identity combines fast-paced combat with a surreal, mysterious atmosphere. It draws on retro pixel-art games while using modern audio effects.
+- Sound effects give clear, immediate feedback without overwhelming the player during combat.
+- The main soundtrack has exactly 10 chapter tracks: one primary background track for each chapter. Each track matches its chapter's environment, enemies, and atmosphere, and loops seamlessly.
+- Chapter themes have energetic rhythms that support fast, mobile combat.
+- The chapter track continues without restarting between rooms in the same chapter. Transitions between chapters are smooth.
+- After a room is cleared, the music shifts to a calmer state.
+- Combat, room-clear, and boss events may use short musical transitions or changes in intensity. Boss encounters, including the final boss, do not require additional full-length chapter tracks.
+- Menus and game-state screens use suitable ambience or short audio cues.
 
-### Player Sound Effects
+### Gameplay Sound Effects
 
-Every player action must have a dedicated sound effect synchronized with its animation.
+- Player actions have sound effects synchronized with their animations. Include movement and surface-specific footsteps, jumping, landing, sword swings and hits, gunshots and bullet impacts, dashing, taking damage, healing pickups, and death. Idle sounds may be subtle and should not become repetitive or distracting.
+- Sword swings must sound different when they hit an enemy. Bullet impacts distinguish enemies from the environment. Damage and healing sounds must be easy to recognize.
+- Each enemy type has a recognizable sound identity, with sounds for idle, movement, attack execution, taking damage, and death. Include attack-preparation cues where applicable. Enemy hit sounds clearly confirm a successful hit, dangerous attacks have clear warning cues, and death sounds are short enough to avoid clutter when several enemies die together.
+- Stronger attacks have more powerful impact sounds.
+- Bosses have distinctive sounds for their movement, attacks, phase changes when applicable, damage, and defeat. Boss attack cues must remain audible during combat.
+- Bonuses that introduce new gameplay mechanics have appropriate sound effects.
 
-- **Idle:** subtle sounds when appropriate, without repetitive or distracting audio.
-- **Movement:** footsteps synchronized with the walking/running animation, varying depending on the surface.
-- **Jump:** short, responsive sound when jumping.
-- **Landing:** impact sound depending on the landing intensity.
-- **Sword attack:** sharp, fast swoosh synchronized with the sword swing.
-- **Sword hit:** satisfying impact sound when hitting an enemy, distinct from swinging without hitting anything.
-- **Gunshot:** powerful, punchy shooting sound with a short tail to avoid audio clutter.
-- **Bullet impact:** different sounds depending on whether the bullet hits an enemy or the environment.
-- **Dash:** quick, distinctive movement sound emphasizing speed.
-- **Taking damage:** clear impact sound, with a short character reaction.
-- **Healing:** positive, recognizable sound when collecting health.
-- **Death:** distinctive sound synchronized with the player's death animation.
+### Ambience, Events, and Interface
 
-Repeated actions such as sword attacks and gunshots should have subtle pitch and volume variations to avoid sounding identical every time.
+- Each chapter has an ambient soundscape that supports its environment and surreal atmosphere without distracting from gameplay. Ambience loops seamlessly, varies subtly, and transitions smoothly when entering a new chapter.
+- Play a distinct, satisfying cue for the 0.5-second room-clear animation. Provide distinct feedback for the exit door appearing and opening, bonus selection and navigation, health pickups, and other interactions.
+- Menu navigation, selection confirmation, invalid actions, and opening or closing the pause menu have consistent, appropriately subtle feedback.
+- Boss introductions use a short transition that builds tension; phase changes use clear audio cues. Defeating a boss, ending a run, restarting, and winning each have distinct cues. The final victory cue is unique.
 
-### Enemy Sound Effects
+### Mixing and Playback
 
-- Every enemy type must have its own recognizable sound identity, matching its appearance and behavior.
-- Each enemy type must have sounds for idle, movement, attack preparation when applicable, attack execution, taking damage, and death.
-- Enemy attacks should be recognizable through audio cues, allowing skilled players to anticipate danger.
-- Dangerous attacks should have more noticeable sounds than regular attacks.
-- Enemy hit sounds must clearly indicate that the player's attack connected.
-- Enemy death sounds should be short enough to avoid overwhelming combat when multiple enemies die simultaneously.
-- Enemy sounds should vary slightly in pitch and volume to prevent repetition.
-- Bosses must have unique sounds for their attacks, movements, phase changes, taking damage, and death.
-- Boss attack audio cues must remain audible even during intense combat.
+- Keep music and sound effects on separate channels. Important gameplay cues, especially player damage and boss attack warnings, take priority over ambience and decorative sounds.
+- Music may briefly lower in volume during important events, such as boss introductions, death, or victory.
+- Limit or mix simultaneous identical sounds to prevent excessive volume. Repeated effects may vary slightly in pitch or volume to reduce repetition.
+- Avoid clipping and excessive loudness. Stereo positioning may reflect sound location, but must not make important cues difficult to hear.
+- Audio playback must remain performant in rooms with up to 15 enemies. Pause or attenuate gameplay audio while paused, keep menu sounds available, and restore gameplay audio smoothly on resume.
+- Stop or transition audio correctly when restarting a run, dying, returning to the main menu, or changing chapters. No sound should continue after its associated game state ends.
 
-### Combat Feedback
+### Audio Assets
 
-- Combat sounds must feel impactful, fast, and satisfying.
-- Successful attacks must sound different from missed attacks.
-- Stronger attacks must have more powerful impact sounds.
-- When the player takes damage, the sound must be immediately recognizable, even when multiple enemies are attacking.
-- Sounds should be synchronized precisely with their corresponding animation frames.
-- Multiple identical sounds played simultaneously should be intelligently limited or mixed to prevent excessive volume.
-- Each chapter must have its own ambient soundscape matching its visual environment.
-- Ambient sounds should reinforce the surreal atmosphere without distracting from gameplay.
-- Environmental sounds may include wind, distant echoes, mechanical noises, supernatural whispers, or other effects appropriate to the chapter.
-- Ambient audio should loop seamlessly and vary subtly over time.
-- Moving between rooms in the same chapter should preserve the overall sound atmosphere.
-- Entering a new chapter should introduce its new ambiance through a smooth transition.
-- Environmental sounds should remain quieter than important gameplay sounds.
-- When all enemies in a room are defeated, the combat music should transition to a calmer state.
-- The 0.5-second room-clear animation must have a distinct, satisfying sound effect.
-- When the exit door appears, a recognizable sound should indicate that the room is ready to leave.
-- Opening the door and transitioning to the next room must have dedicated sound effects synchronized with the transition animation.
-- When the bonus selection appears, a short, rewarding sound must play.
-- Navigating between bonus choices must produce subtle UI sounds.
-- Selecting a bonus must play a satisfying confirmation sound.
-- Bonuses that introduce new gameplay mechanics must also introduce appropriate sound effects for those mechanics.
-- Collecting a health drop must play a recognizable healing sound.
-- Interacting with doors and other interactive elements must produce clear audio feedback.
-- Every 10th room must feature a distinct boss encounter audio sequence.
-- Entering a boss room should trigger a short musical transition that builds tension.
-- Each boss must have unique attack sounds and recognizable audio cues.
-- If a boss has multiple phases, each phase transition must be accompanied by a noticeable audio change.
-- Defeating a boss must trigger a powerful, satisfying sound sequence.
-- After a boss is defeated, the music should transition into a short moment of relief before continuing.
-- Defeating the final boss must trigger a unique victory audio sequence.
-- All interactive UI elements must have consistent sound effects.
-- Navigating menus must produce subtle feedback sounds.
-- Confirming a selection must have a distinct confirmation sound.
-- Invalid or unavailable actions should produce a soft error sound when appropriate.
-- Opening and closing the pause menu must have dedicated sounds.
-- UI sounds must remain audible but should never be louder than important gameplay feedback.
-- The death screen must have a distinctive sound or musical transition that emphasizes the end of the run.
-- Restarting a run must have a short transition sound.
-- The victory screen must feature a rewarding audio sequence distinct from regular room completion.
-- Audio must be organized into separate music and sound-effect channels.
-- The settings menu must provide independent volume sliders for music and game sounds, both ranging from 0 to 100 and defaulting to 100.
-- Volume changes must apply immediately without requiring a restart.
-- Audio settings must persist locally between game sessions.
-- Important gameplay sounds must take priority over ambient and decorative sounds.
-- When the player takes damage, the damage sound should remain clearly audible over other effects.
-- Boss attack warnings must never be masked by music or other sound effects.
-- Music volume may be temporarily reduced during important events such as boss introductions, player death, or victory.
-- Audio must avoid clipping, distortion, and excessive loudness when many sounds play simultaneously.
-- Sounds should support stereo positioning based on their location relative to the player, without making important audio cues difficult to hear.
-- Audio playback must remain performant even in rooms containing 15 enemies.
-- All music and sound effects must be loaded from local assets.
-- Sound effects should use an appropriate compressed or uncompressed format depending on latency and quality requirements.
-- Music should use a compressed format suitable for seamless looping.
-- Frequently used sound effects should be preloaded to avoid playback delays.
-- Sounds must trigger at the correct moment in their associated animations.
-- Repeated sound effects must support slight randomized pitch variations.
-- The audio system must support multiple simultaneous sound effects.
-- A priority system must prevent excessive overlapping sounds.
-- Pausing the game must pause or appropriately attenuate gameplay audio, while keeping menu sounds functional.
-- Resuming the game must restore audio smoothly.
-- Audio playback must stop or transition correctly when restarting a run, dying, returning to the main menu, or changing chapters.
-- No sound should continue playing unintentionally after its associated game state has ended.
-- Audio files must use descriptive and consistent filenames.
-- Multiple variations of the same sound should use numbered suffixes, such as `sword_hit_01.wav`, `sword_hit_02.wav`, etc.
-- Audio assets should be reusable where appropriate, without compromising the unique identity of player actions, enemy types, and chapters.
-- Missing optional audio assets must never crash the game.
+- Store audio assets in `src/assets/audio/`, organized by category, with descriptive, consistent filenames. Name numbered variations with suffixes such as `sword_hit_01.wav` and `sword_hit_02.wav`.
+- Choose audio formats appropriate to playback latency and quality. Preload frequently used sound effects, and ensure missing optional audio assets do not crash the game.
