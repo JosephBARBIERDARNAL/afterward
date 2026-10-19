@@ -5,7 +5,7 @@ edition = "2024"
 rust-version = "1.96"
 
 [dependencies]
-bevy = { version = "0.19", features = ["wav"] }
+bevy = { version = "0.20" }
 
 [profile.dev]
 opt-level = 1
