@@ -11,6 +11,8 @@
 - Early runs may end before the player reaches later chapters because the player is weak and inexperienced.
 - The game runs offline and locally. It has no account system or telemetry.
 
+Important: the following is the game specifications, focusing on the first chapter (first 10 rooms), not the entire game.
+
 ## Player
 
 - The game has one protagonist. Character creation is not included.
@@ -22,6 +24,7 @@
 ### Movement Specifications
 
 `H` is the height of the player's collision box. Movement distances and speeds use `H` as their reference unit.
+“Movement speed” refers to the player's speed while grounded. Airborne horizontal control is specified separately.
 
 These are initial balance constants and should be easy to tune during iteration. Keep each value centralized in the game's player-tuning configuration rather than duplicating it across gameplay systems. The values below are the specification's source of truth.
 
@@ -44,26 +47,27 @@ These are initial balance constants and should be easy to tune during iteration.
 
 The sword damages all enemies within a 150-degree arc in front of the player. The gun fires projectiles.
 
-| Constant                                 | Value    | Unit or notes                                |
-| ---------------------------------------- | -------- | -------------------------------------------- |
-| `PLAYER_SWORD_DAMAGE`                    | 5        | Damage per hit                               |
-| `PLAYER_SWORD_RANGE`                     | 1.5      | H from the player's collision-box center     |
-| `PLAYER_SWORD_ATTACK_INTERVAL`           | 0.5      | s between attacks (2 attacks per second)     |
-| `PLAYER_GUN_DAMAGE`                      | 15       | Damage per projectile                        |
-| `PLAYER_GUN_FIRE_INTERVAL`               | 0.4      | s between shots (2.5 shots per second)       |
-| `PLAYER_GUN_AMMO_MODE`                   | Infinite | No reload                                    |
-| `PLAYER_PROJECTILE_SPEED`                | 18       | H/s                                          |
-| `ENEMY_KNOCKBACK_FROM_SWORD`             | 2.5      | H/s horizontally away from the player        |
-| `ENEMY_KNOCKBACK_FROM_BULLET`            | 1.2      | H/s horizontally away from the player        |
-| `PLAYER_KNOCKBACK`                       | 3.5      | H/s horizontally away from the damage source |
-| `PLAYER_DAMAGE_INVULNERABILITY_DURATION` | 0.55     | s after taking damage (33 frames at 60 FPS)  |
-| `PLAYER_DASH_INVULNERABILITY_DURATION`   | 0.12     | s at the start of the dash                   |
+| Constant                                 | Value    | Unit or notes                               |
+| ---------------------------------------- | -------- | ------------------------------------------- |
+| `PLAYER_SWORD_DAMAGE`                    | 5        | Damage per hit                              |
+| `PLAYER_SWORD_RANGE`                     | 1.5      | H from the player's collision-box center    |
+| `PLAYER_SWORD_ATTACK_INTERVAL`           | 0.5      | s between attacks (2 attacks per second)    |
+| `PLAYER_GUN_DAMAGE`                      | 15       | Damage per projectile                       |
+| `PLAYER_GUN_FIRE_INTERVAL`               | 0.4      | s between shots (2.5 shots per second)      |
+| `PLAYER_GUN_AMMO_MODE`                   | Infinite | No reload                                   |
+| `PLAYER_PROJECTILE_SPEED`                | 18       | H/s                                         |
+| `BOSS_KNOCKBACK_FROM_SWORD`              | 2.5      | H/s horizontally away from the player       |
+| `BOSS_KNOCKBACK_FROM_BULLET`             | 1.2      | H/s horizontally away from the player       |
+| `PLAYER_DAMAGE_INVULNERABILITY_DURATION` | 0.55     | s after taking damage (33 frames at 60 FPS) |
+| `PLAYER_DASH_INVULNERABILITY_DURATION`   | 0.12     | s at the start of the dash                  |
 
 ### Combat Feedback and Room Flow
 
 - Combat is fast, mobility-heavy, and skill-based.
+- The player never receives knockback. Damage may trigger the usual feedback and hit reaction, but must not displace the player.
+- Bosses are the only enemies affected by knockback. Sword hits and bullets may push bosses horizontally away from the player using the boss knockback constants above. Ordinary enemies are never displaced by knockback.
 - Whenever the player deals or receives damage, show a brief floating damage number. Damage dealt appears over the enemy; damage received appears over the player in bold red. Numbers pop up, drift upward, and fade quickly so they remain legible without obscuring combat.
-- Each player move, including sword attacks, shooting, and dashing, has a dedicated animation and corresponding sound effect.
+- Each player move, including sword attacks, shooting, and dashing, has a dedicated animation. Use placeholder sounds only for now (see Sound Design).
 - After all enemies in a room are defeated, play a 0.5-second, full-screen room-clear animation, then show the bonus choices.
 - After the player chooses a bonus, a door appears on the right side of the room. Touching it opens the door and starts the next room's combat.
 
@@ -73,7 +77,7 @@ The sword damages all enemies within a 150-degree arc in front of the player. Th
 - The player's health appears as a horizontal bar in the top-left corner, starting at 100/100.
 - Enemy health appears above its head as a red bar with a black remainder and disappears when the enemy dies.
 - Healing is scarce, so taking damage matters.
-- Each enemy has a 1-in-25 chance to drop a 10 HP health pickup.
+- Each enemy has a 4% base chance to drop a 10 HP health pickup.
 
 ## Rooms
 
@@ -124,20 +128,51 @@ next_room_id: null # null only for room 100
 
 ## Enemies
 
-- Enemy behavior is determined by enemy type; each type has a distinct behavior matching its appearance.
-- Each room contains 5 to 15 enemies and at least two different enemy types.
-- Individual enemies should be relatively easy to defeat, especially in the early rooms.
-- Taking a hit interrupts an enemy's current action.
+- These first-pass Chapter 1 values are tuning defaults, not final balance. Store them centrally in `src/assets/enemies/enemy_types.yaml`; room YAML may override them.
+- Each non-boss room contains 5 to 15 enemies and at least two different enemy types.
+- Enemies attack only through their defined attacks (no contact damage). Show a readable wind-up before each attack; taking a hit interrupts the current action. Ranged enemies try to keep their listed distance, while melee enemies approach the player.
+- Enemy profiles use the existing animation sets: the Swordsman and Gorgons fight up close, the Infantryman fires regular shots, and the Destroyer uses slower charged shots. Gorgon variants share a visual style but vary in speed and attack weight.
+
+| Type ID       |  HP | Attack                                                                    | Movement / behavior            |
+| ------------- | --: | ------------------------------------------------------------------------- | ------------------------------ |
+| `swordsman`   |  30 | 8 damage; melee, 1.2 H reach, 1.2 s cooldown, 0.35 s wind-up              | 2.5 H/s; pursues and strikes   |
+| `infantryman` |  24 | 8 damage; projectile at 8 H/s, 1.5 s cooldown, 0.4 s wind-up              | 1.5 H/s; keeps 5–8 H distance  |
+| `destroyer`   |  45 | 14 damage; charged projectile at 7 H/s, 2.2 s cooldown, 0.7 s wind-up     | 0.8 H/s; holds 6–10 H distance |
+| `gorgon_1`    |  28 | 8 damage; lunge, 1.3 H reach, 1.4 s cooldown, 0.3 s wind-up               | 3.5 H/s; fast pursuer          |
+| `gorgon_2`    |  36 | 10 damage; special projectile at 7 H/s, 2 s cooldown, 0.5 s wind-up       | 2.3 H/s; keeps 5–8 H distance  |
+| `gorgon_3`    |  46 | 12 damage; heavy melee sweep, 1.6 H reach, 1.8 s cooldown, 0.55 s wind-up | 2.2 H/s; slow pursuer          |
+
+- Chapter 1 boss `warrior`: 300 HP; moves at 3 H/s. Its three attacks are a two-hit melee combo (10 damage per hit), a telegraphed lunge (15 damage), and a jump slam (18 damage within 2 H of the landing point). Use 0.45–0.8 s wind-ups and 1.4–2.5 s cooldowns. At 50% HP, reduce cooldowns by 20%. These values are initial and tunable.
 - Every enemy has idle, movement, hit-reaction, and death animations.
 
 ## Bonuses
 
-- A bonus cannot be offered if the player already has it.
+- Bonuses are unique per run: a bonus cannot be offered to or acquired by a player who already owns it, even if multiple copies could otherwise be compatible.
 - After each room, two distinct eligible bonuses are selected randomly at runtime. Bonus choices are not stored in room YAML files.
 - Every bonus has a name, description, and category.
 - Categories: combat, defense, agility, intelligence, and combined (a mix of at least two other categories).
 - Each category has its own icon and color: red for combat, blue for defense, green for agility, pale yellow for intelligence, and orange for combined.
-- The bonus catalog has not yet been defined.
+- Initial bonus pool (20 bonuses):
+  - **Honed Edge** (_Combat_): Increase sword damage by 20%.
+  - **Heavy Caliber** (_Combat_): Increase gun damage by 20%.
+  - **Quick Cut** (_Combat_): Increase sword attack speed by 15%.
+  - **Velocity Rounds** (_Combat_): Increase projectile speed by 25%.
+  - **Thick Skin** (_Defense_): Increase defense by 10%, causing attacks to deal 10% less damage.
+  - **Room Ward** (_Defense_): Negate the first damage event in each room.
+  - **Vitality** (_Defense_): Increase maximum health by 15 and restore 15 health when acquired.
+  - **Scavenger** (_Defense_): Increase the chance of an enemy dropping a 10-HP health pickup by 25% relative to the base chance.
+  - **Fleet Feet** (_Agility_): Increase movement speed by 10%.
+  - **High Jump** (_Agility_): Increase jump height by 15%.
+  - **Dash Recharge** (_Agility_): Reduce dash cooldown by 20% (from 0.8 s to 0.64 s at the current baseline).
+  - **Double Jump** (_Agility_): Gain one additional mid-air jump at 80% of the normal jump impulse.
+  - **Marked Prey** (_Intelligence_): A sword hit marks an enemy for 2 s; gun hits deal 15% more damage to that enemy while marked.
+  - **Rhythm Training** (_Intelligence_): Each hit within 1.5 s of the previous hit increases both weapon attack speeds by 4%, up to 16%; the bonus resets after 1.5 s without a hit.
+  - **Chain Reaction** (_Intelligence_): Killing an enemy increases damage by 15% for 2 s.
+  - **Patient Aim** (_Intelligence_): After standing still for 0.5 s, gun damage increases by 15% until the player moves.
+  - **Vampiric Edge** (_Combined: Combat + Defense_): Each enemy hit by the sword restores 1 health, up to 5 health per swing.
+  - **Dash Strike** (_Combined: Combat + Agility_): A sword attack within 1 s after dashing deals 25% more damage.
+  - **Aerial Hunter** (_Combined: Combat + Agility_): Deal 20% more gun damage while airborne.
+  - **Sated Fury** (_Combined: Combat + Defense_): After collecting a healing pickup, increase both weapon attack speeds by 15% for 3 s.
 
 ## Assets
 
@@ -206,3 +241,5 @@ Settings:
 
 - Store audio assets in `src/assets/audio/`, organized by category, with descriptive, consistent filenames. Name numbered variations with suffixes such as `sword_hit_01.wav` and `sword_hit_02.wav`.
 - Choose audio formats appropriate to playback latency and quality. Preload frequently used sound effects, and ensure missing optional audio assets do not crash the game.
+
+Important for audio production: use temporary placeholders (simple generated tones/noise or silence) for required events. Keep placeholder calls easy to replace, and make sure missing audio files never prevent the game from running.
