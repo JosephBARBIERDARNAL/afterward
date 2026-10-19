@@ -60,3 +60,55 @@ pub(super) fn animate_sprites(
         atlas.index = animation.frame;
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::{fs, path::Path};
+
+    #[test]
+    fn sprite_sheet_layouts_match_their_png_dimensions() {
+        let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
+        let specs = player_sheets::sprites()
+            .into_iter()
+            .chain(enemy_sheets::sprites())
+            .chain(boss_sheets::sprites());
+
+        for spec in specs {
+            let path = asset_root.join(spec.path);
+            let bytes = fs::read(&path)
+                .unwrap_or_else(|error| panic!("failed to read {}: {error}", path.display()));
+            assert!(
+                bytes.starts_with(b"\x89PNG\r\n\x1a\n"),
+                "{} is not a PNG",
+                path.display()
+            );
+            assert!(
+                bytes.len() >= 24,
+                "{} has a truncated PNG header",
+                path.display()
+            );
+            assert_eq!(
+                &bytes[12..16],
+                b"IHDR",
+                "{} has no IHDR chunk",
+                path.display()
+            );
+
+            let image_width = u32::from_be_bytes(bytes[16..20].try_into().unwrap());
+            let image_height = u32::from_be_bytes(bytes[20..24].try_into().unwrap());
+            assert_eq!(
+                image_width,
+                spec.frame_width * spec.frames as u32,
+                "{} atlas width does not match its configured frame count",
+                path.display()
+            );
+            assert_eq!(
+                image_height,
+                spec.frame_height,
+                "{} atlas height does not match its configured frame height",
+                path.display()
+            );
+        }
+    }
+}

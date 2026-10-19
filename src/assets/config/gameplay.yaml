@@ -34,6 +34,9 @@ health_pickup:
 
 room_flow:
   clear_animation_s: 0.5
+  bonus_reroll_animation_s: 0.25
+  boss_intro_duration_s: 0.9
+  room_transition_duration_s: 0.8
   exit_side: right
   bonus_rerolls_per_run: 3
 

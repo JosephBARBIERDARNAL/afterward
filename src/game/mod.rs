@@ -19,6 +19,9 @@ mod screens;
 mod settings;
 mod world;
 
+#[cfg(test)]
+mod tests;
+
 use audio::{SoundCue, SoundQueue};
 use controls::{ControlBindings, GameAction};
 use settings::AudioSettings;
@@ -54,6 +57,18 @@ impl Plugin for GamePlugin {
                 (world::spawn_room, audio::start_chapter_music),
             )
             .add_systems(
+                OnEnter(GameScreen::BossIntro),
+                (
+                    world::spawn_room,
+                    flow::start_boss_intro,
+                    audio::queue_boss_intro,
+                ),
+            )
+            .add_systems(
+                OnEnter(GameScreen::RoomLoading),
+                (world::spawn_room, flow::start_room_transition_fade_out).chain(),
+            )
+            .add_systems(
                 OnEnter(GameScreen::MainMenu),
                 (world::cleanup_room, audio::stop_chapter_music),
             )
@@ -72,6 +87,8 @@ impl Plugin for GamePlugin {
                     screens::update_screen_text,
                     screens::handle_screen_input,
                     interface::update_room_clear_overlay,
+                    interface::update_boss_intro_overlay,
+                    interface::update_room_transition_overlay,
                     camera::update_background_parallax,
                     interface::update_hud,
                 ),
@@ -104,7 +121,20 @@ impl Plugin for GamePlugin {
             )
             .add_systems(
                 Update,
+                flow::update_boss_intro.run_if(in_state(GameScreen::BossIntro)),
+            )
+            .add_systems(
+                Update,
                 flow::update_room_transition.run_if(in_state(GameScreen::Transitioning)),
+            )
+            .add_systems(
+                Update,
+                flow::animate_exit_door.run_if(in_state(GameScreen::Transitioning)),
+            )
+            .add_systems(
+                Update,
+                flow::update_room_transition_fade_out
+                    .run_if(in_state(GameScreen::TransitioningOut)),
             )
             .add_systems(
                 Update,
@@ -125,7 +155,10 @@ enum GameScreen {
     Paused,
     RoomClear,
     Bonus,
+    BossIntro,
     Transitioning,
+    RoomLoading,
+    TransitioningOut,
     Settings,
     Controls,
     Dead,
@@ -142,6 +175,7 @@ struct RunSession {
     offered_bonuses: Vec<String>,
     previous_offers: BTreeSet<String>,
     selected_option: usize,
+    bonus_reroll_animation_remaining_s: f32,
     door_open: bool,
     room_ward_used: bool,
     world_loaded: bool,
@@ -158,6 +192,7 @@ impl Default for RunSession {
             offered_bonuses: Vec::new(),
             previous_offers: BTreeSet::new(),
             selected_option: 0,
+            bonus_reroll_animation_remaining_s: 0.0,
             door_open: false,
             room_ward_used: false,
             world_loaded: false,
@@ -213,6 +248,12 @@ struct HealthBarFrame;
 
 #[derive(Component)]
 struct RoomClearOverlay;
+
+#[derive(Component)]
+struct BossIntroOverlay;
+
+#[derive(Component)]
+struct RoomTransitionOverlay;
 
 #[derive(Component)]
 struct RoomEntity;

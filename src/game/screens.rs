@@ -17,7 +17,23 @@ pub(super) fn update_screen_text(
         }
         GameScreen::RoomClear => String::from("ROOM CLEARED"),
         GameScreen::Bonus => bonus_screen_header(&controls),
-        GameScreen::Transitioning => format!("ENTERING ROOM {:02}", session.room_id),
+        GameScreen::BossIntro => String::from("CHAPTER ONE\n\nTHE WARRIOR"),
+        GameScreen::Transitioning => data
+            .rooms
+            .get(&session.room_id)
+            .filter(|room| data.rooms.contains_key(&room.next_room_id))
+            .map_or_else(
+                || String::from("CHAPTER ONE COMPLETE"),
+                |room| format!("ENTERING ROOM {:02}", room.next_room_id),
+            ),
+        GameScreen::RoomLoading | GameScreen::TransitioningOut => data
+            .rooms
+            .get(&session.room_id)
+            .filter(|room| data.rooms.contains_key(&room.next_room_id))
+            .map_or_else(
+                || String::from("CHAPTER ONE COMPLETE"),
+                |_| format!("ROOM {:02}", session.room_id),
+            ),
         GameScreen::Settings => format!(
             "SETTINGS\n\n{} MUSIC  {}%\n{} SOUND  {}%\n\nMENU UP/DOWN  Select\nMOVE LEFT/RIGHT  Adjust\nINTERACT  Controls\nF  Fullscreen\nPAUSE  Back",
             if settings.selected_slider == 0 {
@@ -67,6 +83,17 @@ fn bonus_span_content(
     data: &GameData,
 ) -> (String, Color) {
     if matches!(span.kind, BonusSpanKind::Reroll) {
+        if session.bonus_reroll_animation_remaining_s > 0.0 {
+            let dots = (session.bonus_reroll_animation_remaining_s * 12.0) as usize % 4;
+            return (
+                format!(
+                    "↻  REROLLING{}  ({} remaining)\n",
+                    ".".repeat(dots),
+                    session.rerolls
+                ),
+                Color::WHITE,
+            );
+        }
         let marker = if session.selected_option == 2 {
             ">"
         } else {
@@ -74,12 +101,15 @@ fn bonus_span_content(
         };
         return if flow::reroll_available(session, data) {
             (
-                format!("{marker} 3. REROLL  ({} remaining)\n", session.rerolls),
+                format!("{marker} 3. ↻ REROLL  ({} remaining)\n", session.rerolls),
                 Color::WHITE,
             )
         } else {
             ("  3. REROLL UNAVAILABLE\n".to_owned(), Color::WHITE)
         };
+    }
+    if session.bonus_reroll_animation_remaining_s > 0.0 {
+        return (String::new(), Color::WHITE);
     }
 
     let Some(bonus_id) = session.offered_bonuses.get(span.index) else {
@@ -322,6 +352,7 @@ fn reset_run(session: &mut RunSession, data: &GameData) {
     session.offered_bonuses.clear();
     session.previous_offers.clear();
     session.selected_option = 0;
+    session.bonus_reroll_animation_remaining_s = 0.0;
     session.room_ward_used = false;
     session.door_open = false;
     session.world_loaded = false;

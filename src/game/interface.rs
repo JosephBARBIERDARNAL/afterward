@@ -17,6 +17,36 @@ pub(super) fn spawn_interface(mut commands: Commands) {
         Pickable::IGNORE,
     ));
 
+    commands.spawn((
+        Node {
+            position_type: PositionType::Absolute,
+            left: px(0),
+            right: px(0),
+            top: px(0),
+            bottom: px(0),
+            ..default()
+        },
+        BackgroundColor(Color::srgba(0.0, 0.0, 0.0, 0.0)),
+        Visibility::Hidden,
+        RoomTransitionOverlay,
+        Pickable::IGNORE,
+    ));
+
+    commands.spawn((
+        Node {
+            position_type: PositionType::Absolute,
+            left: px(0),
+            right: px(0),
+            top: px(0),
+            bottom: px(0),
+            ..default()
+        },
+        BackgroundColor(Color::srgba(0.02, 0.025, 0.05, 0.0)),
+        Visibility::Hidden,
+        BossIntroOverlay,
+        Pickable::IGNORE,
+    ));
+
     commands
         .spawn((
             Node {
@@ -196,6 +226,45 @@ pub(super) fn update_room_clear_overlay(
         if *screen.get() == GameScreen::RoomClear {
             let opacity = 0.72 * (1.0 - timer.0.fraction());
             color.0 = Color::srgba(0.78, 0.86, 1.0, opacity);
+            *visibility = Visibility::Visible;
+        } else {
+            *visibility = Visibility::Hidden;
+        }
+    }
+}
+
+pub(super) fn update_boss_intro_overlay(
+    screen: Res<State<GameScreen>>,
+    timer: Res<PhaseTimer>,
+    mut overlay: Query<(&mut BackgroundColor, &mut Visibility), With<BossIntroOverlay>>,
+) {
+    for (mut color, mut visibility) in &mut overlay {
+        if *screen.get() == GameScreen::BossIntro {
+            let progress = timer.0.fraction();
+            let fade_in = (progress / 0.25).clamp(0.0, 1.0);
+            let fade_out = ((1.0 - progress) / 0.75).clamp(0.0, 1.0);
+            color.0 = Color::srgba(0.02, 0.025, 0.05, 0.72 * fade_in.min(fade_out));
+            *visibility = Visibility::Visible;
+        } else {
+            *visibility = Visibility::Hidden;
+        }
+    }
+}
+
+pub(super) fn update_room_transition_overlay(
+    screen: Res<State<GameScreen>>,
+    timer: Res<PhaseTimer>,
+    mut overlay: Query<(&mut BackgroundColor, &mut Visibility), With<RoomTransitionOverlay>>,
+) {
+    let opacity = match screen.get() {
+        GameScreen::Transitioning => Some(timer.0.fraction()),
+        GameScreen::RoomLoading => Some(1.0),
+        GameScreen::TransitioningOut => Some(1.0 - timer.0.fraction()),
+        _ => None,
+    };
+    for (mut color, mut visibility) in &mut overlay {
+        if let Some(opacity) = opacity {
+            color.0 = Color::srgba(0.0, 0.0, 0.0, opacity.clamp(0.0, 1.0));
             *visibility = Visibility::Visible;
         } else {
             *visibility = Visibility::Hidden;

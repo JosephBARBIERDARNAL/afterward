@@ -32,11 +32,13 @@ pub(super) enum SoundCue {
     PlayerHurt,
     Pickup,
     EnemyAttack,
+    BossIntro,
     BossAttack,
     EnemyHurt,
     EnemyDeath,
     BossPhase,
     RoomClear,
+    DoorAppear,
     DoorOpen,
     BonusSelected,
     RunEnded,
@@ -74,6 +76,10 @@ pub(super) fn initialize_sound_bank(
 
 pub(super) fn queue_victory_cue(mut queue: ResMut<SoundQueue>) {
     queue.push(SoundCue::Victory);
+}
+
+pub(super) fn queue_boss_intro(mut queue: ResMut<SoundQueue>) {
+    queue.push(SoundCue::BossIntro);
 }
 
 pub(super) fn start_chapter_music(
@@ -151,7 +157,7 @@ pub(super) fn update_audio_volume(
         GameScreen::Paused | GameScreen::Settings => {
             data.gameplay.audio.paused_music_volume_multiplier
         }
-        GameScreen::RoomClear | GameScreen::Bonus => {
+        GameScreen::RoomClear | GameScreen::Bonus | GameScreen::BossIntro => {
             data.gameplay.audio.room_clear_music_volume_multiplier
         }
         _ => 1.0,
@@ -178,7 +184,7 @@ pub(super) fn update_audio_volume(
     }
 }
 
-fn cue_specs() -> [(SoundCue, f32, f32, f32, f32); 24] {
+fn cue_specs() -> [(SoundCue, f32, f32, f32, f32); 26] {
     use SoundCue::*;
     [
         (UiMove, 720.0, 920.0, 0.045, 0.08),
@@ -196,11 +202,13 @@ fn cue_specs() -> [(SoundCue, f32, f32, f32, f32); 24] {
         (PlayerHurt, 190.0, 90.0, 0.24, 0.25),
         (Pickup, 620.0, 1040.0, 0.20, 0.16),
         (EnemyAttack, 360.0, 420.0, 0.15, 0.12),
+        (BossIntro, 72.0, 220.0, 0.9, 0.3),
         (BossAttack, 100.0, 65.0, 0.24, 0.25),
         (EnemyHurt, 280.0, 190.0, 0.10, 0.12),
         (EnemyDeath, 300.0, 110.0, 0.20, 0.16),
         (BossPhase, 110.0, 220.0, 0.55, 0.22),
         (RoomClear, 440.0, 880.0, 0.45, 0.19),
+        (DoorAppear, 260.0, 440.0, 0.14, 0.10),
         (DoorOpen, 310.0, 660.0, 0.28, 0.17),
         (BonusSelected, 740.0, 1110.0, 0.18, 0.16),
         (RunEnded, 310.0, 70.0, 0.75, 0.22),

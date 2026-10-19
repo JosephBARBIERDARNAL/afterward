@@ -62,6 +62,9 @@ impl GameData {
             ));
         }
         if self.gameplay.room_flow.clear_animation_s <= 0.0
+            || self.gameplay.room_flow.bonus_reroll_animation_s <= 0.0
+            || self.gameplay.room_flow.boss_intro_duration_s <= 0.0
+            || self.gameplay.room_flow.room_transition_duration_s <= 0.0
             || self.gameplay.room_flow.exit_side != "right"
         {
             return Err(invalid_data(

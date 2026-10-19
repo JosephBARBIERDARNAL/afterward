@@ -97,6 +97,9 @@ pub struct HealthPickupConfig {
 #[derive(Debug, Deserialize)]
 pub struct RoomFlowConfig {
     pub clear_animation_s: f32,
+    pub bonus_reroll_animation_s: f32,
+    pub boss_intro_duration_s: f32,
+    pub room_transition_duration_s: f32,
     pub exit_side: String,
     pub bonus_rerolls_per_run: u8,
 }

@@ -159,22 +159,7 @@ pub(super) fn initialize_control_bindings(
     data: Res<GameData>,
     mut bindings: ResMut<ControlBindings>,
 ) {
-    let controls = &data.gameplay.controls;
-    let defaults = BTreeMap::from([
-        (GameAction::MoveLeft, parse_keys(&controls.move_left)),
-        (GameAction::MoveRight, parse_keys(&controls.move_right)),
-        (GameAction::NavigateUp, parse_keys(&controls.navigate_up)),
-        (
-            GameAction::NavigateDown,
-            parse_keys(&controls.navigate_down),
-        ),
-        (GameAction::Jump, parse_keys(&controls.jump)),
-        (GameAction::Dash, parse_keys(&controls.dash)),
-        (GameAction::Sword, parse_keys(&controls.sword)),
-        (GameAction::Gun, parse_keys(&controls.gun)),
-        (GameAction::Interact, parse_keys(&controls.interact)),
-        (GameAction::Pause, parse_keys(&controls.pause)),
-    ]);
+    let defaults = default_bindings(&data);
     bindings.defaults = defaults.clone();
     bindings.bindings = defaults;
 
@@ -199,6 +184,34 @@ pub(super) fn initialize_control_bindings(
             bindings.bindings.insert(action, keys);
         }
     }
+}
+
+pub(super) fn initialize_default_control_bindings(
+    data: Res<GameData>,
+    mut bindings: ResMut<ControlBindings>,
+) {
+    let defaults = default_bindings(&data);
+    bindings.defaults = defaults.clone();
+    bindings.bindings = defaults;
+}
+
+fn default_bindings(data: &GameData) -> BTreeMap<GameAction, Vec<KeyCode>> {
+    let controls = &data.gameplay.controls;
+    BTreeMap::from([
+        (GameAction::MoveLeft, parse_keys(&controls.move_left)),
+        (GameAction::MoveRight, parse_keys(&controls.move_right)),
+        (GameAction::NavigateUp, parse_keys(&controls.navigate_up)),
+        (
+            GameAction::NavigateDown,
+            parse_keys(&controls.navigate_down),
+        ),
+        (GameAction::Jump, parse_keys(&controls.jump)),
+        (GameAction::Dash, parse_keys(&controls.dash)),
+        (GameAction::Sword, parse_keys(&controls.sword)),
+        (GameAction::Gun, parse_keys(&controls.gun)),
+        (GameAction::Interact, parse_keys(&controls.interact)),
+        (GameAction::Pause, parse_keys(&controls.pause)),
+    ])
 }
 
 pub(super) fn save_bindings(bindings: &ControlBindings) {

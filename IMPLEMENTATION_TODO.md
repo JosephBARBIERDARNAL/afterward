@@ -7,6 +7,7 @@
 - [x] Centralize player, viewport, room-flow, and pickup tuning.
 - [x] Define the 20 unique bonus offers and their category presentation data.
 - [x] Add typed loading and validation for all game data.
+- [x] Verify every configured sprite atlas frame count and height against its PNG header.
 
 ## Playable game
 
@@ -19,5 +20,12 @@
 
 ## Completion checks
 
-- [ ] Verify the first ten rooms in a running build using the supplied assets.
+- [ ] Play through rooms 1–10 in a running build and visually verify each room, bonus choice, transition, and the Warrior encounter. So far, startup, game-data loading, and sprite-atlas dimensions have been verified.
 - [x] Run formatting, Clippy, the Rust test suite, and the native build; fix all resulting issues.
+
+## Remaining specification gaps
+
+- [ ] Decide how the Swordsman should move. The supplied assets have no walk sheet, so the current animation falls back to idle while it moves.
+- [ ] Decide how to add room-specific decorative props. All ten decoration lists are empty, and the supplied environment art is made of full-width parallax layers rather than standalone props.
+- [x] Add a visible door-opening / room-transition animation. The door narrows as the screen fades to black, the next room loads under the overlay, and the new room fades in.
+- [ ] Review audio against the full sound specification. Placeholder cues are in place, but most enemy types still share generic action sounds and footsteps do not vary by surface.

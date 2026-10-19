@@ -44,6 +44,7 @@ pub(super) fn update_room_clear(
 
 #[derive(SystemParam)]
 pub(super) struct BonusInputResources<'w> {
+    time: Res<'w, Time>,
     keys: Res<'w, ButtonInput<KeyCode>>,
     controls: Res<'w, ControlBindings>,
     data: Res<'w, GameData>,
@@ -55,6 +56,7 @@ pub(super) struct BonusInputResources<'w> {
 
 pub(super) fn handle_bonus_input(mut commands: Commands, resources: BonusInputResources) {
     let BonusInputResources {
+        time,
         keys,
         controls,
         data,
@@ -63,6 +65,15 @@ pub(super) fn handle_bonus_input(mut commands: Commands, resources: BonusInputRe
         mut next_screen,
         mut sounds,
     } = resources;
+    let was_animating = session.bonus_reroll_animation_remaining_s > 0.0;
+    session.bonus_reroll_animation_remaining_s =
+        (session.bonus_reroll_animation_remaining_s - time.delta_secs().min(0.05)).max(0.0);
+    if was_animating && session.bonus_reroll_animation_remaining_s > 0.0 {
+        return;
+    }
+    if was_animating {
+        session.selected_option = 0;
+    }
     let previous_selection = session.selected_option;
     let can_reroll = reroll_available(&session, &data);
     let max_option = if can_reroll { 2 } else { 1 };
@@ -93,7 +104,8 @@ pub(super) fn handle_bonus_input(mut commands: Commands, resources: BonusInputRe
         session.previous_offers.clear();
         let offered = session.offered_bonuses.clone();
         session.previous_offers.extend(offered);
-        session.selected_option = 0;
+        session.bonus_reroll_animation_remaining_s =
+            data.gameplay.room_flow.bonus_reroll_animation_s;
         return;
     }
 
@@ -137,7 +149,7 @@ pub(super) fn handle_bonus_input(mut commands: Commands, resources: BonusInputRe
         RoomEntity,
     ));
     session.door_open = true;
-    sounds.push(SoundCue::DoorOpen);
+    sounds.push(SoundCue::DoorAppear);
     next_screen.set(GameScreen::Playing);
 }
 
@@ -156,8 +168,10 @@ pub(super) fn reroll_available(session: &RunSession, data: &GameData) -> bool {
 pub(super) fn handle_door_touch(
     player: Query<&Transform, (With<PlayerBody>, Without<ExitDoor>)>,
     doors: Query<&Transform, (With<ExitDoor>, Without<PlayerBody>)>,
+    data: Res<GameData>,
     mut timer: ResMut<PhaseTimer>,
     mut next_screen: ResMut<NextState<GameScreen>>,
+    mut sounds: ResMut<SoundQueue>,
 ) {
     let (Ok(player), Ok(door)) = (player.single(), doors.single()) else {
         return;
@@ -167,8 +181,30 @@ pub(super) fn handle_door_touch(
     {
         return;
     }
-    timer.0 = Timer::from_seconds(0.45, TimerMode::Once);
+    timer.0 = Timer::from_seconds(
+        data.gameplay.room_flow.room_transition_duration_s / 2.0,
+        TimerMode::Once,
+    );
+    sounds.push(SoundCue::DoorOpen);
     next_screen.set(GameScreen::Transitioning);
+}
+
+pub(super) fn start_boss_intro(data: Res<GameData>, mut timer: ResMut<PhaseTimer>) {
+    timer.0 = Timer::from_seconds(
+        data.gameplay.room_flow.boss_intro_duration_s,
+        TimerMode::Once,
+    );
+}
+
+pub(super) fn update_boss_intro(
+    time: Res<Time>,
+    mut timer: ResMut<PhaseTimer>,
+    mut next_screen: ResMut<NextState<GameScreen>>,
+) {
+    timer.0.tick(time.delta());
+    if timer.0.is_finished() {
+        next_screen.set(GameScreen::Playing);
+    }
 }
 
 pub(super) fn update_room_transition(
@@ -185,18 +221,67 @@ pub(super) fn update_room_transition(
         return;
     }
     let next_room_id = data.rooms[&session.room_id].next_room_id;
+    if !data.rooms.contains_key(&next_room_id) {
+        timer.0 = Timer::from_seconds(
+            data.gameplay.room_flow.room_transition_duration_s / 2.0,
+            TimerMode::Once,
+        );
+        next_screen.set(GameScreen::TransitioningOut);
+        return;
+    }
     for entity in &entities {
         commands.entity(entity).despawn();
     }
     session.world_loaded = false;
     session.door_open = false;
     session.room_ward_used = false;
-    if !data.rooms.contains_key(&next_room_id) {
-        next_screen.set(GameScreen::Complete);
+    session.room_id = next_room_id;
+    next_screen.set(GameScreen::RoomLoading);
+}
+
+pub(super) fn animate_exit_door(
+    timer: Res<PhaseTimer>,
+    mut doors: Query<&mut Transform, With<ExitDoor>>,
+) {
+    let remaining_width = (1.0 - timer.0.fraction()).max(0.08);
+    for mut transform in &mut doors {
+        transform.scale.x = remaining_width;
+    }
+}
+
+pub(super) fn start_room_transition_fade_out(
+    data: Res<GameData>,
+    mut timer: ResMut<PhaseTimer>,
+    mut next_screen: ResMut<NextState<GameScreen>>,
+) {
+    timer.0 = Timer::from_seconds(
+        data.gameplay.room_flow.room_transition_duration_s / 2.0,
+        TimerMode::Once,
+    );
+    next_screen.set(GameScreen::TransitioningOut);
+}
+
+pub(super) fn update_room_transition_fade_out(
+    time: Res<Time>,
+    data: Res<GameData>,
+    session: Res<RunSession>,
+    mut timer: ResMut<PhaseTimer>,
+    mut next_screen: ResMut<NextState<GameScreen>>,
+) {
+    timer.0.tick(time.delta());
+    if !timer.0.is_finished() {
         return;
     }
-    session.room_id = next_room_id;
-    next_screen.set(GameScreen::Playing);
+    let room = &data.rooms[&session.room_id];
+    next_screen.set(if data.rooms.contains_key(&room.next_room_id) {
+        if room.next_room_id == 10 {
+            GameScreen::BossIntro
+        } else {
+            GameScreen::Playing
+        }
+    } else {
+        GameScreen::Complete
+    });
 }
 
 fn draw_bonus_pair(
