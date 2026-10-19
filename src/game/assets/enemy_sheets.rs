@@ -55,7 +55,7 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             path: "enemies/type1/Infantryman/Shot_1.png",
             frame_width: 128,
             frame_height: 128,
-            frames: 17,
+            frames: 11,
             fps: 12.0,
         },
         SpriteSheetSpec {

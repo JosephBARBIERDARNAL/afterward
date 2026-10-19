@@ -9,7 +9,9 @@ pub(super) struct SoundQueue(Vec<SoundCue>);
 
 impl SoundQueue {
     pub fn push(&mut self, cue: SoundCue) {
-        self.0.push(cue);
+        if !self.0.contains(&cue) {
+            self.0.push(cue);
+        }
     }
 }
 
@@ -145,10 +147,14 @@ pub(super) fn update_audio_volume(
     mut music_mix: Local<Option<f32>>,
     mut active_audio: Query<(&ManagedAudio, Option<&mut AudioSink>)>,
 ) {
-    let target_mix = if matches!(screen.get(), GameScreen::Paused | GameScreen::Settings) {
-        data.gameplay.audio.paused_music_volume_multiplier
-    } else {
-        1.0
+    let target_mix = match screen.get() {
+        GameScreen::Paused | GameScreen::Settings => {
+            data.gameplay.audio.paused_music_volume_multiplier
+        }
+        GameScreen::RoomClear | GameScreen::Bonus => {
+            data.gameplay.audio.room_clear_music_volume_multiplier
+        }
+        _ => 1.0,
     };
     let previous_mix = *music_mix;
     let current_mix = previous_mix.unwrap_or(target_mix);

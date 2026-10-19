@@ -27,7 +27,7 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
                     primary_window: Some(Window {
                         title: "Afterward".to_string(),
                         mode: if starts_fullscreen {
-                            WindowMode::BorderlessFullscreen(MonitorSelection::Current)
+                            WindowMode::BorderlessFullscreen(MonitorSelection::Primary)
                         } else {
                             WindowMode::Windowed
                         },
