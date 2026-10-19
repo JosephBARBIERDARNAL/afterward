@@ -1,0 +1,313 @@
+use super::*;
+use crate::data::{EnemyAttackConfig, RoomConfig};
+
+pub(super) fn spawn_room(
+    mut commands: Commands,
+    data: Res<GameData>,
+    mut session: ResMut<RunSession>,
+    mut camera: Query<(&mut Transform, &mut RoomCamera), With<Camera2d>>,
+    asset_server: Res<AssetServer>,
+    sheets: Res<SpriteSheets>,
+) {
+    if session.world_loaded {
+        return;
+    }
+    let room = &data.rooms[&session.room_id];
+    draw_room(&mut commands, room, &data, &asset_server);
+    spawn_player(&mut commands, room, &sheets);
+    spawn_enemies(&mut commands, room, &data, &sheets);
+
+    if let Ok((mut transform, mut rig)) = camera.single_mut() {
+        rig.width_h = f32::from(room.size.width_viewports) * 16.0;
+        rig.fixed_y_h = room.camera.fixed_y_h;
+        rig.follows_player = room.camera.follow_player_x;
+        transform.translation.x = (rig.width_h.min(16.0) / 2.0) * H_WORLD_UNITS;
+        transform.translation.y = rig.fixed_y_h * H_WORLD_UNITS;
+    }
+    session.world_loaded = true;
+}
+
+pub(super) fn draw_room(
+    commands: &mut Commands,
+    room: &RoomConfig,
+    data: &GameData,
+    asset_server: &AssetServer,
+) {
+    let profile = &data.backgrounds.profiles[&room.background_profile];
+    let tile_h = profile.tile_h;
+    let tile_width_h =
+        tile_h * profile.source_size_px.width as f32 / profile.source_size_px.height as f32;
+    let room_width_h = f32::from(room.size.width_viewports) * 16.0;
+    let first_tile = if profile.repeat_horizontal { -2 } else { 0 };
+    let last_tile = if profile.repeat_horizontal {
+        (room_width_h / tile_width_h).ceil() as i32 + 2
+    } else {
+        0
+    };
+    let mut layers = Vec::with_capacity(profile.layers.len() + 1);
+    layers.push((profile.backdrop.as_str(), 0.0));
+    layers.extend(
+        profile
+            .layers
+            .iter()
+            .map(|layer| (layer.asset.as_str(), layer.parallax)),
+    );
+
+    for (layer_index, (asset, parallax)) in layers.into_iter().enumerate() {
+        for tile_index in first_tile..=last_tile {
+            let base_x = (tile_index as f32 + 0.5) * tile_width_h * H_WORLD_UNITS;
+            let mut sprite = Sprite::from_image(asset_server.load(asset.to_string()));
+            sprite.custom_size = Some(Vec2::new(
+                tile_width_h * H_WORLD_UNITS,
+                tile_h * H_WORLD_UNITS,
+            ));
+            commands.spawn((
+                sprite,
+                Transform::from_xyz(
+                    base_x,
+                    room.camera.fixed_y_h * H_WORLD_UNITS,
+                    -80.0 + layer_index as f32,
+                ),
+                BackgroundParallax {
+                    base_x,
+                    factor: parallax,
+                },
+                RoomEntity,
+            ));
+        }
+    }
+
+    for platform in &room.platforms {
+        let center = Vec2::new(
+            platform.position_h.x_h * H_WORLD_UNITS,
+            platform.position_h.y_h * H_WORLD_UNITS,
+        );
+        let size = Vec2::new(
+            platform.size_h.width_h * H_WORLD_UNITS,
+            platform.size_h.height_h * H_WORLD_UNITS,
+        );
+        commands.spawn((
+            Sprite::from_color(Color::srgb(0.075, 0.11, 0.16), size),
+            Transform::from_xyz(center.x, center.y, 0.0),
+            PlatformSurface {
+                left: center.x - size.x / 2.0,
+                right: center.x + size.x / 2.0,
+                top: center.y + size.y / 2.0,
+            },
+            RoomEntity,
+        ));
+        commands.spawn((
+            Sprite::from_color(Color::srgb(0.12, 0.23, 0.19), Vec2::new(size.x, 5.0)),
+            Transform::from_xyz(center.x, center.y + size.y / 2.0 - 2.5, 0.2),
+            RoomEntity,
+        ));
+    }
+
+    for decoration in &room.decorations {
+        let mut sprite = Sprite::from_image(asset_server.load(decoration.asset.clone()));
+        sprite.custom_size = Some(Vec2::splat(H_WORLD_UNITS));
+        let z = if decoration.visual_layer == "foreground" {
+            6.0
+        } else {
+            -10.0
+        };
+        commands.spawn((
+            sprite,
+            Transform::from_xyz(
+                decoration.position_h.x_h * H_WORLD_UNITS,
+                decoration.position_h.y_h * H_WORLD_UNITS,
+                z,
+            ),
+            RoomEntity,
+        ));
+    }
+}
+
+pub(super) fn spawn_player(commands: &mut Commands, room: &RoomConfig, sheets: &SpriteSheets) {
+    let key = "player_idle_sword";
+    let sheet = &sheets.0[key];
+    commands.spawn((
+        Sprite::from_atlas_image(
+            sheet.image.clone(),
+            TextureAtlas {
+                layout: sheet.layout.clone(),
+                index: 0,
+            },
+        ),
+        Transform::from_xyz(
+            room.player_spawn.x_h * H_WORLD_UNITS,
+            room.player_spawn.y_h * H_WORLD_UNITS,
+            4.0,
+        ),
+        AnimatedSprite {
+            sheet: key.to_string(),
+            frame: 0,
+            frames: sheet.frames,
+            timer: Timer::from_seconds(1.0 / sheet.fps, TimerMode::Repeating),
+            looping: true,
+        },
+        PlayerBody {
+            velocity: Vec2::ZERO,
+            facing: 1.0,
+            grounded: true,
+            jumps_used: 0,
+            dash_timer: 0.0,
+            dash_cooldown: 0.0,
+            dash_direction: 1.0,
+            sword_cooldown: 0.0,
+            gun_cooldown: 0.0,
+            invulnerability_timer: 0.0,
+            dash_invulnerability_timer: 0.0,
+            dash_strike_timer: 0.0,
+            stationary_timer: 0.0,
+            rhythm_timer: 0.0,
+            rhythm_stacks: 0,
+            chain_reaction_timer: 0.0,
+            sated_fury_timer: 0.0,
+            action_animation_timer: 0.0,
+            footstep_timer: 0.0,
+        },
+        RoomEntity,
+    ));
+}
+
+pub(super) fn spawn_enemies(
+    commands: &mut Commands,
+    room: &RoomConfig,
+    data: &GameData,
+    sheets: &SpriteSheets,
+) {
+    for spawn in &room.enemy_spawns {
+        let profile = &data.enemies.types[&spawn.type_id];
+        let key = enemy_idle_sheet(&spawn.type_id);
+        let sheet = &sheets.0[key];
+        let scale = if spawn.type_id == "warrior" {
+            2.0
+        } else {
+            0.55
+        };
+        let mut attacks = if profile.attacks.is_empty() {
+            profile.attack.iter().map(enemy_attack).collect::<Vec<_>>()
+        } else {
+            profile.attacks.iter().map(enemy_attack).collect::<Vec<_>>()
+        };
+        let health = spawn
+            .stat_overrides
+            .as_ref()
+            .and_then(|overrides| overrides.health)
+            .unwrap_or(profile.health);
+        let movement_speed_h_s = spawn
+            .stat_overrides
+            .as_ref()
+            .and_then(|overrides| overrides.movement_speed_h_s)
+            .unwrap_or(profile.movement_speed_h_s);
+        if let Some(damage) = spawn
+            .stat_overrides
+            .as_ref()
+            .and_then(|overrides| overrides.attack_damage)
+        {
+            for attack in &mut attacks {
+                attack.damage = damage;
+            }
+        }
+        let preferred_distance_h = profile
+            .preferred_distance_h
+            .as_ref()
+            .map(|range| (range.min, range.max));
+        let phase_two = profile
+            .phase_two
+            .as_ref()
+            .map(|phase| (phase.health_fraction_at_or_below, phase.cooldown_multiplier));
+        let enemy = commands
+            .spawn((
+                Sprite::from_atlas_image(
+                    sheet.image.clone(),
+                    TextureAtlas {
+                        layout: sheet.layout.clone(),
+                        index: 0,
+                    },
+                ),
+                Transform::from_xyz(
+                    spawn.position_h.x_h * H_WORLD_UNITS,
+                    spawn.position_h.y_h * H_WORLD_UNITS,
+                    3.0,
+                )
+                .with_scale(Vec3::splat(scale)),
+                AnimatedSprite {
+                    sheet: key.to_string(),
+                    frame: 0,
+                    frames: sheet.frames,
+                    timer: Timer::from_seconds(1.0 / sheet.fps, TimerMode::Repeating),
+                    looping: true,
+                },
+                EnemyBody {
+                    type_id: spawn.type_id.clone(),
+                    health,
+                    max_health: health,
+                    movement_speed_h_s,
+                    home_y: spawn.position_h.y_h * H_WORLD_UNITS,
+                    behavior: profile.behavior.clone(),
+                    preferred_distance_h,
+                    attacks,
+                    engaged: false,
+                    attack_cooldown: 0.0,
+                    windup_remaining: 0.0,
+                    combo_hit_pending: false,
+                    active_attack: 0,
+                    next_attack: 0,
+                    hurt_timer: 0.0,
+                    knockback_velocity: 0.0,
+                    phase_two,
+                    phase_two_announced: false,
+                    marked_timer: 0.0,
+                },
+                RoomEntity,
+            ))
+            .id();
+        let bar_position = Vec3::new(
+            spawn.position_h.x_h * H_WORLD_UNITS,
+            spawn.position_h.y_h * H_WORLD_UNITS
+                + H_WORLD_UNITS * if scale > 1.0 { 1.35 } else { 1.0 },
+            5.0,
+        );
+        commands.spawn((
+            Sprite::from_color(Color::BLACK, Vec2::new(52.0, 6.0)),
+            Transform::from_translation(bar_position - Vec3::Z * 0.1),
+            EnemyHealthBarBackground { enemy },
+            RoomEntity,
+        ));
+        commands.spawn((
+            Sprite::from_color(Color::srgb(0.8, 0.12, 0.2), Vec2::new(48.0, 4.0)),
+            Transform::from_translation(bar_position),
+            EnemyHealthBar {
+                enemy,
+                max_health: health,
+            },
+            RoomEntity,
+        ));
+    }
+}
+
+pub(super) fn enemy_attack(config: &EnemyAttackConfig) -> EnemyAttack {
+    EnemyAttack {
+        kind: config.kind.clone(),
+        damage: config.damage.or(config.damage_per_hit).unwrap_or(0.0),
+        hits: config.hits.unwrap_or(1),
+        reach_h: config.reach_h.or(config.landing_radius_h).unwrap_or(1.2),
+        projectile_speed_h_s: config.projectile_speed_h_s.unwrap_or(0.0),
+        landing_radius_h: config.landing_radius_h.unwrap_or(0.0),
+        cooldown_s: config.cooldown_s,
+        windup_s: config.windup_s,
+    }
+}
+
+pub(super) fn cleanup_room(
+    mut commands: Commands,
+    entities: Query<Entity, With<RoomEntity>>,
+    mut session: ResMut<RunSession>,
+) {
+    for entity in &entities {
+        commands.entity(entity).despawn();
+    }
+    session.world_loaded = false;
+}

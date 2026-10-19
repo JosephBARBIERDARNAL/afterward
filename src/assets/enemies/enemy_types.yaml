@@ -1,0 +1,92 @@
+# Shared Chapter 1 tuning defaults. Room enemy_spawns reference these type IDs;
+# any future room-specific stat changes belong on that room's spawn entry.
+detection_range_h: 10
+retain_target_after_detection: true
+damage_triggers_combat: true
+types:
+  swordsman:
+    health: 30
+    movement_speed_h_s: 2.5
+    behavior: melee_pursuit
+    attack:
+      kind: melee
+      damage: 8
+      reach_h: 1.2
+      cooldown_s: 1.2
+      windup_s: 0.35
+  infantryman:
+    health: 24
+    movement_speed_h_s: 1.5
+    behavior: ranged_keep_distance
+    preferred_distance_h: { min: 5, max: 8 }
+    attack:
+      kind: projectile
+      damage: 8
+      projectile_speed_h_s: 8
+      cooldown_s: 1.5
+      windup_s: 0.4
+  destroyer:
+    health: 45
+    movement_speed_h_s: 0.8
+    behavior: ranged_keep_distance
+    preferred_distance_h: { min: 6, max: 10 }
+    attack:
+      kind: charged_projectile
+      damage: 14
+      projectile_speed_h_s: 7
+      cooldown_s: 2.2
+      windup_s: 0.7
+  gorgon_1:
+    health: 28
+    movement_speed_h_s: 3.5
+    behavior: melee_pursuit
+    attack:
+      kind: lunge
+      damage: 8
+      reach_h: 1.3
+      cooldown_s: 1.4
+      windup_s: 0.3
+  gorgon_2:
+    health: 36
+    movement_speed_h_s: 2.3
+    behavior: ranged_keep_distance
+    preferred_distance_h: { min: 5, max: 8 }
+    attack:
+      kind: special_projectile
+      damage: 10
+      projectile_speed_h_s: 7
+      cooldown_s: 2
+      windup_s: 0.5
+  gorgon_3:
+    health: 46
+    movement_speed_h_s: 2.2
+    behavior: melee_pursuit
+    attack:
+      kind: heavy_melee_sweep
+      damage: 12
+      reach_h: 1.6
+      cooldown_s: 1.8
+      windup_s: 0.55
+  warrior:
+    health: 300
+    movement_speed_h_s: 3
+    behavior: boss
+    attacks:
+      - kind: two_hit_melee_combo
+        hits: 2
+        damage_per_hit: 10
+        reach_h: 1.5
+        cooldown_s: 1.4
+        windup_s: 0.45
+      - kind: telegraphed_lunge
+        damage: 15
+        cooldown_s: 1.9
+        windup_s: 0.6
+      - kind: jump_slam
+        damage: 18
+        landing_radius_h: 2
+        cooldown_s: 2.5
+        windup_s: 0.8
+    phase_two:
+      health_fraction_at_or_below: 0.5
+      cooldown_multiplier: 0.8

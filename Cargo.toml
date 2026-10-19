@@ -1,11 +1,13 @@
 [package]
-name = "too-late"
+name = "afterward"
 version = "0.1.0"
 edition = "2024"
-rust-version = "1.96"
+rust-version = "1.97.1"
 
 [dependencies]
-bevy = { version = "0.20" }
+bevy = { version = "0.20", features = ["wav"] }
+serde = { version = "1.0", features = ["derive"] }
+yaml_serde = "0.10.7"
 
 [profile.dev]
 opt-level = 1

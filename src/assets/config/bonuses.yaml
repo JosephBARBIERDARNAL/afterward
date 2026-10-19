@@ -1,0 +1,118 @@
+categories:
+  combat:
+    color: "#D74444"
+    icon: crossed_swords
+  defense:
+    color: "#4F8FD6"
+    icon: shield
+  agility:
+    color: "#58AD68"
+    icon: wing
+  intelligence:
+    color: "#E6D772"
+    icon: light
+  combined:
+    color: "#E8843F"
+    icon: knot
+
+bonuses:
+  - id: honed_edge
+    name: Honed Edge
+    description: Increase sword damage by 20%.
+    category: combat
+    effects: { sword_damage_multiplier: 1.2 }
+  - id: heavy_caliber
+    name: Heavy Caliber
+    description: Increase gun damage by 20%.
+    category: combat
+    effects: { gun_damage_multiplier: 1.2 }
+  - id: quick_cut
+    name: Quick Cut
+    description: Increase sword attack speed by 15%.
+    category: combat
+    effects: { sword_attack_speed_multiplier: 1.15 }
+  - id: velocity_rounds
+    name: Velocity Rounds
+    description: Increase projectile speed by 25%.
+    category: combat
+    effects: { projectile_speed_multiplier: 1.25 }
+  - id: thick_skin
+    name: Thick Skin
+    description: Reduce damage taken by 10%.
+    category: defense
+    effects: { damage_taken_multiplier: 0.9 }
+  - id: room_ward
+    name: Room Ward
+    description: Negate the first damage event in each room.
+    category: defense
+    effects: { negate_first_damage_each_room: true }
+  - id: vitality
+    name: Vitality
+    description: Increase maximum health by 15 and restore 15 health.
+    category: defense
+    effects: { max_health_increase: 15, restore_health: 15 }
+  - id: scavenger
+    name: Scavenger
+    description: Increase health pickup drop chance by 25% relative to its base chance.
+    category: defense
+    effects: { health_drop_chance_multiplier: 1.25 }
+  - id: fleet_feet
+    name: Fleet Feet
+    description: Increase movement speed by 10%.
+    category: agility
+    effects: { movement_speed_multiplier: 1.1 }
+  - id: high_jump
+    name: High Jump
+    description: Increase jump height by 15%.
+    category: agility
+    effects: { jump_height_multiplier: 1.15 }
+  - id: dash_recharge
+    name: Dash Recharge
+    description: Reduce dash cooldown by 20%.
+    category: agility
+    effects: { dash_cooldown_multiplier: 0.8 }
+  - id: double_jump
+    name: Double Jump
+    description: Gain one additional mid-air jump at 80% of normal jump impulse.
+    category: agility
+    effects: { extra_midair_jumps: 1, extra_jump_impulse_factor: 0.8 }
+  - id: marked_prey
+    name: Marked Prey
+    description: Sword hits mark an enemy for 2 seconds; gun hits deal 15% more damage to it.
+    category: intelligence
+    effects: { mark_duration_s: 2, marked_gun_damage_multiplier: 1.15 }
+  - id: rhythm_training
+    name: Rhythm Training
+    description: Hits within 1.5 seconds increase both weapon attack speeds by 4%, up to 16%.
+    category: intelligence
+    effects: { hit_window_s: 1.5, attack_speed_step: 0.04, attack_speed_max_bonus: 0.16 }
+  - id: chain_reaction
+    name: Chain Reaction
+    description: Killing an enemy increases damage by 15% for 2 seconds.
+    category: intelligence
+    effects: { kill_damage_bonus: 0.15, kill_damage_duration_s: 2 }
+  - id: patient_aim
+    name: Patient Aim
+    description: After standing still for 0.5 seconds, gun damage increases by 15% until moving.
+    category: intelligence
+    effects: { stationary_time_s: 0.5, stationary_gun_damage_multiplier: 1.15 }
+  - id: vampiric_edge
+    name: Vampiric Edge
+    description: Sword hits restore 1 health per enemy, up to 5 health per swing.
+    category: combined
+    effects: { sword_hit_healing: 1, sword_swing_healing_cap: 5 }
+  - id: dash_strike
+    name: Dash Strike
+    description: A sword attack within 1 second after dashing deals 25% more damage.
+    category: combined
+    effects: { post_dash_window_s: 1, post_dash_sword_damage_multiplier: 1.25 }
+  - id: aerial_hunter
+    name: Aerial Hunter
+    description: Deal 20% more gun damage while airborne.
+    category: combined
+    effects: { airborne_gun_damage_multiplier: 1.2 }
+  - id: sated_fury
+    name: Sated Fury
+    description: Healing pickups increase both weapon attack speeds by 15% for 3 seconds.
+    category: combined
+    effects: { healing_pickup_attack_speed_multiplier: 1.15, healing_pickup_attack_speed_duration_s: 3 }

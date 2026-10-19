@@ -1,0 +1,61 @@
+viewport:
+  aspect_ratio: { width: 16, height: 9 }
+  height_h: 9
+
+player:
+  max_health: 100
+  max_speed_h_s: 6
+  acceleration_h_s2: 36
+  deceleration_h_s2: 48
+  jump_height_h: 2.25
+  gravity_h_s2: 32
+  jump_impulse_h_s: 12
+  jumps_per_takeoff: 1
+  dash_distance_h: 5
+  dash_duration_s: 0.2
+  dash_cooldown_s: 0.8
+  damage_invulnerability_s: 0.55
+  dash_invulnerability_s: 0.12
+  sword:
+    damage: 5
+    range_h: 2
+    attack_interval_s: 0.5
+  gun:
+    damage: 15
+    fire_interval_s: 0.4
+    projectile_speed_h_s: 18
+  boss_knockback:
+    sword_h_s: 2.5
+    bullet_h_s: 1.2
+
+health_pickup:
+  healing: 10
+  base_drop_chance: 0.04
+
+room_flow:
+  clear_animation_s: 0.5
+  exit_side: right
+  bonus_rerolls_per_run: 3
+
+window:
+  start_borderless_fullscreen: true
+  resizable_windowed: true
+  music_volume_percent: 100
+  sfx_volume_percent: 100
+
+audio:
+  footstep_interval_s: 0.42
+  paused_music_volume_multiplier: 0.35
+  chapter_one_music_gain: 0.2
+
+controls:
+  move_left: [KeyA, KeyQ, ArrowLeft]
+  move_right: [KeyD, ArrowRight]
+  navigate_up: [ArrowUp]
+  navigate_down: [ArrowDown]
+  jump: [Space]
+  dash: [ShiftLeft]
+  sword: [KeyJ]
+  gun: [KeyK]
+  interact: [KeyE, Enter]
+  pause: [Escape]

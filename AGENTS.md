@@ -12,7 +12,7 @@ Once you finish making a change (fixing a bug or adding a feature), make sure al
 - `cargo fmt --all -- --check` — check Rust formatting.
 - `cargo clippy --locked --all-targets -- -D warnings` — check Rust lint.
 - `cargo test --locked` — run Rust tests.
-- `cargo build --locked --bin too-late` — compile the native game.
+- `cargo build --locked --bin afterward` — compile the native game.
 
 ## Rules
 
@@ -20,6 +20,9 @@ Once you finish making a change (fixing a bug or adding a feature), make sure al
 - When defining number of ennemies, room organization, etc, always make sure to do that is a consistent and centralized way in yaml files so that making changes in a specific room is easy. Those files should be the source of truth on the construction of the game and make the game a true data-driven game.
 - All constant parameters (game dimension, player stats, etc) should be clearly defined in such way and easy to change.
 - Always feel free to move, rename and change asset files for consistency and simplicity.w
+- Keep source files focused and reasonably sized. Split code into separate modules by responsibility instead of letting individual files grow too long.
+- Follow established software engineering practices: keep responsibilities clear, reuse shared logic where appropriate, and keep configuration data in its designated source-of-truth files.
+- Keep Clippy rules intact. Fix lint findings in code instead of lowering lint levels or adding lint suppressions to make checks pass.
 
 ## Bevy
 

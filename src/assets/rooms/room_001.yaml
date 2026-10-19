@@ -1,0 +1,39 @@
+# Chapter 1 room data. All coordinates use H, with the room origin at the
+# lower-left; position_h values locate object centers.
+room_id: 1
+chapter_id: 1
+size:
+  width_viewports: 2
+  height_h: 9
+background_profile: chapter_01_forest
+player_spawn:
+  x_h: 2
+  y_h: 0.5
+camera:
+  follow_player_x: true
+  fixed_y_h: 4.5
+platforms:
+  - position_h: { x: 16, y: -0.5 }
+    size_h: { width: 32, height: 1 }
+  - position_h: { x: 9, y: 1.25 }
+    size_h: { width: 3, height: 0.5 }
+  - position_h: { x: 17, y: 2 }
+    size_h: { width: 4, height: 0.5 }
+  - position_h: { x: 25, y: 1.25 }
+    size_h: { width: 3, height: 0.5 }
+decorations: [] # Chapter scenery comes from the shared layered forest profile.
+enemy_spawns:
+  - type_id: swordsman
+    position_h: { x: 9, y: 0.5 }
+  - type_id: infantryman
+    position_h: { x: 13, y: 0.5 }
+  - type_id: swordsman
+    position_h: { x: 19, y: 0.5 }
+  - type_id: infantryman
+    position_h: { x: 24, y: 0.5 }
+  - type_id: swordsman
+    position_h: { x: 29, y: 0.5 }
+exit:
+  x_h: 30.5
+  y_h: 0.5
+next_room_id: 2

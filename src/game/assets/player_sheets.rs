@@ -1,0 +1,78 @@
+use super::super::SpriteSheetSpec;
+
+pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
+    vec![
+        SpriteSheetSpec {
+            key: "player_idle",
+            path: "player/idle/idle.png",
+            frame_width: 128,
+            frame_height: 80,
+            frames: 5,
+            fps: 6.0,
+        },
+        SpriteSheetSpec {
+            key: "player_idle_sword",
+            path: "player/idle/idle_sword.png",
+            frame_width: 128,
+            frame_height: 80,
+            frames: 5,
+            fps: 6.0,
+        },
+        SpriteSheetSpec {
+            key: "player_running",
+            path: "player/running/running.png",
+            frame_width: 128,
+            frame_height: 80,
+            frames: 6,
+            fps: 10.0,
+        },
+        SpriteSheetSpec {
+            key: "player_running_sword",
+            path: "player/running/running_sword.png",
+            frame_width: 128,
+            frame_height: 80,
+            frames: 6,
+            fps: 10.0,
+        },
+        SpriteSheetSpec {
+            key: "player_jump",
+            path: "player/jump/jump.png",
+            frame_width: 128,
+            frame_height: 80,
+            frames: 11,
+            fps: 12.0,
+        },
+        SpriteSheetSpec {
+            key: "player_dash",
+            path: "player/dash/dash_loop.png",
+            frame_width: 128,
+            frame_height: 80,
+            frames: 6,
+            fps: 16.0,
+        },
+        SpriteSheetSpec {
+            key: "player_sword",
+            path: "player/attacks/sword_attack_1.png",
+            frame_width: 128,
+            frame_height: 80,
+            frames: 6,
+            fps: 14.0,
+        },
+        SpriteSheetSpec {
+            key: "player_gun_shoot_idle",
+            path: "player/idle/idle_shoot_gun.png",
+            frame_width: 128,
+            frame_height: 80,
+            frames: 4,
+            fps: 14.0,
+        },
+        SpriteSheetSpec {
+            key: "player_gun_shoot_run",
+            path: "player/running/running_shoot_gun.png",
+            frame_width: 128,
+            frame_height: 80,
+            frames: 6,
+            fps: 10.0,
+        },
+    ]
+}

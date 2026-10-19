@@ -1,0 +1,31 @@
+# Shared chapter scenery. Layers are listed back-to-front and preserve the
+# source image's dimensions; each layer scrolls at its configured parallax rate.
+profiles:
+  chapter_01_forest:
+    backdrop: background/forest/PNG/Background layers/Layer_0011_0.png
+    source_size_px: { width: 928, height: 793 }
+    tile_h: 9
+    repeat_horizontal: true
+    layers:
+      - asset: background/forest/PNG/Background layers/Layer_0010_1.png
+        parallax: 0.02
+      - asset: background/forest/PNG/Background layers/Layer_0009_2.png
+        parallax: 0.05
+      - asset: background/forest/PNG/Background layers/Layer_0008_3.png
+        parallax: 0.08
+      - asset: background/forest/PNG/Background layers/Layer_0007_Lights.png
+        parallax: 0.12
+      - asset: background/forest/PNG/Background layers/Layer_0006_4.png
+        parallax: 0.16
+      - asset: background/forest/PNG/Background layers/Layer_0005_5.png
+        parallax: 0.22
+      - asset: background/forest/PNG/Background layers/Layer_0004_Lights.png
+        parallax: 0.28
+      - asset: background/forest/PNG/Background layers/Layer_0003_6.png
+        parallax: 0.38
+      - asset: background/forest/PNG/Background layers/Layer_0002_7.png
+        parallax: 0.5
+      - asset: background/forest/PNG/Background layers/Layer_0001_8.png
+        parallax: 0.7
+      - asset: background/forest/PNG/Background layers/Layer_0000_9.png
+        parallax: 1
