@@ -45,12 +45,12 @@ These are initial balance constants and should be easy to tune during iteration.
 
 ### Weapon Specifications
 
-The sword damages all enemies within a 150-degree arc in front of the player. The gun fires projectiles.
+The sword attacks horizontally in the direction the player faces, hitting all enemies in a broad forward-facing area. Its reach should let the player hit enemies without standing directly beside them. The gun fires projectiles horizontally in the direction the player faces (left or right); it cannot fire vertically.
 
 | Constant                                 | Value    | Unit or notes                               |
 | ---------------------------------------- | -------- | ------------------------------------------- |
 | `PLAYER_SWORD_DAMAGE`                    | 5        | Damage per hit                              |
-| `PLAYER_SWORD_RANGE`                     | 1.5      | H from the player's collision-box center    |
+| `PLAYER_SWORD_RANGE`                     | 2.0      | H forward from the player's collision-box center |
 | `PLAYER_SWORD_ATTACK_INTERVAL`           | 0.5      | s between attacks (2 attacks per second)    |
 | `PLAYER_GUN_DAMAGE`                      | 15       | Damage per projectile                       |
 | `PLAYER_GUN_FIRE_INTERVAL`               | 0.4      | s between shots (2.5 shots per second)      |
@@ -81,12 +81,21 @@ The sword damages all enemies within a 150-degree arc in front of the player. Th
 
 ## Rooms
 
+### Display and Gameplay Viewport
+
+- Support a resizable window and borderless fullscreen.
+- `GAMEPLAY_VIEWPORT_ASPECT_RATIO`: `16:9`, fixed across displays.
+- `GAMEPLAY_VIEWPORT_HEIGHT_H`: `9 H`.
+- Derive viewport width from its height and aspect ratio (`16 H`). Resizing the window or entering fullscreen changes only the display scale, never the visible game world.
+- Fit the viewport uniformly inside the available window using fractional scaling. Fill unused space with bars; do not stretch the image or reveal additional terrain on wider or taller displays. Integer pixel scaling is not required.
+- Keep gameplay and HUD layout within this reference viewport. Physical display resolution and OS pixel scaling do not change world measurements in `H`.
+
 ### Room Layout and Authoring
 
 - All 100 rooms are authored before a build and played in fixed order. Room layouts and enemy rosters are not procedurally generated.
 - Store each room in its own YAML file under `src/assets/rooms/`, named by its zero-padded room number (for example, `src/assets/rooms/room_001.yaml` through `src/assets/rooms/room_100.yaml`). These files are the source of truth for constructing the rooms.
 - Each room file describes its ID, chapter, dimensions, player spawn, background profile, camera anchor, platforms and other collidable geometry, decorative props and their positions, enemy spawns and their configured attributes, and exit position.
-- A room is 2 to 4 times the game viewport's width. Room geometry positions and dimensions use `H`, the player's collision-box height, as the reference unit.
+- A room is 2 to 4 times the fixed gameplay viewport's width (32 to 64 H at the initial viewport settings). Room geometry positions and dimensions use `H`, the player's collision-box height, as the reference unit.
 - Each chapter has one shared background profile, including its backdrop and parallax layers. All ten rooms in that chapter reference the same profile. Room layouts, platform placement, enemy placement, and decorative props vary so rooms in a chapter do not all look alike.
 - Keep decorations separate from platforms and other collidable geometry so visual placement does not implicitly make an object climbable.
 - Each room's `enemy_spawns` list defines its fixed enemy roster. The number of enemies is the list length; do not duplicate it in a separately edited count. Each entry specifies an enemy type and position and resolves its configured attributes from YAML, using shared enemy-type defaults and any room-specific overrides. Enemy counts, types, positions, and configured attributes do not randomize at runtime; enemy AI still runs during play.
@@ -130,8 +139,9 @@ next_room_id: null # null only for room 100
 
 - These first-pass Chapter 1 values are tuning defaults, not final balance. Store them centrally in `src/assets/enemies/enemy_types.yaml`; room YAML may override them.
 - Each non-boss room contains 5 to 15 enemies and at least two different enemy types.
-- Enemies attack only through their defined attacks (no contact damage). Show a readable wind-up before each attack; taking a hit interrupts the current action. Ranged enemies try to keep their listed distance, while melee enemies approach the player.
-- Enemy profiles use the existing animation sets: the Swordsman and Gorgons fight up close, the Infantryman fires regular shots, and the Destroyer uses slower charged shots. Gorgon variants share a visual style but vary in speed and attack weight.
+- `ENEMY_DETECTION_RANGE` defaults to 10 H horizontally. Enemies stay idle until the player enters this range, then retain the player as their target for the rest of the room—even if the player leaves detection range. They stay engaged until defeated or the room is cleared. Taking damage from the player also triggers combat immediately. Store this shared setting alongside the enemy profiles.
+- In combat, melee enemies pursue the player and attack when in range; ranged enemies reposition to keep their preferred distance, then fire after a readable wind-up. Attacks deal damage only through their hitbox or projectile (no contact damage), and taking a hit interrupts the current action.
+- Behaviors follow the existing animations: the Swordsman and Gorgon 1/3 close in for melee attacks, the Infantryman fires regular shots, the Destroyer uses slower charged shots, and Gorgon 2 uses its special ranged attack. The Gorgon variants share a visual style but vary in speed and attack weight.
 
 | Type ID       |  HP | Attack                                                                    | Movement / behavior            |
 | ------------- | --: | ------------------------------------------------------------------------- | ------------------------------ |
@@ -149,6 +159,14 @@ next_room_id: null # null only for room 100
 
 - Bonuses are unique per run: a bonus cannot be offered to or acquired by a player who already owns it, even if multiple copies could otherwise be compatible.
 - After each room, two distinct eligible bonuses are selected randomly at runtime. Bonus choices are not stored in room YAML files.
+
+### Bonus Rerolls
+
+- Start each run with `BONUS_REROLLS_STARTING_COUNT: 3`. Rerolls are a run-only resource, reset at the start of a new run, and cannot currently be replenished.
+- Before selecting a bonus, the player may activate a visible **Reroll** button using the standard UI confirm input (E by default). Each use consumes one reroll and replaces both current offers with two distinct eligible bonuses different from the pair just replaced. Disable the button when no rerolls remain or fewer than two alternatives are eligible.
+- Show the remaining count beside a small, minimal reroll-token icon. Play a short dedicated animation as the old pair is replaced by the new pair.
+- Future bonuses may grant rerolls; adding those effects is out of scope for now.
+
 - Every bonus has a name, description, and category.
 - Categories: combat, defense, agility, intelligence, and combined (a mix of at least two other categories).
 - Each category has its own icon and color: red for combat, blue for defense, green for agility, pale yellow for intelligence, and orange for combined.
@@ -186,15 +204,17 @@ next_room_id: null # null only for room 100
 
 Default controls:
 
-- Arrow keys or ZQSD: move.
+- ZQSD (AZERTY) or arrow keys: move.
+- Space: jump.
+- Left Shift: dash.
 - J: use the sword.
 - K: fire the gun.
-- Space: dash.
 - E: interact with an element, such as a bonus.
 - Escape: open or close the pause menu. The menu offers Continue, Restart, Settings, and Leave. Leave returns to the main menu shown before a run.
 
 Settings:
 
+- Start in borderless fullscreen. Settings can switch to a resizable windowed mode or back; both preserve the fixed gameplay viewport.
 - Music and sound-effect volume have separate sliders, each ranging from 0 to 100 and defaulting to 100.
 - Volume changes apply immediately and persist locally between sessions.
 - Every control can be remapped.
