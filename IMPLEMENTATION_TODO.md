@@ -20,12 +20,16 @@
 
 ## Completion checks
 
-- [ ] Play through rooms 1–10 in a running build and visually verify each room, bonus choice, transition, and the Warrior encounter. So far, startup, game-data loading, and sprite-atlas dimensions have been verified.
+- [x] Add headless integration coverage for rooms 1–10 using real room and enemy YAML, production player/enemy/platform spawning, gun/projectile/damage systems, unique bonus choices, and the Warrior encounter. A separate input-driven room test uses the default movement, sword, and gun controls to defeat the room 1 Swordsman without teleporting or resetting invulnerability. Focused tests also cover fullscreen remapping, repeated gunfire animation, received-damage styling, and the Swordsman's procedural gait. The full-chapter flow pilot still teleports and stays invulnerable; neither headless path verifies visuals.
+- [x] Run the native visual walkthrough and inspect screenshots of all ten room combat scenes, bonus screens, door approaches, transitions, the Warrior intro/fight, and Chapter One completion. Captures are saved under `target/visual-walkthrough/`; the walkthrough clears enemies after each room screenshot to exercise the production room and screen flow.
+- [ ] Manually play rooms 1–10 using player movement and combat controls. The headless test covers real combat systems, while the visual walkthrough automates room progression and does not verify combat feel or input timing.
 - [x] Run formatting, Clippy, the Rust test suite, and the native build; fix all resulting issues.
 
 ## Remaining specification gaps
 
-- [ ] Decide how the Swordsman should move. The supplied assets have no walk sheet, so the current animation falls back to idle while it moves.
-- [ ] Decide how to add room-specific decorative props. All ten decoration lists are empty, and the supplied environment art is made of full-width parallax layers rather than standalone props.
+- [x] Give the Swordsman procedural movement animation because the supplied assets have no walk sheet.
+- [x] Keep room decoration lists empty and use the supplied full-width parallax background layers as the room scenery.
 - [x] Add a visible door-opening / room-transition animation. The door narrows as the screen fades to black, the next room loads under the overlay, and the new room fades in.
-- [ ] Review audio against the full sound specification. Placeholder cues are in place, but most enemy types still share generic action sounds and footsteps do not vary by surface.
+- [x] Add distinct generated placeholder cues for each Chapter 1 enemy's idle, movement, attack warning/execution, hurt, and death events.
+- [x] Fade gameplay sound effects while paused or in menus while keeping interface and terminal cues audible.
+- [ ] Review audio against the full sound specification. Chapter 1 now has a forest-specific generated placeholder loop; replace it with authored music when available, and add surface-specific player footsteps after room surface types are defined.

@@ -68,7 +68,7 @@ pub(super) fn update_player(
 
     if controls.just_pressed(GameAction::Jump, &keys) {
         let extra_jump = if session.owned_bonuses.iter().any(|id| id == "double_jump") {
-            bonus_effect_number(&data, "double_jump", "extra_midair_jumps") as u8
+            data.bonus_effect("double_jump", "extra_midair_jumps") as u8
         } else {
             0
         };
@@ -77,7 +77,7 @@ pub(super) fn update_player(
             let jump_factor = if player.jumps_used == 0 {
                 bonus_multiplier(&session, &data, "high_jump", "jump_height_multiplier").sqrt()
             } else {
-                bonus_effect_number(&data, "double_jump", "extra_jump_impulse_factor")
+                data.bonus_effect("double_jump", "extra_jump_impulse_factor")
             };
             player.velocity.y = tuning.jump_impulse_h_s * jump_factor * H_WORLD_UNITS;
             player.jumps_used += 1;
@@ -101,7 +101,7 @@ pub(super) fn update_player(
     let normal_step = dt - dash_step;
     if was_dashing && player.dash_timer == 0.0 {
         player.dash_strike_timer = if session.owned_bonuses.iter().any(|id| id == "dash_strike") {
-            bonus_effect_number(&data, "dash_strike", "post_dash_window_s")
+            data.bonus_effect("dash_strike", "post_dash_window_s")
         } else {
             0.0
         };
@@ -123,7 +123,7 @@ pub(super) fn update_player(
     }
 
     let room = &data.rooms[&session.room_id];
-    let room_width_world = f32::from(room.size.width_viewports) * 16.0 * H_WORLD_UNITS;
+    let room_width_world = room.width_h(&data.gameplay) * H_WORLD_UNITS;
     let half_width = PLAYER_COLLISION_WIDTH_H * H_WORLD_UNITS / 2.0;
     transform.translation.x = transform
         .translation
@@ -176,28 +176,24 @@ pub(super) fn update_player(
         } else if !player.grounded {
             "player_jump"
         } else if player.velocity.x.abs() > 20.0 {
-            "player_running_sword"
+            match player.weapon_mode {
+                PlayerWeapon::Sword => "player_running_sword",
+                PlayerWeapon::Gun => "player_running_gun",
+            }
         } else {
-            "player_idle_sword"
+            match player.weapon_mode {
+                PlayerWeapon::Sword => "player_idle_sword",
+                PlayerWeapon::Gun => "player_idle_gun",
+            }
         };
         set_animation(&mut sprite, &mut animation, &sheets, animation_key, true);
     }
     sprite.flip_x = player.facing < 0.0;
 }
 
-fn bonus_effect_number(data: &GameData, bonus_id: &str, effect_id: &str) -> f32 {
-    data.bonuses
-        .bonuses
-        .iter()
-        .find(|bonus| bonus.id == bonus_id)
-        .and_then(|bonus| bonus.effects.get(effect_id))
-        .and_then(|value| value.as_f64())
-        .unwrap_or(0.0) as f32
-}
-
 fn bonus_multiplier(session: &RunSession, data: &GameData, id: &str, effect: &str) -> f32 {
     if session.owned_bonuses.iter().any(|owned| owned == id) {
-        bonus_effect_number(data, id, effect)
+        data.bonus_effect(id, effect)
     } else {
         1.0
     }

@@ -1,5 +1,5 @@
 use super::*;
-use bevy::text::FontSize;
+use bevy::text::{FontSize, FontWeight};
 
 pub(super) struct EnemyDamageResources<'a, 'w, 's> {
     pub commands: &'a mut Commands<'w, 's>,
@@ -62,13 +62,15 @@ pub(super) fn damage_enemy<'a, 'w, 's>(
         transform.translation.y = enemy.home_y;
     }
     if sword_hit {
-        enemy.marked_timer = effect_number(data, "marked_prey", "mark_duration_s");
+        enemy.marked_timer = data.bonus_effect("marked_prey", "mark_duration_s");
     }
     if data.enemies.damage_triggers_combat {
         enemy.engaged = true;
     }
     if enemy.health == 0.0 {
-        sounds.push(SoundCue::EnemyDeath);
+        sounds.push(SoundCue::EnemyDeath(audio::EnemySoundStyle::from(
+            &enemy.type_id,
+        )));
         enemy.windup_remaining = 0.0;
         enemy.combo_hit_pending = false;
         set_enemy_animation(sprite, animation, sheets, &enemy.type_id, "dead");
@@ -90,7 +92,9 @@ pub(super) fn damage_enemy<'a, 'w, 's>(
         }
         true
     } else {
-        sounds.push(SoundCue::EnemyHurt);
+        sounds.push(SoundCue::EnemyHurt(audio::EnemySoundStyle::from(
+            &enemy.type_id,
+        )));
         enemy.hurt_timer = 0.24;
         enemy.windup_remaining = 0.0;
         enemy.combo_hit_pending = false;
@@ -109,6 +113,11 @@ pub(super) fn spawn_damage_number(
         Text2d::new(format!("{damage:.0}")),
         TextFont {
             font_size: FontSize::Px(if received { 20.0 } else { 16.0 }),
+            weight: if received {
+                FontWeight::BOLD
+            } else {
+                FontWeight::NORMAL
+            },
             ..default()
         },
         TextColor(if received {
@@ -129,20 +138,20 @@ pub(super) fn set_enemy_animation(
     sprite: &mut Sprite,
     animation: &mut AnimatedSprite,
     sheets: &SpriteSheets,
-    type_id: &str,
+    type_id: &EnemyTypeId,
     action: &str,
 ) {
     let key = match action {
-        "walk" => match type_id {
+        "walk" => match &**type_id {
             "infantryman" => "enemy_infantry_walk",
             "destroyer" => "enemy_destroyer_walk",
             "gorgon_1" => "enemy_gorgon_1_run",
             "gorgon_2" => "enemy_gorgon_2_run",
             "gorgon_3" => "enemy_gorgon_3_run",
             "warrior" => "boss_walk",
-            _ => enemy_idle_sheet(type_id),
+            _ => type_id.idle_sheet(),
         },
-        "attack" | "attack_1" => match type_id {
+        "attack" | "attack_1" => match &**type_id {
             "swordsman" => "enemy_swordsman_attack",
             "infantryman" => "enemy_infantry_attack",
             "destroyer" => "enemy_destroyer_attack",
@@ -150,37 +159,37 @@ pub(super) fn set_enemy_animation(
             "gorgon_2" => "enemy_gorgon_2_attack",
             "gorgon_3" => "enemy_gorgon_3_attack",
             "warrior" => "boss_attack",
-            _ => enemy_idle_sheet(type_id),
+            _ => type_id.idle_sheet(),
         },
         "attack_2" => {
-            if type_id == "warrior" {
+            if &**type_id == "warrior" {
                 "boss_attack_2"
             } else {
-                enemy_idle_sheet(type_id)
+                type_id.idle_sheet()
             }
         }
         "attack_3" => {
-            if type_id == "warrior" {
+            if &**type_id == "warrior" {
                 "boss_attack_3"
             } else {
-                enemy_idle_sheet(type_id)
+                type_id.idle_sheet()
             }
         }
         "jump" => {
-            if type_id == "warrior" {
+            if &**type_id == "warrior" {
                 "boss_jump"
             } else {
-                enemy_idle_sheet(type_id)
+                type_id.idle_sheet()
             }
         }
         "land" => {
-            if type_id == "warrior" {
+            if &**type_id == "warrior" {
                 "boss_land"
             } else {
-                enemy_idle_sheet(type_id)
+                type_id.idle_sheet()
             }
         }
-        "hurt" => match type_id {
+        "hurt" => match &**type_id {
             "swordsman" => "enemy_swordsman_hurt",
             "infantryman" => "enemy_infantry_hurt",
             "destroyer" => "enemy_destroyer_hurt",
@@ -188,9 +197,9 @@ pub(super) fn set_enemy_animation(
             "gorgon_2" => "enemy_gorgon_2_hurt",
             "gorgon_3" => "enemy_gorgon_3_hurt",
             "warrior" => "boss_hurt",
-            _ => enemy_idle_sheet(type_id),
+            _ => type_id.idle_sheet(),
         },
-        "dead" => match type_id {
+        "dead" => match &**type_id {
             "swordsman" => "enemy_swordsman_dead",
             "infantryman" => "enemy_infantry_dead",
             "destroyer" => "enemy_destroyer_dead",
@@ -198,9 +207,9 @@ pub(super) fn set_enemy_animation(
             "gorgon_2" => "enemy_gorgon_2_dead",
             "gorgon_3" => "enemy_gorgon_3_dead",
             "warrior" => "boss_dead",
-            _ => enemy_idle_sheet(type_id),
+            _ => type_id.idle_sheet(),
         },
-        _ => enemy_idle_sheet(type_id),
+        _ => type_id.idle_sheet(),
     };
     let Some(sheet) = sheets.0.get(key) else {
         return;
@@ -218,4 +227,25 @@ pub(super) fn set_enemy_animation(
     animation.frames = sheet.frames;
     animation.looping = matches!(action, "walk" | "idle");
     animation.timer = Timer::from_seconds(1.0 / sheet.fps, TimerMode::Repeating);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn received_damage_numbers_are_bold_red() {
+        let mut app = App::new();
+        app.add_systems(Startup, |mut commands: Commands| {
+            spawn_damage_number(&mut commands, Vec3::ZERO, 8.0, true);
+        });
+        app.update();
+
+        let mut numbers = app.world_mut().query::<(&TextFont, &TextColor)>();
+        let (font, color) = numbers
+            .single(app.world())
+            .expect("the damage number should be spawned");
+        assert_eq!(font.weight, FontWeight::BOLD);
+        assert_eq!(color.0, Color::srgb(1.0, 0.15, 0.18));
+    }
 }

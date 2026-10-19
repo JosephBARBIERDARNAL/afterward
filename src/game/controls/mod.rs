@@ -1,11 +1,19 @@
-use super::{GameData, settings::preferences_path};
+use crate::{
+    data::{ControlsConfig, GameData},
+    game::settings::preferences_path,
+};
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
-use std::{collections::BTreeMap, fs};
+use std::{
+    collections::BTreeMap,
+    fmt::{self, Display, Formatter},
+    fs,
+    str::FromStr,
+};
 
 mod key_codes;
 
-use key_codes::{key_from_name, key_label, key_name};
+use key_codes::{KeyBindingName, KeyLabel};
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub(super) enum GameAction {
     MoveLeft,
@@ -18,10 +26,11 @@ pub(super) enum GameAction {
     Gun,
     Interact,
     Pause,
+    ToggleFullscreen,
 }
 
 impl GameAction {
-    pub const ALL: [Self; 10] = [
+    pub const ALL: [Self; 11] = [
         Self::MoveLeft,
         Self::MoveRight,
         Self::NavigateUp,
@@ -32,22 +41,8 @@ impl GameAction {
         Self::Gun,
         Self::Interact,
         Self::Pause,
+        Self::ToggleFullscreen,
     ];
-
-    fn id(self) -> &'static str {
-        match self {
-            Self::MoveLeft => "move_left",
-            Self::MoveRight => "move_right",
-            Self::NavigateUp => "navigate_up",
-            Self::NavigateDown => "navigate_down",
-            Self::Jump => "jump",
-            Self::Dash => "dash",
-            Self::Sword => "sword",
-            Self::Gun => "gun",
-            Self::Interact => "interact",
-            Self::Pause => "pause",
-        }
-    }
 
     pub fn label(self) -> &'static str {
         match self {
@@ -61,11 +56,47 @@ impl GameAction {
             Self::Gun => "GUN",
             Self::Interact => "INTERACT / CONFIRM",
             Self::Pause => "PAUSE",
+            Self::ToggleFullscreen => "FULLSCREEN",
         }
     }
+}
 
-    fn from_id(id: &str) -> Option<Self> {
-        Self::ALL.into_iter().find(|action| action.id() == id)
+impl FromStr for GameAction {
+    type Err = &'static str;
+
+    fn from_str(id: &str) -> Result<Self, Self::Err> {
+        match id {
+            "move_left" => Ok(Self::MoveLeft),
+            "move_right" => Ok(Self::MoveRight),
+            "navigate_up" => Ok(Self::NavigateUp),
+            "navigate_down" => Ok(Self::NavigateDown),
+            "jump" => Ok(Self::Jump),
+            "dash" => Ok(Self::Dash),
+            "sword" => Ok(Self::Sword),
+            "gun" => Ok(Self::Gun),
+            "interact" => Ok(Self::Interact),
+            "pause" => Ok(Self::Pause),
+            "toggle_fullscreen" => Ok(Self::ToggleFullscreen),
+            _ => Err("unknown game action"),
+        }
+    }
+}
+
+impl Display for GameAction {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
+        formatter.write_str(match self {
+            Self::MoveLeft => "move_left",
+            Self::MoveRight => "move_right",
+            Self::NavigateUp => "navigate_up",
+            Self::NavigateDown => "navigate_down",
+            Self::Jump => "jump",
+            Self::Dash => "dash",
+            Self::Sword => "sword",
+            Self::Gun => "gun",
+            Self::Interact => "interact",
+            Self::Pause => "pause",
+            Self::ToggleFullscreen => "toggle_fullscreen",
+        })
     }
 }
 
@@ -73,8 +104,40 @@ impl GameAction {
 pub(super) struct ControlBindings {
     bindings: BTreeMap<GameAction, Vec<KeyCode>>,
     defaults: BTreeMap<GameAction, Vec<KeyCode>>,
-    selected_action: usize,
-    waiting_for_key: bool,
+    pub(crate) selected_action_index: usize,
+    pub(crate) waiting_for_key: bool,
+}
+
+struct DefaultBindings(BTreeMap<GameAction, Vec<KeyCode>>);
+
+impl From<&ControlsConfig> for DefaultBindings {
+    fn from(controls: &ControlsConfig) -> Self {
+        let parse_keys = |names: &[String]| {
+            names
+                .iter()
+                .filter_map(|name| name.parse::<KeyBindingName>().ok().map(KeyCode::from))
+                .collect::<Vec<_>>()
+        };
+        Self(BTreeMap::from([
+            (GameAction::MoveLeft, parse_keys(&controls.move_left)),
+            (GameAction::MoveRight, parse_keys(&controls.move_right)),
+            (GameAction::NavigateUp, parse_keys(&controls.navigate_up)),
+            (
+                GameAction::NavigateDown,
+                parse_keys(&controls.navigate_down),
+            ),
+            (GameAction::Jump, parse_keys(&controls.jump)),
+            (GameAction::Dash, parse_keys(&controls.dash)),
+            (GameAction::Sword, parse_keys(&controls.sword)),
+            (GameAction::Gun, parse_keys(&controls.gun)),
+            (GameAction::Interact, parse_keys(&controls.interact)),
+            (GameAction::Pause, parse_keys(&controls.pause)),
+            (
+                GameAction::ToggleFullscreen,
+                parse_keys(&controls.toggle_fullscreen),
+            ),
+        ]))
+    }
 }
 
 impl ControlBindings {
@@ -91,15 +154,7 @@ impl ControlBindings {
     }
 
     pub fn selected_action(&self) -> GameAction {
-        GameAction::ALL[self.selected_action]
-    }
-
-    pub fn selected_index(&self) -> usize {
-        self.selected_action
-    }
-
-    pub fn is_waiting_for_key(&self) -> bool {
-        self.waiting_for_key
+        GameAction::ALL[self.selected_action_index]
     }
 
     pub fn binding_label(&self, action: GameAction) -> String {
@@ -107,14 +162,14 @@ impl ControlBindings {
             .get(&action)
             .into_iter()
             .flatten()
-            .map(|key| key_label(*key))
+            .map(|key| KeyLabel::from(*key).to_string())
             .collect::<Vec<_>>()
             .join(" / ")
     }
 
     pub fn move_selection(&mut self, direction: i8) {
         let len = GameAction::ALL.len();
-        self.selected_action = (self.selected_action as isize + isize::from(direction))
+        self.selected_action_index = (self.selected_action_index as isize + isize::from(direction))
             .rem_euclid(len as isize) as usize;
     }
 
@@ -130,7 +185,7 @@ impl ControlBindings {
         let Some(key) = keys
             .get_just_pressed()
             .copied()
-            .find(|key| key_name(*key).is_some())
+            .find(|key| KeyBindingName::try_from(*key).is_ok())
         else {
             return false;
         };
@@ -159,7 +214,7 @@ pub(super) fn initialize_control_bindings(
     data: Res<GameData>,
     mut bindings: ResMut<ControlBindings>,
 ) {
-    let defaults = default_bindings(&data);
+    let defaults = DefaultBindings::from(&data.gameplay.controls).0;
     bindings.defaults = defaults.clone();
     bindings.bindings = defaults;
 
@@ -173,12 +228,12 @@ pub(super) fn initialize_control_bindings(
         return;
     };
     for (action_id, names) in saved.bindings {
-        let Some(action) = GameAction::from_id(&action_id) else {
+        let Ok(action) = action_id.parse::<GameAction>() else {
             continue;
         };
         let keys = names
             .iter()
-            .filter_map(|name| key_from_name(name))
+            .filter_map(|name| name.parse::<KeyBindingName>().ok().map(KeyCode::from))
             .collect::<Vec<_>>();
         if !keys.is_empty() {
             bindings.bindings.insert(action, keys);
@@ -186,32 +241,14 @@ pub(super) fn initialize_control_bindings(
     }
 }
 
+#[cfg(test)]
 pub(super) fn initialize_default_control_bindings(
     data: Res<GameData>,
     mut bindings: ResMut<ControlBindings>,
 ) {
-    let defaults = default_bindings(&data);
+    let defaults = DefaultBindings::from(&data.gameplay.controls).0;
     bindings.defaults = defaults.clone();
     bindings.bindings = defaults;
-}
-
-fn default_bindings(data: &GameData) -> BTreeMap<GameAction, Vec<KeyCode>> {
-    let controls = &data.gameplay.controls;
-    BTreeMap::from([
-        (GameAction::MoveLeft, parse_keys(&controls.move_left)),
-        (GameAction::MoveRight, parse_keys(&controls.move_right)),
-        (GameAction::NavigateUp, parse_keys(&controls.navigate_up)),
-        (
-            GameAction::NavigateDown,
-            parse_keys(&controls.navigate_down),
-        ),
-        (GameAction::Jump, parse_keys(&controls.jump)),
-        (GameAction::Dash, parse_keys(&controls.dash)),
-        (GameAction::Sword, parse_keys(&controls.sword)),
-        (GameAction::Gun, parse_keys(&controls.gun)),
-        (GameAction::Interact, parse_keys(&controls.interact)),
-        (GameAction::Pause, parse_keys(&controls.pause)),
-    ])
 }
 
 pub(super) fn save_bindings(bindings: &ControlBindings) {
@@ -227,10 +264,10 @@ pub(super) fn save_bindings(bindings: &ControlBindings) {
             .iter()
             .map(|(action, keys)| {
                 (
-                    action.id().to_string(),
+                    action.to_string(),
                     keys.iter()
-                        .filter_map(|key| key_name(*key))
-                        .map(str::to_string)
+                        .filter_map(|key| KeyBindingName::try_from(*key).ok())
+                        .map(|name| name.to_string())
                         .collect(),
                 )
             })
@@ -242,11 +279,4 @@ pub(super) fn save_bindings(bindings: &ControlBindings) {
     if fs::create_dir_all(directory).is_ok() {
         let _ = fs::write(path, serialized);
     }
-}
-
-fn parse_keys(names: &[String]) -> Vec<KeyCode> {
-    names
-        .iter()
-        .filter_map(|name| key_from_name(name))
-        .collect()
 }

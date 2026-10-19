@@ -117,11 +117,8 @@ pub(in crate::game) fn update_health_pickups(
         session.health = (session.health + pickup.healing).min(session.max_health);
         sounds.push(SoundCue::Pickup);
         if has_bonus(&session, "sated_fury") {
-            player_body.sated_fury_timer = effect_number(
-                &data,
-                "sated_fury",
-                "healing_pickup_attack_speed_duration_s",
-            );
+            player_body.sated_fury_timer =
+                data.bonus_effect("sated_fury", "healing_pickup_attack_speed_duration_s");
         }
         commands.entity(entity).despawn();
     }

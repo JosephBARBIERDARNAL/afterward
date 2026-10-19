@@ -1,215 +1,198 @@
+use std::{
+    fmt::{self, Display, Formatter},
+    str::FromStr,
+};
+
 use bevy::prelude::KeyCode;
 
-pub(super) fn key_from_name(name: &str) -> Option<KeyCode> {
-    Some(match name {
-        "KeyA" => KeyCode::KeyA,
-        "KeyB" => KeyCode::KeyB,
-        "KeyC" => KeyCode::KeyC,
-        "KeyD" => KeyCode::KeyD,
-        "KeyE" => KeyCode::KeyE,
-        "KeyF" => KeyCode::KeyF,
-        "KeyG" => KeyCode::KeyG,
-        "KeyH" => KeyCode::KeyH,
-        "KeyI" => KeyCode::KeyI,
-        "KeyJ" => KeyCode::KeyJ,
-        "KeyK" => KeyCode::KeyK,
-        "KeyL" => KeyCode::KeyL,
-        "KeyM" => KeyCode::KeyM,
-        "KeyN" => KeyCode::KeyN,
-        "KeyO" => KeyCode::KeyO,
-        "KeyP" => KeyCode::KeyP,
-        "KeyQ" => KeyCode::KeyQ,
-        "KeyR" => KeyCode::KeyR,
-        "KeyS" => KeyCode::KeyS,
-        "KeyT" => KeyCode::KeyT,
-        "KeyU" => KeyCode::KeyU,
-        "KeyV" => KeyCode::KeyV,
-        "KeyW" => KeyCode::KeyW,
-        "KeyX" => KeyCode::KeyX,
-        "KeyY" => KeyCode::KeyY,
-        "KeyZ" => KeyCode::KeyZ,
-        "Digit0" => KeyCode::Digit0,
-        "Digit1" => KeyCode::Digit1,
-        "Digit2" => KeyCode::Digit2,
-        "Digit3" => KeyCode::Digit3,
-        "Digit4" => KeyCode::Digit4,
-        "Digit5" => KeyCode::Digit5,
-        "Digit6" => KeyCode::Digit6,
-        "Digit7" => KeyCode::Digit7,
-        "Digit8" => KeyCode::Digit8,
-        "Digit9" => KeyCode::Digit9,
-        "F1" => KeyCode::F1,
-        "F2" => KeyCode::F2,
-        "F3" => KeyCode::F3,
-        "F4" => KeyCode::F4,
-        "F5" => KeyCode::F5,
-        "F6" => KeyCode::F6,
-        "F7" => KeyCode::F7,
-        "F8" => KeyCode::F8,
-        "F9" => KeyCode::F9,
-        "F10" => KeyCode::F10,
-        "F11" => KeyCode::F11,
-        "F12" => KeyCode::F12,
-        "ArrowDown" => KeyCode::ArrowDown,
-        "ArrowLeft" => KeyCode::ArrowLeft,
-        "ArrowRight" => KeyCode::ArrowRight,
-        "ArrowUp" => KeyCode::ArrowUp,
-        "Space" => KeyCode::Space,
-        "ShiftLeft" => KeyCode::ShiftLeft,
-        "ShiftRight" => KeyCode::ShiftRight,
-        "ControlLeft" => KeyCode::ControlLeft,
-        "ControlRight" => KeyCode::ControlRight,
-        "AltLeft" => KeyCode::AltLeft,
-        "AltRight" => KeyCode::AltRight,
-        "Enter" => KeyCode::Enter,
-        "Escape" => KeyCode::Escape,
-        "Tab" => KeyCode::Tab,
-        "Backspace" => KeyCode::Backspace,
-        "Delete" => KeyCode::Delete,
-        "Home" => KeyCode::Home,
-        "End" => KeyCode::End,
-        "PageUp" => KeyCode::PageUp,
-        "PageDown" => KeyCode::PageDown,
-        "Minus" => KeyCode::Minus,
-        "Equal" => KeyCode::Equal,
-        "BracketLeft" => KeyCode::BracketLeft,
-        "BracketRight" => KeyCode::BracketRight,
-        "Semicolon" => KeyCode::Semicolon,
-        "Quote" => KeyCode::Quote,
-        "Comma" => KeyCode::Comma,
-        "Period" => KeyCode::Period,
-        "Slash" => KeyCode::Slash,
-        "Backslash" => KeyCode::Backslash,
-        "Backquote" => KeyCode::Backquote,
-        "NumpadEnter" => KeyCode::NumpadEnter,
-        "Numpad0" => KeyCode::Numpad0,
-        "Numpad1" => KeyCode::Numpad1,
-        "Numpad2" => KeyCode::Numpad2,
-        "Numpad3" => KeyCode::Numpad3,
-        "Numpad4" => KeyCode::Numpad4,
-        "Numpad5" => KeyCode::Numpad5,
-        "Numpad6" => KeyCode::Numpad6,
-        "Numpad7" => KeyCode::Numpad7,
-        "Numpad8" => KeyCode::Numpad8,
-        "Numpad9" => KeyCode::Numpad9,
-        "NumpadAdd" => KeyCode::NumpadAdd,
-        "NumpadSubtract" => KeyCode::NumpadSubtract,
-        "NumpadMultiply" => KeyCode::NumpadMultiply,
-        "NumpadDivide" => KeyCode::NumpadDivide,
-        "NumpadDecimal" => KeyCode::NumpadDecimal,
-        _ => return None,
-    })
-}
+#[derive(Clone, Copy)]
+pub(super) struct KeyBindingName(KeyCode);
 
-pub(super) fn key_name(key: KeyCode) -> Option<&'static str> {
-    match key {
-        KeyCode::KeyA => Some("KeyA"),
-        KeyCode::KeyB => Some("KeyB"),
-        KeyCode::KeyC => Some("KeyC"),
-        KeyCode::KeyD => Some("KeyD"),
-        KeyCode::KeyE => Some("KeyE"),
-        KeyCode::KeyF => Some("KeyF"),
-        KeyCode::KeyG => Some("KeyG"),
-        KeyCode::KeyH => Some("KeyH"),
-        KeyCode::KeyI => Some("KeyI"),
-        KeyCode::KeyJ => Some("KeyJ"),
-        KeyCode::KeyK => Some("KeyK"),
-        KeyCode::KeyL => Some("KeyL"),
-        KeyCode::KeyM => Some("KeyM"),
-        KeyCode::KeyN => Some("KeyN"),
-        KeyCode::KeyO => Some("KeyO"),
-        KeyCode::KeyP => Some("KeyP"),
-        KeyCode::KeyQ => Some("KeyQ"),
-        KeyCode::KeyR => Some("KeyR"),
-        KeyCode::KeyS => Some("KeyS"),
-        KeyCode::KeyT => Some("KeyT"),
-        KeyCode::KeyU => Some("KeyU"),
-        KeyCode::KeyV => Some("KeyV"),
-        KeyCode::KeyW => Some("KeyW"),
-        KeyCode::KeyX => Some("KeyX"),
-        KeyCode::KeyY => Some("KeyY"),
-        KeyCode::KeyZ => Some("KeyZ"),
-        KeyCode::Digit0 => Some("Digit0"),
-        KeyCode::Digit1 => Some("Digit1"),
-        KeyCode::Digit2 => Some("Digit2"),
-        KeyCode::Digit3 => Some("Digit3"),
-        KeyCode::Digit4 => Some("Digit4"),
-        KeyCode::Digit5 => Some("Digit5"),
-        KeyCode::Digit6 => Some("Digit6"),
-        KeyCode::Digit7 => Some("Digit7"),
-        KeyCode::Digit8 => Some("Digit8"),
-        KeyCode::Digit9 => Some("Digit9"),
-        KeyCode::F1 => Some("F1"),
-        KeyCode::F2 => Some("F2"),
-        KeyCode::F3 => Some("F3"),
-        KeyCode::F4 => Some("F4"),
-        KeyCode::F5 => Some("F5"),
-        KeyCode::F6 => Some("F6"),
-        KeyCode::F7 => Some("F7"),
-        KeyCode::F8 => Some("F8"),
-        KeyCode::F9 => Some("F9"),
-        KeyCode::F10 => Some("F10"),
-        KeyCode::F11 => Some("F11"),
-        KeyCode::F12 => Some("F12"),
-        KeyCode::ArrowDown => Some("ArrowDown"),
-        KeyCode::ArrowLeft => Some("ArrowLeft"),
-        KeyCode::ArrowRight => Some("ArrowRight"),
-        KeyCode::ArrowUp => Some("ArrowUp"),
-        KeyCode::Space => Some("Space"),
-        KeyCode::ShiftLeft => Some("ShiftLeft"),
-        KeyCode::ShiftRight => Some("ShiftRight"),
-        KeyCode::ControlLeft => Some("ControlLeft"),
-        KeyCode::ControlRight => Some("ControlRight"),
-        KeyCode::AltLeft => Some("AltLeft"),
-        KeyCode::AltRight => Some("AltRight"),
-        KeyCode::Enter => Some("Enter"),
-        KeyCode::Escape => Some("Escape"),
-        KeyCode::Tab => Some("Tab"),
-        KeyCode::Backspace => Some("Backspace"),
-        KeyCode::Delete => Some("Delete"),
-        KeyCode::Home => Some("Home"),
-        KeyCode::End => Some("End"),
-        KeyCode::PageUp => Some("PageUp"),
-        KeyCode::PageDown => Some("PageDown"),
-        KeyCode::Minus => Some("Minus"),
-        KeyCode::Equal => Some("Equal"),
-        KeyCode::BracketLeft => Some("BracketLeft"),
-        KeyCode::BracketRight => Some("BracketRight"),
-        KeyCode::Semicolon => Some("Semicolon"),
-        KeyCode::Quote => Some("Quote"),
-        KeyCode::Comma => Some("Comma"),
-        KeyCode::Period => Some("Period"),
-        KeyCode::Slash => Some("Slash"),
-        KeyCode::Backslash => Some("Backslash"),
-        KeyCode::Backquote => Some("Backquote"),
-        KeyCode::NumpadEnter => Some("NumpadEnter"),
-        KeyCode::Numpad0 => Some("Numpad0"),
-        KeyCode::Numpad1 => Some("Numpad1"),
-        KeyCode::Numpad2 => Some("Numpad2"),
-        KeyCode::Numpad3 => Some("Numpad3"),
-        KeyCode::Numpad4 => Some("Numpad4"),
-        KeyCode::Numpad5 => Some("Numpad5"),
-        KeyCode::Numpad6 => Some("Numpad6"),
-        KeyCode::Numpad7 => Some("Numpad7"),
-        KeyCode::Numpad8 => Some("Numpad8"),
-        KeyCode::Numpad9 => Some("Numpad9"),
-        KeyCode::NumpadAdd => Some("NumpadAdd"),
-        KeyCode::NumpadSubtract => Some("NumpadSubtract"),
-        KeyCode::NumpadMultiply => Some("NumpadMultiply"),
-        KeyCode::NumpadDivide => Some("NumpadDivide"),
-        KeyCode::NumpadDecimal => Some("NumpadDecimal"),
-        _ => None,
+#[derive(Debug)]
+pub(super) struct UnknownKeyCode;
+
+impl Display for UnknownKeyCode {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
+        formatter.write_str("unsupported key code")
     }
 }
 
-pub(super) fn key_label(key: KeyCode) -> String {
-    match key_name(key) {
-        Some(name) if name.starts_with("Key") => name[3..].to_string(),
-        Some("ArrowLeft") => String::from("←"),
-        Some("ArrowRight") => String::from("→"),
-        Some("ArrowUp") => String::from("↑"),
-        Some("ArrowDown") => String::from("↓"),
-        Some(name) => name.to_string(),
-        None => String::from("Unknown"),
+impl std::error::Error for UnknownKeyCode {}
+
+macro_rules! key_binding_names {
+    ($($name:literal => $key:ident),+ $(,)?) => {
+        impl FromStr for KeyBindingName {
+            type Err = UnknownKeyCode;
+
+            fn from_str(value: &str) -> Result<Self, Self::Err> {
+                let key = match value {
+                    $($name => KeyCode::$key,)+
+                    _ => return Err(UnknownKeyCode),
+                };
+                Ok(Self(key))
+            }
+        }
+
+        impl TryFrom<KeyCode> for KeyBindingName {
+            type Error = UnknownKeyCode;
+
+            fn try_from(key: KeyCode) -> Result<Self, Self::Error> {
+                match key {
+                    $(KeyCode::$key => Ok(Self(key)),)+
+                    _ => Err(UnknownKeyCode),
+                }
+            }
+        }
+
+        impl From<KeyBindingName> for KeyCode {
+            fn from(name: KeyBindingName) -> Self {
+                name.0
+            }
+        }
+
+        impl Display for KeyBindingName {
+            fn fmt(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
+                formatter.write_str(match self.0 {
+                    $(KeyCode::$key => $name,)+
+                    _ => "Unknown",
+                })
+            }
+        }
+    };
+}
+
+key_binding_names! {
+    "KeyA" => KeyA,
+    "KeyB" => KeyB,
+    "KeyC" => KeyC,
+    "KeyD" => KeyD,
+    "KeyE" => KeyE,
+    "KeyF" => KeyF,
+    "KeyG" => KeyG,
+    "KeyH" => KeyH,
+    "KeyI" => KeyI,
+    "KeyJ" => KeyJ,
+    "KeyK" => KeyK,
+    "KeyL" => KeyL,
+    "KeyM" => KeyM,
+    "KeyN" => KeyN,
+    "KeyO" => KeyO,
+    "KeyP" => KeyP,
+    "KeyQ" => KeyQ,
+    "KeyR" => KeyR,
+    "KeyS" => KeyS,
+    "KeyT" => KeyT,
+    "KeyU" => KeyU,
+    "KeyV" => KeyV,
+    "KeyW" => KeyW,
+    "KeyX" => KeyX,
+    "KeyY" => KeyY,
+    "KeyZ" => KeyZ,
+    "Digit0" => Digit0,
+    "Digit1" => Digit1,
+    "Digit2" => Digit2,
+    "Digit3" => Digit3,
+    "Digit4" => Digit4,
+    "Digit5" => Digit5,
+    "Digit6" => Digit6,
+    "Digit7" => Digit7,
+    "Digit8" => Digit8,
+    "Digit9" => Digit9,
+    "F1" => F1,
+    "F2" => F2,
+    "F3" => F3,
+    "F4" => F4,
+    "F5" => F5,
+    "F6" => F6,
+    "F7" => F7,
+    "F8" => F8,
+    "F9" => F9,
+    "F10" => F10,
+    "F11" => F11,
+    "F12" => F12,
+    "ArrowDown" => ArrowDown,
+    "ArrowLeft" => ArrowLeft,
+    "ArrowRight" => ArrowRight,
+    "ArrowUp" => ArrowUp,
+    "Space" => Space,
+    "ShiftLeft" => ShiftLeft,
+    "ShiftRight" => ShiftRight,
+    "ControlLeft" => ControlLeft,
+    "ControlRight" => ControlRight,
+    "AltLeft" => AltLeft,
+    "AltRight" => AltRight,
+    "Enter" => Enter,
+    "Escape" => Escape,
+    "Tab" => Tab,
+    "Backspace" => Backspace,
+    "Delete" => Delete,
+    "Home" => Home,
+    "End" => End,
+    "PageUp" => PageUp,
+    "PageDown" => PageDown,
+    "Minus" => Minus,
+    "Equal" => Equal,
+    "BracketLeft" => BracketLeft,
+    "BracketRight" => BracketRight,
+    "Semicolon" => Semicolon,
+    "Quote" => Quote,
+    "Comma" => Comma,
+    "Period" => Period,
+    "Slash" => Slash,
+    "Backslash" => Backslash,
+    "Backquote" => Backquote,
+    "NumpadEnter" => NumpadEnter,
+    "Numpad0" => Numpad0,
+    "Numpad1" => Numpad1,
+    "Numpad2" => Numpad2,
+    "Numpad3" => Numpad3,
+    "Numpad4" => Numpad4,
+    "Numpad5" => Numpad5,
+    "Numpad6" => Numpad6,
+    "Numpad7" => Numpad7,
+    "Numpad8" => Numpad8,
+    "Numpad9" => Numpad9,
+    "NumpadAdd" => NumpadAdd,
+    "NumpadSubtract" => NumpadSubtract,
+    "NumpadMultiply" => NumpadMultiply,
+    "NumpadDivide" => NumpadDivide,
+    "NumpadDecimal" => NumpadDecimal,
+}
+
+pub(super) struct KeyLabel(KeyCode);
+
+impl From<KeyCode> for KeyLabel {
+    fn from(key: KeyCode) -> Self {
+        Self(key)
+    }
+}
+
+impl Display for KeyLabel {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
+        let Ok(name) = KeyBindingName::try_from(self.0) else {
+            return formatter.write_str("Unknown");
+        };
+        let name = name.to_string();
+        match name.as_str() {
+            "ArrowLeft" => formatter.write_str("LEFT"),
+            "ArrowRight" => formatter.write_str("RIGHT"),
+            "ArrowUp" => formatter.write_str("UP"),
+            "ArrowDown" => formatter.write_str("DOWN"),
+            name if name.starts_with("Key") => formatter.write_str(&name[3..]),
+            name => formatter.write_str(name),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn arrow_key_labels_use_characters_available_in_the_game_font() {
+        assert_eq!(KeyLabel::from(KeyCode::ArrowUp).to_string(), "UP");
+        assert_eq!(KeyLabel::from(KeyCode::ArrowDown).to_string(), "DOWN");
+        assert_eq!(KeyLabel::from(KeyCode::ArrowLeft).to_string(), "LEFT");
+        assert_eq!(KeyLabel::from(KeyCode::ArrowRight).to_string(), "RIGHT");
     }
 }

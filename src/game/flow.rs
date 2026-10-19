@@ -263,7 +263,6 @@ pub(super) fn start_room_transition_fade_out(
 
 pub(super) fn update_room_transition_fade_out(
     time: Res<Time>,
-    data: Res<GameData>,
     session: Res<RunSession>,
     mut timer: ResMut<PhaseTimer>,
     mut next_screen: ResMut<NextState<GameScreen>>,
@@ -272,15 +271,12 @@ pub(super) fn update_room_transition_fade_out(
     if !timer.0.is_finished() {
         return;
     }
-    let room = &data.rooms[&session.room_id];
-    next_screen.set(if data.rooms.contains_key(&room.next_room_id) {
-        if room.next_room_id == 10 {
-            GameScreen::BossIntro
-        } else {
-            GameScreen::Playing
-        }
-    } else {
+    next_screen.set(if session.door_open {
         GameScreen::Complete
+    } else if session.room_id == 10 {
+        GameScreen::BossIntro
+    } else {
+        GameScreen::Playing
     });
 }
 

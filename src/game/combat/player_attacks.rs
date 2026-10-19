@@ -63,6 +63,7 @@ pub(in crate::game) fn player_attacks(
     let sword_speed = attack_speed_multiplier(&session, &data, &player, true);
     let sword_ready = controls.pressed(GameAction::Sword, &keys) && player.sword_cooldown == 0.0;
     if sword_ready {
+        player.weapon_mode = PlayerWeapon::Sword;
         player.sword_cooldown = data.gameplay.player.sword.attack_interval_s / sword_speed;
         let mut total_healing = 0.0;
         let mut hit_any = false;
@@ -103,11 +104,11 @@ pub(in crate::game) fn player_attacks(
             );
             if killed {
                 player.chain_reaction_timer =
-                    effect_number(&data, "chain_reaction", "kill_damage_duration_s");
+                    data.bonus_effect("chain_reaction", "kill_damage_duration_s");
             }
             hit_any = true;
             if has_bonus(&session, "vampiric_edge") {
-                total_healing += effect_number(&data, "vampiric_edge", "sword_hit_healing");
+                total_healing += data.bonus_effect("vampiric_edge", "sword_hit_healing");
             }
         }
         if has_bonus(&session, "dash_strike") {
@@ -116,7 +117,7 @@ pub(in crate::game) fn player_attacks(
         if hit_any {
             sounds.push(SoundCue::SwordHit);
             register_hit(&mut player, &session, &data);
-            let cap = effect_number(&data, "vampiric_edge", "sword_swing_healing_cap");
+            let cap = data.bonus_effect("vampiric_edge", "sword_swing_healing_cap");
             session.health = (session.health + total_healing.min(cap)).min(session.max_health);
         } else {
             sounds.push(SoundCue::SwordSwing);
@@ -128,10 +129,17 @@ pub(in crate::game) fn player_attacks(
             "player_sword",
             false,
         );
-        player.action_animation_timer = 0.35;
+        player_animation.frame = 0;
+        if let Some(atlas) = player_sprite.texture_atlas.as_mut() {
+            atlas.index = 0;
+        }
+        player_animation.timer.reset();
+        player.action_animation_timer =
+            player_animation.frames as f32 * player_animation.timer.duration().as_secs_f32();
     }
 
     if controls.pressed(GameAction::Gun, &keys) && player.gun_cooldown == 0.0 {
+        player.weapon_mode = PlayerWeapon::Gun;
         sounds.push(SoundCue::Gunshot);
         let gun_speed = attack_speed_multiplier(&session, &data, &player, false);
         player.gun_cooldown = data.gameplay.player.gun.fire_interval_s / gun_speed;
@@ -146,8 +154,9 @@ pub(in crate::game) fn player_attacks(
             )
             * H_WORLD_UNITS
             * player.facing;
+        let projectile_size = Vec2::new(12.0, 5.0);
         commands.spawn((
-            Sprite::from_color(Color::srgb(1.0, 0.83, 0.32), Vec2::new(12.0, 5.0)),
+            Sprite::from_color(Color::srgb(1.0, 0.83, 0.32), projectile_size),
             Transform::from_translation(
                 player_transform.translation + Vec3::new(player.facing * 22.0, 0.0, 0.5),
             ),
@@ -157,6 +166,7 @@ pub(in crate::game) fn player_attacks(
                 knockback_h_s: data.gameplay.player.boss_knockback.bullet_h_s,
                 life_s: 2.0,
                 friendly: true,
+                half_size: projectile_size / 2.0,
             },
             RoomEntity,
         ));
@@ -169,8 +179,14 @@ pub(in crate::game) fn player_attacks(
             } else {
                 "player_gun_shoot_idle"
             },
-            true,
+            false,
         );
-        player.action_animation_timer = 0.2;
+        player_animation.frame = 0;
+        if let Some(atlas) = player_sprite.texture_atlas.as_mut() {
+            atlas.index = 0;
+        }
+        player_animation.timer.reset();
+        player.action_animation_timer =
+            player_animation.frames as f32 * player_animation.timer.duration().as_secs_f32();
     }
 }

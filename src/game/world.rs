@@ -1,5 +1,5 @@
 use super::*;
-use crate::data::{EnemyAttackConfig, RoomConfig};
+use crate::data::RoomConfig;
 
 pub(super) fn spawn_room(
     mut commands: Commands,
@@ -18,10 +18,15 @@ pub(super) fn spawn_room(
     spawn_enemies(&mut commands, room, &data, &sheets);
 
     if let Ok((mut transform, mut rig)) = camera.single_mut() {
-        rig.width_h = f32::from(room.size.width_viewports) * 16.0;
+        rig.width_h = room.width_h(&data.gameplay);
         rig.fixed_y_h = room.camera.fixed_y_h;
         rig.follows_player = room.camera.follow_player_x;
-        transform.translation.x = (rig.width_h.min(16.0) / 2.0) * H_WORLD_UNITS;
+        let half_viewport_width_h = data.gameplay.viewport_width_h() / 2.0;
+        transform.translation.x = room
+            .player_spawn
+            .x_h
+            .clamp(half_viewport_width_h, rig.width_h - half_viewport_width_h)
+            * H_WORLD_UNITS;
         transform.translation.y = rig.fixed_y_h * H_WORLD_UNITS;
     }
     session.world_loaded = true;
@@ -37,7 +42,7 @@ pub(super) fn draw_room(
     let tile_h = profile.tile_h;
     let tile_width_h =
         tile_h * profile.source_size_px.width as f32 / profile.source_size_px.height as f32;
-    let room_width_h = f32::from(room.size.width_viewports) * 16.0;
+    let room_width_h = room.width_h(&data.gameplay);
     let first_tile = if profile.repeat_horizontal { -2 } else { 0 };
     let last_tile = if profile.repeat_horizontal {
         (room_width_h / tile_width_h).ceil() as i32 + 2
@@ -77,31 +82,7 @@ pub(super) fn draw_room(
         }
     }
 
-    for platform in &room.platforms {
-        let center = Vec2::new(
-            platform.position_h.x_h * H_WORLD_UNITS,
-            platform.position_h.y_h * H_WORLD_UNITS,
-        );
-        let size = Vec2::new(
-            platform.size_h.width_h * H_WORLD_UNITS,
-            platform.size_h.height_h * H_WORLD_UNITS,
-        );
-        commands.spawn((
-            Sprite::from_color(Color::srgb(0.075, 0.11, 0.16), size),
-            Transform::from_xyz(center.x, center.y, 0.0),
-            PlatformSurface {
-                left: center.x - size.x / 2.0,
-                right: center.x + size.x / 2.0,
-                top: center.y + size.y / 2.0,
-            },
-            RoomEntity,
-        ));
-        commands.spawn((
-            Sprite::from_color(Color::srgb(0.12, 0.23, 0.19), Vec2::new(size.x, 5.0)),
-            Transform::from_xyz(center.x, center.y + size.y / 2.0 - 2.5, 0.2),
-            RoomEntity,
-        ));
-    }
+    spawn_room_platforms(commands, room);
 
     for decoration in &room.decorations {
         let mut sprite = Sprite::from_image(asset_server.load(decoration.asset.clone()));
@@ -118,6 +99,35 @@ pub(super) fn draw_room(
                 decoration.position_h.y_h * H_WORLD_UNITS,
                 z,
             ),
+            RoomEntity,
+        ));
+    }
+}
+
+pub(super) fn spawn_room_platforms(commands: &mut Commands, room: &RoomConfig) {
+    for platform in &room.platforms {
+        let center = Vec2::new(
+            platform.position_h.x_h * H_WORLD_UNITS,
+            platform.position_h.y_h * H_WORLD_UNITS,
+        );
+        let size = Vec2::new(
+            platform.size_h.width_h * H_WORLD_UNITS,
+            platform.size_h.height_h * H_WORLD_UNITS,
+        );
+        commands.spawn((
+            Sprite::from_color(Color::srgb(0.075, 0.11, 0.16), size),
+            Transform::from_xyz(center.x, center.y, 0.0),
+            PlatformSurface {
+                left: center.x - size.x / 2.0,
+                right: center.x + size.x / 2.0,
+                bottom: center.y - size.y / 2.0,
+                top: center.y + size.y / 2.0,
+            },
+            RoomEntity,
+        ));
+        commands.spawn((
+            Sprite::from_color(Color::srgb(0.12, 0.23, 0.19), Vec2::new(size.x, 5.0)),
+            Transform::from_xyz(center.x, center.y + size.y / 2.0 - 2.5, 0.2),
             RoomEntity,
         ));
     }
@@ -149,6 +159,7 @@ pub(super) fn spawn_player(commands: &mut Commands, room: &RoomConfig, sheets: &
         PlayerBody {
             velocity: Vec2::ZERO,
             facing: 1.0,
+            weapon_mode: PlayerWeapon::Sword,
             grounded: true,
             jumps_used: 0,
             dash_timer: 0.0,
@@ -179,7 +190,7 @@ pub(super) fn spawn_enemies(
 ) {
     for spawn in &room.enemy_spawns {
         let profile = &data.enemies.types[&spawn.type_id];
-        let key = enemy_idle_sheet(&spawn.type_id);
+        let key = spawn.type_id.idle_sheet();
         let sheet = &sheets.0[key];
         let scale = if spawn.type_id == "warrior" {
             2.0
@@ -187,9 +198,17 @@ pub(super) fn spawn_enemies(
             0.55
         };
         let mut attacks = if profile.attacks.is_empty() {
-            profile.attack.iter().map(enemy_attack).collect::<Vec<_>>()
+            profile
+                .attack
+                .iter()
+                .map(EnemyAttack::from)
+                .collect::<Vec<_>>()
         } else {
-            profile.attacks.iter().map(enemy_attack).collect::<Vec<_>>()
+            profile
+                .attacks
+                .iter()
+                .map(EnemyAttack::from)
+                .collect::<Vec<_>>()
         };
         let health = spawn
             .stat_overrides
@@ -247,6 +266,14 @@ pub(super) fn spawn_enemies(
                     movement_speed_h_s,
                     home_y: spawn.position_h.y_h * H_WORLD_UNITS,
                     behavior: profile.behavior.clone(),
+                    procedural_movement: profile.procedural_movement.as_ref().map(|movement| {
+                        ProceduralMovementState {
+                            phase_radians: 0.0,
+                            bob_height_h: movement.bob_height_h,
+                            cycles_per_h: movement.cycles_per_h,
+                            lean_radians: movement.lean_degrees.to_radians(),
+                        }
+                    }),
                     preferred_distance_h,
                     attacks,
                     engaged: false,
@@ -260,6 +287,7 @@ pub(super) fn spawn_enemies(
                     phase_two,
                     phase_two_announced: false,
                     marked_timer: 0.0,
+                    movement_sound_timer: 0.0,
                 },
                 RoomEntity,
             ))
@@ -285,19 +313,6 @@ pub(super) fn spawn_enemies(
             },
             RoomEntity,
         ));
-    }
-}
-
-pub(super) fn enemy_attack(config: &EnemyAttackConfig) -> EnemyAttack {
-    EnemyAttack {
-        kind: config.kind.clone(),
-        damage: config.damage.or(config.damage_per_hit).unwrap_or(0.0),
-        hits: config.hits.unwrap_or(1),
-        reach_h: config.reach_h.or(config.landing_radius_h).unwrap_or(1.2),
-        projectile_speed_h_s: config.projectile_speed_h_s.unwrap_or(0.0),
-        landing_radius_h: config.landing_radius_h.unwrap_or(0.0),
-        cooldown_s: config.cooldown_s,
-        windup_s: config.windup_s,
     }
 }
 

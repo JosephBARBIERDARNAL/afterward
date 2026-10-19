@@ -1,6 +1,13 @@
-use std::collections::BTreeMap;
+use std::{
+    borrow::Borrow,
+    collections::BTreeMap,
+    fmt::{self, Display, Formatter},
+    ops::Deref,
+    str::FromStr,
+};
 
-use serde::Deserialize;
+use bevy::prelude::Color;
+use serde::{Deserialize, Deserializer, de::Error as DeserializeError};
 use yaml_serde::Value;
 
 #[derive(Debug, Deserialize)]
@@ -12,6 +19,13 @@ pub struct GameplayConfig {
     pub window: WindowConfig,
     pub audio: AudioConfig,
     pub controls: ControlsConfig,
+}
+
+impl GameplayConfig {
+    pub(crate) fn viewport_width_h(&self) -> f32 {
+        self.viewport.height_h * f32::from(self.viewport.aspect_ratio.width)
+            / f32::from(self.viewport.aspect_ratio.height)
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -34,6 +48,7 @@ pub struct ControlsConfig {
     pub gun: Vec<String>,
     pub interact: Vec<String>,
     pub pause: Vec<String>,
+    pub toggle_fullscreen: Vec<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -117,7 +132,61 @@ pub struct EnemyTypes {
     pub detection_range_h: f32,
     pub retain_target_after_detection: bool,
     pub damage_triggers_combat: bool,
-    pub types: BTreeMap<String, EnemyTypeConfig>,
+    pub types: BTreeMap<EnemyTypeId, EnemyTypeConfig>,
+}
+
+#[derive(Debug, Clone, Eq, Ord, PartialEq, PartialOrd)]
+pub struct EnemyTypeId(String);
+
+impl FromStr for EnemyTypeId {
+    type Err = &'static str;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        let mut bytes = value.bytes();
+        if !bytes.next().is_some_and(|first| first.is_ascii_lowercase())
+            || !bytes.all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'_')
+        {
+            return Err("enemy type IDs must use lowercase letters, digits, and underscores");
+        }
+        Ok(Self(value.to_string()))
+    }
+}
+
+impl<'de> Deserialize<'de> for EnemyTypeId {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        String::deserialize(deserializer)?
+            .parse()
+            .map_err(D::Error::custom)
+    }
+}
+
+impl Borrow<str> for EnemyTypeId {
+    fn borrow(&self) -> &str {
+        &self.0
+    }
+}
+
+impl Deref for EnemyTypeId {
+    type Target = str;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl Display for EnemyTypeId {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
+        formatter.write_str(&self.0)
+    }
+}
+
+impl PartialEq<&str> for EnemyTypeId {
+    fn eq(&self, other: &&str) -> bool {
+        &**self == *other
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -125,11 +194,19 @@ pub struct EnemyTypeConfig {
     pub health: f32,
     pub movement_speed_h_s: f32,
     pub behavior: String,
+    pub procedural_movement: Option<ProceduralMovementConfig>,
     pub preferred_distance_h: Option<DistanceRange>,
     pub attack: Option<EnemyAttackConfig>,
     #[serde(default)]
     pub attacks: Vec<EnemyAttackConfig>,
     pub phase_two: Option<BossPhaseConfig>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ProceduralMovementConfig {
+    pub bob_height_h: f32,
+    pub cycles_per_h: f32,
+    pub lean_degrees: f32,
 }
 
 #[derive(Debug, Deserialize)]
@@ -192,8 +269,66 @@ pub struct BonusesConfig {
 
 #[derive(Debug, Deserialize)]
 pub struct BonusCategoryConfig {
-    pub color: String,
-    pub icon: String,
+    pub color: HexColor,
+    pub icon: BonusCategoryIcon,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct HexColor(Color);
+
+impl FromStr for HexColor {
+    type Err = &'static str;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        let hex = value.strip_prefix('#').unwrap_or(value);
+        if hex.len() != 6 {
+            return Err("hex colors must contain six digits");
+        }
+        let rgb = u32::from_str_radix(hex, 16).map_err(|_| "hex colors must contain six digits")?;
+        let red = f32::from(((rgb >> 16) & 0xff) as u8) / 255.0;
+        let green = f32::from(((rgb >> 8) & 0xff) as u8) / 255.0;
+        let blue = f32::from((rgb & 0xff) as u8) / 255.0;
+        Ok(Self(Color::srgb(red, green, blue)))
+    }
+}
+
+impl<'de> Deserialize<'de> for HexColor {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        String::deserialize(deserializer)?
+            .parse()
+            .map_err(D::Error::custom)
+    }
+}
+
+impl From<HexColor> for Color {
+    fn from(color: HexColor) -> Self {
+        color.0
+    }
+}
+
+#[derive(Debug, Clone, Copy, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum BonusCategoryIcon {
+    CrossedSwords,
+    Shield,
+    Wing,
+    Light,
+    Knot,
+}
+
+impl Display for BonusCategoryIcon {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
+        formatter.write_str(match self {
+            Self::CrossedSwords => "X",
+            Self::Shield => "O",
+            Self::Wing => "^",
+            Self::Light => "*",
+            Self::Knot => "&",
+        })
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -203,6 +338,27 @@ pub struct BonusConfig {
     pub description: String,
     pub category: String,
     pub effects: BTreeMap<String, Value>,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct BonusEffect(f32);
+
+impl TryFrom<&Value> for BonusEffect {
+    type Error = &'static str;
+
+    fn try_from(value: &Value) -> Result<Self, Self::Error> {
+        let number = value.as_f64().ok_or("bonus effects must be numeric")? as f32;
+        if !number.is_finite() {
+            return Err("bonus effects must be finite numbers");
+        }
+        Ok(Self(number))
+    }
+}
+
+impl From<BonusEffect> for f32 {
+    fn from(effect: BonusEffect) -> Self {
+        effect.0
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -219,6 +375,12 @@ pub struct RoomConfig {
     pub enemy_spawns: Vec<EnemySpawnConfig>,
     pub exit: SpawnPosition,
     pub next_room_id: u16,
+}
+
+impl RoomConfig {
+    pub(crate) fn width_h(&self, gameplay: &GameplayConfig) -> f32 {
+        f32::from(self.size.width_viewports) * gameplay.viewport_width_h()
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -264,7 +426,7 @@ pub struct DecorationConfig {
 
 #[derive(Debug, Deserialize)]
 pub struct EnemySpawnConfig {
-    pub type_id: String,
+    pub type_id: EnemyTypeId,
     pub position_h: SpawnPosition,
     pub stat_overrides: Option<EnemyStatOverrides>,
 }

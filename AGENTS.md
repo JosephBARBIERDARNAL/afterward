@@ -23,6 +23,11 @@ Once you finish making a change (fixing a bug or adding a feature), make sure al
 - Keep source files focused and reasonably sized. Split code into separate modules by responsibility instead of letting individual files grow too long.
 - Follow established software engineering practices: keep responsibilities clear, reuse shared logic where appropriate, and keep configuration data in its designated source-of-truth files.
 - Keep Clippy rules intact. Fix lint findings in code instead of lowering lint levels or adding lint suppressions to make checks pass.
+- No free functions for validation or conversion. Define a newtype and implement `Deserialize`, `FromStr`, or `TryFrom` on it
+- A helper called once is inlined. This applies to test fixtures as much as to production code; a fixture used by two tests is still inlined into both.
+- Combine `use` statements from one crate into a single `crate::{...}`.
+- No accessor that only returns a field. Widen the field to `pub(crate)` instead of writing a getter around it.
+- Prefer a tailored API over `std::mem::take`. `Option::take`, `Vec::split_off` and `HashMap::remove` name what moves and leave the container usable, where `mem::take` silently swaps in a `Default`.
 
 ## Bevy
 

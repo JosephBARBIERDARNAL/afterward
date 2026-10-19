@@ -3,8 +3,8 @@ pub use models::*;
 use std::{
     collections::BTreeMap,
     error::Error,
+    fmt::{self, Display, Formatter},
     fs,
-    io::{Error as IoError, ErrorKind},
     path::Path,
 };
 
@@ -45,19 +45,30 @@ impl GameData {
         Ok(data)
     }
 
-    fn validate(&self, asset_root: &Path) -> Result<(), Box<dyn Error + Send + Sync>> {
+    pub(crate) fn bonus_effect(&self, bonus_id: &str, effect_id: &str) -> f32 {
+        self.bonuses
+            .bonuses
+            .iter()
+            .find(|bonus| bonus.id == bonus_id)
+            .and_then(|bonus| bonus.effects.get(effect_id))
+            .and_then(|value| BonusEffect::try_from(value).ok())
+            .map(f32::from)
+            .unwrap_or_default()
+    }
+
+    fn validate(&self, asset_root: &Path) -> Result<(), InvalidGameData> {
         if self.gameplay.viewport.height_h != 9.0
             || self.gameplay.viewport.aspect_ratio.width != 16
             || self.gameplay.viewport.aspect_ratio.height != 9
         {
-            return Err(invalid_data(
+            return Err(InvalidGameData::from(
                 "the gameplay viewport must be fixed at 16:9 and 9 H",
             ));
         }
         let expected_jump_impulse =
             (2.0 * self.gameplay.player.gravity_h_s2 * self.gameplay.player.jump_height_h).sqrt();
         if (expected_jump_impulse - self.gameplay.player.jump_impulse_h_s).abs() > 0.05 {
-            return Err(invalid_data(
+            return Err(InvalidGameData::from(
                 "jump height, gravity, and jump impulse must describe the same jump",
             ));
         }
@@ -67,7 +78,7 @@ impl GameData {
             || self.gameplay.room_flow.room_transition_duration_s <= 0.0
             || self.gameplay.room_flow.exit_side != "right"
         {
-            return Err(invalid_data(
+            return Err(InvalidGameData::from(
                 "Chapter 1 room flow requires a positive clear animation and right-side exits",
             ));
         }
@@ -77,7 +88,9 @@ impl GameData {
             || !(0.0..=1.0).contains(&audio.room_clear_music_volume_multiplier)
             || !(0.0..=1.0).contains(&audio.chapter_one_music_gain)
         {
-            return Err(invalid_data("audio tuning values are out of range"));
+            return Err(InvalidGameData::from(
+                "audio tuning values are out of range",
+            ));
         }
         let controls = &self.gameplay.controls;
         let default_bindings = [
@@ -91,19 +104,36 @@ impl GameData {
             &controls.gun,
             &controls.interact,
             &controls.pause,
+            &controls.toggle_fullscreen,
         ];
         if default_bindings.iter().any(|binding| binding.is_empty()) {
-            return Err(invalid_data("each game action needs a default key binding"));
+            return Err(InvalidGameData::from(
+                "each game action needs a default key binding",
+            ));
+        }
+
+        for enemy in self.enemies.types.values() {
+            if enemy.procedural_movement.as_ref().is_some_and(|movement| {
+                !movement.bob_height_h.is_finite()
+                    || movement.bob_height_h < 0.0
+                    || !movement.cycles_per_h.is_finite()
+                    || movement.cycles_per_h <= 0.0
+                    || !movement.lean_degrees.is_finite()
+            }) {
+                return Err(InvalidGameData::from(
+                    "procedural enemy movement values must be finite and nonnegative",
+                ));
+            }
         }
 
         if self.rooms.len() != 10 {
-            return Err(invalid_data(
+            return Err(InvalidGameData::from(
                 "the Chapter 1 data must contain rooms 1 through 10",
             ));
         }
 
         if self.bonuses.bonuses.len() != 20 {
-            return Err(invalid_data(
+            return Err(InvalidGameData::from(
                 "the bonus pool must contain exactly 20 entries",
             ));
         }
@@ -117,7 +147,7 @@ impl GameData {
         bonus_ids.sort_unstable();
         bonus_ids.dedup();
         if bonus_ids.len() != self.bonuses.bonuses.len() {
-            return Err(invalid_data("bonus IDs must be unique"));
+            return Err(InvalidGameData::from("bonus IDs must be unique"));
         }
         if self
             .bonuses
@@ -125,23 +155,27 @@ impl GameData {
             .iter()
             .any(|bonus| !self.bonuses.categories.contains_key(&bonus.category))
         {
-            return Err(invalid_data("a bonus references an unknown category"));
+            return Err(InvalidGameData::from(
+                "a bonus references an unknown category",
+            ));
         }
 
         for (room_id, room) in &self.rooms {
-            let room_width_h = f32::from(room.size.width_viewports) * 16.0;
+            let room_width_h = room.width_h(&self.gameplay);
             if room.room_id != *room_id || room.chapter_id != 1 {
-                return Err(invalid_data(format!(
+                return Err(InvalidGameData::from(format!(
                     "room {room_id} has an inconsistent ID"
                 )));
             }
-            if !(2..=4).contains(&room.size.width_viewports) || room.size.height_h != 9.0 {
-                return Err(invalid_data(format!(
+            if !(2..=4).contains(&room.size.width_viewports)
+                || room.size.height_h != self.gameplay.viewport.height_h
+            {
+                return Err(InvalidGameData::from(format!(
                     "room {room_id} has invalid dimensions"
                 )));
             }
             if room.next_room_id != room.room_id + 1 {
-                return Err(invalid_data(format!(
+                return Err(InvalidGameData::from(format!(
                     "room {room_id} has an invalid next_room_id"
                 )));
             }
@@ -150,14 +184,14 @@ impl GameData {
                 .profiles
                 .contains_key(&room.background_profile)
             {
-                return Err(invalid_data(format!(
+                return Err(InvalidGameData::from(format!(
                     "room {room_id} references an unknown background profile"
                 )));
             }
             if !(0.0..=room_width_h).contains(&room.player_spawn.x_h)
                 || !(0.0..=room_width_h).contains(&room.exit.x_h)
             {
-                return Err(invalid_data(format!(
+                return Err(InvalidGameData::from(format!(
                     "room {room_id} has an out-of-bounds spawn or exit"
                 )));
             }
@@ -166,10 +200,10 @@ impl GameData {
                 let unique_types = room
                     .enemy_spawns
                     .iter()
-                    .map(|spawn| spawn.type_id.as_str())
+                    .map(|spawn| &*spawn.type_id)
                     .collect::<std::collections::BTreeSet<_>>();
                 if !(5..=15).contains(&room.enemy_spawns.len()) || unique_types.len() < 2 {
-                    return Err(invalid_data(format!(
+                    return Err(InvalidGameData::from(format!(
                         "room {room_id} must have 5–15 spawns across at least two enemy types"
                     )));
                 }
@@ -178,18 +212,20 @@ impl GameData {
                 .iter()
                 .any(|spawn| spawn.type_id == "warrior")
             {
-                return Err(invalid_data("room 10 must include the Warrior boss"));
+                return Err(InvalidGameData::from(
+                    "room 10 must include the Warrior boss",
+                ));
             }
 
             for spawn in &room.enemy_spawns {
                 if !self.enemies.types.contains_key(&spawn.type_id) {
-                    return Err(invalid_data(format!(
+                    return Err(InvalidGameData::from(format!(
                         "room {room_id} references unknown enemy type {}",
                         spawn.type_id
                     )));
                 }
                 if !(0.0..=room_width_h).contains(&spawn.position_h.x_h) {
-                    return Err(invalid_data(format!(
+                    return Err(InvalidGameData::from(format!(
                         "room {room_id} has an out-of-bounds enemy spawn"
                     )));
                 }
@@ -202,7 +238,7 @@ impl GameData {
                     || platform.position_h.x_h - half_width < 0.0
                     || platform.position_h.x_h + half_width > room_width_h
                 {
-                    return Err(invalid_data(format!(
+                    return Err(InvalidGameData::from(format!(
                         "room {room_id} has an invalid platform"
                     )));
                 }
@@ -214,7 +250,9 @@ impl GameData {
             assets.extend(profile.layers.iter().map(|layer| layer.asset.as_str()));
             for asset in assets {
                 if !asset_root.join(asset).is_file() {
-                    return Err(invalid_data(format!("missing background asset: {asset}")));
+                    return Err(InvalidGameData::from(format!(
+                        "missing background asset: {asset}"
+                    )));
                 }
             }
         }
@@ -229,9 +267,28 @@ fn read_yaml<T: DeserializeOwned>(path: &Path) -> Result<T, Box<dyn Error + Send
     Ok(value)
 }
 
-fn invalid_data(message: impl Into<String>) -> Box<dyn Error + Send + Sync> {
-    Box::new(IoError::new(ErrorKind::InvalidData, message.into()))
+#[derive(Debug)]
+struct InvalidGameData(String);
+
+impl From<&str> for InvalidGameData {
+    fn from(message: &str) -> Self {
+        Self(message.to_string())
+    }
 }
+
+impl From<String> for InvalidGameData {
+    fn from(message: String) -> Self {
+        Self(message)
+    }
+}
+
+impl Display for InvalidGameData {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
+        formatter.write_str(&self.0)
+    }
+}
+
+impl Error for InvalidGameData {}
 
 #[cfg(test)]
 mod tests {
@@ -245,5 +302,18 @@ mod tests {
         assert_eq!(data.rooms.len(), 10);
         assert_eq!(data.bonuses.bonuses.len(), 20);
         assert_eq!(data.rooms[&10].enemy_spawns[0].type_id, "warrior");
+    }
+
+    #[test]
+    fn bonus_category_icons_use_ascii_glyphs_available_in_the_game_font() {
+        for icon in [
+            BonusCategoryIcon::CrossedSwords,
+            BonusCategoryIcon::Shield,
+            BonusCategoryIcon::Wing,
+            BonusCategoryIcon::Light,
+            BonusCategoryIcon::Knot,
+        ] {
+            assert!(icon.to_string().is_ascii());
+        }
     }
 }

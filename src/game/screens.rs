@@ -16,7 +16,12 @@ pub(super) fn update_screen_text(
             String::from("PAUSED\n\nENTER  Continue\nS  Settings\nR  Restart\nM  Main menu")
         }
         GameScreen::RoomClear => String::from("ROOM CLEARED"),
-        GameScreen::Bonus => bonus_screen_header(&controls),
+        GameScreen::Bonus => format!(
+            "CHOOSE A BONUS\n\n{} / {}  Select    {}  Confirm\n\n",
+            controls.binding_label(GameAction::NavigateUp),
+            controls.binding_label(GameAction::NavigateDown),
+            controls.binding_label(GameAction::Interact),
+        ),
         GameScreen::BossIntro => String::from("CHAPTER ONE\n\nTHE WARRIOR"),
         GameScreen::Transitioning => data
             .rooms
@@ -35,7 +40,7 @@ pub(super) fn update_screen_text(
                 |_| format!("ROOM {:02}", session.room_id),
             ),
         GameScreen::Settings => format!(
-            "SETTINGS\n\n{} MUSIC  {}%\n{} SOUND  {}%\n\nMENU UP/DOWN  Select\nMOVE LEFT/RIGHT  Adjust\nINTERACT  Controls\nF  Fullscreen\nPAUSE  Back",
+            "SETTINGS\n\n{} MUSIC  {}%\n{} SOUND  {}%\n\nMENU UP/DOWN  Select\nMOVE LEFT/RIGHT  Adjust\nINTERACT  Controls\n{} FULLSCREEN\nPAUSE  Back",
             if settings.selected_slider == 0 {
                 ">"
             } else {
@@ -48,8 +53,31 @@ pub(super) fn update_screen_text(
                 " "
             },
             settings.sfx_volume_percent,
+            controls.binding_label(GameAction::ToggleFullscreen),
         ),
-        GameScreen::Controls => control_screen_text(&controls),
+        GameScreen::Controls => {
+            let mut message = String::from("CONTROLS\n\n");
+            for (index, action) in GameAction::ALL.iter().enumerate() {
+                let marker = if controls.selected_action_index == index {
+                    "> "
+                } else {
+                    "  "
+                };
+                message.push_str(&format!(
+                    "{marker}{}  {}\n",
+                    action.label(),
+                    controls.binding_label(*action)
+                ));
+            }
+            if controls.waiting_for_key {
+                message.push_str("\nPRESS A KEY TO BIND  (ESC cancels)");
+            } else {
+                message.push_str(
+                    "\nMENU UP/DOWN  Select   INTERACT  Remap\nR  Restore defaults   PAUSE  Back",
+                );
+            }
+            message
+        }
         GameScreen::Dead => String::from("RUN ENDED\n\nENTER  Return to menu"),
         GameScreen::Complete => String::from("CHAPTER ONE CLEARED\n\nENTER  Return to menu"),
         GameScreen::Playing => String::new(),
@@ -58,149 +86,79 @@ pub(super) fn update_screen_text(
         text.0 = message.clone();
     }
     for (span, mut text, mut color) in &mut bonus_spans {
-        let (content, span_color) = if *screen.get() == GameScreen::Bonus {
-            bonus_span_content(span, &session, &data)
+        let (content, span_color) = if *screen.get() != GameScreen::Bonus {
+            (String::new(), Color::WHITE)
+        } else if matches!(span.kind, BonusSpanKind::Reroll) {
+            if session.bonus_reroll_animation_remaining_s > 0.0 {
+                let dots = (session.bonus_reroll_animation_remaining_s * 12.0) as usize % 4;
+                (
+                    format!(
+                        "@  REROLLING{}  ({} remaining)\n",
+                        ".".repeat(dots),
+                        session.rerolls
+                    ),
+                    Color::WHITE,
+                )
+            } else {
+                let marker = if session.selected_option == 2 {
+                    ">"
+                } else {
+                    " "
+                };
+                if flow::reroll_available(&session, &data) {
+                    (
+                        format!("{marker} 3. @ REROLL  ({} remaining)\n", session.rerolls),
+                        Color::WHITE,
+                    )
+                } else {
+                    ("  3. REROLL UNAVAILABLE\n".to_owned(), Color::WHITE)
+                }
+            }
+        } else if session.bonus_reroll_animation_remaining_s > 0.0 {
+            (String::new(), Color::WHITE)
+        } else if let Some(bonus_id) = session.offered_bonuses.get(span.index) {
+            if let Some(bonus) = data
+                .bonuses
+                .bonuses
+                .iter()
+                .find(|bonus| bonus.id == *bonus_id)
+            {
+                let selected = session.selected_option == span.index;
+                match span.kind {
+                    BonusSpanKind::Category => {
+                        if let Some(category) = data.bonuses.categories.get(&bonus.category) {
+                            let marker = if selected { ">" } else { " " };
+                            let icon = category.icon.to_string();
+                            let mut characters = bonus.category.chars();
+                            let category_name = characters
+                                .next()
+                                .map(|first| {
+                                    first.to_uppercase().chain(characters).collect::<String>()
+                                })
+                                .unwrap_or_default();
+                            (
+                                format!("{marker} {}. {icon} {category_name}\n", span.index + 1),
+                                Color::from(category.color),
+                            )
+                        } else {
+                            (String::new(), Color::WHITE)
+                        }
+                    }
+                    BonusSpanKind::Name => (format!("{}\n", bonus.name), Color::WHITE),
+                    BonusSpanKind::Description => {
+                        (format!("{}\n\n", bonus.description), Color::WHITE)
+                    }
+                    BonusSpanKind::Reroll => unreachable!(),
+                }
+            } else {
+                (String::new(), Color::WHITE)
+            }
         } else {
             (String::new(), Color::WHITE)
         };
         text.0 = content;
         color.0 = span_color;
     }
-}
-
-fn bonus_screen_header(controls: &ControlBindings) -> String {
-    format!(
-        "CHOOSE A BONUS\n\n{} / {}  Select    {}  Confirm\n\n",
-        controls.binding_label(GameAction::NavigateUp),
-        controls.binding_label(GameAction::NavigateDown),
-        controls.binding_label(GameAction::Interact),
-    )
-}
-
-fn bonus_span_content(
-    span: &BonusScreenSpan,
-    session: &RunSession,
-    data: &GameData,
-) -> (String, Color) {
-    if matches!(span.kind, BonusSpanKind::Reroll) {
-        if session.bonus_reroll_animation_remaining_s > 0.0 {
-            let dots = (session.bonus_reroll_animation_remaining_s * 12.0) as usize % 4;
-            return (
-                format!(
-                    "↻  REROLLING{}  ({} remaining)\n",
-                    ".".repeat(dots),
-                    session.rerolls
-                ),
-                Color::WHITE,
-            );
-        }
-        let marker = if session.selected_option == 2 {
-            ">"
-        } else {
-            " "
-        };
-        return if flow::reroll_available(session, data) {
-            (
-                format!("{marker} 3. ↻ REROLL  ({} remaining)\n", session.rerolls),
-                Color::WHITE,
-            )
-        } else {
-            ("  3. REROLL UNAVAILABLE\n".to_owned(), Color::WHITE)
-        };
-    }
-    if session.bonus_reroll_animation_remaining_s > 0.0 {
-        return (String::new(), Color::WHITE);
-    }
-
-    let Some(bonus_id) = session.offered_bonuses.get(span.index) else {
-        return (String::new(), Color::WHITE);
-    };
-    let Some(bonus) = data
-        .bonuses
-        .bonuses
-        .iter()
-        .find(|bonus| bonus.id == *bonus_id)
-    else {
-        return (String::new(), Color::WHITE);
-    };
-    let selected = session.selected_option == span.index;
-    match span.kind {
-        BonusSpanKind::Category => {
-            let Some(category) = data.bonuses.categories.get(&bonus.category) else {
-                return (String::new(), Color::WHITE);
-            };
-            let marker = if selected { ">" } else { " " };
-            let icon = category_icon(&category.icon);
-            (
-                format!(
-                    "{marker} {}. {icon} {}\n",
-                    span.index + 1,
-                    title_case(&bonus.category)
-                ),
-                parse_hex_color(&category.color).unwrap_or(Color::WHITE),
-            )
-        }
-        BonusSpanKind::Name => (format!("{}\n", bonus.name), Color::WHITE),
-        BonusSpanKind::Description => (format!("{}\n\n", bonus.description), Color::WHITE),
-        BonusSpanKind::Reroll => unreachable!(),
-    }
-}
-
-fn title_case(value: &str) -> String {
-    let mut characters = value.chars();
-    let Some(first) = characters.next() else {
-        return String::new();
-    };
-    first.to_uppercase().chain(characters).collect()
-}
-
-fn category_icon(icon: &str) -> &'static str {
-    match icon {
-        "crossed_swords" => "⚔",
-        "shield" => "⬡",
-        "wing" => "➤",
-        "light" => "✦",
-        "knot" => "∞",
-        _ => "◆",
-    }
-}
-
-fn parse_hex_color(value: &str) -> Option<Color> {
-    let hex = value.strip_prefix('#').unwrap_or(value).as_bytes();
-    if hex.len() != 6 {
-        return None;
-    }
-    let channel = |index| {
-        Some(
-            u8::from_str_radix(std::str::from_utf8(&hex[index..index + 2]).ok()?, 16).ok()? as f32
-                / 255.0,
-        )
-    };
-    Some(Color::srgb(channel(0)?, channel(2)?, channel(4)?))
-}
-
-fn control_screen_text(controls: &ControlBindings) -> String {
-    let mut message = String::from("CONTROLS\n\n");
-    for (index, action) in GameAction::ALL.iter().enumerate() {
-        let marker = if controls.selected_index() == index {
-            "> "
-        } else {
-            "  "
-        };
-        message.push_str(&format!(
-            "{marker}{}  {}\n",
-            action.label(),
-            controls.binding_label(*action)
-        ));
-    }
-    if controls.is_waiting_for_key() {
-        message.push_str("\nPRESS A KEY TO BIND  (ESC cancels)");
-    } else {
-        message.push_str(
-            "\nMENU UP/DOWN  Select   INTERACT  Remap\nR  Restore defaults   PAUSE  Back",
-        );
-    }
-    message
 }
 
 #[derive(SystemParam)]
@@ -296,12 +254,19 @@ pub(super) fn handle_screen_input(
                 next_screen.set(GameScreen::Controls);
                 sounds.push(SoundCue::UiConfirm);
             }
-            if keys.just_pressed(KeyCode::KeyF) {
-                toggle_fullscreen(&data, &mut windows);
+            if controls.just_pressed(GameAction::ToggleFullscreen, &keys) {
+                if let Ok(mut window) = windows.single_mut() {
+                    if matches!(window.mode, WindowMode::BorderlessFullscreen(_)) {
+                        window.mode = WindowMode::Windowed;
+                        window.resizable = data.gameplay.window.resizable_windowed;
+                    } else {
+                        window.mode = WindowMode::BorderlessFullscreen(MonitorSelection::Current);
+                    }
+                }
                 sounds.push(SoundCue::UiConfirm);
             }
         }
-        GameScreen::Controls if controls.is_waiting_for_key() => {
+        GameScreen::Controls if controls.waiting_for_key => {
             if keys.just_pressed(KeyCode::Escape) {
                 controls.cancel_rebinding();
                 sounds.push(SoundCue::UiCancel);
@@ -356,16 +321,4 @@ fn reset_run(session: &mut RunSession, data: &GameData) {
     session.room_ward_used = false;
     session.door_open = false;
     session.world_loaded = false;
-}
-
-fn toggle_fullscreen(data: &GameData, windows: &mut Query<&mut Window, With<PrimaryWindow>>) {
-    let Ok(mut window) = windows.single_mut() else {
-        return;
-    };
-    if matches!(window.mode, WindowMode::BorderlessFullscreen(_)) {
-        window.mode = WindowMode::Windowed;
-        window.resizable = data.gameplay.window.resizable_windowed;
-    } else {
-        window.mode = WindowMode::BorderlessFullscreen(MonitorSelection::Current);
-    }
 }

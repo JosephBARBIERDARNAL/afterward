@@ -63,3 +63,4 @@ controls:
   gun: [KeyK]
   interact: [KeyE, Enter]
   pause: [Escape]
+  toggle_fullscreen: [KeyF]

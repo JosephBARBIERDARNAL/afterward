@@ -17,11 +17,15 @@ pub(super) fn spawn_camera(mut commands: Commands, data: Res<GameData>) {
             ..default()
         },
         RoomCamera {
-            width_h: f32::from(first_room.size.width_viewports) * 16.0,
+            width_h: first_room.width_h(&data.gameplay),
             fixed_y_h: first_room.camera.fixed_y_h,
             follows_player: first_room.camera.follow_player_x,
         },
-        Transform::from_xyz(8.0 * H_WORLD_UNITS, view_height / 2.0, 100.0),
+        Transform::from_xyz(
+            data.gameplay.viewport_width_h() / 2.0 * H_WORLD_UNITS,
+            view_height / 2.0,
+            100.0,
+        ),
     ));
 }
 
@@ -39,9 +43,7 @@ pub(super) fn follow_camera(
     if !room_camera.follows_player {
         return;
     }
-    let visible_width_h = data.gameplay.viewport.height_h
-        * f32::from(data.gameplay.viewport.aspect_ratio.width)
-        / f32::from(data.gameplay.viewport.aspect_ratio.height);
+    let visible_width_h = data.gameplay.viewport_width_h();
     let half_width = visible_width_h * H_WORLD_UNITS / 2.0;
     let room_width = room_camera.width_h * H_WORLD_UNITS;
     transform.translation.x = player

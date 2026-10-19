@@ -19,6 +19,14 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             fps: 6.0,
         },
         SpriteSheetSpec {
+            key: "player_idle_gun",
+            path: "player/idle/idle_gun.png",
+            frame_width: 128,
+            frame_height: 80,
+            frames: 5,
+            fps: 6.0,
+        },
+        SpriteSheetSpec {
             key: "player_running",
             path: "player/running/running.png",
             frame_width: 128,
@@ -29,6 +37,14 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
         SpriteSheetSpec {
             key: "player_running_sword",
             path: "player/running/running_sword.png",
+            frame_width: 128,
+            frame_height: 80,
+            frames: 6,
+            fps: 10.0,
+        },
+        SpriteSheetSpec {
+            key: "player_running_gun",
+            path: "player/running/running_gun.png",
             frame_width: 128,
             frame_height: 80,
             frames: 6,

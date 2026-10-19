@@ -40,6 +40,7 @@ pub(in crate::game) fn update_projectiles(
     mut player_query: ProjectilePlayerQuery,
     mut enemies: ProjectileEnemiesQuery,
     mut projectiles: Query<(Entity, &mut Transform, &mut CombatProjectile)>,
+    platforms: Query<&PlatformSurface>,
 ) {
     let ProjectileResources {
         time,
@@ -54,9 +55,12 @@ pub(in crate::game) fn update_projectiles(
     let Ok((player_transform, mut player)) = player_query.single_mut() else {
         return;
     };
+    let room_width_world = data.rooms[&session.room_id].width_h(&data.gameplay) * H_WORLD_UNITS;
     for (projectile_entity, mut projectile_transform, mut projectile) in &mut projectiles {
+        let start = projectile_transform.translation.truncate();
         projectile.life_s -= dt;
         projectile_transform.translation.x += projectile.velocity_x * dt;
+        let end = projectile_transform.translation.truncate();
         let mut hit = projectile.life_s <= 0.0;
         if projectile.friendly {
             for (enemy_entity, mut enemy, mut enemy_transform, mut sprite, mut animation) in
@@ -74,7 +78,7 @@ pub(in crate::game) fn update_projectiles(
                     };
                     let marked_multiplier =
                         if enemy.marked_timer > 0.0 && has_bonus(&session, "marked_prey") {
-                            effect_number(&data, "marked_prey", "marked_gun_damage_multiplier")
+                            data.bonus_effect("marked_prey", "marked_gun_damage_multiplier")
                         } else {
                             1.0
                         };
@@ -103,7 +107,7 @@ pub(in crate::game) fn update_projectiles(
                     );
                     if killed {
                         player.chain_reaction_timer =
-                            effect_number(&data, "chain_reaction", "kill_damage_duration_s");
+                            data.bonus_effect("chain_reaction", "kill_damage_duration_s");
                     }
                     register_hit(&mut player, &session, &data);
                     sounds.push(SoundCue::BulletHit);
@@ -130,6 +134,17 @@ pub(in crate::game) fn update_projectiles(
                 );
                 hit = true;
             }
+        }
+        let half_size = projectile.half_size;
+        let outside_room = end.x - half_size.x < 0.0 || end.x + half_size.x > room_width_world;
+        if !hit
+            && (outside_room
+                || platforms
+                    .iter()
+                    .any(|platform| platform.intersects_projectile(start, end, half_size)))
+        {
+            sounds.push(SoundCue::BulletEnvironmentHit);
+            hit = true;
         }
         if hit {
             commands.entity(projectile_entity).despawn();

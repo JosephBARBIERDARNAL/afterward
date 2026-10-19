@@ -5,7 +5,7 @@ use std::{
 
 use bevy::{ecs::system::SystemParam, prelude::*};
 
-use crate::data::GameData;
+use crate::data::{EnemyAttackConfig, EnemyTypeId, GameData};
 
 mod assets;
 mod audio;
@@ -17,7 +17,10 @@ mod interface;
 mod player;
 mod screens;
 mod settings;
+mod visual_walkthrough;
 mod world;
+
+pub use visual_walkthrough::VisualWalkthroughPlugin;
 
 #[cfg(test)]
 mod tests;
@@ -55,6 +58,10 @@ impl Plugin for GamePlugin {
             .add_systems(
                 OnEnter(GameScreen::Playing),
                 (world::spawn_room, audio::start_chapter_music),
+            )
+            .add_systems(
+                OnEnter(GameScreen::RoomClear),
+                combat::clear_room_combat_effects,
             )
             .add_systems(
                 OnEnter(GameScreen::BossIntro),
@@ -262,6 +269,7 @@ struct RoomEntity;
 struct PlayerBody {
     velocity: Vec2,
     facing: f32,
+    weapon_mode: PlayerWeapon,
     grounded: bool,
     jumps_used: u8,
     dash_timer: f32,
@@ -281,14 +289,21 @@ struct PlayerBody {
     footstep_timer: f32,
 }
 
+#[derive(Clone, Copy)]
+enum PlayerWeapon {
+    Sword,
+    Gun,
+}
+
 #[derive(Component)]
 struct EnemyBody {
-    type_id: String,
+    type_id: EnemyTypeId,
     health: f32,
     max_health: f32,
     movement_speed_h_s: f32,
     home_y: f32,
     behavior: String,
+    procedural_movement: Option<ProceduralMovementState>,
     preferred_distance_h: Option<(f32, f32)>,
     attacks: Vec<EnemyAttack>,
     engaged: bool,
@@ -302,6 +317,14 @@ struct EnemyBody {
     phase_two: Option<(f32, f32)>,
     phase_two_announced: bool,
     marked_timer: f32,
+    movement_sound_timer: f32,
+}
+
+struct ProceduralMovementState {
+    phase_radians: f32,
+    bob_height_h: f32,
+    cycles_per_h: f32,
+    lean_radians: f32,
 }
 
 #[derive(Clone)]
@@ -316,6 +339,21 @@ struct EnemyAttack {
     windup_s: f32,
 }
 
+impl From<&EnemyAttackConfig> for EnemyAttack {
+    fn from(config: &EnemyAttackConfig) -> Self {
+        Self {
+            kind: config.kind.clone(),
+            damage: config.damage.or(config.damage_per_hit).unwrap_or(0.0),
+            hits: config.hits.unwrap_or(1),
+            reach_h: config.reach_h.or(config.landing_radius_h).unwrap_or(1.2),
+            projectile_speed_h_s: config.projectile_speed_h_s.unwrap_or(0.0),
+            landing_radius_h: config.landing_radius_h.unwrap_or(0.0),
+            cooldown_s: config.cooldown_s,
+            windup_s: config.windup_s,
+        }
+    }
+}
+
 #[derive(Component)]
 struct DeadEnemy {
     timer: Timer,
@@ -328,6 +366,7 @@ struct CombatProjectile {
     knockback_h_s: f32,
     life_s: f32,
     friendly: bool,
+    half_size: Vec2,
 }
 
 #[derive(Component)]
@@ -391,7 +430,22 @@ struct PhaseTimer(Timer);
 struct PlatformSurface {
     left: f32,
     right: f32,
+    bottom: f32,
     top: f32,
+}
+
+impl PlatformSurface {
+    fn intersects_projectile(&self, start: Vec2, end: Vec2, half_size: Vec2) -> bool {
+        let projectile_left = start.x.min(end.x) - half_size.x;
+        let projectile_right = start.x.max(end.x) + half_size.x;
+        let projectile_bottom = start.y.min(end.y) - half_size.y;
+        let projectile_top = start.y.max(end.y) + half_size.y;
+
+        projectile_left <= self.right
+            && projectile_right >= self.left
+            && projectile_bottom <= self.top
+            && projectile_top >= self.bottom
+    }
 }
 
 #[derive(Component)]
@@ -450,15 +504,17 @@ fn set_animation(
     animation.timer = Timer::from_seconds(1.0 / sheet.fps, TimerMode::Repeating);
 }
 
-fn enemy_idle_sheet(type_id: &str) -> &'static str {
-    match type_id {
-        "swordsman" => "enemy_swordsman_idle",
-        "infantryman" => "enemy_infantry_idle",
-        "destroyer" => "enemy_destroyer_idle",
-        "gorgon_1" => "enemy_gorgon_1_idle",
-        "gorgon_2" => "enemy_gorgon_2_idle",
-        "gorgon_3" => "enemy_gorgon_3_idle",
-        "warrior" => "boss_idle",
-        _ => "enemy_swordsman_idle",
+impl EnemyTypeId {
+    fn idle_sheet(&self) -> &'static str {
+        match &**self {
+            "swordsman" => "enemy_swordsman_idle",
+            "infantryman" => "enemy_infantry_idle",
+            "destroyer" => "enemy_destroyer_idle",
+            "gorgon_1" => "enemy_gorgon_1_idle",
+            "gorgon_2" => "enemy_gorgon_2_idle",
+            "gorgon_3" => "enemy_gorgon_3_idle",
+            "warrior" => "boss_idle",
+            _ => "enemy_swordsman_idle",
+        }
     }
 }

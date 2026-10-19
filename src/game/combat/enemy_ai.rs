@@ -73,6 +73,7 @@ pub(in crate::game) fn update_enemy_ai(
         let distance_h = dx.abs() / H_WORLD_UNITS;
         if !enemy.engaged && distance_h <= data.enemies.detection_range_h {
             enemy.engaged = true;
+            sounds.push(SoundCue::enemy_idle(&enemy.type_id));
         }
         if enemy.engaged
             && !data.enemies.retain_target_after_detection
@@ -81,16 +82,28 @@ pub(in crate::game) fn update_enemy_ai(
             enemy.engaged = false;
         }
         if !enemy.engaged {
+            if enemy.procedural_movement.is_some() {
+                transform.translation.y = enemy.home_y;
+                transform.rotation = Quat::IDENTITY;
+            }
             continue;
         }
         sprite.flip_x = dx < 0.0;
 
         if enemy.hurt_timer > 0.0 {
+            if enemy.procedural_movement.is_some() {
+                transform.translation.y = enemy.home_y;
+                transform.rotation = Quat::IDENTITY;
+            }
             set_enemy_animation(&mut sprite, &mut animation, &sheets, &enemy.type_id, "hurt");
             continue;
         }
 
         if enemy.windup_remaining > 0.0 {
+            if enemy.procedural_movement.is_some() {
+                transform.translation.y = enemy.home_y;
+                transform.rotation = Quat::IDENTITY;
+            }
             enemy.windup_remaining = (enemy.windup_remaining - dt).max(0.0);
             if enemy.type_id == "warrior"
                 && enemy.windup_remaining <= 0.4
@@ -98,15 +111,30 @@ pub(in crate::game) fn update_enemy_ai(
                 && attack.kind == "jump_slam"
                 && animation.sheet == "boss_jump"
             {
-                set_enemy_animation(&mut sprite, &mut animation, &sheets, "warrior", "attack_3");
+                set_enemy_animation(
+                    &mut sprite,
+                    &mut animation,
+                    &sheets,
+                    &enemy.type_id,
+                    "attack_3",
+                );
             }
             if enemy.windup_remaining == 0.0
                 && let Some(attack) = enemy.attacks.get(enemy.active_attack).cloned()
             {
+                sounds.push(SoundCue::EnemyAttack(audio::EnemySoundStyle::from(
+                    &enemy.type_id,
+                )));
                 let kind = attack.kind.as_str();
                 if kind == "jump_slam" {
                     transform.translation.y = enemy.home_y;
-                    set_enemy_animation(&mut sprite, &mut animation, &sheets, "warrior", "land");
+                    set_enemy_animation(
+                        &mut sprite,
+                        &mut animation,
+                        &sheets,
+                        &enemy.type_id,
+                        "land",
+                    );
                     let landing_distance_h =
                         (player_transform.translation.x - transform.translation.x).abs()
                             / H_WORLD_UNITS;
@@ -132,8 +160,9 @@ pub(in crate::game) fn update_enemy_ai(
                     }
                 } else if kind.contains("projectile") {
                     let direction = if dx >= 0.0 { 1.0 } else { -1.0 };
+                    let projectile_size = Vec2::new(14.0, 8.0);
                     commands.spawn((
-                        Sprite::from_color(Color::srgb(0.95, 0.3, 0.24), Vec2::new(14.0, 8.0)),
+                        Sprite::from_color(Color::srgb(0.95, 0.3, 0.24), projectile_size),
                         Transform::from_translation(
                             transform.translation + Vec3::new(direction * 24.0, 0.0, 0.4),
                         ),
@@ -143,6 +172,7 @@ pub(in crate::game) fn update_enemy_ai(
                             knockback_h_s: 0.0,
                             life_s: 3.0,
                             friendly: false,
+                            half_size: projectile_size / 2.0,
                         },
                         RoomEntity,
                     ));
@@ -204,6 +234,13 @@ pub(in crate::game) fn update_enemy_ai(
         let should_approach = distance_h > maximum_distance;
         let should_retreat = distance_h < minimum_distance;
         if should_approach || should_retreat {
+            enemy.movement_sound_timer = (enemy.movement_sound_timer - dt).max(0.0);
+            if enemy.movement_sound_timer == 0.0 {
+                sounds.push(SoundCue::EnemyMovement(audio::EnemySoundStyle::from(
+                    &enemy.type_id,
+                )));
+                enemy.movement_sound_timer = data.gameplay.audio.footstep_interval_s;
+            }
             let direction = if should_approach {
                 dx.signum()
             } else {
@@ -211,39 +248,61 @@ pub(in crate::game) fn update_enemy_ai(
             };
             let speed = enemy.movement_speed_h_s * H_WORLD_UNITS * dt;
             transform.translation.x += direction * speed;
-            let room_width_h = f32::from(data.rooms[&session.room_id].size.width_viewports) * 16.0;
+            let room_width_h = data.rooms[&session.room_id].width_h(&data.gameplay);
             transform.translation.x = transform
                 .translation
                 .x
                 .clamp(24.0, room_width_h * H_WORLD_UNITS - 24.0);
-            set_enemy_animation(&mut sprite, &mut animation, &sheets, &enemy.type_id, "walk");
-        } else if enemy.attack_cooldown <= 0.0 {
-            enemy.active_attack = enemy.next_attack;
-            enemy.next_attack = (enemy.next_attack + 1) % enemy.attacks.len();
-            enemy.windup_remaining = attack.windup_s;
-            let phase_multiplier = enemy
-                .phase_two
-                .filter(|(threshold, _)| enemy.health / enemy.max_health <= *threshold)
-                .map_or(1.0, |(_, multiplier)| multiplier);
-            enemy.attack_cooldown = attack.cooldown_s * phase_multiplier;
-            sounds.push(if enemy.type_id == "warrior" {
-                SoundCue::BossAttack
-            } else {
-                SoundCue::EnemyAttack
-            });
-            if attack.kind == "jump_slam" {
-                transform.translation.x += dx.signum() * distance_h.min(1.0) * H_WORLD_UNITS;
-                transform.translation.y = enemy.home_y + H_WORLD_UNITS * 1.5;
+            let movement_speed_h_s = enemy.movement_speed_h_s;
+            let home_y = enemy.home_y;
+            if let Some(movement) = &mut enemy.procedural_movement {
+                movement.phase_radians = (movement.phase_radians
+                    + dt * movement_speed_h_s * movement.cycles_per_h * std::f32::consts::TAU)
+                    .rem_euclid(std::f32::consts::TAU);
+                let gait = movement.phase_radians.sin();
+                let facing = if dx < 0.0 { -1.0 } else { 1.0 };
+                transform.translation.y =
+                    home_y + gait.max(0.0) * movement.bob_height_h * H_WORLD_UNITS;
+                transform.rotation = Quat::from_rotation_z(gait * movement.lean_radians * facing);
             }
-            let action = match attack.kind.as_str() {
-                "telegraphed_lunge" => "attack_2",
-                "jump_slam" => "jump",
-                _ if enemy.type_id == "warrior" => "attack_1",
-                _ => "attack",
-            };
-            set_enemy_animation(&mut sprite, &mut animation, &sheets, &enemy.type_id, action);
+            set_enemy_animation(&mut sprite, &mut animation, &sheets, &enemy.type_id, "walk");
         } else {
-            set_enemy_animation(&mut sprite, &mut animation, &sheets, &enemy.type_id, "idle");
+            if let Some(movement) = &mut enemy.procedural_movement {
+                movement.phase_radians = 0.0;
+                transform.translation.y = enemy.home_y;
+                transform.rotation = Quat::IDENTITY;
+            }
+            if enemy.attack_cooldown <= 0.0 {
+                enemy.movement_sound_timer = 0.0;
+                enemy.active_attack = enemy.next_attack;
+                enemy.next_attack = (enemy.next_attack + 1) % enemy.attacks.len();
+                enemy.windup_remaining = attack.windup_s;
+                let phase_multiplier = enemy
+                    .phase_two
+                    .filter(|(threshold, _)| enemy.health / enemy.max_health <= *threshold)
+                    .map_or(1.0, |(_, multiplier)| multiplier);
+                enemy.attack_cooldown = attack.cooldown_s * phase_multiplier;
+                sounds.push(SoundCue::EnemyTelegraph(audio::EnemySoundStyle::from(
+                    &enemy.type_id,
+                )));
+                if attack.kind == "jump_slam" {
+                    transform.translation.x += dx.signum() * distance_h.min(1.0) * H_WORLD_UNITS;
+                    transform.translation.y = enemy.home_y + H_WORLD_UNITS * 1.5;
+                }
+                let action = match attack.kind.as_str() {
+                    "telegraphed_lunge" => "attack_2",
+                    "jump_slam" => "jump",
+                    _ if enemy.type_id == "warrior" => "attack_1",
+                    _ => "attack",
+                };
+                set_enemy_animation(&mut sprite, &mut animation, &sheets, &enemy.type_id, action);
+            } else {
+                enemy.movement_sound_timer = 0.0;
+                if animation.sheet != enemy.type_id.idle_sheet() {
+                    sounds.push(SoundCue::enemy_idle(&enemy.type_id));
+                }
+                set_enemy_animation(&mut sprite, &mut animation, &sheets, &enemy.type_id, "idle");
+            }
         }
     }
 }

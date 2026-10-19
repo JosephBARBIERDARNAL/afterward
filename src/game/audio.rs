@@ -2,7 +2,10 @@ use super::*;
 use bevy::audio::{
     AudioPlayer, AudioSink, AudioSinkPlayback, AudioSource, PlaybackSettings, Volume,
 };
-use std::sync::Arc;
+
+mod synthesis;
+
+use synthesis::{ChapterOneForestCalmLoop, ChapterOneForestLoop, ToneSpec, cue_specs};
 
 #[derive(Resource, Default)]
 pub(super) struct SoundQueue(Vec<SoundCue>);
@@ -29,13 +32,16 @@ pub(super) enum SoundCue {
     SwordHit,
     Gunshot,
     BulletHit,
+    BulletEnvironmentHit,
     PlayerHurt,
     Pickup,
-    EnemyAttack,
+    EnemyIdle(EnemySoundStyle),
+    EnemyMovement(EnemySoundStyle),
+    EnemyTelegraph(EnemySoundStyle),
+    EnemyAttack(EnemySoundStyle),
     BossIntro,
-    BossAttack,
-    EnemyHurt,
-    EnemyDeath,
+    EnemyHurt(EnemySoundStyle),
+    EnemyDeath(EnemySoundStyle),
     BossPhase,
     RoomClear,
     DoorAppear,
@@ -45,21 +51,95 @@ pub(super) enum SoundCue {
     Victory,
 }
 
+#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub(super) enum EnemySoundStyle {
+    Generic,
+    Swordsman,
+    Infantryman,
+    Destroyer,
+    GorgonOne,
+    GorgonTwo,
+    GorgonThree,
+    Warrior,
+}
+
+impl EnemySoundStyle {
+    const ALL: [Self; 8] = [
+        Self::Generic,
+        Self::Swordsman,
+        Self::Infantryman,
+        Self::Destroyer,
+        Self::GorgonOne,
+        Self::GorgonTwo,
+        Self::GorgonThree,
+        Self::Warrior,
+    ];
+
+    fn base_frequency_hz(self) -> f32 {
+        match self {
+            Self::Generic => 170.0,
+            Self::Swordsman => 220.0,
+            Self::Infantryman => 380.0,
+            Self::Destroyer => 100.0,
+            Self::GorgonOne => 560.0,
+            Self::GorgonTwo => 300.0,
+            Self::GorgonThree => 145.0,
+            Self::Warrior => 72.0,
+        }
+    }
+}
+
+impl From<&EnemyTypeId> for EnemySoundStyle {
+    fn from(type_id: &EnemyTypeId) -> Self {
+        match &**type_id {
+            "swordsman" => Self::Swordsman,
+            "infantryman" => Self::Infantryman,
+            "destroyer" => Self::Destroyer,
+            "gorgon_1" => Self::GorgonOne,
+            "gorgon_2" => Self::GorgonTwo,
+            "gorgon_3" => Self::GorgonThree,
+            "warrior" => Self::Warrior,
+            _ => Self::Generic,
+        }
+    }
+}
+
+impl SoundCue {
+    fn is_interface(self) -> bool {
+        matches!(
+            self,
+            Self::UiMove | Self::UiConfirm | Self::UiCancel | Self::UiInvalid
+        )
+    }
+
+    fn is_terminal(self) -> bool {
+        matches!(self, Self::RunEnded | Self::Victory)
+    }
+
+    pub(super) fn enemy_idle(type_id: &EnemyTypeId) -> Self {
+        Self::EnemyIdle(EnemySoundStyle::from(type_id))
+    }
+}
+
 #[derive(Resource, Default)]
 pub(super) struct SoundBank {
     cues: BTreeMap<SoundCue, (Handle<AudioSource>, f32)>,
     chapter_one_music: Option<Handle<AudioSource>>,
+    chapter_one_calm_music: Option<Handle<AudioSource>>,
 }
 
-#[derive(Component, Clone, Copy)]
-enum AudioChannel {
+#[derive(Component, Clone, Copy, Eq, PartialEq)]
+enum AudioClass {
     Music,
-    Effects,
+    CalmMusic,
+    GameplayEffect,
+    InterfaceEffect,
+    TerminalEffect,
 }
 
 #[derive(Component)]
 pub(super) struct ManagedAudio {
-    channel: AudioChannel,
+    class: AudioClass,
     gain: f32,
 }
 
@@ -68,10 +148,17 @@ pub(super) fn initialize_sound_bank(
     mut audio_sources: ResMut<Assets<AudioSource>>,
 ) {
     for (cue, start_hz, end_hz, seconds, gain) in cue_specs() {
-        let source = audio_sources.add(make_tone(start_hz, end_hz, seconds, 0.8));
+        let source = audio_sources.add(AudioSource::from(ToneSpec {
+            start_hz,
+            end_hz,
+            seconds,
+            amplitude: 0.8,
+        }));
         bank.cues.insert(cue, (source, gain));
     }
-    bank.chapter_one_music = Some(audio_sources.add(make_ambient_loop()));
+    bank.chapter_one_music = Some(audio_sources.add(AudioSource::from(ChapterOneForestLoop)));
+    bank.chapter_one_calm_music =
+        Some(audio_sources.add(AudioSource::from(ChapterOneForestCalmLoop)));
 }
 
 pub(super) fn queue_victory_cue(mut queue: ResMut<SoundQueue>) {
@@ -91,21 +178,32 @@ pub(super) fn start_chapter_music(
 ) {
     if active_audio
         .iter()
-        .any(|audio| matches!(audio.channel, AudioChannel::Music))
+        .any(|audio| matches!(audio.class, AudioClass::Music | AudioClass::CalmMusic))
     {
         return;
     }
-    let Some(source) = bank.chapter_one_music.clone() else {
+    let (Some(combat_source), Some(calm_source)) = (
+        bank.chapter_one_music.clone(),
+        bank.chapter_one_calm_music.clone(),
+    ) else {
         return;
     };
     let gain = data.gameplay.audio.chapter_one_music_gain;
     commands.spawn((
-        AudioPlayer::new(source),
+        AudioPlayer::new(combat_source),
         PlaybackSettings::LOOP.with_volume(Volume::Linear(
             settings.music_volume_percent as f32 / 100.0 * gain,
         )),
         ManagedAudio {
-            channel: AudioChannel::Music,
+            class: AudioClass::Music,
+            gain,
+        },
+    ));
+    commands.spawn((
+        AudioPlayer::new(calm_source),
+        PlaybackSettings::LOOP.with_volume(Volume::Linear(0.0)),
+        ManagedAudio {
+            class: AudioClass::CalmMusic,
             gain,
         },
     ));
@@ -116,7 +214,7 @@ pub(super) fn stop_chapter_music(
     active_audio: Query<(Entity, &ManagedAudio)>,
 ) {
     for (entity, audio) in &active_audio {
-        if matches!(audio.channel, AudioChannel::Music) {
+        if matches!(audio.class, AudioClass::Music | AudioClass::CalmMusic) {
             commands.entity(entity).despawn();
         }
     }
@@ -127,20 +225,28 @@ pub(super) fn play_sound_queue(
     mut queue: ResMut<SoundQueue>,
     bank: Res<SoundBank>,
     settings: Res<AudioSettings>,
+    screen: Res<State<GameScreen>>,
 ) {
     for cue in queue.0.drain(..) {
         let Some((source, gain)) = bank.cues.get(&cue) else {
             continue;
         };
+        let class = if cue.is_interface() {
+            AudioClass::InterfaceEffect
+        } else if cue.is_terminal() {
+            AudioClass::TerminalEffect
+        } else {
+            AudioClass::GameplayEffect
+        };
+        if class == AudioClass::GameplayEffect && gameplay_effects_muted(*screen.get()) {
+            continue;
+        }
         commands.spawn((
             AudioPlayer::new(source.clone()),
             PlaybackSettings::DESPAWN.with_volume(Volume::Linear(
                 settings.sfx_volume_percent as f32 / 100.0 * gain,
             )),
-            ManagedAudio {
-                channel: AudioChannel::Effects,
-                gain: *gain,
-            },
+            ManagedAudio { class, gain: *gain },
         ));
     }
 }
@@ -148,12 +254,13 @@ pub(super) fn play_sound_queue(
 pub(super) fn update_audio_volume(
     time: Res<Time>,
     screen: Res<State<GameScreen>>,
+    session: Res<RunSession>,
     data: Res<GameData>,
     settings: Res<AudioSettings>,
-    mut music_mix: Local<Option<f32>>,
+    mut audio_mix: Local<Option<(f32, f32, f32)>>,
     mut active_audio: Query<(&ManagedAudio, Option<&mut AudioSink>)>,
 ) {
-    let target_mix = match screen.get() {
+    let target_music_volume = match screen.get() {
         GameScreen::Paused | GameScreen::Settings => {
             data.gameplay.audio.paused_music_volume_multiplier
         }
@@ -162,11 +269,50 @@ pub(super) fn update_audio_volume(
         }
         _ => 1.0,
     };
-    let previous_mix = *music_mix;
-    let current_mix = previous_mix.unwrap_or(target_mix);
-    let next_mix = move_towards(current_mix, target_mix, time.delta_secs() * 4.0);
-    *music_mix = Some(next_mix);
-    let mix_changed = previous_mix.is_none_or(|previous| (previous - next_mix).abs() > 0.0001);
+    let calm_music_active =
+        matches!(screen.get(), GameScreen::RoomClear | GameScreen::Bonus) || session.door_open;
+    let target_combat_music_mix = if calm_music_active {
+        0.0
+    } else {
+        target_music_volume
+    };
+    let target_calm_music_mix = if calm_music_active {
+        target_music_volume
+    } else {
+        0.0
+    };
+    let target_gameplay_effects_mix = if gameplay_effects_muted(*screen.get()) {
+        0.0
+    } else {
+        1.0
+    };
+    let previous_mix = *audio_mix;
+    let (current_combat_music_mix, current_calm_music_mix, current_gameplay_effects_mix) =
+        previous_mix.unwrap_or((
+            target_combat_music_mix,
+            target_calm_music_mix,
+            target_gameplay_effects_mix,
+        ));
+    let mix_speed = time.delta_secs() * 4.0;
+    let next_combat_music_mix =
+        move_towards(current_combat_music_mix, target_combat_music_mix, mix_speed);
+    let next_calm_music_mix =
+        move_towards(current_calm_music_mix, target_calm_music_mix, mix_speed);
+    let next_gameplay_effects_mix = move_towards(
+        current_gameplay_effects_mix,
+        target_gameplay_effects_mix,
+        mix_speed,
+    );
+    *audio_mix = Some((
+        next_combat_music_mix,
+        next_calm_music_mix,
+        next_gameplay_effects_mix,
+    ));
+    let mix_changed = previous_mix.is_none_or(|(combat, calm, effects)| {
+        (combat - next_combat_music_mix).abs() > 0.0001
+            || (calm - next_calm_music_mix).abs() > 0.0001
+            || (effects - next_gameplay_effects_mix).abs() > 0.0001
+    });
     if !settings.is_changed() && !mix_changed {
         return;
     }
@@ -174,9 +320,13 @@ pub(super) fn update_audio_volume(
         let Some(mut sink) = sink else {
             continue;
         };
-        let (channel_volume, mix) = match audio.channel {
-            AudioChannel::Music => (settings.music_volume_percent, next_mix),
-            AudioChannel::Effects => (settings.sfx_volume_percent, 1.0),
+        let (channel_volume, mix) = match audio.class {
+            AudioClass::Music => (settings.music_volume_percent, next_combat_music_mix),
+            AudioClass::CalmMusic => (settings.music_volume_percent, next_calm_music_mix),
+            AudioClass::GameplayEffect => (settings.sfx_volume_percent, next_gameplay_effects_mix),
+            AudioClass::InterfaceEffect | AudioClass::TerminalEffect => {
+                (settings.sfx_volume_percent, 1.0)
+            }
         };
         sink.set_volume(Volume::Linear(
             channel_volume as f32 / 100.0 * audio.gain * mix,
@@ -184,101 +334,51 @@ pub(super) fn update_audio_volume(
     }
 }
 
-fn cue_specs() -> [(SoundCue, f32, f32, f32, f32); 26] {
-    use SoundCue::*;
-    [
-        (UiMove, 720.0, 920.0, 0.045, 0.08),
-        (UiConfirm, 660.0, 990.0, 0.11, 0.11),
-        (UiCancel, 440.0, 300.0, 0.09, 0.10),
-        (UiInvalid, 220.0, 180.0, 0.10, 0.10),
-        (Jump, 360.0, 590.0, 0.12, 0.13),
-        (Landing, 120.0, 80.0, 0.09, 0.12),
-        (Footstep, 110.0, 75.0, 0.07, 0.055),
-        (Dash, 180.0, 90.0, 0.18, 0.18),
-        (SwordSwing, 540.0, 190.0, 0.13, 0.12),
-        (SwordHit, 920.0, 380.0, 0.12, 0.18),
-        (Gunshot, 150.0, 70.0, 0.09, 0.20),
-        (BulletHit, 510.0, 260.0, 0.08, 0.12),
-        (PlayerHurt, 190.0, 90.0, 0.24, 0.25),
-        (Pickup, 620.0, 1040.0, 0.20, 0.16),
-        (EnemyAttack, 360.0, 420.0, 0.15, 0.12),
-        (BossIntro, 72.0, 220.0, 0.9, 0.3),
-        (BossAttack, 100.0, 65.0, 0.24, 0.25),
-        (EnemyHurt, 280.0, 190.0, 0.10, 0.12),
-        (EnemyDeath, 300.0, 110.0, 0.20, 0.16),
-        (BossPhase, 110.0, 220.0, 0.55, 0.22),
-        (RoomClear, 440.0, 880.0, 0.45, 0.19),
-        (DoorAppear, 260.0, 440.0, 0.14, 0.10),
-        (DoorOpen, 310.0, 660.0, 0.28, 0.17),
-        (BonusSelected, 740.0, 1110.0, 0.18, 0.16),
-        (RunEnded, 310.0, 70.0, 0.75, 0.22),
-        (Victory, 520.0, 1040.0, 1.1, 0.20),
-    ]
+fn gameplay_effects_muted(screen: GameScreen) -> bool {
+    matches!(
+        screen,
+        GameScreen::Paused
+            | GameScreen::Settings
+            | GameScreen::MainMenu
+            | GameScreen::Dead
+            | GameScreen::Complete
+    )
 }
 
-fn make_tone(start_hz: f32, end_hz: f32, seconds: f32, amplitude: f32) -> AudioSource {
-    const SAMPLE_RATE: u32 = 22_050;
-    let sample_count = (SAMPLE_RATE as f32 * seconds).max(1.0) as usize;
-    let mut samples = Vec::with_capacity(sample_count * 2);
-    let mut phase = 0.0_f32;
-    for index in 0..sample_count {
-        let progress = index as f32 / sample_count as f32;
-        let frequency = start_hz + (end_hz - start_hz) * progress;
-        phase += std::f32::consts::TAU * frequency / SAMPLE_RATE as f32;
-        let attack = (progress / 0.08).clamp(0.0, 1.0);
-        let release = ((1.0 - progress) / 0.28).clamp(0.0, 1.0);
-        let value = (phase.sin() * attack.min(release) * amplitude * f32::from(i16::MAX)) as i16;
-        samples.extend_from_slice(&value.to_le_bytes());
-    }
-    AudioSource {
-        bytes: Arc::from(wav_header_and_data(SAMPLE_RATE, 1, 16, &samples)),
-    }
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-fn make_ambient_loop() -> AudioSource {
-    const SAMPLE_RATE: u32 = 22_050;
-    const SECONDS: f32 = 8.0;
-    let sample_count = (SAMPLE_RATE as f32 * SECONDS) as usize;
-    let mut samples = Vec::with_capacity(sample_count * 2);
-    for index in 0..sample_count {
-        let progress = index as f32 / sample_count as f32;
-        let t = index as f32 / SAMPLE_RATE as f32;
-        let chord = (std::f32::consts::TAU * 82.41 * t).sin() * 0.38
-            + (std::f32::consts::TAU * 110.0 * t).sin() * 0.24
-            + (std::f32::consts::TAU * 164.81 * t).sin() * 0.12;
-        let pulse = 0.72 + 0.28 * (std::f32::consts::TAU * 0.125 * t).sin();
-        let loop_fade = (progress.min(1.0 - progress) / 0.02).clamp(0.0, 1.0);
-        let value = (chord * pulse * loop_fade * 0.045 * f32::from(i16::MAX)) as i16;
-        samples.extend_from_slice(&value.to_le_bytes());
-    }
-    AudioSource {
-        bytes: Arc::from(wav_header_and_data(SAMPLE_RATE, 1, 16, &samples)),
-    }
-}
+    #[test]
+    fn gameplay_audio_fades_outside_active_gameplay() {
+        for screen in [
+            GameScreen::MainMenu,
+            GameScreen::Paused,
+            GameScreen::Settings,
+            GameScreen::Dead,
+            GameScreen::Complete,
+        ] {
+            assert!(gameplay_effects_muted(screen));
+        }
 
-fn wav_header_and_data(
-    sample_rate: u32,
-    channels: u16,
-    bits_per_sample: u16,
-    data: &[u8],
-) -> Vec<u8> {
-    let data_len = data.len() as u32;
-    let bytes_per_sample = u32::from(bits_per_sample / 8);
-    let byte_rate = sample_rate * u32::from(channels) * bytes_per_sample;
-    let block_align = channels * (bits_per_sample / 8);
-    let mut wav = Vec::with_capacity(44 + data.len());
-    wav.extend_from_slice(b"RIFF");
-    wav.extend_from_slice(&(36 + data_len).to_le_bytes());
-    wav.extend_from_slice(b"WAVEfmt ");
-    wav.extend_from_slice(&16_u32.to_le_bytes());
-    wav.extend_from_slice(&1_u16.to_le_bytes());
-    wav.extend_from_slice(&channels.to_le_bytes());
-    wav.extend_from_slice(&sample_rate.to_le_bytes());
-    wav.extend_from_slice(&byte_rate.to_le_bytes());
-    wav.extend_from_slice(&block_align.to_le_bytes());
-    wav.extend_from_slice(&bits_per_sample.to_le_bytes());
-    wav.extend_from_slice(b"data");
-    wav.extend_from_slice(&data_len.to_le_bytes());
-    wav.extend_from_slice(data);
-    wav
+        for screen in [
+            GameScreen::Playing,
+            GameScreen::RoomClear,
+            GameScreen::Bonus,
+            GameScreen::BossIntro,
+            GameScreen::Transitioning,
+            GameScreen::RoomLoading,
+            GameScreen::TransitioningOut,
+        ] {
+            assert!(!gameplay_effects_muted(screen));
+        }
+    }
+
+    #[test]
+    fn interface_and_terminal_cues_keep_their_own_audio_class() {
+        assert!(SoundCue::UiMove.is_interface());
+        assert!(SoundCue::RunEnded.is_terminal());
+        assert!(!SoundCue::Jump.is_interface());
+        assert!(!SoundCue::Victory.is_interface());
+    }
 }

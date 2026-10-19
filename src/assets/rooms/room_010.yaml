@@ -5,7 +5,7 @@ size:
   height_h: 9
 background_profile: chapter_01_forest
 player_spawn:
-  x_h: 4
+  x_h: 42
   y_h: 0.5
 camera:
   follow_player_x: true

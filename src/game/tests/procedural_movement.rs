@@ -1,0 +1,105 @@
+use super::super::*;
+use std::{path::Path, time::Duration};
+
+use bevy::{prelude::MinimalPlugins, state::app::StatesPlugin, time::TimeUpdateStrategy};
+
+#[test]
+fn swordsman_bobs_while_walking_and_returns_to_idle_pose() {
+    let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
+    let data = GameData::load(&asset_root).expect("Chapter 1 data should load");
+    let placeholder_sheet = SpriteSheet {
+        image: Handle::default(),
+        layout: Handle::default(),
+        frames: 1,
+        fps: 1.0,
+    };
+    let mut sheets =
+        BTreeMap::from([(String::from("player_idle_sword"), placeholder_sheet.clone())]);
+    for type_id in data.enemies.types.keys() {
+        sheets.insert(type_id.idle_sheet().to_string(), placeholder_sheet.clone());
+    }
+
+    let mut app = App::new();
+    app.add_plugins((MinimalPlugins, StatesPlugin))
+        .insert_resource(data)
+        .insert_resource(SpriteSheets(sheets))
+        .insert_resource(TimeUpdateStrategy::ManualDuration(Duration::from_millis(
+            50,
+        )))
+        .init_state::<GameScreen>()
+        .init_resource::<RunSession>()
+        .init_resource::<SoundQueue>()
+        .add_systems(
+            Startup,
+            |mut commands: Commands,
+             data: Res<GameData>,
+             mut session: ResMut<RunSession>,
+             sheets: Res<SpriteSheets>| {
+                let room = &data.rooms[&1];
+                world::spawn_player(&mut commands, room, &sheets);
+                world::spawn_enemies(&mut commands, room, &data, &sheets);
+                session.world_loaded = true;
+            },
+        )
+        .add_systems(Update, combat::update_enemy_ai);
+
+    app.update();
+    let (swordsman, home_y) = {
+        let mut enemies = app.world_mut().query::<(Entity, &EnemyBody)>();
+        let (entity, enemy) = enemies
+            .iter(app.world())
+            .find(|(_, enemy)| enemy.type_id == "swordsman")
+            .expect("room 1 should spawn a Swordsman");
+        (entity, enemy.home_y)
+    };
+    let mut highest_position = home_y;
+    for _ in 0..6 {
+        app.update();
+        let position_y = app
+            .world()
+            .get::<Transform>(swordsman)
+            .expect("Swordsman should remain spawned")
+            .translation
+            .y;
+        highest_position = highest_position.max(position_y);
+    }
+    assert!(
+        highest_position > home_y,
+        "walking should produce a step bob"
+    );
+
+    let player = {
+        let mut players = app.world_mut().query_filtered::<Entity, With<PlayerBody>>();
+        players
+            .single(app.world())
+            .expect("room should spawn one player")
+    };
+    let swordsman_x = app
+        .world()
+        .get::<Transform>(swordsman)
+        .expect("Swordsman should remain spawned")
+        .translation
+        .x;
+    let player_y = app
+        .world()
+        .get::<Transform>(player)
+        .expect("player should remain spawned")
+        .translation
+        .y;
+    app.world_mut()
+        .get_mut::<Transform>(player)
+        .expect("player should remain spawned")
+        .translation = Vec3::new(swordsman_x - H_WORLD_UNITS, player_y, 0.0);
+    app.world_mut()
+        .get_mut::<EnemyBody>(swordsman)
+        .expect("Swordsman should remain spawned")
+        .attack_cooldown = 10.0;
+
+    app.update();
+    let swordsman_transform = app
+        .world()
+        .get::<Transform>(swordsman)
+        .expect("Swordsman should remain spawned");
+    assert_eq!(swordsman_transform.translation.y, home_y);
+    assert_eq!(swordsman_transform.rotation, Quat::IDENTITY);
+}
