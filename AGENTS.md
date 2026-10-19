@@ -2,6 +2,8 @@
 
 The entire game specifications live in `game-spec.md`. This is the reference for every specifications of the game.
 
+We are currently in the phase of defining the entire game specification, not development.
+
 ## Run and check
 
 Once you finish making a change (fixing a bug or adding a feature), make sure all code is well formatted, linted and tested. Everything should be green. This will run in CI too. Common commands:
@@ -17,6 +19,7 @@ Once you finish making a change (fixing a bug or adding a feature), make sure al
 - When something is unclear, needs decision, is inconsistent or contradictory with something else, ask what should be done explicitely.
 - When defining number of ennemies, room organization, etc, always make sure to do that is a consistent and centralized way in yaml files so that making changes in a specific room is easy. Those files should be the source of truth on the construction of the game and make the game a true data-driven game.
 - All constant parameters (game dimension, player stats, etc) should be clearly defined in such way and easy to change.
+- Always feel free to move, rename and change asset files for consistency and simplicity.w
 
 ## Bevy
 

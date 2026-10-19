@@ -17,10 +17,50 @@
 - Player assets (PNG and Aseprite files) are stored in `src/assets/player/`.
 - Every player action, including idle, has a dedicated animation.
 
-## Combat
+## Player Movement and Combat
 
-- The player has a sword and a gun. The sword damages all enemies within a 150-degree arc in front of the player. The gun fires bullets.
-- Default sword damage is 5; default gun damage is 15.
+### Movement Specifications
+
+`H` is the height of the player's collision box. Movement distances and speeds use `H` as their reference unit.
+
+These are initial balance constants and should be easy to tune during iteration. Keep each value centralized in the game's player-tuning configuration rather than duplicating it across gameplay systems. The values below are the specification's source of truth.
+
+| Constant                           | Value | Unit or notes                                                     |
+| ---------------------------------- | ----- | ----------------------------------------------------------------- |
+| `PLAYER_MAX_SPEED`                 | 6     | H/s                                                               |
+| `PLAYER_ACCELERATION`              | 36    | H/s²                                                              |
+| `PLAYER_DECELERATION`              | 48    | H/s²                                                              |
+| `PLAYER_JUMP_HEIGHT`               | 2.25  | H                                                                 |
+| `PLAYER_GRAVITY`                   | 32    | H/s² downward                                                     |
+| `PLAYER_JUMP_IMPULSE`              | 12    | H/s upward; produces the specified jump height under this gravity |
+| `PLAYER_JUMPS_PER_TAKEOFF`         | 1     | No double jump by default                                         |
+| `BONUS_DOUBLE_JUMP_EXTRA_JUMPS`    | 1     | Additional mid-air jump; resets on landing                        |
+| `BONUS_DOUBLE_JUMP_IMPULSE_FACTOR` | 0.8   | Multiplier of the normal jump impulse                             |
+| `PLAYER_DASH_DISTANCE`             | 5     | H                                                                 |
+| `PLAYER_DASH_DURATION`             | 0.2   | s; usable on the ground or in the air                             |
+| `PLAYER_DASH_COOLDOWN`             | 0.8   | s from dash start                                                 |
+
+### Weapon Specifications
+
+The sword damages all enemies within a 150-degree arc in front of the player. The gun fires projectiles.
+
+| Constant                                 | Value    | Unit or notes                                |
+| ---------------------------------------- | -------- | -------------------------------------------- |
+| `PLAYER_SWORD_DAMAGE`                    | 5        | Damage per hit                               |
+| `PLAYER_SWORD_RANGE`                     | 1.5      | H from the player's collision-box center     |
+| `PLAYER_SWORD_ATTACK_INTERVAL`           | 0.5      | s between attacks (2 attacks per second)     |
+| `PLAYER_GUN_DAMAGE`                      | 15       | Damage per projectile                        |
+| `PLAYER_GUN_FIRE_INTERVAL`               | 0.4      | s between shots (2.5 shots per second)       |
+| `PLAYER_GUN_AMMO_MODE`                   | Infinite | No reload                                    |
+| `PLAYER_PROJECTILE_SPEED`                | 18       | H/s                                          |
+| `ENEMY_KNOCKBACK_FROM_SWORD`             | 2.5      | H/s horizontally away from the player        |
+| `ENEMY_KNOCKBACK_FROM_BULLET`            | 1.2      | H/s horizontally away from the player        |
+| `PLAYER_KNOCKBACK`                       | 3.5      | H/s horizontally away from the damage source |
+| `PLAYER_DAMAGE_INVULNERABILITY_DURATION` | 0.55     | s after taking damage (33 frames at 60 FPS)  |
+| `PLAYER_DASH_INVULNERABILITY_DURATION`   | 0.12     | s at the start of the dash                   |
+
+### Combat Feedback and Room Flow
+
 - Combat is fast, mobility-heavy, and skill-based.
 - Whenever the player deals or receives damage, show a brief floating damage number. Damage dealt appears over the enemy; damage received appears over the player in bold red. Numbers pop up, drift upward, and fade quickly so they remain legible without obscuring combat.
 - Each player move, including sword attacks, shooting, and dashing, has a dedicated animation and corresponding sound effect.
@@ -37,9 +77,49 @@
 
 ## Rooms
 
-- Each room is 2 to 4 times the game viewport's width.
-- Each room has a distinct background with parallax layers that create a sense of depth.
-- Platforms are placed throughout each room to support jumping and movement during combat.
+### Room Layout and Authoring
+
+- All 100 rooms are authored before a build and played in fixed order. Room layouts and enemy rosters are not procedurally generated.
+- Store each room in its own YAML file under `src/assets/rooms/`, named by its zero-padded room number (for example, `src/assets/rooms/room_001.yaml` through `src/assets/rooms/room_100.yaml`). These files are the source of truth for constructing the rooms.
+- Each room file describes its ID, chapter, dimensions, player spawn, background profile, camera anchor, platforms and other collidable geometry, decorative props and their positions, enemy spawns and their configured attributes, and exit position.
+- A room is 2 to 4 times the game viewport's width. Room geometry positions and dimensions use `H`, the player's collision-box height, as the reference unit.
+- Each chapter has one shared background profile, including its backdrop and parallax layers. All ten rooms in that chapter reference the same profile. Room layouts, platform placement, enemy placement, and decorative props vary so rooms in a chapter do not all look alike.
+- Keep decorations separate from platforms and other collidable geometry so visual placement does not implicitly make an object climbable.
+- Each room's `enemy_spawns` list defines its fixed enemy roster. The number of enemies is the list length; do not duplicate it in a separately edited count. Each entry specifies an enemy type and position and resolves its configured attributes from YAML, using shared enemy-type defaults and any room-specific overrides. Enemy counts, types, positions, and configured attributes do not randomize at runtime; enemy AI still runs during play.
+- Each room contains 5 to 15 enemy spawns and at least two enemy types, except boss rooms. Bosses are included in their room's enemy spawn list.
+- Room YAML files do not define bonus offers. After a room is cleared, the game randomly selects two eligible bonuses at runtime; a bonus already owned by the player cannot be offered.
+
+### Camera
+
+- The camera follows the player's horizontal position and is clamped to the room's horizontal bounds.
+- The camera's vertical position is fixed at the room's configured vertical anchor. It does not follow the player when they jump or fall.
+
+### Room YAML Structure
+
+The following is a schema example; each room file supplies concrete values and entries for its layout:
+
+```yaml
+room_id: null
+chapter_id: null
+size:
+  width_viewports: null # 2 to 4
+  height_h: null
+background_profile: null # shared by all rooms in this chapter
+player_spawn:
+  x_h: null
+  y_h: null
+camera:
+  follow_player_x: true
+  fixed_y_h: null
+platforms: [] # entries define position_h, size_h, and collision geometry
+decorations: [] # entries define asset, position_h, and visual layer
+enemy_spawns: [] # entries define type_id, position_h, and optional stat overrides
+exit:
+  x_h: null
+  y_h: null
+next_room_id: null # null only for room 100
+```
+
 - Moving through the exit door to the next room has its own transition animation.
 
 ## Enemies
@@ -53,6 +133,7 @@
 ## Bonuses
 
 - A bonus cannot be offered if the player already has it.
+- After each room, two distinct eligible bonuses are selected randomly at runtime. Bonus choices are not stored in room YAML files.
 - Every bonus has a name, description, and category.
 - Categories: combat, defense, agility, intelligence, and combined (a mix of at least two other categories).
 - Each category has its own icon and color: red for combat, blue for defense, green for agility, pale yellow for intelligence, and orange for combined.
@@ -74,7 +155,7 @@ Default controls:
 - J: use the sword.
 - K: fire the gun.
 - Space: dash.
-- E: interact with an element, such as a bonus or door.
+- E: interact with an element, such as a bonus.
 - Escape: open or close the pause menu. The menu offers Continue, Restart, Settings, and Leave. Leave returns to the main menu shown before a run.
 
 Settings:
