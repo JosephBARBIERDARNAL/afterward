@@ -1,3 +1,5 @@
+# Room coordinates use H from the lower-left. Platform positions are centers;
+# player and enemy spawn y_h values mark the feet baseline.
 room_id: 7
 chapter_id: 1
 size:
@@ -11,54 +13,60 @@ camera:
   follow_player_x: true
   fixed_y_h: 4.5
 platforms:
-  - position_h: { x: 24.0, y: 0.3 }
+  - position_h: { x: 24, y: 0.3 }
     surface: soil
     size_h: { width: 48, height: 1 }
-  - position_h: { x: 8, y: 1.2 }
+  - position_h: { x: 5, y: 1.1 }
     surface: stone
-    size_h: { width: 5.0, height: 0.5 }
-  - position_h: { x: 14, y: 1.45 }
+    size_h: { width: 3.5, height: 0.5 }
+  - position_h: { x: 10, y: 1.71 }
     surface: stone
-    size_h: { width: 5.0, height: 0.5 }
-  - position_h: { x: 20, y: 1.15 }
+    size_h: { width: 3.5, height: 0.5 }
+  - position_h: { x: 15, y: 2.12 }
     surface: stone
-    size_h: { width: 5.0, height: 0.5 }
-  - position_h: { x: 26, y: 1.5 }
+    size_h: { width: 3.5, height: 0.5 }
+  - position_h: { x: 20, y: 2.63 }
     surface: stone
-    size_h: { width: 5.0, height: 0.5 }
-  - position_h: { x: 32, y: 1.2 }
+    size_h: { width: 3.5, height: 0.5 }
+  - position_h: { x: 25, y: 3.24 }
     surface: stone
-    size_h: { width: 5.0, height: 0.5 }
-  - position_h: { x: 38, y: 1.45 }
+    size_h: { width: 3.5, height: 0.5 }
+  - position_h: { x: 30, y: 3.65 }
     surface: stone
-    size_h: { width: 5.0, height: 0.5 }
-  - position_h: { x: 44, y: 1.15 }
+    size_h: { width: 3.5, height: 0.5 }
+  - position_h: { x: 35, y: 4.16 }
     surface: stone
-    size_h: { width: 5.0, height: 0.5 }
+    size_h: { width: 3.5, height: 0.5 }
+  - position_h: { x: 40, y: 4.77 }
+    surface: stone
+    size_h: { width: 3.5, height: 0.5 }
+  - position_h: { x: 45, y: 5.18 }
+    surface: stone
+    size_h: { width: 3.5, height: 0.5 }
 decorations: []
 enemy_spawns:
   - type_id: swordsman
-    position_h: { x: 7, y: 1.45 }
+    position_h: { x: 5, y: 1.35 }
   - type_id: infantryman
-    position_h: { x: 11, y: 0.8 }
+    position_h: { x: 10, y: 1.96 }
   - type_id: gorgon_1
-    position_h: { x: 15, y: 1.7 }
+    position_h: { x: 12.5, y: 0.8 }
   - type_id: gorgon_3
-    position_h: { x: 19, y: 0.8 }
+    position_h: { x: 17.5, y: 0.8 }
   - type_id: destroyer
-    position_h: { x: 23, y: 0.8 }
+    position_h: { x: 20, y: 2.88 }
   - type_id: infantryman
-    position_h: { x: 27, y: 0.8 }
+    position_h: { x: 25, y: 3.49 }
   - type_id: gorgon_2
-    position_h: { x: 31, y: 1.45 }
+    position_h: { x: 30, y: 3.9 }
   - type_id: swordsman
-    position_h: { x: 35, y: 0.8 }
+    position_h: { x: 32.5, y: 0.8 }
   - type_id: gorgon_1
-    position_h: { x: 39, y: 1.7 }
+    position_h: { x: 37.5, y: 0.8 }
   - type_id: gorgon_3
-    position_h: { x: 43, y: 0.8 }
+    position_h: { x: 40, y: 5.02 }
   - type_id: destroyer
-    position_h: { x: 46, y: 1.4 }
+    position_h: { x: 45, y: 5.43 }
 exit:
   x_h: 46.5
   y_h: 0.8

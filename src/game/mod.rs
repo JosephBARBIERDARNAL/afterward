@@ -308,6 +308,7 @@ struct EnemyBody {
     movement_speed_h_s: f32,
     home_y: f32,
     visual_height: f32,
+    visible_top_offset: f32,
     vertical_velocity: f32,
     behavior: String,
     procedural_movement: Option<ProceduralMovementState>,

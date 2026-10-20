@@ -322,6 +322,14 @@ pub(in crate::game) fn update_enemy_platform_physics(
         if enemy.health <= 0.0 {
             continue;
         }
+        if enemy.windup_remaining > 0.0
+            && enemy
+                .attacks
+                .get(enemy.active_attack)
+                .is_some_and(|attack| attack.kind == "jump_slam")
+        {
+            continue;
+        }
         let gait_offset = transform.translation.y - enemy.home_y;
         let previous_foot_y = enemy.home_y - enemy.visual_height / 2.0;
         let overlaps_platform = |platform: &PlatformSurface| {

@@ -1,5 +1,10 @@
 use super::*;
 use crate::data::RoomConfig;
+use bevy::sprite::Anchor;
+
+const PLAYER_VISUAL_HEIGHT_FACTOR: f32 = 1.4;
+const PLAYER_SPRITE_BOTTOM_PADDING_FRACTION: f32 = 0.2;
+const ENEMY_SPRITE_SCALE: f32 = 0.62;
 
 pub(super) fn spawn_room(
     mut commands: Commands,
@@ -114,14 +119,6 @@ pub(super) fn spawn_room_platforms(commands: &mut Commands, room: &RoomConfig) {
             platform.size_h.width_h * H_WORLD_UNITS,
             platform.size_h.height_h * H_WORLD_UNITS,
         );
-        let (body_color, top_color) = match platform.surface {
-            PlatformMaterial::Soil => {
-                (Color::srgb(0.30, 0.20, 0.11), Color::srgb(0.28, 0.48, 0.20))
-            }
-            PlatformMaterial::Stone => {
-                (Color::srgb(0.32, 0.34, 0.36), Color::srgb(0.48, 0.49, 0.46))
-            }
-        };
         commands.spawn((
             PlatformSurface {
                 left: center.x - size.x / 2.0,
@@ -132,16 +129,20 @@ pub(super) fn spawn_room_platforms(commands: &mut Commands, room: &RoomConfig) {
             },
             RoomEntity,
         ));
-        commands.spawn((
-            Sprite::from_color(body_color, size),
-            Transform::from_xyz(center.x, center.y, 0.0),
-            RoomEntity,
-        ));
-        commands.spawn((
-            Sprite::from_color(top_color, Vec2::new(size.x, 5.0)),
-            Transform::from_xyz(center.x, center.y + size.y / 2.0 - 2.5, 0.2),
-            RoomEntity,
-        ));
+        if platform.surface == PlatformMaterial::Stone {
+            // Keep placeholder art separate from the data-only collider so a future
+            // stone sprite or tilemap can replace these shapes without changing physics.
+            commands.spawn((
+                Sprite::from_color(Color::srgb(0.32, 0.34, 0.36), size),
+                Transform::from_xyz(center.x, center.y, 0.0),
+                RoomEntity,
+            ));
+            commands.spawn((
+                Sprite::from_color(Color::srgb(0.48, 0.49, 0.46), Vec2::new(size.x, 5.0)),
+                Transform::from_xyz(center.x, center.y + size.y / 2.0 - 2.5, 0.2),
+                RoomEntity,
+            ));
+        }
     }
 }
 
@@ -155,12 +156,18 @@ pub(super) fn spawn_player(commands: &mut Commands, room: &RoomConfig, sheets: &
             index: 0,
         },
     );
+    let visual_height = H_WORLD_UNITS * PLAYER_VISUAL_HEIGHT_FACTOR;
     sprite.custom_size = Some(Vec2::new(
-        sheet.frame_size.x * H_WORLD_UNITS / sheet.frame_size.y,
-        H_WORLD_UNITS,
+        sheet.frame_size.x * visual_height / sheet.frame_size.y,
+        visual_height,
     ));
     commands.spawn((
         sprite,
+        Anchor(Vec2::new(
+            0.0,
+            (1.0 - PLAYER_VISUAL_HEIGHT_FACTOR) / (2.0 * PLAYER_VISUAL_HEIGHT_FACTOR)
+                + PLAYER_SPRITE_BOTTOM_PADDING_FRACTION,
+        )),
         Transform::from_xyz(
             room.player_spawn.x_h * H_WORLD_UNITS,
             (room.player_spawn.y_h + 0.5) * H_WORLD_UNITS,
@@ -212,7 +219,14 @@ pub(super) fn spawn_enemies(
         let scale = if spawn.type_id == "warrior" {
             2.0
         } else {
-            0.55
+            ENEMY_SPRITE_SCALE
+        };
+        let (frame_top_padding_px, frame_bottom_padding_px) = match &*spawn.type_id {
+            "swordsman" => (61.0, 0.0),
+            "infantryman" => (56.0, 0.0),
+            "destroyer" | "gorgon_1" | "gorgon_2" | "gorgon_3" => (51.0, 0.0),
+            "warrior" => (10.0, 7.0),
+            _ => (0.0, 0.0),
         };
         let mut attacks = if profile.attacks.is_empty() {
             profile
@@ -255,6 +269,8 @@ pub(super) fn spawn_enemies(
             .as_ref()
             .map(|phase| (phase.health_fraction_at_or_below, phase.cooldown_multiplier));
         let visual_height = sheet.frame_size.y * scale;
+        let visible_top_offset =
+            (sheet.frame_size.y / 2.0 - frame_top_padding_px - frame_bottom_padding_px) * scale;
         let home_y = spawn.position_h.y_h * H_WORLD_UNITS + visual_height / 2.0;
         let enemy = commands
             .spawn((
@@ -265,12 +281,9 @@ pub(super) fn spawn_enemies(
                         index: 0,
                     },
                 ),
-                Transform::from_xyz(
-                    spawn.position_h.x_h * H_WORLD_UNITS,
-                    home_y,
-                    3.0,
-                )
-                .with_scale(Vec3::splat(scale)),
+                Anchor(Vec2::new(0.0, frame_bottom_padding_px / sheet.frame_size.y)),
+                Transform::from_xyz(spawn.position_h.x_h * H_WORLD_UNITS, home_y, 3.0)
+                    .with_scale(Vec3::splat(scale)),
                 AnimatedSprite {
                     sheet: key.to_string(),
                     frame: 0,
@@ -285,6 +298,7 @@ pub(super) fn spawn_enemies(
                     movement_speed_h_s,
                     home_y,
                     visual_height,
+                    visible_top_offset,
                     vertical_velocity: 0.0,
                     behavior: profile.behavior.clone(),
                     procedural_movement: profile.procedural_movement.as_ref().map(|movement| {
@@ -315,8 +329,7 @@ pub(super) fn spawn_enemies(
             .id();
         let bar_position = Vec3::new(
             spawn.position_h.x_h * H_WORLD_UNITS,
-            spawn.position_h.y_h * H_WORLD_UNITS
-                + H_WORLD_UNITS * if scale > 1.0 { 1.35 } else { 1.0 },
+            home_y + visible_top_offset + 6.0,
             5.0,
         );
         commands.spawn((

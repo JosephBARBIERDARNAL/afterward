@@ -208,6 +208,14 @@ impl GameData {
                     "room {room_id} has an out-of-bounds spawn or exit"
                 )));
             }
+            if room
+                .surface_y_at(room.player_spawn.x_h)
+                .is_none_or(|surface_y| (surface_y - room.player_spawn.y_h).abs() > 0.01)
+            {
+                return Err(InvalidGameData::from(format!(
+                    "room {room_id} player spawn must use the platform top as its feet baseline"
+                )));
+            }
 
             if room_id < &10 {
                 let unique_types = room
@@ -240,6 +248,14 @@ impl GameData {
                 if !(0.0..=room_width_h).contains(&spawn.position_h.x_h) {
                     return Err(InvalidGameData::from(format!(
                         "room {room_id} has an out-of-bounds enemy spawn"
+                    )));
+                }
+                if room
+                    .surface_y_at(spawn.position_h.x_h)
+                    .is_none_or(|surface_y| (surface_y - spawn.position_h.y_h).abs() > 0.01)
+                {
+                    return Err(InvalidGameData::from(format!(
+                        "room {room_id} enemy spawn must use the platform top as its feet baseline"
                     )));
                 }
             }

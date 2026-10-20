@@ -1,3 +1,5 @@
+# Room coordinates use H from the lower-left. Platform positions are centers;
+# player and enemy spawn y_h values mark the feet baseline.
 room_id: 6
 chapter_id: 1
 size:
@@ -11,49 +13,52 @@ camera:
   follow_player_x: true
   fixed_y_h: 4.5
 platforms:
-  - position_h: { x: 16.0, y: 0.3 }
+  - position_h: { x: 16, y: 0.3 }
     surface: soil
     size_h: { width: 32, height: 1 }
-  - position_h: { x: 6, y: 1.2 }
+  - position_h: { x: 5, y: 1.1 }
     surface: stone
-    size_h: { width: 4.5, height: 0.5 }
-  - position_h: { x: 11, y: 1.45 }
+    size_h: { width: 2.8, height: 0.5 }
+  - position_h: { x: 9, y: 1.78 }
     surface: stone
-    size_h: { width: 4.5, height: 0.5 }
-  - position_h: { x: 16, y: 1.2 }
+    size_h: { width: 2.8, height: 0.5 }
+  - position_h: { x: 13, y: 2.56 }
     surface: stone
-    size_h: { width: 4.5, height: 0.5 }
-  - position_h: { x: 21, y: 1.45 }
+    size_h: { width: 2.8, height: 0.5 }
+  - position_h: { x: 17, y: 3.14 }
     surface: stone
-    size_h: { width: 4.5, height: 0.5 }
-  - position_h: { x: 26, y: 1.2 }
+    size_h: { width: 2.8, height: 0.5 }
+  - position_h: { x: 21, y: 3.82 }
     surface: stone
-    size_h: { width: 4.5, height: 0.5 }
-  - position_h: { x: 30, y: 1.45 }
+    size_h: { width: 2.8, height: 0.5 }
+  - position_h: { x: 25, y: 4.6 }
     surface: stone
-    size_h: { width: 3.5, height: 0.5 }
+    size_h: { width: 2.8, height: 0.5 }
+  - position_h: { x: 29, y: 5.18 }
+    surface: stone
+    size_h: { width: 2.8, height: 0.5 }
 decorations: []
 enemy_spawns:
   - type_id: swordsman
-    position_h: { x: 6, y: 1.45 }
+    position_h: { x: 5, y: 1.35 }
   - type_id: infantryman
-    position_h: { x: 9, y: 0.8 }
+    position_h: { x: 7, y: 0.8 }
   - type_id: destroyer
-    position_h: { x: 12, y: 1.7 }
+    position_h: { x: 11, y: 0.8 }
   - type_id: gorgon_1
-    position_h: { x: 15, y: 0.8 }
+    position_h: { x: 13, y: 2.81 }
   - type_id: gorgon_2
-    position_h: { x: 18, y: 0.8 }
+    position_h: { x: 15, y: 0.8 }
   - type_id: gorgon_3
-    position_h: { x: 21, y: 0.8 }
+    position_h: { x: 19, y: 0.8 }
   - type_id: swordsman
-    position_h: { x: 22.5, y: 1.7 }
+    position_h: { x: 21, y: 4.07 }
   - type_id: infantryman
-    position_h: { x: 25.5, y: 0.8 }
+    position_h: { x: 23, y: 0.8 }
   - type_id: destroyer
-    position_h: { x: 28.5, y: 0.8 }
+    position_h: { x: 27, y: 0.8 }
   - type_id: gorgon_1
-    position_h: { x: 30.5, y: 0.8 }
+    position_h: { x: 29, y: 5.43 }
 exit:
   x_h: 30.5
   y_h: 0.8

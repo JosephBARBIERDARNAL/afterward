@@ -85,15 +85,15 @@ pub(in crate::game) fn update_health_bars(
         let fraction = (enemy.health / bar.max_health).clamp(0.0, 1.0);
         sprite.custom_size = Some(Vec2::new(48.0 * fraction.max(0.02), 4.0));
         transform.translation.x = enemy_transform.translation.x - 24.0 * (1.0 - fraction);
-        transform.translation.y = enemy_transform.translation.y + 48.0;
+        transform.translation.y = enemy_transform.translation.y + enemy.visible_top_offset + 6.0;
     }
     for (background_entity, mut transform, bar) in &mut backgrounds {
-        let Ok((_, enemy_transform)) = enemies.get(bar.enemy) else {
+        let Ok((enemy, enemy_transform)) = enemies.get(bar.enemy) else {
             commands.entity(background_entity).despawn();
             continue;
         };
         transform.translation.x = enemy_transform.translation.x;
-        transform.translation.y = enemy_transform.translation.y + 48.0;
+        transform.translation.y = enemy_transform.translation.y + enemy.visible_top_offset + 6.0;
     }
 }
 

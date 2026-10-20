@@ -1,7 +1,8 @@
 use bevy::{
-    core_pipeline::{schedule::Core2d, tonemapping::tonemapping, Core2dSystems, FullscreenShader},
+    core_pipeline::{Core2dSystems, FullscreenShader, schedule::Core2d, tonemapping::tonemapping},
     prelude::*,
     render::{
+        Render, RenderApp, RenderStartup, RenderSystems,
         extract_component::{
             ComponentUniforms, DynamicUniformIndex, ExtractComponent, ExtractComponentPlugin,
             UniformComponentPlugin,
@@ -12,7 +13,6 @@ use bevy::{
         },
         renderer::{RenderContext, RenderDevice, ViewQuery},
         view::ViewTarget,
-        Render, RenderApp, RenderStartup, RenderSystems,
     },
 };
 
@@ -39,12 +39,15 @@ impl Plugin for PauseBlurPlugin {
             )
             .add_systems(
                 Core2d,
-                post_process.after(tonemapping).in_set(Core2dSystems::PostProcess),
+                post_process
+                    .after(tonemapping)
+                    .in_set(Core2dSystems::PostProcess),
             );
     }
 }
 
 #[derive(Component, Default, Clone, Copy, ExtractComponent, ShaderType)]
+#[extract_app(RenderApp)]
 pub(super) struct PauseBlur {
     pub(super) radius_pixels: f32,
 }

@@ -384,6 +384,18 @@ impl RoomConfig {
     pub(crate) fn width_h(&self, gameplay: &GameplayConfig) -> f32 {
         f32::from(self.size.width_viewports) * gameplay.viewport_width_h()
     }
+
+    pub(crate) fn surface_y_at(&self, x_h: f32) -> Option<f32> {
+        self.platforms
+            .iter()
+            .filter(|platform| {
+                let half_width = platform.size_h.width_h / 2.0;
+                (platform.position_h.x_h - half_width..=platform.position_h.x_h + half_width)
+                    .contains(&x_h)
+            })
+            .map(|platform| platform.position_h.y_h + platform.size_h.height_h / 2.0)
+            .max_by(f32::total_cmp)
+    }
 }
 
 #[derive(Debug, Deserialize)]

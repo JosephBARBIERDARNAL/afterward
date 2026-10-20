@@ -12,7 +12,7 @@ use damage::{
     EnemyDamageResources, EnemyDamageTarget, EnemyHit, damage_enemy, set_enemy_animation,
     spawn_damage_number,
 };
-pub(super) use enemy_ai::update_enemy_ai;
+pub(super) use enemy_ai::{update_enemy_ai, update_enemy_platform_physics};
 pub(super) use feedback::{
     update_damage_numbers, update_dead_enemies, update_health_bars, update_health_pickups,
 };

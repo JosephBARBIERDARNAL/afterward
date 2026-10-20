@@ -100,42 +100,42 @@ pub(super) fn spawn_interface(mut commands: Commands) {
                     TextColor(Color::WHITE),
                     ScreenLabel,
                 ));
-            label.with_children(|parent| {
-                for index in 0..2 {
+                label.with_children(|parent| {
+                    for index in 0..2 {
+                        parent.spawn((
+                            TextSpan::default(),
+                            BonusScreenSpan {
+                                index,
+                                kind: BonusSpanKind::Category,
+                            },
+                            TextColor(Color::WHITE),
+                        ));
+                        parent.spawn((
+                            TextSpan::default(),
+                            BonusScreenSpan {
+                                index,
+                                kind: BonusSpanKind::Name,
+                            },
+                            TextColor(Color::WHITE),
+                        ));
+                        parent.spawn((
+                            TextSpan::default(),
+                            BonusScreenSpan {
+                                index,
+                                kind: BonusSpanKind::Description,
+                            },
+                            TextColor(Color::WHITE),
+                        ));
+                    }
                     parent.spawn((
                         TextSpan::default(),
                         BonusScreenSpan {
-                            index,
-                            kind: BonusSpanKind::Category,
+                            index: 2,
+                            kind: BonusSpanKind::Reroll,
                         },
                         TextColor(Color::WHITE),
                     ));
-                    parent.spawn((
-                        TextSpan::default(),
-                        BonusScreenSpan {
-                            index,
-                            kind: BonusSpanKind::Name,
-                        },
-                        TextColor(Color::WHITE),
-                    ));
-                    parent.spawn((
-                        TextSpan::default(),
-                        BonusScreenSpan {
-                            index,
-                            kind: BonusSpanKind::Description,
-                        },
-                        TextColor(Color::WHITE),
-                    ));
-                }
-                parent.spawn((
-                    TextSpan::default(),
-                    BonusScreenSpan {
-                        index: 2,
-                        kind: BonusSpanKind::Reroll,
-                    },
-                    TextColor(Color::WHITE),
-                ));
-            });
+                });
             });
         });
 
@@ -148,7 +148,7 @@ pub(super) fn spawn_interface(mut commands: Commands) {
         },
         Text::new(""),
         TextFont {
-            font_size: FontSize::Px(20.0),
+            font_size: FontSize::Px(22.0),
             ..default()
         },
         TextColor(Color::WHITE),
@@ -160,9 +160,9 @@ pub(super) fn spawn_interface(mut commands: Commands) {
             Node {
                 position_type: PositionType::Absolute,
                 left: px(24),
-                top: px(54),
-                width: px(240),
-                height: px(16),
+                top: px(56),
+                width: px(320),
+                height: px(22),
                 ..default()
             },
             BackgroundColor(Color::srgb(0.07, 0.08, 0.12)),
@@ -183,14 +183,21 @@ pub(super) fn spawn_interface(mut commands: Commands) {
 }
 
 #[derive(Component)]
-struct MenuBackdrop;
+pub(super) struct MenuBackdrop;
 
 #[derive(Component)]
-struct MenuPanel;
+pub(super) struct MenuPanel;
+
+type MenuBackdropQuery<'w, 's> = Query<
+    'w,
+    's,
+    (&'static mut BackgroundColor, &'static mut Visibility),
+    (With<MenuBackdrop>, Without<MenuPanel>),
+>;
 
 pub(super) fn update_menu_modal(
     screen: Res<State<GameScreen>>,
-    mut backdrop: Query<(&mut BackgroundColor, &mut Visibility), With<MenuBackdrop>>,
+    mut backdrop: MenuBackdropQuery,
     mut panel: Query<&mut BackgroundColor, With<MenuPanel>>,
     mut camera_blur: Query<&mut pause_blur::PauseBlur, With<Camera2d>>,
 ) {

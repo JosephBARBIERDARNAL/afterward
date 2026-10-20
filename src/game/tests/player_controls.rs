@@ -25,6 +25,7 @@ fn default_controls_move_jump_and_dash_the_player() {
             SpriteSheet {
                 image: Handle::default(),
                 layout: Handle::default(),
+                frame_size: Vec2::new(128.0, 80.0),
                 frames,
                 fps,
             },
@@ -55,7 +56,8 @@ fn default_controls_move_jump_and_dash_the_player() {
                     left: 0.0,
                     right: width,
                     bottom: -H_WORLD_UNITS,
-                    top: 0.0,
+                    top: room.platforms[0].position_h.y_h * H_WORLD_UNITS
+                        + room.platforms[0].size_h.height_h * H_WORLD_UNITS / 2.0,
                     material: PlatformMaterial::Soil,
                 });
             },

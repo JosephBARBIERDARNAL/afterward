@@ -30,6 +30,7 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
     let placeholder_sheet = SpriteSheet {
         image: Handle::default(),
         layout: Handle::default(),
+        frame_size: Vec2::new(128.0, 128.0),
         frames: 1,
         fps: 1.0,
     };
@@ -110,7 +111,14 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
                         })
                     {
                         let dx = enemy_transform.translation.x - player_transform.translation.x;
-                        if dx.abs() > H_WORLD_UNITS * TEST_PILOT_COMBAT_DISTANCE_H
+                        let enemy_above_player = enemy_transform.translation.y
+                            > player_transform.translation.y + H_WORLD_UNITS * 0.5;
+                        let combat_distance_h = if enemy_above_player {
+                            1.0
+                        } else {
+                            TEST_PILOT_COMBAT_DISTANCE_H
+                        };
+                        if dx.abs() > H_WORLD_UNITS * combat_distance_h
                             || dx.signum() != player.facing
                         {
                             keys.press(if dx >= 0.0 {
@@ -118,6 +126,9 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
                             } else {
                                 KeyCode::KeyA
                             });
+                        }
+                        if enemy_above_player && player.grounded {
+                            keys.press(KeyCode::Space);
                         }
                         keys.press(KeyCode::KeyJ);
                         keys.press(KeyCode::KeyK);
@@ -133,6 +144,7 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
                 player::update_player,
                 combat::player_attacks,
                 combat::update_enemy_ai,
+                combat::update_enemy_platform_physics,
                 combat::update_projectiles,
                 combat::update_health_pickups,
                 flow::handle_door_touch,

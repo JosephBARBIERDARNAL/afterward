@@ -10,6 +10,7 @@ fn swordsman_bobs_while_walking_and_returns_to_idle_pose() {
     let placeholder_sheet = SpriteSheet {
         image: Handle::default(),
         layout: Handle::default(),
+        frame_size: Vec2::new(128.0, 128.0),
         frames: 1,
         fps: 1.0,
     };

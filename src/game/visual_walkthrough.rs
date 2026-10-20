@@ -33,6 +33,7 @@ struct VisualWalkthrough {
     capture_requested: bool,
     capture_completed: bool,
     action_started: bool,
+    pause_shown: bool,
 }
 
 impl Default for VisualWalkthrough {
@@ -44,6 +45,7 @@ impl Default for VisualWalkthrough {
             capture_requested: false,
             capture_completed: false,
             action_started: false,
+            pause_shown: false,
         }
     }
 }
@@ -129,6 +131,7 @@ fn drive_visual_walkthrough(resources: VisualWalkthroughResources) {
         GameScreen::MainMenu => 0.5,
         GameScreen::Playing if scene.door_open => 0.35,
         GameScreen::Playing => 0.75,
+        GameScreen::Paused => 0.35,
         GameScreen::RoomClear => 0.2,
         GameScreen::Bonus => 0.5,
         GameScreen::BossIntro => 0.35,
@@ -143,6 +146,7 @@ fn drive_visual_walkthrough(resources: VisualWalkthroughResources) {
                 format!("room_{:03}_door", scene.room_id)
             }
             GameScreen::Playing => format!("room_{:03}_combat", scene.room_id),
+            GameScreen::Paused => String::from("paused-overlay"),
             GameScreen::RoomClear => format!("room_{:03}_clear", scene.room_id),
             GameScreen::Bonus => format!("room_{:03}_bonus", scene.room_id),
             GameScreen::BossIntro => format!("room_{:03}_boss-intro", scene.room_id),
@@ -191,6 +195,11 @@ fn drive_visual_walkthrough(resources: VisualWalkthroughResources) {
                 player.translation.y = room.exit.y_h * H_WORLD_UNITS + H_WORLD_UNITS / 2.0;
             }
         }
+        GameScreen::Playing if !walkthrough.pause_shown => {
+            walkthrough.pause_shown = true;
+            next_screen.set(GameScreen::Paused);
+        }
+        GameScreen::Paused => next_screen.set(GameScreen::Playing),
         GameScreen::Playing => {
             for entity in &enemies {
                 commands.entity(entity).despawn();

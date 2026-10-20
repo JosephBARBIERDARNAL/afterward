@@ -15,6 +15,7 @@ fn default_inputs_move_and_defeat_a_room_enemy() {
     let placeholder_sheet = SpriteSheet {
         image: Handle::default(),
         layout: Handle::default(),
+        frame_size: Vec2::new(128.0, 128.0),
         frames: 1,
         fps: 1.0,
     };

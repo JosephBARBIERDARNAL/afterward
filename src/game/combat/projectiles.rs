@@ -72,8 +72,12 @@ pub(in crate::game) fn update_projectiles(
                 if enemy.health <= 0.0 {
                     continue;
                 }
-                let delta = enemy_transform.translation - projectile_transform.translation;
-                if delta.x.abs() <= 24.0 && delta.y.abs() <= 32.0 {
+                let enemy_left = start.x.min(end.x) - projectile.half_size.x - 24.0;
+                let enemy_right = start.x.max(end.x) + projectile.half_size.x + 24.0;
+                let vertical_distance = (enemy_transform.translation.y - start.y).abs();
+                if (enemy_left..=enemy_right).contains(&enemy_transform.translation.x)
+                    && vertical_distance <= 32.0 + projectile.half_size.y
+                {
                     let direction = if projectile.velocity_x > 0.0 {
                         1.0
                     } else {

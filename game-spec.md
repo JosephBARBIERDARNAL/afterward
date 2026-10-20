@@ -46,7 +46,7 @@ These are initial balance constants and should be easy to tune during iteration.
 
 ### Weapon Specifications
 
-The sword attacks horizontally in the direction the player faces, hitting all enemies in a broad forward-facing area. Its reach should let the player hit enemies without standing directly beside them. The gun fires projectiles horizontally in the direction the player faces (left or right); it cannot fire vertically.
+The sword attacks horizontally in the direction the player faces, hitting all enemies in a broad forward-facing area. Its reach should let the player hit enemies without standing directly beside them. The gun fires projectiles horizontally in the direction the player faces (left or right); it cannot fire vertically. Player projectiles travel at most 10 H from the muzzle, then disappear.
 
 | Constant                                 | Value    | Unit or notes                               |
 | ---------------------------------------- | -------- | ------------------------------------------- |
@@ -57,6 +57,7 @@ The sword attacks horizontally in the direction the player faces, hitting all en
 | `PLAYER_GUN_FIRE_INTERVAL`               | 0.4      | s between shots (2.5 shots per second)      |
 | `PLAYER_GUN_AMMO_MODE`                   | Infinite | No reload                                   |
 | `PLAYER_PROJECTILE_SPEED`                | 18       | H/s                                         |
+| `PLAYER_GUN_RANGE`                       | 10       | H from the muzzle; maximum projectile travel |
 | `BOSS_KNOCKBACK_FROM_SWORD`              | 2.5      | H/s horizontally away from the player       |
 | `BOSS_KNOCKBACK_FROM_BULLET`             | 1.2      | H/s horizontally away from the player       |
 | `PLAYER_DAMAGE_INVULNERABILITY_DURATION` | 0.55     | s after taking damage (33 frames at 60 FPS) |
@@ -100,7 +101,7 @@ The sword attacks horizontally in the direction the player faces, hitting all en
 - Platform layouts should form reachable routes: keep platform tops within the player's jump height of nearby surfaces, use short horizontal gaps, and include enough stepping points for the room's width. Place some enemy spawn feet on raised platform tops and the rest on the ground.
 - A room is 2 to 4 times the fixed gameplay viewport's width (32 to 64 H at the initial viewport settings). Room geometry positions and dimensions use `H`, the player's collision-box height, as the reference unit.
 - Each chapter has one shared background profile, including its backdrop and parallax layers. All ten rooms in that chapter reference the same profile. Room layouts, platform placement, enemy placement, and decorative props vary so rooms in a chapter do not all look alike.
-- Room platform entries declare a `surface`: Chapter 1 ground platforms use `soil` for grass-topped soil, and raised platforms use `stone`. The material controls both platform appearance and footsteps.
+- Room platform entries declare a `surface`: the `soil` ground collider follows the visible ground in the chapter background and controls footsteps without drawing a second soil slab; raised platforms use `stone` and are drawn separately. The material controls platform appearance and footsteps.
 - Keep decorations separate from platforms and other collidable geometry so visual placement does not implicitly make an object climbable.
 - Each room's `enemy_spawns` list defines its fixed enemy roster. The number of enemies is the list length; do not duplicate it in a separately edited count. Each entry specifies an enemy type and position and resolves its configured attributes from YAML, using shared enemy-type defaults and any room-specific overrides. Enemy counts, types, positions, and configured attributes do not randomize at runtime; enemy AI still runs during play.
 - Each room contains 5 to 15 enemy spawns and at least two enemy types, except boss rooms. Bosses are included in their room's enemy spawn list.
