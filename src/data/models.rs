@@ -34,6 +34,7 @@ pub struct AudioConfig {
     pub paused_music_volume_multiplier: f32,
     pub room_clear_music_volume_multiplier: f32,
     pub chapter_one_music_gain: f32,
+    pub chapter_one_ambience_gain: f32,
 }
 
 #[derive(Debug, Deserialize)]
@@ -67,6 +68,7 @@ pub struct AspectRatio {
 pub struct PlayerConfig {
     pub max_health: f32,
     pub max_speed_h_s: f32,
+    pub air_max_speed_h_s: f32,
     pub acceleration_h_s2: f32,
     pub deceleration_h_s2: f32,
     pub jump_height_h: f32,

@@ -5,6 +5,7 @@ viewport:
 player:
   max_health: 100
   max_speed_h_s: 6
+  air_max_speed_h_s: 6
   acceleration_h_s2: 36
   deceleration_h_s2: 48
   jump_height_h: 2.25
@@ -51,6 +52,7 @@ audio:
   paused_music_volume_multiplier: 0.35
   room_clear_music_volume_multiplier: 0.55
   chapter_one_music_gain: 0.2
+  chapter_one_ambience_gain: 0.1
 
 controls:
   move_left: [KeyA, KeyQ, ArrowLeft]

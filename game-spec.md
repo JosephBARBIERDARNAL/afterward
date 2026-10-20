@@ -24,13 +24,14 @@ Important: the following is the game specifications, focusing on the first chapt
 ### Movement Specifications
 
 `H` is the height of the player's collision box. Movement distances and speeds use `H` as their reference unit.
-“Movement speed” refers to the player's speed while grounded. Airborne horizontal control is specified separately.
+Ground and airborne horizontal movement share a maximum speed of 6 H/s.
 
 These are initial balance constants and should be easy to tune during iteration. Keep each value centralized in the game's player-tuning configuration rather than duplicating it across gameplay systems. The values below are the specification's source of truth.
 
 | Constant                           | Value | Unit or notes                                                     |
 | ---------------------------------- | ----- | ----------------------------------------------------------------- |
-| `PLAYER_MAX_SPEED`                 | 6     | H/s                                                               |
+| `PLAYER_MAX_SPEED`                 | 6     | H/s while grounded                                                |
+| `PLAYER_AIR_MAX_SPEED`             | 6     | H/s while airborne; matches grounded maximum speed                |
 | `PLAYER_ACCELERATION`              | 36    | H/s²                                                              |
 | `PLAYER_DECELERATION`              | 48    | H/s²                                                              |
 | `PLAYER_JUMP_HEIGHT`               | 2.25  | H                                                                 |

@@ -182,6 +182,39 @@ impl From<ChapterOneForestCalmLoop> for AudioSource {
     }
 }
 
+pub(super) struct ChapterOneForestAmbience;
+
+impl From<ChapterOneForestAmbience> for AudioSource {
+    fn from(_: ChapterOneForestAmbience) -> Self {
+        const SAMPLE_RATE: u32 = 22_050;
+        const SECONDS: f32 = 8.0;
+
+        let sample_count = (SAMPLE_RATE as f32 * SECONDS) as usize;
+        let mut samples = Vec::with_capacity(sample_count * 2);
+        let mut filtered_noise = 0.0_f32;
+        for index in 0..sample_count {
+            let progress = index as f32 / sample_count as f32;
+            let t = index as f32 / SAMPLE_RATE as f32;
+            let noise = (index.wrapping_mul(1_103_515_245).wrapping_add(12_345) >> 16 & 0x7fff)
+                as f32
+                / 16_384.0
+                - 1.0;
+            filtered_noise += (noise - filtered_noise) * 0.045;
+            let swell = 0.72 + (std::f32::consts::TAU * 0.125 * t).sin() * 0.2;
+            let low_wind = (std::f32::consts::TAU * 0.19 * t).sin() * 0.08;
+            let loop_fade = (progress.min(1.0 - progress) / 0.01).clamp(0.0, 1.0);
+            let value =
+                ((filtered_noise * swell + low_wind) * loop_fade * 0.06 * f32::from(i16::MAX))
+                    as i16;
+            samples.extend_from_slice(&value.to_le_bytes());
+        }
+
+        Self {
+            bytes: Arc::from(wav_header_and_data(SAMPLE_RATE, 1, 16, &samples)),
+        }
+    }
+}
+
 fn wav_header_and_data(
     sample_rate: u32,
     channels: u16,
@@ -229,5 +262,13 @@ mod tests {
             assert!(cues.contains(&SoundCue::EnemyHurt(style)));
             assert!(cues.contains(&SoundCue::EnemyDeath(style)));
         }
+    }
+
+    #[test]
+    fn generated_forest_ambience_is_an_eight_second_wav_loop() {
+        let source = AudioSource::from(ChapterOneForestAmbience);
+
+        assert_eq!(&source.bytes[..4], b"RIFF");
+        assert_eq!(source.bytes.len(), 44 + 22_050 * 8 * 2);
     }
 }

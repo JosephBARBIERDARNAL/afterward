@@ -20,9 +20,9 @@
 
 ## Completion checks
 
-- [x] Add headless integration coverage for rooms 1–10 using real room and enemy YAML, production player/enemy/platform spawning, gun/projectile/damage systems, unique bonus choices, and the Warrior encounter. A separate input-driven room test uses the default movement, sword, and gun controls to defeat the room 1 Swordsman without teleporting or resetting invulnerability. Focused tests also cover fullscreen remapping, repeated gunfire animation, received-damage styling, and the Swordsman's procedural gait. The full-chapter flow pilot still teleports and stays invulnerable; neither headless path verifies visuals.
+- [x] Add headless integration coverage starting at the main menu and playing rooms 1–10 from real room and enemy YAML, production player/enemy/platform spawning, and default movement, sword, gun, bonus, and door-transition controls. The full-chapter input pilot does not teleport the player or force invulnerability; health changes through normal damage, pickup, and bonus systems. It verifies each roster, ten distinct bonus selections, and the Warrior's phase-two defeat. Focused tests also cover airborne horizontal speed, fullscreen remapping, repeated gunfire animation, received-damage styling, and the Swordsman's procedural gait. Headless tests do not verify visuals.
 - [x] Run the native visual walkthrough and inspect screenshots of all ten room combat scenes, bonus screens, door approaches, transitions, the Warrior intro/fight, and Chapter One completion. Captures are saved under `target/visual-walkthrough/`; the walkthrough clears enemies after each room screenshot to exercise the production room and screen flow.
-- [ ] Manually play rooms 1–10 using player movement and combat controls. The headless test covers real combat systems, while the visual walkthrough automates room progression and does not verify combat feel or input timing.
+- [ ] Manually play rooms 1–10 using player movement and combat controls. The headless input pilot exercises the full chapter through real gameplay systems, while the visual walkthrough automates room progression and neither verifies human combat feel or native input timing.
 - [x] Run formatting, Clippy, the Rust test suite, and the native build; fix all resulting issues.
 
 ## Remaining specification gaps
@@ -32,4 +32,4 @@
 - [x] Add a visible door-opening / room-transition animation. The door narrows as the screen fades to black, the next room loads under the overlay, and the new room fades in.
 - [x] Add distinct generated placeholder cues for each Chapter 1 enemy's idle, movement, attack warning/execution, hurt, and death events.
 - [x] Fade gameplay sound effects while paused or in menus while keeping interface and terminal cues audible.
-- [ ] Review audio against the full sound specification. Chapter 1 now has a forest-specific generated placeholder loop; replace it with authored music when available, and add surface-specific player footsteps after room surface types are defined.
+- [ ] Review audio against the full sound specification. Chapter 1 now has generated forest music and an attenuated, looping forest ambience placeholder; replace them with authored tracks when available, and add surface-specific player footsteps after room surface types are defined.

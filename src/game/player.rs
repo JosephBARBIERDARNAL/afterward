@@ -52,7 +52,12 @@ pub(super) fn update_player(
         if !was_dashing {
             player.facing = direction.signum();
         }
-        let target_speed = direction * tuning.max_speed_h_s * movement_multiplier * H_WORLD_UNITS;
+        let max_speed_h_s = if player.grounded {
+            tuning.max_speed_h_s
+        } else {
+            tuning.air_max_speed_h_s
+        };
+        let target_speed = direction * max_speed_h_s * movement_multiplier * H_WORLD_UNITS;
         player.velocity.x = move_towards(
             player.velocity.x,
             target_speed,

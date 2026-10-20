@@ -65,6 +65,16 @@ impl GameData {
                 "the gameplay viewport must be fixed at 16:9 and 9 H",
             ));
         }
+        let player = &self.gameplay.player;
+        if !player.max_speed_h_s.is_finite()
+            || player.max_speed_h_s <= 0.0
+            || !player.air_max_speed_h_s.is_finite()
+            || player.air_max_speed_h_s <= 0.0
+        {
+            return Err(InvalidGameData::from(
+                "player movement speeds must be finite and positive",
+            ));
+        }
         let expected_jump_impulse =
             (2.0 * self.gameplay.player.gravity_h_s2 * self.gameplay.player.jump_height_h).sqrt();
         if (expected_jump_impulse - self.gameplay.player.jump_impulse_h_s).abs() > 0.05 {
@@ -87,6 +97,7 @@ impl GameData {
             || !(0.0..=1.0).contains(&audio.paused_music_volume_multiplier)
             || !(0.0..=1.0).contains(&audio.room_clear_music_volume_multiplier)
             || !(0.0..=1.0).contains(&audio.chapter_one_music_gain)
+            || !(0.0..=1.0).contains(&audio.chapter_one_ambience_gain)
         {
             return Err(InvalidGameData::from(
                 "audio tuning values are out of range",
@@ -302,6 +313,10 @@ mod tests {
         assert_eq!(data.rooms.len(), 10);
         assert_eq!(data.bonuses.bonuses.len(), 20);
         assert_eq!(data.rooms[&10].enemy_spawns[0].type_id, "warrior");
+        assert_eq!(
+            data.gameplay.player.max_speed_h_s,
+            data.gameplay.player.air_max_speed_h_s
+        );
     }
 
     #[test]

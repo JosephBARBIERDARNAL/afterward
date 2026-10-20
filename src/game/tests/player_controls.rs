@@ -198,6 +198,42 @@ fn default_controls_move_jump_and_dash_the_player() {
         let mut keys = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
         keys.release(KeyCode::ShiftLeft);
         keys.clear();
+    }
+    for _ in 0..3 {
+        app.update();
+        app.world_mut()
+            .resource_mut::<ButtonInput<KeyCode>>()
+            .clear();
+    }
+    app.world_mut()
+        .resource_mut::<ButtonInput<KeyCode>>()
+        .press(KeyCode::KeyA);
+    for _ in 0..5 {
+        app.update();
+        app.world_mut()
+            .resource_mut::<ButtonInput<KeyCode>>()
+            .clear();
+    }
+    let airborne_player = app
+        .world()
+        .get::<PlayerBody>(player)
+        .expect("player should remain spawned");
+    assert!(!airborne_player.grounded);
+    let air_max_speed_h_s = app
+        .world()
+        .resource::<GameData>()
+        .gameplay
+        .player
+        .air_max_speed_h_s;
+    assert!(
+        (airborne_player.velocity.x.abs() / H_WORLD_UNITS - air_max_speed_h_s).abs() < 0.01,
+        "airborne movement should reach the configured maximum horizontal speed"
+    );
+
+    {
+        let mut keys = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
+        keys.release(KeyCode::ShiftLeft);
+        keys.clear();
         keys.press(KeyCode::KeyQ);
     }
     for _ in 0..32 {
