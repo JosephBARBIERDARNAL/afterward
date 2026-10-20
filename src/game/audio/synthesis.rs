@@ -1,4 +1,5 @@
 use super::{EnemySoundStyle, SoundCue};
+use crate::data::PlatformMaterial;
 use bevy::audio::AudioSource;
 use std::sync::Arc;
 
@@ -12,7 +13,8 @@ pub(super) fn cue_specs() -> Vec<(SoundCue, f32, f32, f32, f32)> {
         (UiInvalid, 220.0, 180.0, 0.10, 0.10),
         (Jump, 360.0, 590.0, 0.12, 0.13),
         (Landing, 120.0, 80.0, 0.09, 0.12),
-        (Footstep, 110.0, 75.0, 0.07, 0.055),
+        (Footstep(PlatformMaterial::Soil), 90.0, 58.0, 0.07, 0.055),
+        (Footstep(PlatformMaterial::Stone), 240.0, 390.0, 0.055, 0.05),
         (Dash, 180.0, 90.0, 0.18, 0.18),
         (SwordSwing, 540.0, 190.0, 0.13, 0.12),
         (SwordHit, 920.0, 380.0, 0.12, 0.18),
@@ -28,6 +30,7 @@ pub(super) fn cue_specs() -> Vec<(SoundCue, f32, f32, f32, f32)> {
         (DoorOpen, 310.0, 660.0, 0.28, 0.17),
         (BonusSelected, 740.0, 1110.0, 0.18, 0.16),
         (RunEnded, 310.0, 70.0, 0.75, 0.22),
+        (RunRestarted, 350.0, 780.0, 0.32, 0.20),
         (Victory, 520.0, 1040.0, 1.1, 0.20),
     ];
 
@@ -248,7 +251,7 @@ mod tests {
     use std::collections::BTreeSet;
 
     #[test]
-    fn every_enemy_style_has_distinct_placeholder_cues() {
+    fn enemies_and_special_events_have_placeholder_cues() {
         let cues = cue_specs()
             .into_iter()
             .map(|(cue, ..)| cue)
@@ -262,6 +265,9 @@ mod tests {
             assert!(cues.contains(&SoundCue::EnemyHurt(style)));
             assert!(cues.contains(&SoundCue::EnemyDeath(style)));
         }
+        assert!(cues.contains(&SoundCue::Footstep(PlatformMaterial::Soil)));
+        assert!(cues.contains(&SoundCue::Footstep(PlatformMaterial::Stone)));
+        assert!(cues.contains(&SoundCue::RunRestarted));
     }
 
     #[test]

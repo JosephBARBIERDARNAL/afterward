@@ -220,7 +220,7 @@ pub(super) fn handle_screen_input(
             }
             reset_run(&mut session, &data);
             next_screen.set(GameScreen::Playing);
-            sounds.push(SoundCue::UiConfirm);
+            sounds.push(SoundCue::RunRestarted);
         }
         GameScreen::Settings if controls.just_pressed(GameAction::Pause, &keys) => {
             next_screen.set(GameScreen::Paused);

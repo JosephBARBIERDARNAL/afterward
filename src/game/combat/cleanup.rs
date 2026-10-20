@@ -37,6 +37,7 @@ mod tests {
                 damage: 15.0,
                 knockback_h_s: 0.0,
                 life_s: 1.0,
+                remaining_range: 100.0,
                 friendly: true,
                 half_size: Vec2::splat(4.0),
             })

@@ -11,6 +11,21 @@ pub(super) fn spawn_interface(mut commands: Commands) {
             bottom: px(0),
             ..default()
         },
+        BackgroundColor(Color::srgba(0.015, 0.02, 0.04, 0.0)),
+        Visibility::Hidden,
+        MenuBackdrop,
+        Pickable::IGNORE,
+    ));
+
+    commands.spawn((
+        Node {
+            position_type: PositionType::Absolute,
+            left: px(0),
+            right: px(0),
+            top: px(0),
+            bottom: px(0),
+            ..default()
+        },
         BackgroundColor(Color::srgba(0.78, 0.86, 1.0, 0.72)),
         Visibility::Hidden,
         RoomClearOverlay,
@@ -59,15 +74,32 @@ pub(super) fn spawn_interface(mut commands: Commands) {
             Pickable::IGNORE,
         ))
         .with_children(|parent| {
-            let mut label = parent.spawn((
-                Text::new("AFTERWARD"),
-                TextFont {
-                    font_size: FontSize::Px(36.0),
+            let mut panel = parent.spawn((
+                Node {
+                    width: percent(78),
+                    max_width: px(760),
+                    padding: UiRect::all(px(28)),
+                    flex_direction: FlexDirection::Column,
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::Center,
+                    border_radius: BorderRadius::all(px(8)),
                     ..default()
                 },
-                TextColor(Color::WHITE),
-                ScreenLabel,
+                BackgroundColor(Color::srgba(0.015, 0.02, 0.04, 0.0)),
+                MenuPanel,
+                Pickable::IGNORE,
             ));
+            panel.with_children(|parent| {
+                let mut label = parent.spawn((
+                    Text::new("AFTERWARD"),
+                    TextFont {
+                        font_size: FontSize::Px(32.0),
+                        ..default()
+                    },
+                    TextLayout::justify(Justify::Center),
+                    TextColor(Color::WHITE),
+                    ScreenLabel,
+                ));
             label.with_children(|parent| {
                 for index in 0..2 {
                     parent.spawn((
@@ -103,6 +135,7 @@ pub(super) fn spawn_interface(mut commands: Commands) {
                     },
                     TextColor(Color::WHITE),
                 ));
+            });
             });
         });
 
@@ -147,6 +180,48 @@ pub(super) fn spawn_interface(mut commands: Commands) {
                 HealthFill,
             ));
         });
+}
+
+#[derive(Component)]
+struct MenuBackdrop;
+
+#[derive(Component)]
+struct MenuPanel;
+
+pub(super) fn update_menu_modal(
+    screen: Res<State<GameScreen>>,
+    mut backdrop: Query<(&mut BackgroundColor, &mut Visibility), With<MenuBackdrop>>,
+    mut panel: Query<&mut BackgroundColor, With<MenuPanel>>,
+    mut camera_blur: Query<&mut pause_blur::PauseBlur, With<Camera2d>>,
+) {
+    let is_modal = matches!(
+        screen.get(),
+        GameScreen::MainMenu
+            | GameScreen::Paused
+            | GameScreen::Settings
+            | GameScreen::Controls
+            | GameScreen::Dead
+            | GameScreen::Complete
+    );
+
+    for (mut color, mut visibility) in &mut backdrop {
+        if is_modal {
+            color.0 = Color::srgba(0.015, 0.02, 0.04, 0.36);
+            *visibility = Visibility::Visible;
+        } else {
+            *visibility = Visibility::Hidden;
+        }
+    }
+    for mut color in &mut panel {
+        color.0 = if is_modal {
+            Color::srgba(0.015, 0.02, 0.04, 0.94)
+        } else {
+            Color::srgba(0.015, 0.02, 0.04, 0.0)
+        };
+    }
+    for mut blur in &mut camera_blur {
+        blur.radius_pixels = if is_modal { 1.8 } else { 0.0 };
+    }
 }
 
 pub(super) fn update_letterbox(

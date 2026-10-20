@@ -56,6 +56,7 @@ fn default_controls_move_jump_and_dash_the_player() {
                     right: width,
                     bottom: -H_WORLD_UNITS,
                     top: 0.0,
+                    material: PlatformMaterial::Soil,
                 });
             },
         )

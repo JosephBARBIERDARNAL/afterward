@@ -154,6 +154,7 @@ pub(in crate::game) fn player_attacks(
             )
             * H_WORLD_UNITS
             * player.facing;
+        let remaining_range = data.gameplay.player.gun.range_h * H_WORLD_UNITS;
         let projectile_size = Vec2::new(12.0, 5.0);
         commands.spawn((
             Sprite::from_color(Color::srgb(1.0, 0.83, 0.32), projectile_size),
@@ -165,6 +166,7 @@ pub(in crate::game) fn player_attacks(
                 damage,
                 knockback_h_s: data.gameplay.player.boss_knockback.bullet_h_s,
                 life_s: 2.0,
+                remaining_range,
                 friendly: true,
                 half_size: projectile_size / 2.0,
             },

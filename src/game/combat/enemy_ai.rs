@@ -171,6 +171,7 @@ pub(in crate::game) fn update_enemy_ai(
                             damage: attack.damage,
                             knockback_h_s: 0.0,
                             life_s: 3.0,
+                            remaining_range: attack.projectile_speed_h_s * H_WORLD_UNITS * 3.0,
                             friendly: false,
                             half_size: projectile_size / 2.0,
                         },
@@ -304,5 +305,53 @@ pub(in crate::game) fn update_enemy_ai(
                 set_enemy_animation(&mut sprite, &mut animation, &sheets, &enemy.type_id, "idle");
             }
         }
+    }
+}
+
+pub(in crate::game) fn update_enemy_platform_physics(
+    time: Res<Time>,
+    data: Res<GameData>,
+    mut enemies: Query<(&mut EnemyBody, &mut Transform), Without<PlayerBody>>,
+    platforms: Query<&PlatformSurface>,
+) {
+    let dt = time.delta_secs().min(0.05);
+    let gravity = data.gameplay.player.gravity_h_s2 * H_WORLD_UNITS;
+    let half_width = PLAYER_COLLISION_WIDTH_H * H_WORLD_UNITS / 2.0;
+
+    for (mut enemy, mut transform) in &mut enemies {
+        if enemy.health <= 0.0 {
+            continue;
+        }
+        let gait_offset = transform.translation.y - enemy.home_y;
+        let previous_foot_y = enemy.home_y - enemy.visual_height / 2.0;
+        let overlaps_platform = |platform: &PlatformSurface| {
+            transform.translation.x + half_width > platform.left
+                && transform.translation.x - half_width < platform.right
+        };
+        let standing_platform = platforms.iter().find(|platform| {
+            overlaps_platform(platform) && (platform.top - previous_foot_y).abs() <= 1.0
+        });
+
+        let next_foot_y = if let Some(platform) = standing_platform {
+            enemy.vertical_velocity = 0.0;
+            platform.top
+        } else {
+            enemy.vertical_velocity -= gravity * dt;
+            let mut next_foot_y = previous_foot_y + enemy.vertical_velocity * dt;
+            if enemy.vertical_velocity <= 0.0
+                && let Some(platform) = platforms.iter().find(|platform| {
+                    overlaps_platform(platform)
+                        && previous_foot_y >= platform.top - 1.0
+                        && next_foot_y <= platform.top
+                })
+            {
+                next_foot_y = platform.top;
+                enemy.vertical_velocity = 0.0;
+            }
+            next_foot_y
+        };
+
+        enemy.home_y = next_foot_y + enemy.visual_height / 2.0;
+        transform.translation.y = enemy.home_y + gait_offset;
     }
 }

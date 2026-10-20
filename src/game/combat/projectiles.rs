@@ -59,7 +59,10 @@ pub(in crate::game) fn update_projectiles(
     for (projectile_entity, mut projectile_transform, mut projectile) in &mut projectiles {
         let start = projectile_transform.translation.truncate();
         projectile.life_s -= dt;
-        projectile_transform.translation.x += projectile.velocity_x * dt;
+        let travel = (projectile.velocity_x * dt)
+            .clamp(-projectile.remaining_range, projectile.remaining_range);
+        projectile.remaining_range -= travel.abs();
+        projectile_transform.translation.x += travel;
         let end = projectile_transform.translation.truncate();
         let mut hit = projectile.life_s <= 0.0;
         if projectile.friendly {
@@ -144,6 +147,9 @@ pub(in crate::game) fn update_projectiles(
                     .any(|platform| platform.intersects_projectile(start, end, half_size)))
         {
             sounds.push(SoundCue::BulletEnvironmentHit);
+            hit = true;
+        }
+        if projectile.remaining_range <= 0.0 {
             hit = true;
         }
         if hit {

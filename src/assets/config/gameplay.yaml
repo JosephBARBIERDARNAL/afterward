@@ -25,6 +25,7 @@ player:
     damage: 15
     fire_interval_s: 0.4
     projectile_speed_h_s: 18
+    range_h: 10
   boss_knockback:
     sword_h_s: 2.5
     bullet_h_s: 1.2

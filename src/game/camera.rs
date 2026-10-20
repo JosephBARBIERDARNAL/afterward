@@ -16,6 +16,7 @@ pub(super) fn spawn_camera(mut commands: Commands, data: Res<GameData>) {
             clear_color: ClearColorConfig::Custom(Color::BLACK),
             ..default()
         },
+        pause_blur::PauseBlur::default(),
         RoomCamera {
             width_h: first_room.width_h(&data.gameplay),
             fixed_y_h: first_room.camera.fixed_y_h,

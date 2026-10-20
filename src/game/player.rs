@@ -137,6 +137,7 @@ pub(super) fn update_player(
 
     let was_grounded = player.grounded;
     player.grounded = false;
+    let mut grounded_material = None;
     if player.velocity.y <= 0.0 {
         let current_bottom = transform.translation.y - H_WORLD_UNITS / 2.0;
         for platform in &room_query {
@@ -147,6 +148,7 @@ pub(super) fn update_player(
                 transform.translation.y = platform.top + H_WORLD_UNITS / 2.0;
                 player.velocity.y = 0.0;
                 player.grounded = true;
+                grounded_material = Some(platform.material);
             }
         }
     }
@@ -163,7 +165,9 @@ pub(super) fn update_player(
             data.gameplay.audio.footstep_interval_s
         };
         if player.footstep_timer == 0.0 {
-            sounds.push(SoundCue::Footstep);
+            if let Some(material) = grounded_material {
+                sounds.push(SoundCue::Footstep(material));
+            }
             player.footstep_timer = data.gameplay.audio.footstep_interval_s;
         }
     } else {

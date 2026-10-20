@@ -1,4 +1,5 @@
 use super::*;
+use crate::data::PlatformMaterial;
 use bevy::audio::{
     AudioPlayer, AudioSink, AudioSinkPlayback, AudioSource, PlaybackSettings, Volume,
 };
@@ -31,7 +32,7 @@ pub(super) enum SoundCue {
     UiInvalid,
     Jump,
     Landing,
-    Footstep,
+    Footstep(PlatformMaterial),
     Dash,
     SwordSwing,
     SwordHit,
@@ -53,6 +54,7 @@ pub(super) enum SoundCue {
     DoorOpen,
     BonusSelected,
     RunEnded,
+    RunRestarted,
     Victory,
 }
 
@@ -118,7 +120,7 @@ impl SoundCue {
     }
 
     fn is_terminal(self) -> bool {
-        matches!(self, Self::RunEnded | Self::Victory)
+        matches!(self, Self::RunEnded | Self::RunRestarted | Self::Victory)
     }
 
     pub(super) fn enemy_idle(type_id: &EnemyTypeId) -> Self {
@@ -296,6 +298,7 @@ mod tests {
     fn interface_and_terminal_cues_keep_their_own_audio_class() {
         assert!(SoundCue::UiMove.is_interface());
         assert!(SoundCue::RunEnded.is_terminal());
+        assert!(SoundCue::RunRestarted.is_terminal());
         assert!(!SoundCue::Jump.is_interface());
         assert!(!SoundCue::Victory.is_interface());
     }

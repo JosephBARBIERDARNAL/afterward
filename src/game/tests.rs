@@ -12,6 +12,7 @@ fn projectiles_collide_with_platforms_along_their_travel_path() {
         right: 200.0,
         bottom: 0.0,
         top: 20.0,
+        material: PlatformMaterial::Soil,
     };
 
     assert!(platform.intersects_projectile(

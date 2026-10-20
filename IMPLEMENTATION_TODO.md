@@ -32,4 +32,4 @@
 - [x] Add a visible door-opening / room-transition animation. The door narrows as the screen fades to black, the next room loads under the overlay, and the new room fades in.
 - [x] Add distinct generated placeholder cues for each Chapter 1 enemy's idle, movement, attack warning/execution, hurt, and death events.
 - [x] Fade gameplay sound effects while paused or in menus while keeping interface and terminal cues audible.
-- [ ] Review audio against the full sound specification. Chapter 1 now has generated forest music and an attenuated, looping forest ambience placeholder; replace them with authored tracks when available, and add surface-specific player footsteps after room surface types are defined.
+- [ ] Review audio against the full sound specification. Chapter 1 now has generated forest music, attenuated looping forest ambience, surface-specific soil and stone footsteps, and a distinct run-restart cue. Replace the music placeholders with authored tracks when available.

@@ -30,6 +30,7 @@ pub(super) fn load_sprites(
             SpriteSheet {
                 image,
                 layout,
+                frame_size: Vec2::new(spec.frame_width as f32, spec.frame_height as f32),
                 frames: spec.frames,
                 fps: spec.fps,
             },

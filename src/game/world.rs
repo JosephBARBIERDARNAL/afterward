@@ -114,19 +114,31 @@ pub(super) fn spawn_room_platforms(commands: &mut Commands, room: &RoomConfig) {
             platform.size_h.width_h * H_WORLD_UNITS,
             platform.size_h.height_h * H_WORLD_UNITS,
         );
+        let (body_color, top_color) = match platform.surface {
+            PlatformMaterial::Soil => {
+                (Color::srgb(0.30, 0.20, 0.11), Color::srgb(0.28, 0.48, 0.20))
+            }
+            PlatformMaterial::Stone => {
+                (Color::srgb(0.32, 0.34, 0.36), Color::srgb(0.48, 0.49, 0.46))
+            }
+        };
         commands.spawn((
-            Sprite::from_color(Color::srgb(0.075, 0.11, 0.16), size),
-            Transform::from_xyz(center.x, center.y, 0.0),
             PlatformSurface {
                 left: center.x - size.x / 2.0,
                 right: center.x + size.x / 2.0,
                 bottom: center.y - size.y / 2.0,
                 top: center.y + size.y / 2.0,
+                material: platform.surface,
             },
             RoomEntity,
         ));
         commands.spawn((
-            Sprite::from_color(Color::srgb(0.12, 0.23, 0.19), Vec2::new(size.x, 5.0)),
+            Sprite::from_color(body_color, size),
+            Transform::from_xyz(center.x, center.y, 0.0),
+            RoomEntity,
+        ));
+        commands.spawn((
+            Sprite::from_color(top_color, Vec2::new(size.x, 5.0)),
             Transform::from_xyz(center.x, center.y + size.y / 2.0 - 2.5, 0.2),
             RoomEntity,
         ));
@@ -136,17 +148,22 @@ pub(super) fn spawn_room_platforms(commands: &mut Commands, room: &RoomConfig) {
 pub(super) fn spawn_player(commands: &mut Commands, room: &RoomConfig, sheets: &SpriteSheets) {
     let key = "player_idle_sword";
     let sheet = &sheets.0[key];
+    let mut sprite = Sprite::from_atlas_image(
+        sheet.image.clone(),
+        TextureAtlas {
+            layout: sheet.layout.clone(),
+            index: 0,
+        },
+    );
+    sprite.custom_size = Some(Vec2::new(
+        sheet.frame_size.x * H_WORLD_UNITS / sheet.frame_size.y,
+        H_WORLD_UNITS,
+    ));
     commands.spawn((
-        Sprite::from_atlas_image(
-            sheet.image.clone(),
-            TextureAtlas {
-                layout: sheet.layout.clone(),
-                index: 0,
-            },
-        ),
+        sprite,
         Transform::from_xyz(
             room.player_spawn.x_h * H_WORLD_UNITS,
-            room.player_spawn.y_h * H_WORLD_UNITS,
+            (room.player_spawn.y_h + 0.5) * H_WORLD_UNITS,
             4.0,
         ),
         AnimatedSprite {
@@ -237,6 +254,8 @@ pub(super) fn spawn_enemies(
             .phase_two
             .as_ref()
             .map(|phase| (phase.health_fraction_at_or_below, phase.cooldown_multiplier));
+        let visual_height = sheet.frame_size.y * scale;
+        let home_y = spawn.position_h.y_h * H_WORLD_UNITS + visual_height / 2.0;
         let enemy = commands
             .spawn((
                 Sprite::from_atlas_image(
@@ -248,7 +267,7 @@ pub(super) fn spawn_enemies(
                 ),
                 Transform::from_xyz(
                     spawn.position_h.x_h * H_WORLD_UNITS,
-                    spawn.position_h.y_h * H_WORLD_UNITS,
+                    home_y,
                     3.0,
                 )
                 .with_scale(Vec3::splat(scale)),
@@ -264,7 +283,9 @@ pub(super) fn spawn_enemies(
                     health,
                     max_health: health,
                     movement_speed_h_s,
-                    home_y: spawn.position_h.y_h * H_WORLD_UNITS,
+                    home_y,
+                    visual_height,
+                    vertical_velocity: 0.0,
                     behavior: profile.behavior.clone(),
                     procedural_movement: profile.procedural_movement.as_ref().map(|movement| {
                         ProceduralMovementState {

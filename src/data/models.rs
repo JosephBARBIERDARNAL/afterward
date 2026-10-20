@@ -97,6 +97,7 @@ pub struct GunConfig {
     pub damage: f32,
     pub fire_interval_s: f32,
     pub projectile_speed_h_s: f32,
+    pub range_h: f32,
 }
 
 #[derive(Debug, Deserialize)]
@@ -407,8 +408,16 @@ pub struct CameraConfig {
 
 #[derive(Debug, Deserialize)]
 pub struct PlatformConfig {
+    pub surface: PlatformMaterial,
     pub position_h: SpawnPosition,
     pub size_h: PlatformSize,
+}
+
+#[derive(Debug, Clone, Copy, Deserialize, Eq, Ord, PartialEq, PartialOrd)]
+#[serde(rename_all = "snake_case")]
+pub enum PlatformMaterial {
+    Soil,
+    Stone,
 }
 
 #[derive(Debug, Deserialize)]

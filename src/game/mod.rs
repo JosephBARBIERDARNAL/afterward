@@ -5,7 +5,7 @@ use std::{
 
 use bevy::{ecs::system::SystemParam, prelude::*};
 
-use crate::data::{EnemyAttackConfig, EnemyTypeId, GameData};
+use crate::data::{EnemyAttackConfig, EnemyTypeId, GameData, PlatformMaterial};
 
 mod assets;
 mod audio;
@@ -14,6 +14,7 @@ mod combat;
 mod controls;
 mod flow;
 mod interface;
+mod pause_blur;
 mod player;
 mod screens;
 mod settings;
@@ -36,7 +37,8 @@ pub struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.init_state::<GameScreen>()
+        app.add_plugins(pause_blur::PauseBlurPlugin)
+            .init_state::<GameScreen>()
             .init_resource::<RunSession>()
             .init_resource::<AudioSettings>()
             .init_resource::<ControlBindings>()
@@ -96,6 +98,7 @@ impl Plugin for GamePlugin {
                     interface::update_room_clear_overlay,
                     interface::update_boss_intro_overlay,
                     interface::update_room_transition_overlay,
+                    interface::update_menu_modal,
                     camera::update_background_parallax,
                     interface::update_hud,
                 ),
@@ -107,6 +110,7 @@ impl Plugin for GamePlugin {
                     player::update_player,
                     combat::player_attacks,
                     combat::update_enemy_ai,
+                    combat::update_enemy_platform_physics,
                     combat::update_projectiles,
                     combat::update_damage_numbers,
                     combat::update_dead_enemies,
@@ -214,6 +218,7 @@ struct SpriteSheets(BTreeMap<String, SpriteSheet>);
 struct SpriteSheet {
     image: Handle<Image>,
     layout: Handle<TextureAtlasLayout>,
+    frame_size: Vec2,
     frames: usize,
     fps: f32,
 }
@@ -302,6 +307,8 @@ struct EnemyBody {
     max_health: f32,
     movement_speed_h_s: f32,
     home_y: f32,
+    visual_height: f32,
+    vertical_velocity: f32,
     behavior: String,
     procedural_movement: Option<ProceduralMovementState>,
     preferred_distance_h: Option<(f32, f32)>,
@@ -365,6 +372,7 @@ struct CombatProjectile {
     damage: f32,
     knockback_h_s: f32,
     life_s: f32,
+    remaining_range: f32,
     friendly: bool,
     half_size: Vec2,
 }
@@ -432,6 +440,7 @@ struct PlatformSurface {
     right: f32,
     bottom: f32,
     top: f32,
+    material: PlatformMaterial,
 }
 
 impl PlatformSurface {

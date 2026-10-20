@@ -70,9 +70,11 @@ impl GameData {
             || player.max_speed_h_s <= 0.0
             || !player.air_max_speed_h_s.is_finite()
             || player.air_max_speed_h_s <= 0.0
+            || !player.gun.range_h.is_finite()
+            || player.gun.range_h <= 0.0
         {
             return Err(InvalidGameData::from(
-                "player movement speeds must be finite and positive",
+                "player movement speeds and gun range must be finite and positive",
             ));
         }
         let expected_jump_impulse =
@@ -313,10 +315,19 @@ mod tests {
         assert_eq!(data.rooms.len(), 10);
         assert_eq!(data.bonuses.bonuses.len(), 20);
         assert_eq!(data.rooms[&10].enemy_spawns[0].type_id, "warrior");
+        for room in data.rooms.values() {
+            assert_eq!(room.platforms[0].surface, PlatformMaterial::Soil);
+            assert!(
+                room.platforms[1..]
+                    .iter()
+                    .all(|platform| platform.surface == PlatformMaterial::Stone)
+            );
+        }
         assert_eq!(
             data.gameplay.player.max_speed_h_s,
             data.gameplay.player.air_max_speed_h_s
         );
+        assert_eq!(data.gameplay.player.gun.range_h, 10.0);
     }
 
     #[test]

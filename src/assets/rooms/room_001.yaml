@@ -8,32 +8,42 @@ size:
 background_profile: chapter_01_forest
 player_spawn:
   x_h: 2
-  y_h: 0.5
+  y_h: 0.8
 camera:
   follow_player_x: true
   fixed_y_h: 4.5
 platforms:
-  - position_h: { x: 16, y: -0.5 }
+  - position_h: { x: 16.0, y: 0.3 }
+    surface: soil
     size_h: { width: 32, height: 1 }
-  - position_h: { x: 9, y: 1.25 }
-    size_h: { width: 3, height: 0.5 }
-  - position_h: { x: 17, y: 2 }
-    size_h: { width: 4, height: 0.5 }
-  - position_h: { x: 25, y: 1.25 }
-    size_h: { width: 3, height: 0.5 }
+  - position_h: { x: 9, y: 1.1 }
+    surface: stone
+    size_h: { width: 4.5, height: 0.5 }
+  - position_h: { x: 13, y: 1.35 }
+    surface: stone
+    size_h: { width: 4.5, height: 0.5 }
+  - position_h: { x: 19, y: 1.15 }
+    surface: stone
+    size_h: { width: 4.5, height: 0.5 }
+  - position_h: { x: 24, y: 1.45 }
+    surface: stone
+    size_h: { width: 4.5, height: 0.5 }
+  - position_h: { x: 29, y: 1.2 }
+    surface: stone
+    size_h: { width: 4.0, height: 0.5 }
 decorations: [] # Chapter scenery comes from the shared layered forest profile.
 enemy_spawns:
   - type_id: swordsman
-    position_h: { x: 9, y: 0.5 }
+    position_h: { x: 9, y: 1.35 }
   - type_id: infantryman
-    position_h: { x: 13, y: 0.5 }
+    position_h: { x: 13, y: 0.8 }
   - type_id: swordsman
-    position_h: { x: 19, y: 0.5 }
+    position_h: { x: 19, y: 1.4 }
   - type_id: infantryman
-    position_h: { x: 24, y: 0.5 }
+    position_h: { x: 24, y: 0.8 }
   - type_id: swordsman
-    position_h: { x: 29, y: 0.5 }
+    position_h: { x: 29, y: 1.45 }
 exit:
   x_h: 30.5
-  y_h: 0.5
+  y_h: 0.8
 next_room_id: 2

@@ -96,8 +96,11 @@ The sword attacks horizontally in the direction the player faces, hitting all en
 - All 100 rooms are authored before a build and played in fixed order. Room layouts and enemy rosters are not procedurally generated.
 - Store each room in its own YAML file under `src/assets/rooms/`, named by its zero-padded room number (for example, `src/assets/rooms/room_001.yaml` through `src/assets/rooms/room_100.yaml`). These files are the source of truth for constructing the rooms.
 - Each room file describes its ID, chapter, dimensions, player spawn, background profile, camera anchor, platforms and other collidable geometry, decorative props and their positions, enemy spawns and their configured attributes, and exit position.
+- Player and enemy spawn `position_h.y_h` values mark the feet baseline. The player and every enemy stand on the configured platform top, and sprites are bottom-aligned to that shared baseline even when their source frames have different heights.
+- Platform layouts should form reachable routes: keep platform tops within the player's jump height of nearby surfaces, use short horizontal gaps, and include enough stepping points for the room's width. Place some enemy spawn feet on raised platform tops and the rest on the ground.
 - A room is 2 to 4 times the fixed gameplay viewport's width (32 to 64 H at the initial viewport settings). Room geometry positions and dimensions use `H`, the player's collision-box height, as the reference unit.
 - Each chapter has one shared background profile, including its backdrop and parallax layers. All ten rooms in that chapter reference the same profile. Room layouts, platform placement, enemy placement, and decorative props vary so rooms in a chapter do not all look alike.
+- Room platform entries declare a `surface`: Chapter 1 ground platforms use `soil` for grass-topped soil, and raised platforms use `stone`. The material controls both platform appearance and footsteps.
 - Keep decorations separate from platforms and other collidable geometry so visual placement does not implicitly make an object climbable.
 - Each room's `enemy_spawns` list defines its fixed enemy roster. The number of enemies is the list length; do not duplicate it in a separately edited count. Each entry specifies an enemy type and position and resolves its configured attributes from YAML, using shared enemy-type defaults and any room-specific overrides. Enemy counts, types, positions, and configured attributes do not randomize at runtime; enemy AI still runs during play.
 - Each room contains 5 to 15 enemy spawns and at least two enemy types, except boss rooms. Bosses are included in their room's enemy spawn list.
@@ -119,15 +122,15 @@ size:
   width_viewports: null # 2 to 4
   height_h: null
 background_profile: null # shared by all rooms in this chapter
-player_spawn:
+player_spawn: # y_h marks the player's feet baseline
   x_h: null
   y_h: null
 camera:
   follow_player_x: true
   fixed_y_h: null
-platforms: [] # entries define position_h, size_h, and collision geometry
+platforms: [] # entries define surface (soil or stone), position_h, size_h, and collision geometry
 decorations: [] # entries define asset, position_h, and visual layer
-enemy_spawns: [] # entries define type_id, position_h, and optional stat overrides
+enemy_spawns: [] # position_h.y_h marks enemy feet; entries define type_id and optional stat overrides
 exit:
   x_h: null
   y_h: null
