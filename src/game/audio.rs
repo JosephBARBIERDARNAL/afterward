@@ -67,7 +67,7 @@ pub(super) enum EnemySoundStyle {
     GorgonOne,
     GorgonTwo,
     GorgonThree,
-    Warrior,
+    EvilWizard,
 }
 
 impl EnemySoundStyle {
@@ -79,7 +79,7 @@ impl EnemySoundStyle {
         Self::GorgonOne,
         Self::GorgonTwo,
         Self::GorgonThree,
-        Self::Warrior,
+        Self::EvilWizard,
     ];
 
     fn base_frequency_hz(self) -> f32 {
@@ -91,7 +91,7 @@ impl EnemySoundStyle {
             Self::GorgonOne => 560.0,
             Self::GorgonTwo => 300.0,
             Self::GorgonThree => 145.0,
-            Self::Warrior => 72.0,
+            Self::EvilWizard => 72.0,
         }
     }
 }
@@ -105,7 +105,7 @@ impl From<&EnemyTypeId> for EnemySoundStyle {
             "gorgon_1" => Self::GorgonOne,
             "gorgon_2" => Self::GorgonTwo,
             "gorgon_3" => Self::GorgonThree,
-            "warrior" => Self::Warrior,
+            "evil_wizard" => Self::EvilWizard,
             _ => Self::Generic,
         }
     }

@@ -48,7 +48,7 @@ platforms:
     size_h: { width: 4, height: 0.5 }
 decorations: []
 enemy_spawns:
-  - type_id: warrior
+  - type_id: evil_wizard
     position_h: { x: 48, y: 2.1 }
 exit:
   x_h: 62.5

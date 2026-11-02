@@ -125,7 +125,25 @@ impl GameData {
             ));
         }
 
+        let jumping = &self.enemies.jumping;
+        if !jumping.air_speed_h_s.is_finite()
+            || jumping.air_speed_h_s <= 0.0
+            || !jumping.cooldown_s.is_finite()
+            || jumping.cooldown_s < 0.0
+            || !jumping.level_change_threshold_h.is_finite()
+            || jumping.level_change_threshold_h <= 0.0
+        {
+            return Err(InvalidGameData::from(
+                "enemy jumping tuning values must be finite and positive",
+            ));
+        }
         for enemy in self.enemies.types.values() {
+            let jump_height_h = enemy.jump_height_h.unwrap_or(jumping.jump_height_h);
+            if !jump_height_h.is_finite() || jump_height_h <= 0.0 {
+                return Err(InvalidGameData::from(
+                    "enemy jump heights must be finite and positive",
+                ));
+            }
             if enemy.procedural_movement.as_ref().is_some_and(|movement| {
                 !movement.bob_height_h.is_finite()
                     || movement.bob_height_h < 0.0
@@ -231,10 +249,10 @@ impl GameData {
             } else if !room
                 .enemy_spawns
                 .iter()
-                .any(|spawn| spawn.type_id == "warrior")
+                .any(|spawn| spawn.type_id == "evil_wizard")
             {
                 return Err(InvalidGameData::from(
-                    "room 10 must include the Warrior boss",
+                    "room 10 must include the Evil Wizard boss",
                 ));
             }
 
@@ -330,7 +348,7 @@ mod tests {
 
         assert_eq!(data.rooms.len(), 10);
         assert_eq!(data.bonuses.bonuses.len(), 20);
-        assert_eq!(data.rooms[&10].enemy_spawns[0].type_id, "warrior");
+        assert_eq!(data.rooms[&10].enemy_spawns[0].type_id, "evil_wizard");
         for room in data.rooms.values() {
             assert_eq!(room.platforms[0].surface, PlatformMaterial::Soil);
             assert!(

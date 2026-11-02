@@ -33,6 +33,7 @@ pub(in crate::game) fn update_enemy_ai(
     resources: EnemyAiResources,
     mut player_query: EnemyAiPlayerQuery,
     mut enemies: EnemyAiEnemiesQuery,
+    platforms: Query<&PlatformSurface>,
 ) {
     let EnemyAiResources {
         time,
@@ -46,6 +47,13 @@ pub(in crate::game) fn update_enemy_ai(
         return;
     };
     let dt = time.delta_secs().min(0.05);
+    let gravity = data.gameplay.player.gravity_h_s2 * H_WORLD_UNITS;
+    let jumping = &data.enemies.jumping;
+    let level_change_threshold = jumping.level_change_threshold_h * H_WORLD_UNITS;
+    let player_feet = Vec2::new(
+        player_transform.translation.x,
+        player_transform.translation.y - 0.5 * H_WORLD_UNITS,
+    );
     player.invulnerability_timer = (player.invulnerability_timer - dt).max(0.0);
     player.dash_invulnerability_timer = (player.dash_invulnerability_timer - dt).max(0.0);
 
@@ -64,6 +72,7 @@ pub(in crate::game) fn update_enemy_ai(
         enemy.marked_timer = (enemy.marked_timer - dt).max(0.0);
         enemy.attack_cooldown = (enemy.attack_cooldown - dt).max(0.0);
         enemy.hurt_timer = (enemy.hurt_timer - dt).max(0.0);
+        enemy.jump_cooldown = (enemy.jump_cooldown - dt).max(0.0);
         if enemy.knockback_velocity.abs() > 0.01 {
             transform.translation.x += enemy.knockback_velocity * H_WORLD_UNITS * dt;
             enemy.knockback_velocity = move_towards(enemy.knockback_velocity, 0.0, 14.0 * dt);
@@ -89,6 +98,52 @@ pub(in crate::game) fn update_enemy_ai(
             continue;
         }
         sprite.flip_x = dx < 0.0;
+        let feet = Vec2::new(transform.translation.x, enemy.home_y - enemy.feet_offset);
+
+        // Airborne after a jump or a step off a ledge: physics owns the motion.
+        if !enemy.grounded {
+            transform.translation.y = enemy.home_y;
+            transform.rotation = Quat::IDENTITY;
+            let action = if enemy.vertical_velocity > 0.0 {
+                "jump"
+            } else {
+                "fall"
+            };
+            set_enemy_animation(&mut sprite, &mut animation, &sheets, &enemy.type_id, action);
+            if enemy.type_id != "evil_wizard" {
+                // Without jump art, hold the current walk frame in the air.
+                animation.timer.reset();
+            }
+            continue;
+        }
+        // A landed jump always ends here; a slam also resolves its impact.
+        if let Some(jump) = enemy.jump.take()
+            && jump.slam
+            && let Some(attack) = enemy.attacks.get(enemy.active_attack).cloned()
+        {
+            sounds.push(SoundCue::EnemyAttack(audio::EnemySoundStyle::from(
+                &enemy.type_id,
+            )));
+            let landing = player_feet - feet;
+            if landing.x.abs() <= attack.landing_radius_h * H_WORLD_UNITS
+                && landing.y.abs() <= attack.landing_radius_h * H_WORLD_UNITS
+            {
+                apply_player_damage(
+                    PlayerDamageResources {
+                        commands: &mut commands,
+                        data: &data,
+                        session: &mut session,
+                        next_screen: &mut next_screen,
+                        sounds: &mut sounds,
+                    },
+                    PlayerDamageTarget {
+                        player: &mut player,
+                        transform: player_transform,
+                    },
+                    attack.damage,
+                );
+            }
+        }
 
         if enemy.hurt_timer > 0.0 {
             if enemy.procedural_movement.is_some() {
@@ -105,60 +160,40 @@ pub(in crate::game) fn update_enemy_ai(
                 transform.rotation = Quat::IDENTITY;
             }
             enemy.windup_remaining = (enemy.windup_remaining - dt).max(0.0);
-            if enemy.type_id == "warrior"
-                && enemy.windup_remaining <= 0.4
-                && let Some(attack) = enemy.attacks.get(enemy.active_attack)
-                && attack.kind == "jump_slam"
-                && animation.sheet == "boss_jump"
-            {
-                set_enemy_animation(
-                    &mut sprite,
-                    &mut animation,
-                    &sheets,
-                    &enemy.type_id,
-                    "attack_3",
-                );
-            }
             if enemy.windup_remaining == 0.0
                 && let Some(attack) = enemy.attacks.get(enemy.active_attack).cloned()
             {
-                sounds.push(SoundCue::EnemyAttack(audio::EnemySoundStyle::from(
-                    &enemy.type_id,
-                )));
                 let kind = attack.kind.as_str();
                 if kind == "jump_slam" {
-                    transform.translation.y = enemy.home_y;
+                    // Leap at the player; the slam resolves on touchdown.
+                    let jump_height = enemy.jump_height_h * H_WORLD_UNITS;
+                    let arc = JumpArc::between(
+                        feet,
+                        Vec2::new(player_feet.x, player_feet.y.min(feet.y + jump_height)),
+                        jump_height,
+                        gravity,
+                    );
+                    let air_speed = jumping.air_speed_h_s * H_WORLD_UNITS;
+                    enemy.vertical_velocity = arc.vertical_velocity;
+                    enemy.grounded = false;
+                    enemy.jump = Some(EnemyJump {
+                        velocity_x: arc.horizontal_velocity.clamp(-air_speed, air_speed),
+                        slam: true,
+                        landed: false,
+                    });
                     set_enemy_animation(
                         &mut sprite,
                         &mut animation,
                         &sheets,
                         &enemy.type_id,
-                        "land",
+                        "jump",
                     );
-                    let landing_distance_h =
-                        (player_transform.translation.x - transform.translation.x).abs()
-                            / H_WORLD_UNITS;
-                    let landing_height =
-                        (player_transform.translation.y - transform.translation.y).abs();
-                    if landing_distance_h <= attack.landing_radius_h
-                        && landing_height <= attack.landing_radius_h * H_WORLD_UNITS
-                    {
-                        apply_player_damage(
-                            PlayerDamageResources {
-                                commands: &mut commands,
-                                data: &data,
-                                session: &mut session,
-                                next_screen: &mut next_screen,
-                                sounds: &mut sounds,
-                            },
-                            PlayerDamageTarget {
-                                player: &mut player,
-                                transform: player_transform,
-                            },
-                            attack.damage,
-                        );
-                    }
-                } else if kind.contains("projectile") {
+                    continue;
+                }
+                sounds.push(SoundCue::EnemyAttack(audio::EnemySoundStyle::from(
+                    &enemy.type_id,
+                )));
+                if kind.contains("projectile") {
                     let direction = if dx >= 0.0 { 1.0 } else { -1.0 };
                     let projectile_size = Vec2::new(14.0, 8.0);
                     commands.spawn((
@@ -232,9 +267,78 @@ pub(in crate::game) fn update_enemy_ai(
         } else {
             (0.0, attack.reach_h)
         };
-        let should_approach = distance_h > maximum_distance;
-        let should_retreat = distance_h < minimum_distance;
-        if should_approach || should_retreat {
+        // Only a grounded player defines a level; a mid-jump player does not
+        // send enemies scrambling for platforms.
+        let rise = player_feet.y - feet.y;
+        let other_level = player.grounded && rise.abs() > level_change_threshold;
+        let standing = platforms.iter().find(|platform| {
+            enemy.grounded
+                && feet.x > platform.left
+                && feet.x < platform.right
+                && (platform.top - feet.y).abs() <= 1.0
+        });
+        let should_approach = distance_h > maximum_distance || other_level;
+        let should_retreat = !other_level && distance_h < minimum_distance;
+        let mut direction = match standing {
+            // To reach a player below, head for the nearest ledge of this platform.
+            Some(platform)
+                if other_level
+                    && rise < 0.0
+                    && (platform.left..=platform.right).contains(&player_feet.x) =>
+            {
+                if platform.right - feet.x < feet.x - platform.left {
+                    1.0
+                } else {
+                    -1.0
+                }
+            }
+            _ if should_approach => dx.signum(),
+            _ => -dx.signum(),
+        };
+        let plan = standing
+            .filter(|_| should_approach || should_retreat)
+            .and_then(|platform| {
+                JumpRoute {
+                    feet,
+                    target_feet: player_feet,
+                    direction,
+                    jump_height: enemy.jump_height_h * H_WORLD_UNITS,
+                    air_speed: jumping.air_speed_h_s * H_WORLD_UNITS,
+                    gravity,
+                    level_change_threshold,
+                }
+                .plan(platform, platforms.iter())
+            });
+        let mut waiting = false;
+        match plan {
+            Some(JumpPlan::Leap(arc)) if enemy.jump_cooldown == 0.0 => {
+                enemy.vertical_velocity = arc.vertical_velocity;
+                enemy.grounded = false;
+                enemy.jump_cooldown = jumping.cooldown_s;
+                enemy.jump = Some(EnemyJump {
+                    velocity_x: arc.horizontal_velocity,
+                    slam: false,
+                    landed: false,
+                });
+                transform.translation.y = enemy.home_y;
+                transform.rotation = Quat::IDENTITY;
+                set_enemy_animation(&mut sprite, &mut animation, &sheets, &enemy.type_id, "jump");
+                continue;
+            }
+            Some(JumpPlan::Leap(_)) => waiting = true,
+            Some(JumpPlan::WalkTo(takeoff_x)) => {
+                if (takeoff_x - feet.x).abs() > 1.0 {
+                    direction = (takeoff_x - feet.x).signum();
+                } else {
+                    waiting = true;
+                }
+            }
+            None => {
+                // Directly below a higher player with no route up: wait rather than jitter.
+                waiting = other_level && rise > 0.0 && dx.abs() < 0.5 * H_WORLD_UNITS;
+            }
+        }
+        if (should_approach || should_retreat) && !waiting {
             enemy.movement_sound_timer = (enemy.movement_sound_timer - dt).max(0.0);
             if enemy.movement_sound_timer == 0.0 {
                 sounds.push(SoundCue::EnemyMovement(audio::EnemySoundStyle::from(
@@ -242,11 +346,9 @@ pub(in crate::game) fn update_enemy_ai(
                 )));
                 enemy.movement_sound_timer = data.gameplay.audio.footstep_interval_s;
             }
-            let direction = if should_approach {
-                dx.signum()
-            } else {
-                -dx.signum()
-            };
+            if should_approach {
+                sprite.flip_x = direction < 0.0;
+            }
             let speed = enemy.movement_speed_h_s * H_WORLD_UNITS * dt;
             transform.translation.x += direction * speed;
             let room_width_h = data.rooms[&session.room_id].width_h(&data.gameplay);
@@ -273,7 +375,7 @@ pub(in crate::game) fn update_enemy_ai(
                 transform.translation.y = enemy.home_y;
                 transform.rotation = Quat::IDENTITY;
             }
-            if enemy.attack_cooldown <= 0.0 {
+            if enemy.attack_cooldown <= 0.0 && !other_level {
                 enemy.movement_sound_timer = 0.0;
                 enemy.active_attack = enemy.next_attack;
                 enemy.next_attack = (enemy.next_attack + 1) % enemy.attacks.len();
@@ -286,14 +388,10 @@ pub(in crate::game) fn update_enemy_ai(
                 sounds.push(SoundCue::EnemyTelegraph(audio::EnemySoundStyle::from(
                     &enemy.type_id,
                 )));
-                if attack.kind == "jump_slam" {
-                    transform.translation.x += dx.signum() * distance_h.min(1.0) * H_WORLD_UNITS;
-                    transform.translation.y = enemy.home_y + H_WORLD_UNITS * 1.5;
-                }
                 let action = match attack.kind.as_str() {
                     "telegraphed_lunge" => "attack_2",
                     "jump_slam" => "jump",
-                    _ if enemy.type_id == "warrior" => "attack_1",
+                    _ if enemy.type_id == "evil_wizard" => "attack_1",
                     _ => "attack",
                 };
                 set_enemy_animation(&mut sprite, &mut animation, &sheets, &enemy.type_id, action);
@@ -311,41 +409,45 @@ pub(in crate::game) fn update_enemy_ai(
 pub(in crate::game) fn update_enemy_platform_physics(
     time: Res<Time>,
     data: Res<GameData>,
+    session: Res<RunSession>,
     mut enemies: Query<(&mut EnemyBody, &mut Transform), Without<PlayerBody>>,
     platforms: Query<&PlatformSurface>,
 ) {
     let dt = time.delta_secs().min(0.05);
     let gravity = data.gameplay.player.gravity_h_s2 * H_WORLD_UNITS;
     let half_width = PLAYER_COLLISION_WIDTH_H * H_WORLD_UNITS / 2.0;
+    let room_width = data.rooms[&session.room_id].width_h(&data.gameplay) * H_WORLD_UNITS;
 
     for (mut enemy, mut transform) in &mut enemies {
         if enemy.health <= 0.0 {
-            continue;
+            // Corpses drop straight down instead of finishing a leap.
+            enemy.jump = None;
         }
-        if enemy.windup_remaining > 0.0
-            && enemy
-                .attacks
-                .get(enemy.active_attack)
-                .is_some_and(|attack| attack.kind == "jump_slam")
-        {
-            continue;
+        if let Some(jump) = enemy.jump.filter(|jump| !jump.landed) {
+            transform.translation.x =
+                (transform.translation.x + jump.velocity_x * dt).clamp(24.0, room_width - 24.0);
         }
         let gait_offset = transform.translation.y - enemy.home_y;
-        let previous_foot_y = enemy.home_y - enemy.visual_height / 2.0;
+        let previous_foot_y = enemy.home_y - enemy.feet_offset;
         let overlaps_platform = |platform: &PlatformSurface| {
             transform.translation.x + half_width > platform.left
                 && transform.translation.x - half_width < platform.right
         };
         let standing_platform = platforms.iter().find(|platform| {
-            overlaps_platform(platform) && (platform.top - previous_foot_y).abs() <= 1.0
+            enemy.vertical_velocity <= 0.0
+                && overlaps_platform(platform)
+                && (platform.top - previous_foot_y).abs() <= 1.0
         });
 
-        let next_foot_y = if let Some(platform) = standing_platform {
+        let (next_foot_y, grounded) = if let Some(platform) = standing_platform {
             enemy.vertical_velocity = 0.0;
-            platform.top
+            (platform.top, true)
         } else {
+            // Average velocity over the frame keeps jump arcs exact at any frame rate.
+            let launch_velocity = enemy.vertical_velocity;
             enemy.vertical_velocity -= gravity * dt;
-            let mut next_foot_y = previous_foot_y + enemy.vertical_velocity * dt;
+            let next_foot_y =
+                previous_foot_y + (launch_velocity + enemy.vertical_velocity) / 2.0 * dt;
             if enemy.vertical_velocity <= 0.0
                 && let Some(platform) = platforms.iter().find(|platform| {
                     overlaps_platform(platform)
@@ -353,13 +455,18 @@ pub(in crate::game) fn update_enemy_platform_physics(
                         && next_foot_y <= platform.top
                 })
             {
-                next_foot_y = platform.top;
                 enemy.vertical_velocity = 0.0;
+                (platform.top, true)
+            } else {
+                (next_foot_y, false)
             }
-            next_foot_y
         };
 
-        enemy.home_y = next_foot_y + enemy.visual_height / 2.0;
+        enemy.grounded = grounded;
+        if grounded && let Some(jump) = &mut enemy.jump {
+            jump.landed = true;
+        }
+        enemy.home_y = next_foot_y + enemy.feet_offset;
         transform.translation.y = enemy.home_y + gait_offset;
     }
 }

@@ -36,11 +36,34 @@ const PLAYER_COLLISION_WIDTH_H: f32 = 0.6;
 
 pub struct GamePlugin;
 
+/// Room a new run starts in. Defaults to room 1; `--room <id>` overrides it
+/// for debugging, and restarts from the pause menu return to the same room.
+#[derive(Resource, Clone, Copy, Debug, PartialEq, Eq)]
+pub struct StartRoom(pub u16);
+
+impl Default for StartRoom {
+    fn default() -> Self {
+        Self(1)
+    }
+}
+
+impl std::str::FromStr for StartRoom {
+    type Err = String;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        value
+            .parse()
+            .map(Self)
+            .map_err(|_| format!("--room expects a room ID such as 3, got {value:?}"))
+    }
+}
+
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(pause_blur::PauseBlurPlugin)
             .init_state::<GameScreen>()
             .init_resource::<RunSession>()
+            .init_resource::<StartRoom>()
             .init_resource::<AudioSettings>()
             .init_resource::<ControlBindings>()
             .init_resource::<SoundQueue>()
@@ -297,9 +320,13 @@ struct EnemyBody {
     max_health: f32,
     movement_speed_h_s: f32,
     home_y: f32,
-    visual_height: f32,
+    feet_offset: f32,
     visible_top_offset: f32,
     vertical_velocity: f32,
+    grounded: bool,
+    jump_height_h: f32,
+    jump_cooldown: f32,
+    jump: Option<EnemyJump>,
     behavior: String,
     procedural_movement: Option<ProceduralMovementState>,
     preferred_distance_h: Option<(f32, f32)>,
@@ -316,6 +343,13 @@ struct EnemyBody {
     phase_two_announced: bool,
     marked_timer: f32,
     movement_sound_timer: f32,
+}
+
+#[derive(Clone, Copy)]
+struct EnemyJump {
+    velocity_x: f32,
+    slam: bool,
+    landed: bool,
 }
 
 struct ProceduralMovementState {
@@ -518,7 +552,7 @@ impl EnemyTypeId {
             "gorgon_1" => "enemy_gorgon_1_idle",
             "gorgon_2" => "enemy_gorgon_2_idle",
             "gorgon_3" => "enemy_gorgon_3_idle",
-            "warrior" => "boss_idle",
+            "evil_wizard" => "boss_idle",
             _ => "enemy_swordsman_idle",
         }
     }

@@ -138,7 +138,16 @@ pub struct EnemyTypes {
     pub detection_range_h: f32,
     pub retain_target_after_detection: bool,
     pub damage_triggers_combat: bool,
+    pub jumping: EnemyJumpingConfig,
     pub types: BTreeMap<EnemyTypeId, EnemyTypeConfig>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct EnemyJumpingConfig {
+    pub jump_height_h: f32,
+    pub air_speed_h_s: f32,
+    pub cooldown_s: f32,
+    pub level_change_threshold_h: f32,
 }
 
 #[derive(Debug, Clone, Eq, Ord, PartialEq, PartialOrd)]
@@ -199,6 +208,7 @@ impl PartialEq<&str> for EnemyTypeId {
 pub struct EnemyTypeConfig {
     pub health: f32,
     pub movement_speed_h_s: f32,
+    pub jump_height_h: Option<f32>,
     pub behavior: String,
     pub procedural_movement: Option<ProceduralMovementConfig>,
     pub preferred_distance_h: Option<DistanceRange>,

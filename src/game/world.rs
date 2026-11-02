@@ -216,18 +216,24 @@ pub(super) fn spawn_enemies(
         let profile = &data.enemies.types[&spawn.type_id];
         let key = spawn.type_id.idle_sheet();
         let sheet = &sheets.0[key];
-        let scale = if spawn.type_id == "warrior" {
-            2.0
+        let scale = if spawn.type_id == "evil_wizard" {
+            1.2
         } else {
             ENEMY_SPRITE_SCALE
         };
-        let (frame_top_padding_px, frame_bottom_padding_px) = match &*spawn.type_id {
-            "swordsman" => (61.0, 0.0),
-            "infantryman" => (56.0, 0.0),
-            "destroyer" | "gorgon_1" | "gorgon_2" | "gorgon_3" => (51.0, 0.0),
-            "warrior" => (10.0, 7.0),
-            _ => (0.0, 0.0),
-        };
+        // Source pixels: empty rows above and below the figure, and the height
+        // of the entity origin above the feet. Combat and AI measure from that
+        // origin, so it sits mid-body rather than mid-frame for padded sheets.
+        let (frame_top_padding_px, frame_bottom_padding_px, origin_above_feet_px) =
+            match &*spawn.type_id {
+                "swordsman" => (61.0, 0.0, sheet.frame_size.y / 2.0),
+                "infantryman" => (56.0, 0.0, sheet.frame_size.y / 2.0),
+                "destroyer" | "gorgon_1" | "gorgon_2" | "gorgon_3" => {
+                    (51.0, 0.0, sheet.frame_size.y / 2.0)
+                }
+                "evil_wizard" => (63.0, 83.0, 26.0),
+                _ => (0.0, 0.0, sheet.frame_size.y / 2.0),
+            };
         let mut attacks = if profile.attacks.is_empty() {
             profile
                 .attack
@@ -268,10 +274,13 @@ pub(super) fn spawn_enemies(
             .phase_two
             .as_ref()
             .map(|phase| (phase.health_fraction_at_or_below, phase.cooldown_multiplier));
-        let visual_height = sheet.frame_size.y * scale;
-        let visible_top_offset =
-            (sheet.frame_size.y / 2.0 - frame_top_padding_px - frame_bottom_padding_px) * scale;
-        let home_y = spawn.position_h.y_h * H_WORLD_UNITS + visual_height / 2.0;
+        let feet_offset = origin_above_feet_px * scale;
+        let visible_top_offset = (sheet.frame_size.y
+            - frame_top_padding_px
+            - frame_bottom_padding_px
+            - origin_above_feet_px)
+            * scale;
+        let home_y = spawn.position_h.y_h * H_WORLD_UNITS + feet_offset;
         let enemy = commands
             .spawn((
                 Sprite::from_atlas_image(
@@ -281,7 +290,10 @@ pub(super) fn spawn_enemies(
                         index: 0,
                     },
                 ),
-                Anchor(Vec2::new(0.0, frame_bottom_padding_px / sheet.frame_size.y)),
+                Anchor(Vec2::new(
+                    0.0,
+                    (frame_bottom_padding_px + origin_above_feet_px) / sheet.frame_size.y - 0.5,
+                )),
                 Transform::from_xyz(spawn.position_h.x_h * H_WORLD_UNITS, home_y, 3.0)
                     .with_scale(Vec3::splat(scale)),
                 AnimatedSprite {
@@ -297,9 +309,15 @@ pub(super) fn spawn_enemies(
                     max_health: health,
                     movement_speed_h_s,
                     home_y,
-                    visual_height,
+                    feet_offset,
                     visible_top_offset,
                     vertical_velocity: 0.0,
+                    grounded: true,
+                    jump_height_h: profile
+                        .jump_height_h
+                        .unwrap_or(data.enemies.jumping.jump_height_h),
+                    jump_cooldown: 0.0,
+                    jump: None,
                     behavior: profile.behavior.clone(),
                     procedural_movement: profile.procedural_movement.as_ref().map(|movement| {
                         ProceduralMovementState {

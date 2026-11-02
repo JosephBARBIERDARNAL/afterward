@@ -15,7 +15,7 @@ pub(super) fn update_screen_text(
             String::from("PAUSED\n\nENTER  Continue\nS  Settings\nR  Restart\nM  Main menu")
         }
         GameScreen::RoomClear => String::from("ROOM CLEARED"),
-        GameScreen::BossIntro => String::from("CHAPTER ONE\n\nTHE WARRIOR"),
+        GameScreen::BossIntro => String::from("CHAPTER ONE\n\nTHE EVIL WIZARD"),
         GameScreen::Transitioning => data
             .rooms
             .get(&session.room_id)
@@ -86,6 +86,7 @@ pub(super) struct ScreenInputResources<'w> {
     screen: Res<'w, State<GameScreen>>,
     next_screen: ResMut<'w, NextState<GameScreen>>,
     data: Res<'w, GameData>,
+    start_room: Res<'w, StartRoom>,
     session: ResMut<'w, RunSession>,
     settings: ResMut<'w, AudioSettings>,
     controls: ResMut<'w, ControlBindings>,
@@ -103,6 +104,7 @@ pub(super) fn handle_screen_input(
         screen,
         mut next_screen,
         data,
+        start_room,
         mut session,
         mut settings,
         mut controls,
@@ -110,8 +112,7 @@ pub(super) fn handle_screen_input(
     } = resources;
     match screen.get() {
         GameScreen::MainMenu if controls.just_pressed(GameAction::Interact, &keys) => {
-            reset_run(&mut session, &data);
-            next_screen.set(GameScreen::Playing);
+            next_screen.set(reset_run(&mut session, &data, *start_room));
             sounds.push(SoundCue::UiConfirm);
         }
         GameScreen::Playing if controls.just_pressed(GameAction::Pause, &keys) => {
@@ -137,8 +138,7 @@ pub(super) fn handle_screen_input(
             for entity in &room_entities {
                 commands.entity(entity).despawn();
             }
-            reset_run(&mut session, &data);
-            next_screen.set(GameScreen::Playing);
+            next_screen.set(reset_run(&mut session, &data, *start_room));
             sounds.push(SoundCue::RunRestarted);
         }
         GameScreen::Settings if controls.just_pressed(GameAction::Pause, &keys) => {
@@ -227,8 +227,10 @@ pub(super) fn handle_screen_input(
     }
 }
 
-fn reset_run(session: &mut RunSession, data: &GameData) {
-    session.room_id = 1;
+/// Resets the run to `start_room` and returns the screen that opens it: the
+/// boss room opens on its intro, like arriving there through a door.
+fn reset_run(session: &mut RunSession, data: &GameData, start_room: StartRoom) -> GameScreen {
+    session.room_id = start_room.0;
     session.max_health = data.gameplay.player.max_health;
     session.health = session.max_health;
     session.rerolls = data.gameplay.room_flow.bonus_rerolls_per_run;
@@ -240,4 +242,9 @@ fn reset_run(session: &mut RunSession, data: &GameData) {
     session.room_ward_used = false;
     session.door_open = false;
     session.world_loaded = false;
+    if session.room_id == 10 {
+        GameScreen::BossIntro
+    } else {
+        GameScreen::Playing
+    }
 }

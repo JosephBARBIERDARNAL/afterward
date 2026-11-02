@@ -3,6 +3,17 @@
 detection_range_h: 10
 retain_target_after_detection: true
 damage_triggers_combat: true
+# Shared enemy jumping. Engaged enemies jump to reach the player's level (a
+# higher platform, or across a gap at their own level) only when a platform is
+# reachable within jump_height_h and air_speed_h_s; they walk off ledges to
+# drop down. The player counts as on another level once their grounded feet
+# differ from the enemy's by more than level_change_threshold_h. Each type may
+# override jump_height_h.
+jumping:
+  jump_height_h: 2.25
+  air_speed_h_s: 5
+  cooldown_s: 0.6
+  level_change_threshold_h: 1
 types:
   swordsman:
     health: 30
@@ -71,9 +82,10 @@ types:
       reach_h: 1.6
       cooldown_s: 1.8
       windup_s: 0.55
-  warrior:
+  evil_wizard:
     health: 300
     movement_speed_h_s: 3
+    jump_height_h: 2.75
     behavior: boss
     attacks:
       - kind: two_hit_melee_combo
@@ -86,6 +98,7 @@ types:
         damage: 15
         cooldown_s: 1.9
         windup_s: 0.6
+      # Wind-up is the crouch before take-off; damage lands on touchdown.
       - kind: jump_slam
         damage: 18
         landing_radius_h: 2

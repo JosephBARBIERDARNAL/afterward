@@ -36,7 +36,7 @@ pub(super) fn cue_specs() -> Vec<(SoundCue, f32, f32, f32, f32)> {
 
     for style in EnemySoundStyle::ALL {
         let base = style.base_frequency_hz();
-        let telegraph_gain = if style == EnemySoundStyle::Warrior {
+        let telegraph_gain = if style == EnemySoundStyle::EvilWizard {
             0.30
         } else {
             0.14

@@ -48,6 +48,7 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
         )))
         .init_state::<GameScreen>()
         .init_resource::<RunSession>()
+        .init_resource::<StartRoom>()
         .init_resource::<AudioSettings>()
         .insert_resource(RandomState(0x4a75_6572_6e65_7974))
         .insert_resource(PhaseTimer(Timer::from_seconds(1.0, TimerMode::Once)))
@@ -323,12 +324,12 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
     assert_eq!(session.owned_bonuses.len(), 10);
     assert_eq!(owned_bonuses.len(), session.owned_bonuses.len());
     assert_eq!(cleared_rosters, expected_rosters);
-    let warrior = enemy_bodies
+    let evil_wizard = enemy_bodies
         .iter(app.world())
-        .find(|enemy| enemy.type_id == "warrior")
-        .expect("room 10 should spawn the Warrior from YAML");
-    assert_eq!(warrior.health, 0.0);
-    assert!(warrior.phase_two_announced);
+        .find(|enemy| enemy.type_id == "evil_wizard")
+        .expect("room 10 should spawn the Evil Wizard from YAML");
+    assert_eq!(evil_wizard.health, 0.0);
+    assert!(evil_wizard.phase_two_announced);
 }
 
 fn spawn_test_room(

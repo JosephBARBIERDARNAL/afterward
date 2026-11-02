@@ -3,6 +3,7 @@ use super::*;
 mod cleanup;
 mod damage;
 mod enemy_ai;
+mod enemy_jumps;
 mod feedback;
 mod player_attacks;
 mod projectiles;
@@ -13,6 +14,7 @@ use damage::{
     spawn_damage_number,
 };
 pub(super) use enemy_ai::{update_enemy_ai, update_enemy_platform_physics};
+use enemy_jumps::{JumpArc, JumpPlan, JumpRoute};
 pub(super) use feedback::{
     update_damage_numbers, update_dead_enemies, update_health_bars, update_health_pickups,
     update_impact_effects,

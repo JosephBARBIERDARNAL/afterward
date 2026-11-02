@@ -29,6 +29,7 @@ Once you finish making a change (fixing a bug or adding a feature), make sure al
 - No accessor that only returns a field. Widen the field to `pub(crate)` instead of writing a getter around it.
 - Prefer a tailored API over `std::mem::take`. `Option::take`, `Vec::split_off` and `HashMap::remove` name what moves and leave the container usable, where `mem::take` silently swaps in a `Default`.
 - Treat every git change you did not explicitly make as belonging to someone else working on the project simultaneously; preserve it exactly and do not revert, restore, overwrite, format, or otherwise “clean up” that file.
+- Don't add content in the README.md, relevant development knowledge should live in AGENTS.md
 
 ## Bevy
 
@@ -42,3 +43,13 @@ The game is built using Bevy 0.20, in Rust. Here are relevant sources to look in
 - https://bevy.org/learn/quick-start/getting-started/resources/
 
 The game targets are MacOS, Windows and Linux (CI runs tests for all of them).
+
+## Development
+
+Common tasks are in the `justfile` (run `just` to list them):
+
+- `just run` — play from room 1; `just run 7` starts new runs (and pause-menu restarts) in room 7.
+- `just boss` — start at the Chapter 1 boss (room 10, with its intro).
+- `just check` — formatting, Clippy, tests, and the native build, as in CI.
+
+Without `just`, pass the flag directly: `cargo run -- --room 7`.

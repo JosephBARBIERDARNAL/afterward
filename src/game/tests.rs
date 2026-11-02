@@ -1,6 +1,7 @@
 use super::*;
 mod chapter_one_run;
 mod control_bindings;
+mod enemy_jumping;
 mod gameplay_controls;
 mod player_controls;
 mod procedural_movement;
@@ -30,4 +31,11 @@ fn projectiles_collide_with_platforms_along_their_travel_path() {
         Vec2::new(50.0, 10.0),
         Vec2::splat(6.0),
     ));
+}
+
+#[test]
+fn start_room_parses_room_ids_and_rejects_anything_else() {
+    assert_eq!("7".parse::<StartRoom>(), Ok(StartRoom(7)));
+    assert!("boss".parse::<StartRoom>().is_err());
+    assert_eq!(StartRoom::default(), StartRoom(1));
 }

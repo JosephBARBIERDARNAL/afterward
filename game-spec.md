@@ -157,8 +157,13 @@ next_room_id: null # null only for room 100
 | `gorgon_2`    |  36 | 10 damage; special projectile at 7 H/s, 2 s cooldown, 0.5 s wind-up       | 2.3 H/s; keeps 5–8 H distance  |
 | `gorgon_3`    |  46 | 12 damage; heavy melee sweep, 1.6 H reach, 1.8 s cooldown, 0.55 s wind-up | 2.2 H/s; slow pursuer          |
 
-- Chapter 1 boss `warrior`: 300 HP; moves at 3 H/s. Its three attacks are a two-hit melee combo (10 damage per hit), a telegraphed lunge (15 damage), and a jump slam (18 damage within 2 H of the landing point). Use 0.45–0.8 s wind-ups and 1.4–2.5 s cooldowns. At 50% HP, reduce cooldowns by 20%. These values are initial and tunable.
+- Chapter 1 boss `evil_wizard`: 300 HP; moves at 3 H/s; jumps 2.75 H high. Its three attacks are a two-hit melee combo (10 damage per hit, Attack 1 animation), a telegraphed lunge (15 damage, Attack 2 animation), and a jump slam: after a crouched wind-up it leaps toward the player and deals 18 damage within 2 H of its landing point on touchdown (Jump and Fall animations). Use 0.45–0.8 s wind-ups and 1.4–2.5 s cooldowns. At 50% HP, reduce cooldowns by 20%. These values are initial and tunable.
 - Every enemy has idle, movement, hit-reaction, and death animations.
+- Every enemy, bosses included, can jump. Jumps follow the player's gravity and are tuned in `enemy_types.yaml`: a shared `ENEMY_JUMP_HEIGHT` (2.25 H, the player's jump height) that each type may override, a 5 H/s horizontal air speed, and a 0.6 s cooldown between jumps. Enemies jump only when it brings them toward the player: the player counts as on another level when their grounded feet differ from the enemy's by more than 1 H; a player in mid-jump does not trigger level changes.
+  - When the player stands higher, an enemy targets the reachable platform closest to the player and no higher than them. It walks to a take-off point under or beside that platform, then jumps onto it, repeating step by step.
+  - When the player is at its level, an enemy reaching the ledge it walks toward jumps the gap to the next platform if it can make it.
+  - When the player is lower, enemies walk off the nearest ledge and fall; they never jump down.
+  - With no reachable route up, an enemy waits under the player instead of jittering. Enemies attack only when the player is on their level. Enemies without jump art hold their movement frame while airborne.
 
 ## Bonuses
 
@@ -203,7 +208,7 @@ next_room_id: null # null only for room 100
 
 - Game assets are stored in `src/assets/`. Add more assets as development proceeds.
 - Player assets are stored in `src/assets/player/`.
-- Enemy assets are stored in `src/assets/enemies/`. Each enemy type has its own subfolder (for example, `src/assets/enemies/type1/` and `src/assets/enemies/type2/`). Boss assets are stored in corresponding boss folders (for example, `src/assets/enemies/boss1/`).
+- Enemy assets are stored in `src/assets/enemies/`. Each enemy type has its own subfolder (for example, `src/assets/enemies/type1/` and `src/assets/enemies/type2/`). Boss assets are stored in corresponding boss folders (for example, `src/assets/enemies/boss1/` holds the Chapter 1 Evil Wizard).
 - Background assets are stored in `src/assets/background/`.
 - Assets may be provided as PNG, PSD, or Aseprite files.
 

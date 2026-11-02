@@ -57,7 +57,7 @@ pub(super) fn damage_enemy<'a, 'w, 's>(
     let damage = damage.max(0.0);
     enemy.health = (enemy.health - damage).max(0.0);
     spawn_damage_number(commands, transform.translation, damage, false);
-    if enemy.type_id == "warrior" {
+    if enemy.type_id == "evil_wizard" {
         enemy.knockback_velocity = knockback_direction * knockback_h_s;
         transform.translation.y = enemy.home_y;
     }
@@ -142,13 +142,16 @@ pub(super) fn set_enemy_animation(
     action: &str,
 ) {
     let key = match action {
-        "walk" => match &**type_id {
+        "jump" if &**type_id == "evil_wizard" => "boss_jump",
+        "fall" if &**type_id == "evil_wizard" => "boss_fall",
+        // Without dedicated art, airborne enemies use their movement sheet.
+        "walk" | "jump" | "fall" => match &**type_id {
             "infantryman" => "enemy_infantry_walk",
             "destroyer" => "enemy_destroyer_walk",
             "gorgon_1" => "enemy_gorgon_1_run",
             "gorgon_2" => "enemy_gorgon_2_run",
             "gorgon_3" => "enemy_gorgon_3_run",
-            "warrior" => "boss_walk",
+            "evil_wizard" => "boss_walk",
             _ => type_id.idle_sheet(),
         },
         "attack" | "attack_1" => match &**type_id {
@@ -158,33 +161,12 @@ pub(super) fn set_enemy_animation(
             "gorgon_1" => "enemy_gorgon_1_attack",
             "gorgon_2" => "enemy_gorgon_2_attack",
             "gorgon_3" => "enemy_gorgon_3_attack",
-            "warrior" => "boss_attack",
+            "evil_wizard" => "boss_attack",
             _ => type_id.idle_sheet(),
         },
         "attack_2" => {
-            if &**type_id == "warrior" {
+            if &**type_id == "evil_wizard" {
                 "boss_attack_2"
-            } else {
-                type_id.idle_sheet()
-            }
-        }
-        "attack_3" => {
-            if &**type_id == "warrior" {
-                "boss_attack_3"
-            } else {
-                type_id.idle_sheet()
-            }
-        }
-        "jump" => {
-            if &**type_id == "warrior" {
-                "boss_jump"
-            } else {
-                type_id.idle_sheet()
-            }
-        }
-        "land" => {
-            if &**type_id == "warrior" {
-                "boss_land"
             } else {
                 type_id.idle_sheet()
             }
@@ -196,7 +178,7 @@ pub(super) fn set_enemy_animation(
             "gorgon_1" => "enemy_gorgon_1_hurt",
             "gorgon_2" => "enemy_gorgon_2_hurt",
             "gorgon_3" => "enemy_gorgon_3_hurt",
-            "warrior" => "boss_hurt",
+            "evil_wizard" => "boss_hurt",
             _ => type_id.idle_sheet(),
         },
         "dead" => match &**type_id {
@@ -206,7 +188,7 @@ pub(super) fn set_enemy_animation(
             "gorgon_1" => "enemy_gorgon_1_dead",
             "gorgon_2" => "enemy_gorgon_2_dead",
             "gorgon_3" => "enemy_gorgon_3_dead",
-            "warrior" => "boss_dead",
+            "evil_wizard" => "boss_dead",
             _ => type_id.idle_sheet(),
         },
         _ => type_id.idle_sheet(),
@@ -225,7 +207,7 @@ pub(super) fn set_enemy_animation(
     animation.sheet = key.to_string();
     animation.frame = 0;
     animation.frames = sheet.frames;
-    animation.looping = matches!(action, "walk" | "idle");
+    animation.looping = matches!(action, "walk" | "idle" | "jump" | "fall") && key != "boss_jump";
     animation.timer = Timer::from_seconds(1.0 / sheet.fps, TimerMode::Repeating);
 }
 
