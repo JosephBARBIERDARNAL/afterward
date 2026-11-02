@@ -1,6 +1,7 @@
 use super::*;
 
 mod boss_sheets;
+mod effect_sheets;
 mod enemy_sheets;
 mod player_sheets;
 
@@ -13,6 +14,7 @@ pub(super) fn load_sprites(
         .into_iter()
         .chain(enemy_sheets::sprites())
         .chain(boss_sheets::sprites())
+        .chain(effect_sheets::sprites())
         .collect::<Vec<_>>();
 
     let mut sheets = BTreeMap::new();
@@ -73,7 +75,8 @@ mod tests {
         let specs = player_sheets::sprites()
             .into_iter()
             .chain(enemy_sheets::sprites())
-            .chain(boss_sheets::sprites());
+            .chain(boss_sheets::sprites())
+            .chain(effect_sheets::sprites());
 
         for spec in specs {
             let path = asset_root.join(spec.path);

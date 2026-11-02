@@ -15,6 +15,7 @@ use damage::{
 pub(super) use enemy_ai::{update_enemy_ai, update_enemy_platform_physics};
 pub(super) use feedback::{
     update_damage_numbers, update_dead_enemies, update_health_bars, update_health_pickups,
+    update_impact_effects,
 };
 pub(super) use player_attacks::player_attacks;
 pub(super) use projectiles::update_projectiles;

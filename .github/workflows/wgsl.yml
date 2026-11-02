@@ -1,0 +1,23 @@
+name: WGSL
+
+on: [push, pull_request]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Install tools
+        run: |
+          cargo install naga-cli --locked
+          cargo install --git https://github.com/wgsl-analyzer/wgsl-analyzer wgslfmt --locked
+
+      - name: Check shaders
+        run: |
+          find assets -name '*.wgsl' -print0 |
+            while IFS= read -r -d '' shader; do
+              wgslfmt --check "$shader"
+              naga "$shader"
+            done

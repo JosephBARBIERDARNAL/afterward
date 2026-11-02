@@ -117,6 +117,7 @@ impl Plugin for GamePlugin {
                     combat::update_projectiles,
                     combat::update_damage_numbers,
                     combat::update_dead_enemies,
+                    combat::update_impact_effects,
                     combat::update_health_bars,
                     combat::update_health_pickups,
                     flow::handle_door_touch,
@@ -365,6 +366,11 @@ struct CombatProjectile {
     remaining_range: f32,
     friendly: bool,
     half_size: Vec2,
+}
+
+#[derive(Component)]
+struct ImpactEffect {
+    timer: Timer,
 }
 
 #[derive(Component)]

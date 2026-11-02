@@ -67,6 +67,19 @@ pub(in crate::game) fn update_dead_enemies(
     }
 }
 
+pub(in crate::game) fn update_impact_effects(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut effects: Query<(Entity, &mut ImpactEffect)>,
+) {
+    for (entity, mut effect) in &mut effects {
+        effect.timer.tick(time.delta());
+        if effect.timer.is_finished() {
+            commands.entity(entity).despawn();
+        }
+    }
+}
+
 pub(in crate::game) fn update_health_bars(
     mut commands: Commands,
     enemies: HealthBarEnemiesQuery,

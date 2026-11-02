@@ -5,6 +5,7 @@ pub(in crate::game) fn clear_room_combat_effects(
     projectiles: Query<Entity, With<CombatProjectile>>,
     damage_numbers: Query<Entity, With<DamageNumber>>,
     corpses: Query<Entity, With<DeadEnemy>>,
+    impacts: Query<Entity, With<ImpactEffect>>,
 ) {
     for entity in &projectiles {
         commands.entity(entity).despawn();
@@ -15,6 +16,9 @@ pub(in crate::game) fn clear_room_combat_effects(
     for entity in &corpses {
         commands.entity(entity).despawn();
     }
+    for entity in &impacts {
+        commands.entity(entity).despawn();
+    }
 }
 
 #[cfg(test)]
@@ -23,7 +27,7 @@ mod tests {
     use bevy::{prelude::MinimalPlugins, state::app::StatesPlugin};
 
     #[test]
-    fn room_clear_removes_frozen_projectiles_damage_numbers_and_corpses() {
+    fn room_clear_removes_frozen_projectiles_damage_numbers_corpses_and_impacts() {
         let mut app = App::new();
         app.add_plugins((MinimalPlugins, StatesPlugin))
             .init_state::<GameScreen>()
@@ -55,6 +59,12 @@ mod tests {
                 timer: Timer::from_seconds(0.9, TimerMode::Once),
             })
             .id();
+        let impact = app
+            .world_mut()
+            .spawn(ImpactEffect {
+                timer: Timer::from_seconds(0.35, TimerMode::Once),
+            })
+            .id();
 
         app.world_mut()
             .resource_mut::<NextState<GameScreen>>()
@@ -64,5 +74,6 @@ mod tests {
         assert!(app.world().get_entity(projectile).is_err());
         assert!(app.world().get_entity(damage_number).is_err());
         assert!(app.world().get_entity(corpse).is_err());
+        assert!(app.world().get_entity(impact).is_err());
     }
 }

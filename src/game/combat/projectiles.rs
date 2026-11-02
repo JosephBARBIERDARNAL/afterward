@@ -118,6 +118,34 @@ pub(in crate::game) fn update_projectiles(
                     }
                     register_hit(&mut player, &session, &data);
                     sounds.push(SoundCue::BulletHit);
+                    if let Some(sheet) = sheets.0.get("effect_gun_hit") {
+                        let mut impact_sprite = Sprite::from_atlas_image(
+                            sheet.image.clone(),
+                            TextureAtlas {
+                                layout: sheet.layout.clone(),
+                                index: 0,
+                            },
+                        );
+                        impact_sprite.flip_x = direction < 0.0;
+                        commands.spawn((
+                            impact_sprite,
+                            Transform::from_translation(end.extend(4.0)),
+                            AnimatedSprite {
+                                sheet: "effect_gun_hit".to_string(),
+                                frame: 0,
+                                frames: sheet.frames,
+                                timer: Timer::from_seconds(1.0 / sheet.fps, TimerMode::Repeating),
+                                looping: false,
+                            },
+                            ImpactEffect {
+                                timer: Timer::from_seconds(
+                                    sheet.frames as f32 / sheet.fps,
+                                    TimerMode::Once,
+                                ),
+                            },
+                            RoomEntity,
+                        ));
+                    }
                     hit = true;
                     break;
                 }
