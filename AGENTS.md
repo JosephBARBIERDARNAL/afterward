@@ -28,6 +28,7 @@ Once you finish making a change (fixing a bug or adding a feature), make sure al
 - Combine `use` statements from one crate into a single `crate::{...}`.
 - No accessor that only returns a field. Widen the field to `pub(crate)` instead of writing a getter around it.
 - Prefer a tailored API over `std::mem::take`. `Option::take`, `Vec::split_off` and `HashMap::remove` name what moves and leave the container usable, where `mem::take` silently swaps in a `Default`.
+- Treat every git change you did not explicitly make as belonging to someone else working on the project simultaneously; preserve it exactly and do not revert, restore, overwrite, format, or otherwise “clean up” that file.
 
 ## Bevy
 

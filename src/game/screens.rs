@@ -8,7 +8,6 @@ pub(super) fn update_screen_text(
     settings: Res<AudioSettings>,
     controls: Res<ControlBindings>,
     mut labels: Query<&mut Text, With<ScreenLabel>>,
-    mut bonus_spans: Query<(&BonusScreenSpan, &mut TextSpan, &mut TextColor)>,
 ) {
     let message = match screen.get() {
         GameScreen::MainMenu => String::from("AFTERWARD\n\nENTER  Begin run"),
@@ -16,12 +15,6 @@ pub(super) fn update_screen_text(
             String::from("PAUSED\n\nENTER  Continue\nS  Settings\nR  Restart\nM  Main menu")
         }
         GameScreen::RoomClear => String::from("ROOM CLEARED"),
-        GameScreen::Bonus => format!(
-            "CHOOSE A BONUS\n\n{} / {}  Select    {}  Confirm\n\n",
-            controls.binding_label(GameAction::NavigateUp),
-            controls.binding_label(GameAction::NavigateDown),
-            controls.binding_label(GameAction::Interact),
-        ),
         GameScreen::BossIntro => String::from("CHAPTER ONE\n\nTHE WARRIOR"),
         GameScreen::Transitioning => data
             .rooms
@@ -80,84 +73,10 @@ pub(super) fn update_screen_text(
         }
         GameScreen::Dead => String::from("RUN ENDED\n\nENTER  Return to menu"),
         GameScreen::Complete => String::from("CHAPTER ONE CLEARED\n\nENTER  Return to menu"),
-        GameScreen::Playing => String::new(),
+        GameScreen::Playing | GameScreen::Bonus => String::new(),
     };
     for mut text in &mut labels {
         text.0 = message.clone();
-    }
-    for (span, mut text, mut color) in &mut bonus_spans {
-        let (content, span_color) = if *screen.get() != GameScreen::Bonus {
-            (String::new(), Color::WHITE)
-        } else if matches!(span.kind, BonusSpanKind::Reroll) {
-            if session.bonus_reroll_animation_remaining_s > 0.0 {
-                let dots = (session.bonus_reroll_animation_remaining_s * 12.0) as usize % 4;
-                (
-                    format!(
-                        "@  REROLLING{}  ({} remaining)\n",
-                        ".".repeat(dots),
-                        session.rerolls
-                    ),
-                    Color::WHITE,
-                )
-            } else {
-                let marker = if session.selected_option == 2 {
-                    ">"
-                } else {
-                    " "
-                };
-                if flow::reroll_available(&session, &data) {
-                    (
-                        format!("{marker} 3. @ REROLL  ({} remaining)\n", session.rerolls),
-                        Color::WHITE,
-                    )
-                } else {
-                    ("  3. REROLL UNAVAILABLE\n".to_owned(), Color::WHITE)
-                }
-            }
-        } else if session.bonus_reroll_animation_remaining_s > 0.0 {
-            (String::new(), Color::WHITE)
-        } else if let Some(bonus_id) = session.offered_bonuses.get(span.index) {
-            if let Some(bonus) = data
-                .bonuses
-                .bonuses
-                .iter()
-                .find(|bonus| bonus.id == *bonus_id)
-            {
-                let selected = session.selected_option == span.index;
-                match span.kind {
-                    BonusSpanKind::Category => {
-                        if let Some(category) = data.bonuses.categories.get(&bonus.category) {
-                            let marker = if selected { ">" } else { " " };
-                            let icon = category.icon.to_string();
-                            let mut characters = bonus.category.chars();
-                            let category_name = characters
-                                .next()
-                                .map(|first| {
-                                    first.to_uppercase().chain(characters).collect::<String>()
-                                })
-                                .unwrap_or_default();
-                            (
-                                format!("{marker} {}. {icon} {category_name}\n", span.index + 1),
-                                Color::from(category.color),
-                            )
-                        } else {
-                            (String::new(), Color::WHITE)
-                        }
-                    }
-                    BonusSpanKind::Name => (format!("{}\n", bonus.name), Color::WHITE),
-                    BonusSpanKind::Description => {
-                        (format!("{}\n\n", bonus.description), Color::WHITE)
-                    }
-                    BonusSpanKind::Reroll => unreachable!(),
-                }
-            } else {
-                (String::new(), Color::WHITE)
-            }
-        } else {
-            (String::new(), Color::WHITE)
-        };
-        text.0 = content;
-        color.0 = span_color;
     }
 }
 
@@ -316,7 +235,6 @@ fn reset_run(session: &mut RunSession, data: &GameData) {
     session.owned_bonuses.clear();
     session.offered_bonuses.clear();
     session.previous_offers.clear();
-    session.selected_option = 0;
     session.bonus_reroll_animation_remaining_s = 0.0;
     session.room_ward_used = false;
     session.door_open = false;

@@ -9,6 +9,7 @@ use crate::data::{EnemyAttackConfig, EnemyTypeId, GameData, PlatformMaterial};
 
 mod assets;
 mod audio;
+mod bonus_screen;
 mod camera;
 mod combat;
 mod controls;
@@ -51,6 +52,7 @@ impl Plugin for GamePlugin {
                 (
                     camera::spawn_camera,
                     interface::spawn_interface,
+                    bonus_screen::spawn_bonus_screen,
                     assets::load_sprites,
                     settings::initialize_settings,
                     controls::initialize_control_bindings,
@@ -99,6 +101,7 @@ impl Plugin for GamePlugin {
                     interface::update_boss_intro_overlay,
                     interface::update_room_transition_overlay,
                     interface::update_menu_modal,
+                    bonus_screen::update_bonus_screen,
                     camera::update_background_parallax,
                     interface::update_hud,
                 ),
@@ -185,7 +188,6 @@ struct RunSession {
     owned_bonuses: Vec<String>,
     offered_bonuses: Vec<String>,
     previous_offers: BTreeSet<String>,
-    selected_option: usize,
     bonus_reroll_animation_remaining_s: f32,
     door_open: bool,
     room_ward_used: bool,
@@ -202,7 +204,6 @@ impl Default for RunSession {
             owned_bonuses: Vec::new(),
             offered_bonuses: Vec::new(),
             previous_offers: BTreeSet::new(),
-            selected_option: 0,
             bonus_reroll_animation_remaining_s: 0.0,
             door_open: false,
             room_ward_used: false,
@@ -234,20 +235,6 @@ struct AnimatedSprite {
 
 #[derive(Component)]
 struct ScreenLabel;
-
-#[derive(Component)]
-struct BonusScreenSpan {
-    index: usize,
-    kind: BonusSpanKind,
-}
-
-#[derive(Clone, Copy)]
-enum BonusSpanKind {
-    Category,
-    Name,
-    Description,
-    Reroll,
-}
 
 #[derive(Component)]
 struct HudText;

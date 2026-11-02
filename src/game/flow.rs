@@ -38,7 +38,6 @@ pub(super) fn update_room_clear(
     session.previous_offers.clear();
     let offered = session.offered_bonuses.clone();
     session.previous_offers.extend(offered);
-    session.selected_option = 0;
     next_screen.set(GameScreen::Bonus);
 }
 
@@ -71,29 +70,8 @@ pub(super) fn handle_bonus_input(mut commands: Commands, resources: BonusInputRe
     if was_animating && session.bonus_reroll_animation_remaining_s > 0.0 {
         return;
     }
-    if was_animating {
-        session.selected_option = 0;
-    }
-    let previous_selection = session.selected_option;
-    let can_reroll = reroll_available(&session, &data);
-    let max_option = if can_reroll { 2 } else { 1 };
-    if controls.just_pressed(GameAction::MoveLeft, &keys)
-        || controls.just_pressed(GameAction::NavigateUp, &keys)
-    {
-        session.selected_option = session.selected_option.saturating_sub(1);
-    } else if controls.just_pressed(GameAction::MoveRight, &keys)
-        || controls.just_pressed(GameAction::NavigateDown, &keys)
-    {
-        session.selected_option = (session.selected_option + 1).min(max_option);
-    }
-    if session.selected_option != previous_selection {
-        sounds.push(SoundCue::UiMove);
-    }
-    if !controls.just_pressed(GameAction::Interact, &keys) {
-        return;
-    }
-    if session.selected_option == 2 {
-        if !can_reroll {
+    if controls.just_pressed(GameAction::RerollBonus, &keys) {
+        if !reroll_available(&session, &data) {
             sounds.push(SoundCue::UiInvalid);
             return;
         }
@@ -109,11 +87,14 @@ pub(super) fn handle_bonus_input(mut commands: Commands, resources: BonusInputRe
         return;
     }
 
-    let Some(chosen_id) = session
-        .offered_bonuses
-        .get(session.selected_option)
-        .cloned()
-    else {
+    let chosen_index = if controls.just_pressed(GameAction::ChooseFirstBonus, &keys) {
+        0
+    } else if controls.just_pressed(GameAction::ChooseSecondBonus, &keys) {
+        1
+    } else {
+        return;
+    };
+    let Some(chosen_id) = session.offered_bonuses.get(chosen_index).cloned() else {
         return;
     };
     session.owned_bonuses.push(chosen_id.clone());

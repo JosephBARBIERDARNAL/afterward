@@ -1,6 +1,9 @@
 use super::*;
 use bevy::{camera::Viewport, text::FontSize, window::PrimaryWindow};
 
+const MENU_BLUR_RADIUS_PX: f32 = 1.8;
+const BONUS_BLUR_RADIUS_PX: f32 = 18.0;
+
 pub(super) fn spawn_interface(mut commands: Commands) {
     commands.spawn((
         Node {
@@ -90,7 +93,7 @@ pub(super) fn spawn_interface(mut commands: Commands) {
                 Pickable::IGNORE,
             ));
             panel.with_children(|parent| {
-                let mut label = parent.spawn((
+                parent.spawn((
                     Text::new("AFTERWARD"),
                     TextFont {
                         font_size: FontSize::Px(32.0),
@@ -100,42 +103,6 @@ pub(super) fn spawn_interface(mut commands: Commands) {
                     TextColor(Color::WHITE),
                     ScreenLabel,
                 ));
-                label.with_children(|parent| {
-                    for index in 0..2 {
-                        parent.spawn((
-                            TextSpan::default(),
-                            BonusScreenSpan {
-                                index,
-                                kind: BonusSpanKind::Category,
-                            },
-                            TextColor(Color::WHITE),
-                        ));
-                        parent.spawn((
-                            TextSpan::default(),
-                            BonusScreenSpan {
-                                index,
-                                kind: BonusSpanKind::Name,
-                            },
-                            TextColor(Color::WHITE),
-                        ));
-                        parent.spawn((
-                            TextSpan::default(),
-                            BonusScreenSpan {
-                                index,
-                                kind: BonusSpanKind::Description,
-                            },
-                            TextColor(Color::WHITE),
-                        ));
-                    }
-                    parent.spawn((
-                        TextSpan::default(),
-                        BonusScreenSpan {
-                            index: 2,
-                            kind: BonusSpanKind::Reroll,
-                        },
-                        TextColor(Color::WHITE),
-                    ));
-                });
             });
         });
 
@@ -210,9 +177,10 @@ pub(super) fn update_menu_modal(
             | GameScreen::Dead
             | GameScreen::Complete
     );
+    let is_blurred = is_modal || *screen.get() == GameScreen::Bonus;
 
     for (mut color, mut visibility) in &mut backdrop {
-        if is_modal {
+        if is_blurred {
             color.0 = Color::srgba(0.015, 0.02, 0.04, 0.36);
             *visibility = Visibility::Visible;
         } else {
@@ -227,7 +195,11 @@ pub(super) fn update_menu_modal(
         };
     }
     for mut blur in &mut camera_blur {
-        blur.radius_pixels = if is_modal { 1.8 } else { 0.0 };
+        blur.radius_pixels = match screen.get() {
+            GameScreen::Bonus => BONUS_BLUR_RADIUS_PX,
+            _ if is_modal => MENU_BLUR_RADIUS_PX,
+            _ => 0.0,
+        };
     }
 }
 

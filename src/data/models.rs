@@ -50,6 +50,9 @@ pub struct ControlsConfig {
     pub interact: Vec<String>,
     pub pause: Vec<String>,
     pub toggle_fullscreen: Vec<String>,
+    pub choose_first_bonus: Vec<String>,
+    pub choose_second_bonus: Vec<String>,
+    pub reroll_bonus: Vec<String>,
 }
 
 #[derive(Debug, Deserialize)]

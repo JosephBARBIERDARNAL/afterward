@@ -27,10 +27,13 @@ pub(super) enum GameAction {
     Interact,
     Pause,
     ToggleFullscreen,
+    ChooseFirstBonus,
+    ChooseSecondBonus,
+    RerollBonus,
 }
 
 impl GameAction {
-    pub const ALL: [Self; 11] = [
+    pub const ALL: [Self; 14] = [
         Self::MoveLeft,
         Self::MoveRight,
         Self::NavigateUp,
@@ -42,6 +45,9 @@ impl GameAction {
         Self::Interact,
         Self::Pause,
         Self::ToggleFullscreen,
+        Self::ChooseFirstBonus,
+        Self::ChooseSecondBonus,
+        Self::RerollBonus,
     ];
 
     pub fn label(self) -> &'static str {
@@ -57,6 +63,9 @@ impl GameAction {
             Self::Interact => "INTERACT / CONFIRM",
             Self::Pause => "PAUSE",
             Self::ToggleFullscreen => "FULLSCREEN",
+            Self::ChooseFirstBonus => "FIRST BONUS",
+            Self::ChooseSecondBonus => "SECOND BONUS",
+            Self::RerollBonus => "REROLL BONUSES",
         }
     }
 }
@@ -77,6 +86,9 @@ impl FromStr for GameAction {
             "interact" => Ok(Self::Interact),
             "pause" => Ok(Self::Pause),
             "toggle_fullscreen" => Ok(Self::ToggleFullscreen),
+            "choose_first_bonus" => Ok(Self::ChooseFirstBonus),
+            "choose_second_bonus" => Ok(Self::ChooseSecondBonus),
+            "reroll_bonus" => Ok(Self::RerollBonus),
             _ => Err("unknown game action"),
         }
     }
@@ -96,6 +108,9 @@ impl Display for GameAction {
             Self::Interact => "interact",
             Self::Pause => "pause",
             Self::ToggleFullscreen => "toggle_fullscreen",
+            Self::ChooseFirstBonus => "choose_first_bonus",
+            Self::ChooseSecondBonus => "choose_second_bonus",
+            Self::RerollBonus => "reroll_bonus",
         })
     }
 }
@@ -136,6 +151,15 @@ impl From<&ControlsConfig> for DefaultBindings {
                 GameAction::ToggleFullscreen,
                 parse_keys(&controls.toggle_fullscreen),
             ),
+            (
+                GameAction::ChooseFirstBonus,
+                parse_keys(&controls.choose_first_bonus),
+            ),
+            (
+                GameAction::ChooseSecondBonus,
+                parse_keys(&controls.choose_second_bonus),
+            ),
+            (GameAction::RerollBonus, parse_keys(&controls.reroll_bonus)),
         ]))
     }
 }
@@ -165,6 +189,13 @@ impl ControlBindings {
             .map(|key| KeyLabel::from(*key).to_string())
             .collect::<Vec<_>>()
             .join(" / ")
+    }
+
+    pub fn primary_label(&self, action: GameAction) -> String {
+        self.bindings
+            .get(&action)
+            .and_then(|bindings| bindings.first())
+            .map_or_else(String::new, |key| KeyLabel::from(*key).to_string())
     }
 
     pub fn move_selection(&mut self, direction: i8) {

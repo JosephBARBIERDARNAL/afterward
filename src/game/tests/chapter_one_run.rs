@@ -187,9 +187,10 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
                                 .get(1)
                                 .is_some_and(|offered| offered == preferred)
                         }) {
-                            keys.press(KeyCode::KeyD);
+                            keys.press(KeyCode::KeyB);
+                        } else {
+                            keys.press(KeyCode::KeyA);
                         }
-                        keys.press(KeyCode::KeyE);
                     }
                 },
                 flow::handle_bonus_input,
@@ -294,7 +295,7 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
     assert_eq!(
         *app.world().resource::<State<GameScreen>>().get(),
         GameScreen::Complete,
-        "the input-driven run should reach the Chapter 1 completion screen; room: {}, health: {}, bonuses: {:?}, living enemies: {}, enemy states: {:?}, door open: {}, player position: {:?}, velocity: {:?}, grounded: {}, dash cooldown: {}, facing: {}, left pressed: {}, right pressed: {}, current screen: {:?}, current offers: {:?}, selection: {}, interact binding: {}",
+        "the input-driven run should reach the Chapter 1 completion screen; room: {}, health: {}, bonuses: {:?}, living enemies: {}, enemy states: {:?}, door open: {}, player position: {:?}, velocity: {:?}, grounded: {}, dash cooldown: {}, facing: {}, left pressed: {}, right pressed: {}, current screen: {:?}, current offers: {:?}, interact binding: {}",
         session.room_id,
         session.health,
         session.owned_bonuses,
@@ -310,7 +311,6 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
         right_pressed,
         app.world().resource::<State<GameScreen>>().get(),
         session.offered_bonuses,
-        session.selected_option,
         app.world()
             .resource::<ControlBindings>()
             .binding_label(GameAction::Interact),
