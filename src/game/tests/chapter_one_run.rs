@@ -54,6 +54,8 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
         .init_resource::<SoundQueue>()
         .init_resource::<ControlBindings>()
         .init_resource::<ButtonInput<KeyCode>>()
+        .add_message::<PointerOver>()
+        .add_message::<PointerClick>()
         .add_systems(Startup, controls::initialize_default_control_bindings)
         .add_systems(OnEnter(GameScreen::Playing), spawn_test_room)
         .add_systems(
@@ -187,9 +189,9 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
                                 .get(1)
                                 .is_some_and(|offered| offered == preferred)
                         }) {
-                            keys.press(KeyCode::KeyB);
+                            keys.press(KeyCode::Digit2);
                         } else {
-                            keys.press(KeyCode::KeyA);
+                            keys.press(KeyCode::Digit1);
                         }
                     }
                 },

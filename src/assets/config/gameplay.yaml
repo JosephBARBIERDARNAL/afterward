@@ -67,6 +67,6 @@ controls:
   interact: [KeyE, Enter]
   pause: [Escape]
   toggle_fullscreen: [KeyF]
-  choose_first_bonus: [KeyA, KeyQ]
-  choose_second_bonus: [KeyB]
+  choose_first_bonus: [Digit1, Numpad1]
+  choose_second_bonus: [Digit2, Numpad2]
   reroll_bonus: [KeyR]

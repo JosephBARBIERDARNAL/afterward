@@ -2,6 +2,7 @@ use super::*;
 use bevy::text::FontSize;
 
 const CARD_BACKGROUND: Color = Color::srgba(0.03, 0.035, 0.07, 0.94);
+const CARD_HIGHLIGHT_BACKGROUND: Color = Color::srgba(0.11, 0.12, 0.19, 0.96);
 const KEY_BACKGROUND: Color = Color::srgba(1.0, 1.0, 1.0, 0.1);
 const ACTIVE_BORDER: Color = Color::srgba(0.92, 0.94, 1.0, 0.85);
 const MUTED: Color = Color::srgba(0.6, 0.62, 0.7, 0.55);
@@ -10,10 +11,28 @@ const DESCRIPTION_COLOR: Color = Color::srgb(0.84, 0.86, 0.92);
 #[derive(Component)]
 pub(super) struct BonusScreenRoot;
 
-#[derive(Component, Clone, Copy)]
-pub(super) enum BonusBox {
+/// A selectable box on the bonus screen, also used as the keyboard selection.
+#[derive(Component, Clone, Copy, Debug, Eq, PartialEq)]
+pub(super) enum BonusChoice {
     Offer(usize),
     Reroll,
+}
+
+impl BonusChoice {
+    pub(super) fn previous(self) -> Self {
+        match self {
+            Self::Offer(index) => Self::Offer(index.saturating_sub(1)),
+            Self::Reroll => Self::Offer(1),
+        }
+    }
+
+    pub(super) fn next(self, can_reroll: bool) -> Self {
+        match self {
+            Self::Offer(0) => Self::Offer(1),
+            Self::Offer(_) | Self::Reroll if can_reroll => Self::Reroll,
+            choice => choice,
+        }
+    }
 }
 
 #[derive(Component, Clone, Copy)]
@@ -50,6 +69,7 @@ pub(super) fn spawn_bonus_screen(mut commands: Commands) {
             },
             BackgroundColor(KEY_BACKGROUND),
             BorderColor::all(ACTIVE_BORDER),
+            Pickable::IGNORE,
         )
     };
 
@@ -113,7 +133,7 @@ pub(super) fn spawn_bonus_screen(mut commands: Commands) {
                                 },
                                 BackgroundColor(CARD_BACKGROUND),
                                 BorderColor::all(MUTED),
-                                BonusBox::Offer(index),
+                                BonusChoice::Offer(index),
                             ))
                             .with_children(|parent| {
                                 parent.spawn(key_badge(56.0)).with_child((
@@ -124,6 +144,7 @@ pub(super) fn spawn_bonus_screen(mut commands: Commands) {
                                     },
                                     TextColor(Color::WHITE),
                                     BonusLabel::Key(action),
+                                    Pickable::IGNORE,
                                 ));
                                 parent
                                     .spawn((
@@ -138,6 +159,7 @@ pub(super) fn spawn_bonus_screen(mut commands: Commands) {
                                             min_width: px(0),
                                             ..default()
                                         },
+                                        Pickable::IGNORE,
                                     ))
                                     .with_children(|parent| {
                                         for (kind, font_size) in [
@@ -173,7 +195,7 @@ pub(super) fn spawn_bonus_screen(mut commands: Commands) {
                             },
                             BackgroundColor(CARD_BACKGROUND),
                             BorderColor::all(ACTIVE_BORDER),
-                            BonusBox::Reroll,
+                            BonusChoice::Reroll,
                         ))
                         .with_children(|parent| {
                             parent.spawn(key_badge(40.0)).with_child((
@@ -184,6 +206,7 @@ pub(super) fn spawn_bonus_screen(mut commands: Commands) {
                                 },
                                 TextColor(Color::WHITE),
                                 BonusLabel::Key(GameAction::RerollBonus),
+                                Pickable::IGNORE,
                             ));
                             parent.spawn((
                                 Text::default(),
@@ -194,6 +217,7 @@ pub(super) fn spawn_bonus_screen(mut commands: Commands) {
                                 TextLayout::justify(Justify::Left),
                                 TextColor(Color::WHITE),
                                 BonusLabel::Reroll,
+                                Pickable::IGNORE,
                             ));
                         });
                 });
@@ -211,7 +235,7 @@ pub(super) struct BonusScreenResources<'w> {
 pub(super) fn update_bonus_screen(
     resources: BonusScreenResources,
     mut roots: Query<&mut Visibility, With<BonusScreenRoot>>,
-    mut boxes: Query<(&BonusBox, &mut BorderColor)>,
+    mut boxes: Query<(&BonusChoice, &mut BorderColor, &mut BackgroundColor)>,
     mut labels: Query<(&BonusLabel, &mut Text, &mut TextColor)>,
     mut spans: Query<(&BonusSpan, &mut TextSpan, &mut TextColor), Without<BonusLabel>>,
 ) {
@@ -248,12 +272,18 @@ pub(super) fn update_bonus_screen(
             .map_or(MUTED, |category| Color::from(category.color))
     };
 
-    for (bonus_box, mut border) in &mut boxes {
-        *border = BorderColor::all(match bonus_box {
-            BonusBox::Offer(index) => category_color(*index),
-            BonusBox::Reroll if can_reroll => ACTIVE_BORDER,
-            BonusBox::Reroll => MUTED,
+    for (choice, mut border, mut background) in &mut boxes {
+        let enabled = matches!(choice, BonusChoice::Offer(_)) || can_reroll;
+        *border = BorderColor::all(match choice {
+            BonusChoice::Offer(index) => category_color(*index),
+            BonusChoice::Reroll if can_reroll => ACTIVE_BORDER,
+            BonusChoice::Reroll => MUTED,
         });
+        background.0 = if enabled && session.selected_choice == *choice {
+            CARD_HIGHLIGHT_BACKGROUND
+        } else {
+            CARD_BACKGROUND
+        };
     }
     for (label, mut text, mut color) in &mut labels {
         let (content, label_color) = match label {
@@ -301,5 +331,21 @@ pub(super) fn update_bonus_screen(
         };
         text.0 = content;
         color.0 = span_color;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn arrow_navigation_walks_offers_then_reroll_only_when_available() {
+        assert_eq!(BonusChoice::Offer(0).next(true), BonusChoice::Offer(1));
+        assert_eq!(BonusChoice::Offer(1).next(true), BonusChoice::Reroll);
+        assert_eq!(BonusChoice::Offer(1).next(false), BonusChoice::Offer(1));
+        assert_eq!(BonusChoice::Reroll.next(true), BonusChoice::Reroll);
+        assert_eq!(BonusChoice::Reroll.previous(), BonusChoice::Offer(1));
+        assert_eq!(BonusChoice::Offer(1).previous(), BonusChoice::Offer(0));
+        assert_eq!(BonusChoice::Offer(0).previous(), BonusChoice::Offer(0));
     }
 }

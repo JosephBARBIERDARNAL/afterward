@@ -178,8 +178,11 @@ impl Display for KeyLabel {
             "ArrowRight" => formatter.write_str("RIGHT"),
             "ArrowUp" => formatter.write_str("UP"),
             "ArrowDown" => formatter.write_str("DOWN"),
-            name if name.starts_with("Key") => formatter.write_str(&name[3..]),
-            name => formatter.write_str(name),
+            name => formatter.write_str(
+                name.strip_prefix("Key")
+                    .or_else(|| name.strip_prefix("Digit"))
+                    .unwrap_or(name),
+            ),
         }
     }
 }
@@ -194,5 +197,11 @@ mod tests {
         assert_eq!(KeyLabel::from(KeyCode::ArrowDown).to_string(), "DOWN");
         assert_eq!(KeyLabel::from(KeyCode::ArrowLeft).to_string(), "LEFT");
         assert_eq!(KeyLabel::from(KeyCode::ArrowRight).to_string(), "RIGHT");
+    }
+
+    #[test]
+    fn letter_and_digit_labels_drop_their_key_code_prefix() {
+        assert_eq!(KeyLabel::from(KeyCode::KeyR).to_string(), "R");
+        assert_eq!(KeyLabel::from(KeyCode::Digit1).to_string(), "1");
     }
 }

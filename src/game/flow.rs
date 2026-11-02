@@ -1,4 +1,5 @@
 use super::*;
+use crate::game::bonus_screen::BonusChoice;
 use yaml_serde::Value;
 
 pub(super) fn room_clear_check(
@@ -38,6 +39,7 @@ pub(super) fn update_room_clear(
     session.previous_offers.clear();
     let offered = session.offered_bonuses.clone();
     session.previous_offers.extend(offered);
+    session.selected_choice = BonusChoice::Offer(0);
     next_screen.set(GameScreen::Bonus);
 }
 
@@ -53,7 +55,13 @@ pub(super) struct BonusInputResources<'w> {
     sounds: ResMut<'w, SoundQueue>,
 }
 
-pub(super) fn handle_bonus_input(mut commands: Commands, resources: BonusInputResources) {
+pub(super) fn handle_bonus_input(
+    mut commands: Commands,
+    resources: BonusInputResources,
+    choices: Query<&BonusChoice>,
+    mut pointer_overs: MessageReader<PointerOver>,
+    mut pointer_clicks: MessageReader<PointerClick>,
+) {
     let BonusInputResources {
         time,
         keys,
@@ -64,14 +72,55 @@ pub(super) fn handle_bonus_input(mut commands: Commands, resources: BonusInputRe
         mut next_screen,
         mut sounds,
     } = resources;
+    let hovered = pointer_overs
+        .read()
+        .filter_map(|over| choices.get(over.entity).ok())
+        .last()
+        .copied();
+    let clicked = pointer_clicks
+        .read()
+        .filter(|click| click.button == PointerButton::Primary)
+        .filter_map(|click| choices.get(click.entity).ok())
+        .last()
+        .copied();
     let was_animating = session.bonus_reroll_animation_remaining_s > 0.0;
     session.bonus_reroll_animation_remaining_s =
         (session.bonus_reroll_animation_remaining_s - time.delta_secs().min(0.05)).max(0.0);
     if was_animating && session.bonus_reroll_animation_remaining_s > 0.0 {
         return;
     }
-    if controls.just_pressed(GameAction::RerollBonus, &keys) {
-        if !reroll_available(&session, &data) {
+    if was_animating {
+        session.selected_choice = BonusChoice::Offer(0);
+    }
+
+    let can_reroll = reroll_available(&session, &data);
+    let previous_choice = session.selected_choice;
+    if let Some(choice) = hovered.filter(|choice| *choice != BonusChoice::Reroll || can_reroll) {
+        session.selected_choice = choice;
+    } else if controls.just_pressed(GameAction::NavigateUp, &keys) {
+        session.selected_choice = previous_choice.previous();
+    } else if controls.just_pressed(GameAction::NavigateDown, &keys) {
+        session.selected_choice = previous_choice.next(can_reroll);
+    }
+    if session.selected_choice != previous_choice {
+        sounds.push(SoundCue::UiMove);
+    }
+
+    let chosen = if let Some(choice) = clicked {
+        choice
+    } else if controls.just_pressed(GameAction::RerollBonus, &keys) {
+        BonusChoice::Reroll
+    } else if controls.just_pressed(GameAction::ChooseFirstBonus, &keys) {
+        BonusChoice::Offer(0)
+    } else if controls.just_pressed(GameAction::ChooseSecondBonus, &keys) {
+        BonusChoice::Offer(1)
+    } else if controls.just_pressed(GameAction::Interact, &keys) {
+        session.selected_choice
+    } else {
+        return;
+    };
+    let BonusChoice::Offer(chosen_index) = chosen else {
+        if !can_reroll {
             sounds.push(SoundCue::UiInvalid);
             return;
         }
@@ -84,14 +133,6 @@ pub(super) fn handle_bonus_input(mut commands: Commands, resources: BonusInputRe
         session.previous_offers.extend(offered);
         session.bonus_reroll_animation_remaining_s =
             data.gameplay.room_flow.bonus_reroll_animation_s;
-        return;
-    }
-
-    let chosen_index = if controls.just_pressed(GameAction::ChooseFirstBonus, &keys) {
-        0
-    } else if controls.just_pressed(GameAction::ChooseSecondBonus, &keys) {
-        1
-    } else {
         return;
     };
     let Some(chosen_id) = session.offered_bonuses.get(chosen_index).cloned() else {

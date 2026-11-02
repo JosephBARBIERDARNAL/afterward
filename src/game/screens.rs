@@ -235,6 +235,7 @@ fn reset_run(session: &mut RunSession, data: &GameData) {
     session.owned_bonuses.clear();
     session.offered_bonuses.clear();
     session.previous_offers.clear();
+    session.selected_choice = bonus_screen::BonusChoice::Offer(0);
     session.bonus_reroll_animation_remaining_s = 0.0;
     session.room_ward_used = false;
     session.door_open = false;

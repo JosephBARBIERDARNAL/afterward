@@ -168,7 +168,8 @@ next_room_id: null # null only for room 100
 ### Bonus Rerolls
 
 - Start each run with `BONUS_REROLLS_STARTING_COUNT: 3`. Rerolls are a run-only resource, reset at the start of a new run, and cannot currently be replenished.
-- The bonus screen blurs the room behind it. Each offer is shown in its own bordered box (border tinted by the bonus category) with left-aligned category, name, and description, and a key badge on its left showing its shortcut: A picks the first bonus, B picks the second.
+- The bonus screen blurs the room behind it. Each offer is shown in its own bordered box (border tinted by the bonus category) with left-aligned category, name, and description, and a key badge on its left showing its shortcut: 1 picks the first bonus, 2 picks the second.
+- The offers and the Reroll box can also be clicked with the mouse, or selected with the Up/Down arrow keys and confirmed with Enter (or E). The selected or hovered box is lightly highlighted; the first offer is selected when the screen opens.
 - Before selecting a bonus, the player may activate the **Reroll** box, shown separately below the two offers, with its R key badge. Each use consumes one reroll and replaces both current offers with two distinct eligible bonuses different from the pair just replaced. Disable the button when no rerolls remain or fewer than two alternatives are eligible.
 - Show the remaining count beside a small, minimal reroll-token icon. Play a short dedicated animation as the old pair is replaced by the new pair.
 - Future bonuses may grant rerolls; adding those effects is out of scope for now.
@@ -216,7 +217,7 @@ Default controls:
 - J: use the sword.
 - K: fire the gun.
 - E: interact with an element.
-- A / B: choose the first / second bonus. R: reroll the bonus offers.
+- 1 / 2: choose the first / second bonus. R: reroll the bonus offers. Up/Down + Enter, or a mouse click, also work on the bonus screen.
 - Escape: open or close the pause menu. The menu offers Continue, Restart, Settings, and Leave. Leave returns to the main menu shown before a run.
 
 Settings:

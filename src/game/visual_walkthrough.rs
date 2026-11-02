@@ -208,7 +208,7 @@ fn drive_visual_walkthrough(resources: VisualWalkthroughResources) {
         GameScreen::Bonus => {
             keys.release_all();
             keys.clear();
-            keys.press(KeyCode::KeyA);
+            keys.press(KeyCode::Digit1);
         }
         _ => {}
     }
