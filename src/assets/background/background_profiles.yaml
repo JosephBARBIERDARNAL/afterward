@@ -45,3 +45,27 @@ profiles:
         parallax: 1
       - asset: background/forest-desert/PNG/Hills Layer 06.png
         parallax: 1
+  chapter_01_autumn_canopy:
+    backdrop: background/autumn-forest/PNG/tree-wall.png
+    source_size_px: { width: 272, height: 160 }
+    tile_h: 10
+    repeat_horizontal: true
+    layers:
+      - asset: background/autumn-forest/PNG/light-rays.png
+        parallax: 0.2
+      - asset: background/autumn-forest/PNG/middle-trees-red.png
+        parallax: 1
+      - asset: background/autumn-forest/PNG/front-silhouettes.png
+        parallax: 1
+  chapter_01_autumn_sunbeams:
+    backdrop: background/autumn-forest/PNG/sun-sky.png
+    source_size_px: { width: 272, height: 160 }
+    tile_h: 10
+    repeat_horizontal: true
+    layers:
+      - asset: background/autumn-forest/PNG/middle-trees-brown.png
+        parallax: 0.4
+      - asset: background/autumn-forest/PNG/light-rays.png
+        parallax: 0.6
+      - asset: background/autumn-forest/PNG/front-trees-ground.png
+        parallax: 1
