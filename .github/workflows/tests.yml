@@ -10,6 +10,10 @@ on:
 permissions:
   contents: read
 
+env:
+  # Debug info only slows linking and bloats the build cache in CI.
+  CARGO_PROFILE_DEV_DEBUG: 0
+
 jobs:
   test:
     name: Test (${{ matrix.os }})
@@ -32,6 +36,9 @@ jobs:
 
       - name: Install stable Rust
         uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust build artifacts
+        uses: Swatinem/rust-cache@v2
 
       - name: Run tests
         run: cargo test --workspace --all-features --locked

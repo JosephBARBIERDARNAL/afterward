@@ -18,8 +18,8 @@ player:
   damage_invulnerability_s: 0.55
   dash_invulnerability_s: 0.12
   sword:
-    damage: 5
-    range_h: 2
+    damage: 25
+    range_h: 3
     attack_interval_s: 0.5
   gun:
     damage: 15
