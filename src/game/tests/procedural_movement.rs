@@ -14,8 +14,7 @@ fn swordsman_bobs_while_walking_and_returns_to_idle_pose() {
         frames: 1,
         fps: 1.0,
     };
-    let mut sheets =
-        BTreeMap::from([(String::from("player_idle_sword"), placeholder_sheet.clone())]);
+    let mut sheets = BTreeMap::from([(String::from("player_idle"), placeholder_sheet.clone())]);
     for type_id in data.enemies.types.keys() {
         sheets.insert(type_id.idle_sheet().to_string(), placeholder_sheet.clone());
     }
@@ -37,7 +36,7 @@ fn swordsman_bobs_while_walking_and_returns_to_idle_pose() {
              mut session: ResMut<RunSession>,
              sheets: Res<SpriteSheets>| {
                 let room = &data.rooms[&1];
-                world::spawn_player(&mut commands, room, &sheets);
+                world::spawn_player(&mut commands, room, &data, &sheets);
                 world::spawn_enemies(&mut commands, room, &data, &sheets);
                 session.world_loaded = true;
             },

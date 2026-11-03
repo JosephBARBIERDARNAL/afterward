@@ -46,7 +46,6 @@ pub struct ControlsConfig {
     pub jump: Vec<String>,
     pub dash: Vec<String>,
     pub sword: Vec<String>,
-    pub gun: Vec<String>,
     pub interact: Vec<String>,
     pub pause: Vec<String>,
     pub toggle_fullscreen: Vec<String>,
@@ -84,8 +83,6 @@ pub struct PlayerConfig {
     pub damage_invulnerability_s: f32,
     pub dash_invulnerability_s: f32,
     pub sword: SwordConfig,
-    pub gun: GunConfig,
-    pub boss_knockback: BossKnockbackConfig,
 }
 
 #[derive(Debug, Deserialize)]
@@ -93,20 +90,13 @@ pub struct SwordConfig {
     pub damage: f32,
     pub range_h: f32,
     pub attack_interval_s: f32,
+    pub boss_knockback_h_s: f32,
+    pub combo: SwordComboConfig,
 }
 
 #[derive(Debug, Deserialize)]
-pub struct GunConfig {
-    pub damage: f32,
-    pub fire_interval_s: f32,
-    pub projectile_speed_h_s: f32,
-    pub range_h: f32,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct BossKnockbackConfig {
-    pub sword_h_s: f32,
-    pub bullet_h_s: f32,
+pub struct SwordComboConfig {
+    pub damage_multipliers: Vec<f32>,
 }
 
 #[derive(Debug, Deserialize)]

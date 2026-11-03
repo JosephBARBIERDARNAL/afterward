@@ -9,10 +9,7 @@ mod player_attacks;
 mod projectiles;
 
 pub(super) use cleanup::clear_room_combat_effects;
-use damage::{
-    EnemyDamageResources, EnemyDamageTarget, EnemyHit, damage_enemy, set_enemy_animation,
-    spawn_damage_number,
-};
+use damage::{set_enemy_animation, spawn_damage_number};
 pub(super) use enemy_ai::{update_enemy_ai, update_enemy_platform_physics};
 use enemy_jumps::{JumpArc, JumpPlan, JumpRoute};
 pub(super) use feedback::{
@@ -32,91 +29,6 @@ fn bonus_multiplier(session: &RunSession, data: &GameData, id: &str, effect: &st
     } else {
         1.0
     }
-}
-
-fn attack_speed_multiplier(
-    session: &RunSession,
-    data: &GameData,
-    player: &PlayerBody,
-    is_sword: bool,
-) -> f32 {
-    (if is_sword {
-        bonus_multiplier(session, data, "quick_cut", "sword_attack_speed_multiplier")
-    } else {
-        1.0
-    }) * if player.sated_fury_timer > 0.0 {
-        data.bonus_effect("sated_fury", "healing_pickup_attack_speed_multiplier")
-    } else {
-        1.0
-    } * (1.0
-        + f32::from(player.rhythm_stacks)
-            * data.bonus_effect("rhythm_training", "attack_speed_step"))
-}
-
-fn player_damage_multiplier(
-    session: &RunSession,
-    data: &GameData,
-    player: &PlayerBody,
-    is_gun: bool,
-) -> f32 {
-    let weapon_bonus = if is_gun {
-        bonus_multiplier(session, data, "heavy_caliber", "gun_damage_multiplier")
-    } else {
-        bonus_multiplier(session, data, "honed_edge", "sword_damage_multiplier")
-    };
-    let chain = if player.chain_reaction_timer > 0.0 && has_bonus(session, "chain_reaction") {
-        1.0 + data.bonus_effect("chain_reaction", "kill_damage_bonus")
-    } else {
-        1.0
-    };
-    let movement_bonus = if is_gun
-        && player.stationary_timer >= data.bonus_effect("patient_aim", "stationary_time_s")
-    {
-        bonus_multiplier(
-            session,
-            data,
-            "patient_aim",
-            "stationary_gun_damage_multiplier",
-        )
-    } else {
-        1.0
-    };
-    let air_bonus = if is_gun && !player.grounded {
-        bonus_multiplier(
-            session,
-            data,
-            "aerial_hunter",
-            "airborne_gun_damage_multiplier",
-        )
-    } else {
-        1.0
-    };
-    let dash_bonus = if !is_gun && player.dash_strike_timer > 0.0 {
-        bonus_multiplier(
-            session,
-            data,
-            "dash_strike",
-            "post_dash_sword_damage_multiplier",
-        )
-    } else {
-        1.0
-    };
-    weapon_bonus * chain * movement_bonus * air_bonus * dash_bonus
-}
-
-fn register_hit(player: &mut PlayerBody, session: &RunSession, data: &GameData) {
-    if !has_bonus(session, "rhythm_training") {
-        return;
-    }
-    if player.rhythm_timer > 0.0 {
-        let maximum = data.bonus_effect("rhythm_training", "attack_speed_max_bonus");
-        let step = data.bonus_effect("rhythm_training", "attack_speed_step");
-        player.rhythm_stacks = player
-            .rhythm_stacks
-            .saturating_add(1)
-            .min((maximum / step) as u8);
-    }
-    player.rhythm_timer = data.bonus_effect("rhythm_training", "hit_window_s");
 }
 
 struct PlayerDamageResources<'a, 'w, 's> {

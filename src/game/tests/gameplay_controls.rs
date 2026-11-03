@@ -19,8 +19,7 @@ fn default_inputs_move_and_defeat_a_room_enemy() {
         frames: 1,
         fps: 1.0,
     };
-    let mut sheets =
-        BTreeMap::from([(String::from("player_idle_sword"), placeholder_sheet.clone())]);
+    let mut sheets = BTreeMap::from([(String::from("player_idle"), placeholder_sheet.clone())]);
     for type_id in data.enemies.types.keys() {
         sheets.insert(type_id.idle_sheet().to_string(), placeholder_sheet.clone());
     }
@@ -45,7 +44,7 @@ fn default_inputs_move_and_defeat_a_room_enemy() {
             |mut commands: Commands, data: Res<GameData>, sheets: Res<SpriteSheets>| {
                 let room = &data.rooms[&1];
                 world::spawn_room_platforms(&mut commands, room);
-                world::spawn_player(&mut commands, room, &sheets);
+                world::spawn_player(&mut commands, room, &data, &sheets);
                 world::spawn_enemies(&mut commands, room, &data, &sheets);
             },
         )
@@ -58,6 +57,8 @@ fn default_inputs_move_and_defeat_a_room_enemy() {
                     keys.clear();
                     keys.release(KeyCode::KeyD);
                     keys.release(KeyCode::ArrowLeft);
+                    // Release J every frame so each press starts a fresh swing.
+                    keys.release(KeyCode::KeyJ);
                     let (Ok(player), Some((_, target))) = (
                         players.single(),
                         enemies.iter().find(|(enemy, _)| enemy.health > 0.0),
@@ -71,7 +72,6 @@ fn default_inputs_move_and_defeat_a_room_enemy() {
                         keys.press(KeyCode::ArrowLeft);
                     }
                     keys.press(KeyCode::KeyJ);
-                    keys.press(KeyCode::KeyK);
                 },
                 player::update_player,
                 combat::player_attacks,
@@ -115,7 +115,7 @@ fn default_inputs_move_and_defeat_a_room_enemy() {
             .expect("the enemy should remain available for verification")
             .health,
         0.0,
-        "the player should defeat the swordsman using movement and weapon inputs"
+        "the player should defeat the swordsman using movement and sword inputs"
     );
     assert!(
         app.world()

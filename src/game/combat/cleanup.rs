@@ -39,10 +39,8 @@ mod tests {
             .spawn(CombatProjectile {
                 velocity_x: 1.0,
                 damage: 15.0,
-                knockback_h_s: 0.0,
                 life_s: 1.0,
                 remaining_range: 100.0,
-                friendly: true,
                 half_size: Vec2::splat(4.0),
             })
             .id();
@@ -50,7 +48,7 @@ mod tests {
             .world_mut()
             .spawn(DamageNumber {
                 timer: Timer::from_seconds(0.65, TimerMode::Once),
-                received: false,
+                color: Color::WHITE,
             })
             .id();
         let corpse = app

@@ -17,6 +17,7 @@ mod flow;
 mod interface;
 mod pause_blur;
 mod player;
+mod player_model;
 mod screens;
 mod settings;
 mod visual_walkthrough;
@@ -77,6 +78,7 @@ impl Plugin for GamePlugin {
                     interface::spawn_interface,
                     bonus_screen::spawn_bonus_screen,
                     assets::load_sprites,
+                    player_model::setup_player_model.after(assets::load_sprites),
                     settings::initialize_settings,
                     controls::initialize_control_bindings,
                     audio::initialize_sound_bank,
@@ -152,6 +154,12 @@ impl Plugin for GamePlugin {
             .add_systems(
                 Update,
                 flow::update_room_clear.run_if(in_state(GameScreen::RoomClear)),
+            )
+            .add_systems(
+                Update,
+                player_model::animate_player_model
+                    .after(combat::player_attacks)
+                    .run_if(in_state(GameScreen::Playing)),
             )
             .add_systems(
                 Update,
@@ -287,30 +295,25 @@ struct RoomEntity;
 struct PlayerBody {
     velocity: Vec2,
     facing: f32,
-    weapon_mode: PlayerWeapon,
     grounded: bool,
     jumps_used: u8,
     dash_timer: f32,
     dash_cooldown: f32,
     dash_direction: f32,
     sword_cooldown: f32,
-    gun_cooldown: f32,
+    /// Swings already made in the current sword combo chain.
+    combo_step: usize,
+    /// A sword press made while the previous swing was still cooling down.
+    sword_buffered: bool,
     invulnerability_timer: f32,
     dash_invulnerability_timer: f32,
     dash_strike_timer: f32,
-    stationary_timer: f32,
     rhythm_timer: f32,
     rhythm_stacks: u8,
     chain_reaction_timer: f32,
     sated_fury_timer: f32,
     action_animation_timer: f32,
     footstep_timer: f32,
-}
-
-#[derive(Clone, Copy)]
-enum PlayerWeapon {
-    Sword,
-    Gun,
 }
 
 #[derive(Component)]
@@ -395,10 +398,8 @@ struct DeadEnemy {
 struct CombatProjectile {
     velocity_x: f32,
     damage: f32,
-    knockback_h_s: f32,
     life_s: f32,
     remaining_range: f32,
-    friendly: bool,
     half_size: Vec2,
 }
 
@@ -410,7 +411,7 @@ struct ImpactEffect {
 #[derive(Component)]
 struct DamageNumber {
     timer: Timer,
-    received: bool,
+    color: Color,
 }
 
 #[derive(Component)]
@@ -502,8 +503,8 @@ struct RoomCamera {
 
 #[derive(Debug)]
 struct SpriteSheetSpec {
-    key: &'static str,
-    path: &'static str,
+    key: String,
+    path: String,
     frame_width: u32,
     frame_height: u32,
     frames: usize,

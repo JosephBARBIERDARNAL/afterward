@@ -204,10 +204,8 @@ pub(in crate::game) fn update_enemy_ai(
                         CombatProjectile {
                             velocity_x: direction * attack.projectile_speed_h_s * H_WORLD_UNITS,
                             damage: attack.damage,
-                            knockback_h_s: 0.0,
                             life_s: 3.0,
                             remaining_range: attack.projectile_speed_h_s * H_WORLD_UNITS * 3.0,
-                            friendly: false,
                             half_size: projectile_size / 2.0,
                         },
                         RoomEntity,

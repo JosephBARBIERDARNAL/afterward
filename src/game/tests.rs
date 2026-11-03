@@ -5,6 +5,7 @@ mod enemy_jumping;
 mod gameplay_controls;
 mod player_controls;
 mod procedural_movement;
+mod sword_combo;
 
 #[test]
 fn projectiles_collide_with_platforms_along_their_travel_path() {

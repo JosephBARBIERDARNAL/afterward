@@ -16,8 +16,9 @@ Important: the following is the game specifications, focusing on the first chapt
 ## Player
 
 - The game has one protagonist. Character creation is not included.
-- Player assets (PNG and Aseprite files) are stored in `src/assets/player/`.
-- Every player action, including idle, has a dedicated animation.
+- The protagonist uses the Ozzbit Games "Male Hero Template" (free version: personal, non-commercial use only; credit "Ozzbit Games"). Its sheets live in `src/assets/player/sheets/`, and `src/assets/player/animations.yaml` lists every clip (frames, frame rate) and how the 128×128 frames map onto the collision box: the 32 px body is drawn 0.75 H tall (`body_height_h`), feet on the collision box's baseline.
+- Every player action, including idle, has a dedicated animation: idle, walk (while accelerating or below 60% of maximum speed), run, jump (rising), fall (apex transition, then a falling loop), dash, and one animation per sword-combo hit (the pack's `combo_1` slash, then its `combo_1_end` follow-through as the finisher). The pack has no dash art, so the dash replays the run cycle at a much higher frame rate.
+- Prototype: `src/assets/player/model.yaml` can replace the sprite sheets with a 3D glTF model (`enabled: true`). An off-screen orthographic camera renders the model into a texture drawn as the player sprite, so it looks high definition against the pixel-art world; each player clip plays a mapped glTF animation, with one-shot actions fitted to the clip's duration. The sample model is "RobotExpressive" by Tomás Laulhé (CC0).
 
 ## Player Movement and Combat
 
@@ -46,20 +47,17 @@ These are initial balance constants and should be easy to tune during iteration.
 
 ### Weapon Specifications
 
-The sword attacks horizontally in the direction the player faces, hitting all enemies in a broad forward-facing area. Its reach should let the player hit enemies without standing directly beside them. The gun fires projectiles horizontally in the direction the player faces (left or right); it cannot fire vertically. Player projectiles travel at most 10 H from the muzzle, then disappear.
+The sword is the player's only weapon. It attacks horizontally in the direction the player faces, hitting all enemies in a broad forward-facing area. Its reach should let the player hit enemies without standing directly beside them.
+
+Sword attacks form a combo. Each press of J starts a swing (a press made while the previous swing is still cooling down is buffered and fires as soon as the sword is ready). Combos have no timing window: spamming the sword attack chains it. Any press made before the sword is ready again continues the chain, and each further step multiplies the hit's damage by the next `PLAYER_SWORD_COMBO_DAMAGE_MULTIPLIERS` entry, so longer combos hit harder. The last step is the finisher: it ends the chain, and the next swing starts over at the first step. The chain also resets once the sword is ready with no press waiting, meaning the player stopped attacking. Each hit plays its own combo animation (`sword_combo` in `src/assets/player/animations.yaml`, one clip per multiplier), so the animation shows the player how far the combo has gone; there is no on-screen combo text.
 
 | Constant                                 | Value    | Unit or notes                               |
 | ---------------------------------------- | -------- | ------------------------------------------- |
-| `PLAYER_SWORD_DAMAGE`                    | 5        | Damage per hit                              |
-| `PLAYER_SWORD_RANGE`                     | 2.0      | H forward from the player's collision-box center |
+| `PLAYER_SWORD_DAMAGE`                    | 25       | Damage per hit, before combo multipliers    |
+| `PLAYER_SWORD_RANGE`                     | 3.0      | H forward from the player's collision-box center |
 | `PLAYER_SWORD_ATTACK_INTERVAL`           | 0.5      | s between attacks (2 attacks per second)    |
-| `PLAYER_GUN_DAMAGE`                      | 15       | Damage per projectile                       |
-| `PLAYER_GUN_FIRE_INTERVAL`               | 0.4      | s between shots (2.5 shots per second)      |
-| `PLAYER_GUN_AMMO_MODE`                   | Infinite | No reload                                   |
-| `PLAYER_PROJECTILE_SPEED`                | 18       | H/s                                         |
-| `PLAYER_GUN_RANGE`                       | 10       | H from the muzzle; maximum projectile travel |
+| `PLAYER_SWORD_COMBO_DAMAGE_MULTIPLIERS`  | 1.0, 1.75 | Damage multiplier per combo hit; the last hit is the finisher |
 | `BOSS_KNOCKBACK_FROM_SWORD`              | 2.5      | H/s horizontally away from the player       |
-| `BOSS_KNOCKBACK_FROM_BULLET`             | 1.2      | H/s horizontally away from the player       |
 | `PLAYER_DAMAGE_INVULNERABILITY_DURATION` | 0.55     | s after taking damage (33 frames at 60 FPS) |
 | `PLAYER_DASH_INVULNERABILITY_DURATION`   | 0.12     | s at the start of the dash                  |
 
@@ -67,9 +65,9 @@ The sword attacks horizontally in the direction the player faces, hitting all en
 
 - Combat is fast, mobility-heavy, and skill-based.
 - The player never receives knockback. Damage may trigger the usual feedback and hit reaction, but must not displace the player.
-- Bosses are the only enemies affected by knockback. Sword hits and bullets may push bosses horizontally away from the player using the boss knockback constants above. Ordinary enemies are never displaced by knockback.
+- Bosses are the only enemies affected by knockback. Sword hits may push bosses horizontally away from the player using the boss knockback constant above. Ordinary enemies are never displaced by knockback.
 - Whenever the player deals or receives damage, show a brief floating damage number. Damage dealt appears over the enemy; damage received appears over the player in bold red. Numbers pop up, drift upward, and fade quickly so they remain legible without obscuring combat.
-- Each player move, including sword attacks, shooting, and dashing, has a dedicated animation. Use placeholder sounds only for now (see Sound Design).
+- Each player move, including sword attacks and dashing, has a dedicated animation. Use placeholder sounds only for now (see Sound Design).
 - After all enemies in a room are defeated, play a 0.5-second, full-screen room-clear animation, then show the bonus choices.
 - After the player chooses a bonus, a door appears on the right side of the room. Touching it opens the door and starts the next room's combat.
 
@@ -184,9 +182,9 @@ next_room_id: null # null only for room 100
 - Each category has its own icon and color: red for combat, blue for defense, green for agility, pale yellow for intelligence, and orange for combined.
 - Initial bonus pool (20 bonuses):
   - **Honed Edge** (_Combat_): Increase sword damage by 20%.
-  - **Heavy Caliber** (_Combat_): Increase gun damage by 20%.
+  - **Keen Finisher** (_Combat_): The final hit of a sword combo deals 30% more damage.
   - **Quick Cut** (_Combat_): Increase sword attack speed by 15%.
-  - **Velocity Rounds** (_Combat_): Increase projectile speed by 25%.
+  - **Long Reach** (_Combat_): Increase sword range by 20%.
   - **Thick Skin** (_Defense_): Increase defense by 10%, causing attacks to deal 10% less damage.
   - **Room Ward** (_Defense_): Negate the first damage event in each room.
   - **Vitality** (_Defense_): Increase maximum health by 15 and restore 15 health when acquired.
@@ -195,14 +193,14 @@ next_room_id: null # null only for room 100
   - **High Jump** (_Agility_): Increase jump height by 15%.
   - **Dash Recharge** (_Agility_): Reduce dash cooldown by 20% (from 0.8 s to 0.64 s at the current baseline).
   - **Double Jump** (_Agility_): Gain one additional mid-air jump at 80% of the normal jump impulse.
-  - **Marked Prey** (_Intelligence_): A sword hit marks an enemy for 2 s; gun hits deal 15% more damage to that enemy while marked.
-  - **Rhythm Training** (_Intelligence_): Each hit within 1.5 s of the previous hit increases both weapon attack speeds by 4%, up to 16%; the bonus resets after 1.5 s without a hit.
+  - **Marked Prey** (_Intelligence_): A sword hit marks an enemy for 2 s; further sword hits deal 15% more damage to that enemy while marked.
+  - **Rhythm Training** (_Intelligence_): Each hit within 1.5 s of the previous hit increases sword attack speed by 4%, up to 16%; the bonus resets after 1.5 s without a hit.
   - **Chain Reaction** (_Intelligence_): Killing an enemy increases damage by 15% for 2 s.
-  - **Patient Aim** (_Intelligence_): After standing still for 0.5 s, gun damage increases by 15% until the player moves.
+  - **Combo Flow** (_Intelligence_): Follow-up sword combo swings come 25% faster.
   - **Vampiric Edge** (_Combined: Combat + Defense_): Each enemy hit by the sword restores 1 health, up to 5 health per swing.
   - **Dash Strike** (_Combined: Combat + Agility_): A sword attack within 1 s after dashing deals 25% more damage.
-  - **Aerial Hunter** (_Combined: Combat + Agility_): Deal 20% more gun damage while airborne.
-  - **Sated Fury** (_Combined: Combat + Defense_): After collecting a healing pickup, increase both weapon attack speeds by 15% for 3 s.
+  - **Aerial Edge** (_Combined: Combat + Agility_): Deal 20% more sword damage while airborne.
+  - **Sated Fury** (_Combined: Combat + Defense_): After collecting a healing pickup, increase sword attack speed by 15% for 3 s.
 
 ## Assets
 
@@ -219,8 +217,7 @@ Default controls:
 - ZQSD (AZERTY) or arrow keys: move.
 - Space: jump.
 - Left Shift: dash.
-- J: use the sword.
-- K: fire the gun.
+- J: swing the sword (press repeatedly to chain a combo).
 - E: interact with an element.
 - 1 / 2: choose the first / second bonus. R: reroll the bonus offers. Up/Down + Enter, or a mouse click, also work on the bonus screen.
 - Escape: open or close the pause menu. The menu offers Continue, Restart, Settings, and Leave. Leave returns to the main menu shown before a run.
@@ -247,8 +244,8 @@ Settings:
 
 ### Gameplay Sound Effects
 
-- Player actions have sound effects synchronized with their animations. Include movement and surface-specific footsteps, jumping, landing, sword swings and hits, gunshots and bullet impacts, dashing, taking damage, healing pickups, and death. Idle sounds may be subtle and should not become repetitive or distracting.
-- Sword swings must sound different when they hit an enemy. Bullet impacts distinguish enemies from the environment. Damage and healing sounds must be easy to recognize.
+- Player actions have sound effects synchronized with their animations. Include movement and surface-specific footsteps, jumping, landing, sword swings and hits (with a distinct combo-finisher hit), enemy projectiles striking the environment, dashing, taking damage, healing pickups, and death. Idle sounds may be subtle and should not become repetitive or distracting.
+- Sword swings must sound different when they hit an enemy. Damage and healing sounds must be easy to recognize.
 - Each enemy type has a recognizable sound identity, with sounds for idle, movement, attack execution, taking damage, and death. Include attack-preparation cues where applicable. Enemy hit sounds clearly confirm a successful hit, dangerous attacks have clear warning cues, and death sounds are short enough to avoid clutter when several enemies die together.
 - Stronger attacks have more powerful impact sounds.
 - Bosses have distinctive sounds for their movement, attacks, phase changes when applicable, damage, and defeat. Boss attack cues must remain audible during combat.

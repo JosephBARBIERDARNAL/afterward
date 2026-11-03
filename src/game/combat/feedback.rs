@@ -43,11 +43,7 @@ pub(in crate::game) fn update_damage_numbers(
         number.timer.tick(time.delta());
         transform.translation.y += 30.0 * time.delta_secs();
         let opacity = 1.0 - number.timer.fraction();
-        color.0 = if number.received {
-            Color::srgba(1.0, 0.22, 0.22, opacity)
-        } else {
-            Color::srgba(1.0, 1.0, 1.0, opacity)
-        };
+        color.0 = number.color.with_alpha(opacity);
         if number.timer.is_finished() {
             commands.entity(entity).despawn();
         }

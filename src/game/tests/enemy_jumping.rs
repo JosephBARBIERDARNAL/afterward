@@ -14,8 +14,7 @@ fn ground_enemy_climbs_the_staircase_to_a_player_on_a_higher_platform() {
         frames: 1,
         fps: 1.0,
     };
-    let mut sheets =
-        BTreeMap::from([(String::from("player_idle_sword"), placeholder_sheet.clone())]);
+    let mut sheets = BTreeMap::from([(String::from("player_idle"), placeholder_sheet.clone())]);
     for type_id in data.enemies.types.keys() {
         sheets.insert(type_id.idle_sheet().to_string(), placeholder_sheet.clone());
     }
@@ -38,7 +37,7 @@ fn ground_enemy_climbs_the_staircase_to_a_player_on_a_higher_platform() {
             |mut commands: Commands, data: Res<GameData>, sheets: Res<SpriteSheets>| {
                 let room = &data.rooms[&3];
                 world::spawn_room_platforms(&mut commands, room);
-                world::spawn_player(&mut commands, room, &sheets);
+                world::spawn_player(&mut commands, room, &data, &sheets);
                 world::spawn_enemies(&mut commands, room, &data, &sheets);
             },
         )
@@ -122,7 +121,7 @@ fn evil_wizard_jump_slam_damages_the_player_on_landing() {
         fps: 1.0,
     };
     let sheets = SpriteSheets(BTreeMap::from([
-        (String::from("player_idle_sword"), placeholder_sheet.clone()),
+        (String::from("player_idle"), placeholder_sheet.clone()),
         (String::from("boss_idle"), placeholder_sheet),
     ]));
 
@@ -144,7 +143,7 @@ fn evil_wizard_jump_slam_damages_the_player_on_landing() {
             |mut commands: Commands, data: Res<GameData>, sheets: Res<SpriteSheets>| {
                 let room = &data.rooms[&10];
                 world::spawn_room_platforms(&mut commands, room);
-                world::spawn_player(&mut commands, room, &sheets);
+                world::spawn_player(&mut commands, room, &data, &sheets);
                 world::spawn_enemies(&mut commands, room, &data, &sheets);
             },
         )

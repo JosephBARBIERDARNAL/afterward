@@ -1,20 +1,19 @@
 use super::*;
 
 mod boss_sheets;
-mod effect_sheets;
 mod enemy_sheets;
 mod player_sheets;
 
 pub(super) fn load_sprites(
     mut commands: Commands,
+    data: Res<GameData>,
     asset_server: Res<AssetServer>,
     mut atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
 ) {
-    let specs = player_sheets::sprites()
+    let specs = player_sheets::sprites(&data.player_animations)
         .into_iter()
         .chain(enemy_sheets::sprites())
         .chain(boss_sheets::sprites())
-        .chain(effect_sheets::sprites())
         .collect::<Vec<_>>();
 
     let mut sheets = BTreeMap::new();
@@ -28,7 +27,7 @@ pub(super) fn load_sprites(
             None,
         ));
         sheets.insert(
-            spec.key.to_string(),
+            spec.key,
             SpriteSheet {
                 image,
                 layout,
@@ -72,14 +71,14 @@ mod tests {
     #[test]
     fn sprite_sheet_layouts_match_their_png_dimensions() {
         let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
-        let specs = player_sheets::sprites()
+        let data = GameData::load(&asset_root).expect("game data should load");
+        let specs = player_sheets::sprites(&data.player_animations)
             .into_iter()
             .chain(enemy_sheets::sprites())
-            .chain(boss_sheets::sprites())
-            .chain(effect_sheets::sprites());
+            .chain(boss_sheets::sprites());
 
         for spec in specs {
-            let path = asset_root.join(spec.path);
+            let path = asset_root.join(&spec.path);
             let bytes = fs::read(&path)
                 .unwrap_or_else(|error| panic!("failed to read {}: {error}", path.display()));
             assert!(

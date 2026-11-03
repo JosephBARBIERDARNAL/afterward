@@ -174,28 +174,30 @@ pub(super) fn update_player(
         player.footstep_timer = 0.0;
     }
 
-    player.stationary_timer = if player.velocity.x.abs() < 5.0 {
-        player.stationary_timer + dt
-    } else {
-        0.0
-    };
+    let moving = player.velocity.x.abs() > 20.0;
     if player.action_animation_timer <= 0.0 {
-        let animation_key = if player.dash_timer > 0.0 {
-            "player_dash"
+        let run_speed = data.player_animations.run_speed_fraction
+            * tuning.max_speed_h_s
+            * movement_multiplier
+            * H_WORLD_UNITS;
+        let fall_finished = animation.sheet == "player_fall_loop"
+            || (animation.sheet == "player_fall" && animation.frame + 1 == animation.frames);
+        let (animation_key, looping) = if player.dash_timer > 0.0 {
+            ("player_dash", true)
+        } else if !player.grounded && player.velocity.y > 0.0 {
+            ("player_jump", false)
+        } else if !player.grounded && fall_finished {
+            ("player_fall_loop", true)
         } else if !player.grounded {
-            "player_jump"
-        } else if player.velocity.x.abs() > 20.0 {
-            match player.weapon_mode {
-                PlayerWeapon::Sword => "player_running_sword",
-                PlayerWeapon::Gun => "player_running_gun",
-            }
+            ("player_fall", false)
+        } else if player.velocity.x.abs() >= run_speed {
+            ("player_run", true)
+        } else if moving {
+            ("player_walk", true)
         } else {
-            match player.weapon_mode {
-                PlayerWeapon::Sword => "player_idle_sword",
-                PlayerWeapon::Gun => "player_idle_gun",
-            }
+            ("player_idle", true)
         };
-        set_animation(&mut sprite, &mut animation, &sheets, animation_key, true);
+        set_animation(&mut sprite, &mut animation, &sheets, animation_key, looping);
     }
     sprite.flip_x = player.facing < 0.0;
 }

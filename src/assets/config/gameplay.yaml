@@ -21,14 +21,14 @@ player:
     damage: 25
     range_h: 3
     attack_interval_s: 0.5
-  gun:
-    damage: 15
-    fire_interval_s: 0.4
-    projectile_speed_h_s: 18
-    range_h: 10
-  boss_knockback:
-    sword_h_s: 2.5
-    bullet_h_s: 1.2
+    boss_knockback_h_s: 2.5
+    # Spamming J chains the combo: a press made before the sword is ready again
+    # continues it, and hit N of a chain deals `damage * damage_multipliers[N]`
+    # and plays the player's `sword_combo[N]` animation. The chain resets after
+    # its last hit (the finisher), or once the sword is ready and no press is
+    # waiting (the player stopped attacking).
+    combo:
+      damage_multipliers: [1.0, 1.75]
 
 health_pickup:
   healing: 10
@@ -63,7 +63,6 @@ controls:
   jump: [Space]
   dash: [ShiftLeft]
   sword: [KeyJ]
-  gun: [KeyK]
   interact: [KeyE, Enter]
   pause: [Escape]
   toggle_fullscreen: [KeyF]

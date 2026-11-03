@@ -1,5 +1,7 @@
 mod models;
+mod player_animations;
 pub use models::*;
+pub use player_animations::*;
 use std::{
     collections::BTreeMap,
     error::Error,
@@ -14,6 +16,8 @@ use serde::de::DeserializeOwned;
 #[derive(Resource, Debug)]
 pub struct GameData {
     pub gameplay: GameplayConfig,
+    pub player_animations: PlayerAnimations,
+    pub player_model: PlayerModelConfig,
     pub enemies: EnemyTypes,
     pub backgrounds: BackgroundProfiles,
     pub bonuses: BonusesConfig,
@@ -23,6 +27,8 @@ pub struct GameData {
 impl GameData {
     pub fn load(asset_root: &Path) -> Result<Self, Box<dyn Error + Send + Sync>> {
         let gameplay = read_yaml(&asset_root.join("config/gameplay.yaml"))?;
+        let player_animations = read_yaml(&asset_root.join("player/animations.yaml"))?;
+        let player_model = read_yaml(&asset_root.join("player/model.yaml"))?;
         let enemies = read_yaml(&asset_root.join("enemies/enemy_types.yaml"))?;
         let backgrounds = read_yaml(&asset_root.join("background/background_profiles.yaml"))?;
         let bonuses = read_yaml(&asset_root.join("config/bonuses.yaml"))?;
@@ -36,6 +42,8 @@ impl GameData {
 
         let data = Self {
             gameplay,
+            player_animations,
+            player_model,
             enemies,
             backgrounds,
             bonuses,
@@ -70,12 +78,83 @@ impl GameData {
             || player.max_speed_h_s <= 0.0
             || !player.air_max_speed_h_s.is_finite()
             || player.air_max_speed_h_s <= 0.0
-            || !player.gun.range_h.is_finite()
-            || player.gun.range_h <= 0.0
+            || !player.sword.range_h.is_finite()
+            || player.sword.range_h <= 0.0
         {
             return Err(InvalidGameData::from(
-                "player movement speeds and gun range must be finite and positive",
+                "player movement speeds and sword range must be finite and positive",
             ));
+        }
+        let sword = &player.sword;
+        if !(sword.attack_interval_s.is_finite() && sword.attack_interval_s > 0.0)
+            || sword.combo.damage_multipliers.is_empty()
+            || sword
+                .combo
+                .damage_multipliers
+                .iter()
+                .any(|multiplier| !multiplier.is_finite() || *multiplier <= 0.0)
+        {
+            return Err(InvalidGameData::from(
+                "the sword needs a positive attack interval and at least one positive \
+                 combo damage multiplier",
+            ));
+        }
+        let animations = &self.player_animations;
+        if animations.body_height_px <= 0.0
+            || !(animations.body_height_h.is_finite() && animations.body_height_h > 0.0)
+            || !(animations.body_height_px..=animations.frame_size_px.height as f32)
+                .contains(&animations.feet_row_px)
+            || !(animations.run_speed_fraction > 0.0 && animations.run_speed_fraction <= 1.0)
+        {
+            return Err(InvalidGameData::from(
+                "player sprite body heights, feet row, and run speed fraction are out of range",
+            ));
+        }
+        if animations.sword_combo.len() != sword.combo.damage_multipliers.len() {
+            return Err(InvalidGameData::from(
+                "the player needs exactly one sword-combo animation per combo damage multiplier",
+            ));
+        }
+        let model = &self.player_model;
+        if model.enabled {
+            if !asset_root.join(&model.scene).is_file() {
+                return Err(InvalidGameData::from(format!(
+                    "missing player model: {}",
+                    model.scene
+                )));
+            }
+            if model.render_size_px == 0
+                || [model.model_height, model.view_height, model.blend_s]
+                    .iter()
+                    .any(|value| !value.is_finite() || *value <= 0.0)
+                || !(0.0..model.view_height).contains(&model.feet_margin)
+            {
+                return Err(InvalidGameData::from(
+                    "player model sizes and blend time must be positive, \
+                     with the feet margin inside the view",
+                ));
+            }
+            if let Some((key, _)) = animations.keyed().into_iter().find(|(key, _)| {
+                key.strip_prefix("player_")
+                    .is_none_or(|name| !model.clips.contains_key(name))
+            }) {
+                return Err(InvalidGameData::from(format!(
+                    "the player model maps no animation to {key}"
+                )));
+            }
+        }
+        for (key, clip) in animations.keyed() {
+            if clip.frames == 0 || !clip.fps.is_finite() || clip.fps <= 0.0 {
+                return Err(InvalidGameData::from(format!(
+                    "{key} needs at least one frame and a positive frame rate"
+                )));
+            }
+            if !asset_root.join(&clip.sheet).is_file() {
+                return Err(InvalidGameData::from(format!(
+                    "missing player sprite sheet: {}",
+                    clip.sheet
+                )));
+            }
         }
         let expected_jump_impulse =
             (2.0 * self.gameplay.player.gravity_h_s2 * self.gameplay.player.jump_height_h).sqrt();
@@ -114,7 +193,6 @@ impl GameData {
             &controls.jump,
             &controls.dash,
             &controls.sword,
-            &controls.gun,
             &controls.interact,
             &controls.pause,
             &controls.toggle_fullscreen,
@@ -361,7 +439,14 @@ mod tests {
             data.gameplay.player.max_speed_h_s,
             data.gameplay.player.air_max_speed_h_s
         );
-        assert_eq!(data.gameplay.player.gun.range_h, 10.0);
+        let combo = &data.gameplay.player.sword.combo;
+        assert!(
+            combo
+                .damage_multipliers
+                .windows(2)
+                .all(|pair| pair[1] > pair[0]),
+            "longer sword combos must deal more damage per hit"
+        );
     }
 
     #[test]

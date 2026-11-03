@@ -1,94 +1,17 @@
 use super::super::SpriteSheetSpec;
+use crate::data::PlayerAnimations;
 
-pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
-    vec![
-        SpriteSheetSpec {
-            key: "player_idle",
-            path: "player/idle/idle.png",
-            frame_width: 128,
-            frame_height: 80,
-            frames: 5,
-            fps: 6.0,
-        },
-        SpriteSheetSpec {
-            key: "player_idle_sword",
-            path: "player/idle/idle_sword.png",
-            frame_width: 128,
-            frame_height: 80,
-            frames: 5,
-            fps: 6.0,
-        },
-        SpriteSheetSpec {
-            key: "player_idle_gun",
-            path: "player/idle/idle_gun.png",
-            frame_width: 128,
-            frame_height: 80,
-            frames: 5,
-            fps: 6.0,
-        },
-        SpriteSheetSpec {
-            key: "player_running",
-            path: "player/running/running.png",
-            frame_width: 128,
-            frame_height: 80,
-            frames: 6,
-            fps: 10.0,
-        },
-        SpriteSheetSpec {
-            key: "player_running_sword",
-            path: "player/running/running_sword.png",
-            frame_width: 128,
-            frame_height: 80,
-            frames: 6,
-            fps: 10.0,
-        },
-        SpriteSheetSpec {
-            key: "player_running_gun",
-            path: "player/running/running_gun.png",
-            frame_width: 128,
-            frame_height: 80,
-            frames: 6,
-            fps: 10.0,
-        },
-        SpriteSheetSpec {
-            key: "player_jump",
-            path: "player/jump/jump.png",
-            frame_width: 128,
-            frame_height: 80,
-            frames: 11,
-            fps: 12.0,
-        },
-        SpriteSheetSpec {
-            key: "player_dash",
-            path: "player/dash/dash_loop.png",
-            frame_width: 128,
-            frame_height: 80,
-            frames: 6,
-            fps: 16.0,
-        },
-        SpriteSheetSpec {
-            key: "player_sword",
-            path: "player/attacks/sword_attack_1.png",
-            frame_width: 128,
-            frame_height: 80,
-            frames: 6,
-            fps: 14.0,
-        },
-        SpriteSheetSpec {
-            key: "player_gun_shoot_idle",
-            path: "player/idle/idle_shoot_gun.png",
-            frame_width: 128,
-            frame_height: 80,
-            frames: 4,
-            fps: 14.0,
-        },
-        SpriteSheetSpec {
-            key: "player_gun_shoot_run",
-            path: "player/running/running_shoot_gun.png",
-            frame_width: 128,
-            frame_height: 80,
-            frames: 6,
-            fps: 10.0,
-        },
-    ]
+pub(super) fn sprites(animations: &PlayerAnimations) -> Vec<SpriteSheetSpec> {
+    animations
+        .keyed()
+        .into_iter()
+        .map(|(key, clip)| SpriteSheetSpec {
+            key,
+            path: clip.sheet.clone(),
+            frame_width: animations.frame_size_px.width,
+            frame_height: animations.frame_size_px.height,
+            frames: clip.frames,
+            fps: clip.fps,
+        })
+        .collect()
 }

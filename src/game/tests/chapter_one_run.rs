@@ -7,7 +7,7 @@ use std::{
 
 use bevy::{prelude::MinimalPlugins, state::app::StatesPlugin, time::TimeUpdateStrategy};
 
-const TEST_PILOT_COMBAT_DISTANCE_H: f32 = 5.0;
+const TEST_PILOT_COMBAT_DISTANCE_H: f32 = 2.0;
 
 type TestPilotPlayers<'w, 's> = Query<
     'w,
@@ -34,8 +34,7 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
         frames: 1,
         fps: 1.0,
     };
-    let mut sheets =
-        BTreeMap::from([(String::from("player_idle_sword"), placeholder_sheet.clone())]);
+    let mut sheets = BTreeMap::from([(String::from("player_idle"), placeholder_sheet.clone())]);
     for type_id in data.enemies.types.keys() {
         sheets.insert(type_id.idle_sheet().to_string(), placeholder_sheet.clone());
     }
@@ -134,7 +133,6 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
                             keys.press(KeyCode::Space);
                         }
                         keys.press(KeyCode::KeyJ);
-                        keys.press(KeyCode::KeyK);
                     } else {
                         let room = &data.rooms[&session.room_id];
                         if room.exit.x_h * H_WORLD_UNITS - player_transform.translation.x
@@ -174,7 +172,7 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
                             "vitality",
                             "thick_skin",
                             "vampiric_edge",
-                            "heavy_caliber",
+                            "keen_finisher",
                             "rhythm_training",
                         ]
                         .into_iter()
@@ -343,7 +341,7 @@ fn spawn_test_room(
     }
     let room = &data.rooms[&session.room_id];
     world::spawn_room_platforms(&mut commands, room);
-    world::spawn_player(&mut commands, room, &sheets);
+    world::spawn_player(&mut commands, room, &data, &sheets);
     world::spawn_enemies(&mut commands, room, &data, &sheets);
     session.world_loaded = true;
 }

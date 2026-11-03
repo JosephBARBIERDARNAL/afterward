@@ -7,31 +7,23 @@ use bevy::{prelude::MinimalPlugins, time::TimeUpdateStrategy};
 fn default_controls_move_jump_and_dash_the_player() {
     let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
     let data = GameData::load(&asset_root).expect("Chapter 1 data should load");
-    let sheets = [
-        ("player_idle_sword", 5, 6.0),
-        ("player_running_sword", 6, 10.0),
-        ("player_idle_gun", 5, 6.0),
-        ("player_running_gun", 6, 10.0),
-        ("player_jump", 11, 12.0),
-        ("player_dash", 6, 16.0),
-        ("player_sword", 6, 14.0),
-        ("player_gun_shoot_idle", 4, 14.0),
-        ("player_gun_shoot_run", 6, 10.0),
-    ]
-    .into_iter()
-    .map(|(key, frames, fps)| {
-        (
-            String::from(key),
-            SpriteSheet {
-                image: Handle::default(),
-                layout: Handle::default(),
-                frame_size: Vec2::new(128.0, 80.0),
-                frames,
-                fps,
-            },
-        )
-    })
-    .collect();
+    let sheets = data
+        .player_animations
+        .keyed()
+        .into_iter()
+        .map(|(key, clip)| {
+            (
+                key,
+                SpriteSheet {
+                    image: Handle::default(),
+                    layout: Handle::default(),
+                    frame_size: Vec2::new(128.0, 128.0),
+                    frames: clip.frames,
+                    fps: clip.fps,
+                },
+            )
+        })
+        .collect();
 
     let mut app = App::new();
     app.add_plugins(MinimalPlugins)
@@ -50,7 +42,7 @@ fn default_controls_move_jump_and_dash_the_player() {
             Startup,
             |mut commands: Commands, data: Res<GameData>, sheets: Res<SpriteSheets>| {
                 let room = &data.rooms[&1];
-                world::spawn_player(&mut commands, room, &sheets);
+                world::spawn_player(&mut commands, room, &data, &sheets);
                 let width = room.width_h(&data.gameplay) * H_WORLD_UNITS;
                 commands.spawn(PlatformSurface {
                     left: 0.0,
@@ -88,6 +80,15 @@ fn default_controls_move_jump_and_dash_the_player() {
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
         .press(KeyCode::KeyD);
+    app.update();
+    assert_eq!(
+        app.world()
+            .get::<AnimatedSprite>(player)
+            .expect("player animation should remain available")
+            .sheet,
+        "player_walk",
+        "the player walks while accelerating from a standstill"
+    );
     for _ in 0..8 {
         app.update();
         app.world_mut()
@@ -100,11 +101,18 @@ fn default_controls_move_jump_and_dash_the_player() {
         .expect("player should remain spawned")
         .translation;
     assert!(after_moving.x > start_position.x);
+    assert_eq!(
+        app.world()
+            .get::<AnimatedSprite>(player)
+            .expect("player animation should remain available")
+            .sheet,
+        "player_run"
+    );
 
     {
         let mut keys = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
         keys.clear();
-        keys.press(KeyCode::KeyK);
+        keys.press(KeyCode::KeyJ);
     }
     app.update();
     assert_eq!(
@@ -112,29 +120,16 @@ fn default_controls_move_jump_and_dash_the_player() {
             .get::<AnimatedSprite>(player)
             .expect("player animation should remain available")
             .sheet,
-        "player_gun_shoot_run"
+        "player_sword_combo_1"
     );
-
-    for _ in 0..8 {
-        app.update();
-        app.world_mut()
-            .resource_mut::<ButtonInput<KeyCode>>()
-            .clear();
-    }
-    let repeated_shot = app
-        .world()
-        .get::<AnimatedSprite>(player)
-        .expect("player animation should remain available");
-    assert_eq!(repeated_shot.sheet, "player_gun_shoot_run");
-    assert_eq!(repeated_shot.frame, 0);
 
     {
         let mut keys = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
         keys.release(KeyCode::KeyD);
-        keys.release(KeyCode::KeyK);
+        keys.release(KeyCode::KeyJ);
         keys.clear();
     }
-    for _ in 0..14 {
+    for _ in 0..30 {
         app.update();
         app.world_mut()
             .resource_mut::<ButtonInput<KeyCode>>()
@@ -145,19 +140,7 @@ fn default_controls_move_jump_and_dash_the_player() {
             .get::<AnimatedSprite>(player)
             .expect("player animation should remain available")
             .sheet,
-        "player_idle_gun"
-    );
-
-    app.world_mut()
-        .resource_mut::<ButtonInput<KeyCode>>()
-        .press(KeyCode::KeyD);
-    app.update();
-    assert_eq!(
-        app.world()
-            .get::<AnimatedSprite>(player)
-            .expect("player animation should remain available")
-            .sheet,
-        "player_running_gun"
+        "player_idle"
     );
 
     {
@@ -173,6 +156,13 @@ fn default_controls_move_jump_and_dash_the_player() {
         .expect("player should remain spawned")
         .translation;
     assert!(after_jumping.y > start_position.y);
+    assert_eq!(
+        app.world()
+            .get::<AnimatedSprite>(player)
+            .expect("player animation should remain available")
+            .sheet,
+        "player_jump"
+    );
 
     let before_dashing_x = after_jumping.x;
     {

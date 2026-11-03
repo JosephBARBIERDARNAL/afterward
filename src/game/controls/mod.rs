@@ -23,7 +23,6 @@ pub(super) enum GameAction {
     Jump,
     Dash,
     Sword,
-    Gun,
     Interact,
     Pause,
     ToggleFullscreen,
@@ -33,7 +32,7 @@ pub(super) enum GameAction {
 }
 
 impl GameAction {
-    pub const ALL: [Self; 14] = [
+    pub const ALL: [Self; 13] = [
         Self::MoveLeft,
         Self::MoveRight,
         Self::NavigateUp,
@@ -41,7 +40,6 @@ impl GameAction {
         Self::Jump,
         Self::Dash,
         Self::Sword,
-        Self::Gun,
         Self::Interact,
         Self::Pause,
         Self::ToggleFullscreen,
@@ -59,7 +57,6 @@ impl GameAction {
             Self::Jump => "JUMP",
             Self::Dash => "DASH",
             Self::Sword => "SWORD",
-            Self::Gun => "GUN",
             Self::Interact => "INTERACT / CONFIRM",
             Self::Pause => "PAUSE",
             Self::ToggleFullscreen => "FULLSCREEN",
@@ -82,7 +79,6 @@ impl FromStr for GameAction {
             "jump" => Ok(Self::Jump),
             "dash" => Ok(Self::Dash),
             "sword" => Ok(Self::Sword),
-            "gun" => Ok(Self::Gun),
             "interact" => Ok(Self::Interact),
             "pause" => Ok(Self::Pause),
             "toggle_fullscreen" => Ok(Self::ToggleFullscreen),
@@ -104,7 +100,6 @@ impl Display for GameAction {
             Self::Jump => "jump",
             Self::Dash => "dash",
             Self::Sword => "sword",
-            Self::Gun => "gun",
             Self::Interact => "interact",
             Self::Pause => "pause",
             Self::ToggleFullscreen => "toggle_fullscreen",
@@ -144,7 +139,6 @@ impl From<&ControlsConfig> for DefaultBindings {
             (GameAction::Jump, parse_keys(&controls.jump)),
             (GameAction::Dash, parse_keys(&controls.dash)),
             (GameAction::Sword, parse_keys(&controls.sword)),
-            (GameAction::Gun, parse_keys(&controls.gun)),
             (GameAction::Interact, parse_keys(&controls.interact)),
             (GameAction::Pause, parse_keys(&controls.pause)),
             (

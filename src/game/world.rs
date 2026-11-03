@@ -2,8 +2,6 @@ use super::*;
 use crate::data::RoomConfig;
 use bevy::sprite::Anchor;
 
-const PLAYER_VISUAL_HEIGHT_FACTOR: f32 = 1.4;
-const PLAYER_SPRITE_BOTTOM_PADDING_FRACTION: f32 = 0.2;
 const ENEMY_SPRITE_SCALE: f32 = 0.62;
 
 pub(super) fn spawn_room(
@@ -19,7 +17,7 @@ pub(super) fn spawn_room(
     }
     let room = &data.rooms[&session.room_id];
     draw_room(&mut commands, room, &data, &asset_server);
-    spawn_player(&mut commands, room, &sheets);
+    spawn_player(&mut commands, room, &data, &sheets);
     spawn_enemies(&mut commands, room, &data, &sheets);
 
     if let Ok((mut transform, mut rig)) = camera.single_mut() {
@@ -146,8 +144,14 @@ pub(super) fn spawn_room_platforms(commands: &mut Commands, room: &RoomConfig) {
     }
 }
 
-pub(super) fn spawn_player(commands: &mut Commands, room: &RoomConfig, sheets: &SpriteSheets) {
-    let key = "player_idle_sword";
+pub(super) fn spawn_player(
+    commands: &mut Commands,
+    room: &RoomConfig,
+    data: &GameData,
+    sheets: &SpriteSheets,
+) {
+    let animations = &data.player_animations;
+    let key = "player_idle";
     let sheet = &sheets.0[key];
     let mut sprite = Sprite::from_atlas_image(
         sheet.image.clone(),
@@ -156,17 +160,29 @@ pub(super) fn spawn_player(commands: &mut Commands, room: &RoomConfig, sheets: &
             index: 0,
         },
     );
-    let visual_height = H_WORLD_UNITS * PLAYER_VISUAL_HEIGHT_FACTOR;
-    sprite.custom_size = Some(Vec2::new(
-        sheet.frame_size.x * visual_height / sheet.frame_size.y,
-        visual_height,
-    ));
+    // Where the body sits in a frame: the sprite sheets' measured pixels, or the
+    // 3D model's camera framing (see `player_model::setup_player_model`).
+    let model = &data.player_model;
+    let (body_height_px, feet_row_px) = if model.enabled {
+        let px_per_unit = sheet.frame_size.y / model.view_height;
+        (
+            model.model_height * px_per_unit,
+            (model.view_height - model.feet_margin) * px_per_unit,
+        )
+    } else {
+        (animations.body_height_px, animations.feet_row_px)
+    };
+    // Draw the body `body_height_h` tall with its feet on the collision box's
+    // baseline; the anchor sits at the box's center, half an H above the feet.
+    sprite.custom_size =
+        Some(sheet.frame_size * animations.body_height_h * H_WORLD_UNITS / body_height_px);
+    let px_per_h = body_height_px / animations.body_height_h;
+    let body_center_from_bottom_px = sheet.frame_size.y - feet_row_px + px_per_h / 2.0;
     commands.spawn((
         sprite,
         Anchor(Vec2::new(
             0.0,
-            (1.0 - PLAYER_VISUAL_HEIGHT_FACTOR) / (2.0 * PLAYER_VISUAL_HEIGHT_FACTOR)
-                + PLAYER_SPRITE_BOTTOM_PADDING_FRACTION,
+            body_center_from_bottom_px / sheet.frame_size.y - 0.5,
         )),
         Transform::from_xyz(
             room.player_spawn.x_h * H_WORLD_UNITS,
@@ -183,18 +199,17 @@ pub(super) fn spawn_player(commands: &mut Commands, room: &RoomConfig, sheets: &
         PlayerBody {
             velocity: Vec2::ZERO,
             facing: 1.0,
-            weapon_mode: PlayerWeapon::Sword,
             grounded: true,
             jumps_used: 0,
             dash_timer: 0.0,
             dash_cooldown: 0.0,
             dash_direction: 1.0,
             sword_cooldown: 0.0,
-            gun_cooldown: 0.0,
+            combo_step: 0,
+            sword_buffered: false,
             invulnerability_timer: 0.0,
             dash_invulnerability_timer: 0.0,
             dash_strike_timer: 0.0,
-            stationary_timer: 0.0,
             rhythm_timer: 0.0,
             rhythm_stacks: 0,
             chain_reaction_timer: 0.0,

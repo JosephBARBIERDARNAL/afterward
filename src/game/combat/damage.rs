@@ -1,114 +1,17 @@
 use super::*;
 use bevy::text::{FontSize, FontWeight};
 
-pub(super) struct EnemyDamageResources<'a, 'w, 's> {
-    pub commands: &'a mut Commands<'w, 's>,
-    pub data: &'a GameData,
-    pub session: &'a RunSession,
-    pub random: &'a mut RandomState,
-    pub sheets: &'a SpriteSheets,
-    pub sounds: &'a mut SoundQueue,
-}
-
-pub(super) struct EnemyDamageTarget<'a> {
-    pub entity: Entity,
-    pub enemy: &'a mut EnemyBody,
-    pub transform: &'a mut Transform,
-    pub sprite: &'a mut Sprite,
-    pub animation: &'a mut AnimatedSprite,
-}
-
-pub(super) struct EnemyHit {
-    pub damage: f32,
-    pub knockback_h_s: f32,
-    pub knockback_direction: f32,
-    pub sword_hit: bool,
-}
-
-pub(super) fn damage_enemy<'a, 'w, 's>(
-    resources: EnemyDamageResources<'a, 'w, 's>,
-    target: EnemyDamageTarget<'a>,
-    hit: EnemyHit,
-) -> bool {
-    let EnemyDamageResources {
-        commands,
-        data,
-        session,
-        random,
-        sheets,
-        sounds,
-    } = resources;
-    let EnemyDamageTarget {
-        entity,
-        enemy,
-        transform,
-        sprite,
-        animation,
-    } = target;
-    let EnemyHit {
-        damage,
-        knockback_h_s,
-        knockback_direction,
-        sword_hit,
-    } = hit;
-    if enemy.health <= 0.0 {
-        return false;
-    }
-    let damage = damage.max(0.0);
-    enemy.health = (enemy.health - damage).max(0.0);
-    spawn_damage_number(commands, transform.translation, damage, false);
-    if enemy.type_id == "evil_wizard" {
-        enemy.knockback_velocity = knockback_direction * knockback_h_s;
-        transform.translation.y = enemy.home_y;
-    }
-    if sword_hit {
-        enemy.marked_timer = data.bonus_effect("marked_prey", "mark_duration_s");
-    }
-    if data.enemies.damage_triggers_combat {
-        enemy.engaged = true;
-    }
-    if enemy.health == 0.0 {
-        sounds.push(SoundCue::EnemyDeath(audio::EnemySoundStyle::from(
-            &enemy.type_id,
-        )));
-        enemy.windup_remaining = 0.0;
-        enemy.combo_hit_pending = false;
-        set_enemy_animation(sprite, animation, sheets, &enemy.type_id, "dead");
-        commands.entity(entity).insert(DeadEnemy {
-            timer: Timer::from_seconds(0.9, TimerMode::Once),
-        });
-        let drop_multiplier =
-            bonus_multiplier(session, data, "scavenger", "health_drop_chance_multiplier");
-        if random.chance((data.gameplay.health_pickup.base_drop_chance * drop_multiplier).min(1.0))
-        {
-            commands.spawn((
-                Sprite::from_color(Color::srgb(0.28, 0.95, 0.48), Vec2::splat(18.0)),
-                Transform::from_translation(transform.translation + Vec3::new(0.0, 20.0, 0.8)),
-                HealthPickup {
-                    healing: data.gameplay.health_pickup.healing,
-                },
-                RoomEntity,
-            ));
-        }
-        true
-    } else {
-        sounds.push(SoundCue::EnemyHurt(audio::EnemySoundStyle::from(
-            &enemy.type_id,
-        )));
-        enemy.hurt_timer = 0.24;
-        enemy.windup_remaining = 0.0;
-        enemy.combo_hit_pending = false;
-        set_enemy_animation(sprite, animation, sheets, &enemy.type_id, "hurt");
-        false
-    }
-}
-
 pub(super) fn spawn_damage_number(
     commands: &mut Commands,
     position: Vec3,
     damage: f32,
     received: bool,
 ) {
+    let color = if received {
+        Color::srgb(1.0, 0.15, 0.18)
+    } else {
+        Color::WHITE
+    };
     commands.spawn((
         Text2d::new(format!("{damage:.0}")),
         TextFont {
@@ -120,15 +23,11 @@ pub(super) fn spawn_damage_number(
             },
             ..default()
         },
-        TextColor(if received {
-            Color::srgb(1.0, 0.15, 0.18)
-        } else {
-            Color::WHITE
-        }),
+        TextColor(color),
         Transform::from_translation(position + Vec3::new(0.0, 34.0, 20.0)),
         DamageNumber {
             timer: Timer::from_seconds(0.65, TimerMode::Once),
-            received,
+            color,
         },
         RoomEntity,
     ));

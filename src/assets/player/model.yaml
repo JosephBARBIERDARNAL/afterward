@@ -1,0 +1,33 @@
+# Prototype: draw the player as a 3D glTF model instead of the pixel-art sheets.
+# An off-screen orthographic camera renders the model into a square texture,
+# which becomes the player's sprite. The 2D animation state machine still runs
+# (clip timings come from animations.yaml); each player clip plays the glTF
+# animation mapped below. Set `enabled: false` to go back to the sprite sheets.
+enabled: true
+# Sample model: "RobotExpressive" by Tomás Laulhé (CC0), via the three.js examples.
+scene: player/model/robot_expressive.glb
+# Texture resolution; higher is sharper ("HD") against the pixel-art world.
+render_size_px: 512
+# Model height from feet to top of head, in the model's own units.
+model_height: 4.5
+# Square slice of model space the camera captures, and how far below the feet
+# it starts (room for poses that dip below the ground line).
+view_height: 9.0
+feet_margin: 1.0
+# Rotation around the vertical axis that makes the model face +X (right).
+facing_yaw_degrees: 90
+# Cross-fade between animations.
+blend_s: 0.12
+# glTF animation index played for each player clip in animations.yaml.
+# RobotExpressive: 0 Dance, 1 Death, 2 Idle, 3 Jump, 4 No, 5 Punch, 6 Running,
+# 7 Sitting, 8 Standing, 9 ThumbsUp, 10 Walking, 11 WalkJump, 12 Wave, 13 Yes.
+clips:
+  idle: 2
+  walk: 10
+  run: 6
+  dash: 6
+  jump: 11
+  fall: 3
+  fall_loop: 3
+  sword_combo_1: 5
+  sword_combo_2: 5
