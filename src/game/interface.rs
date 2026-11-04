@@ -243,7 +243,7 @@ pub(super) fn update_hud(
     mut fill_query: Query<&mut Node, With<HealthFill>>,
     mut bar_visibility: Query<&mut Visibility, With<HealthBarFrame>>,
 ) {
-    let text_value = if *screen.get() == GameScreen::Playing {
+    let text_value = if matches!(screen.get(), GameScreen::RoomIntro | GameScreen::Playing) {
         format!(
             "ROOM {:02}    HP {:03.0}/{:03.0}",
             session.room_id, session.health, session.max_health
@@ -263,7 +263,7 @@ pub(super) fn update_hud(
         node.width = percent((health_fraction.clamp(0.0, 1.0) * 100.0).round() as u32);
     }
     for mut visibility in &mut bar_visibility {
-        *visibility = if *screen.get() == GameScreen::Playing {
+        *visibility = if matches!(screen.get(), GameScreen::RoomIntro | GameScreen::Playing) {
             Visibility::Visible
         } else {
             Visibility::Hidden

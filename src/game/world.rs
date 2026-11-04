@@ -234,7 +234,10 @@ pub(super) fn spawn_enemies(
     data: &GameData,
     sheets: &SpriteSheets,
 ) {
-    for spawn in &room.enemy_spawns {
+    // Enemies appear one after another, evenly spread over the intro window.
+    let appear_spread_s = data.gameplay.room_flow.room_intro.enemy_appear_spread_s;
+    let last_index = room.enemy_spawns.len().saturating_sub(1).max(1) as f32;
+    for (index, spawn) in room.enemy_spawns.iter().enumerate() {
         let profile = &data.enemies.types[&spawn.type_id];
         let key = spawn.type_id.idle_sheet();
         let sheet = &sheets.0[key];
@@ -363,6 +366,10 @@ pub(super) fn spawn_enemies(
                     phase_two_announced: false,
                     marked_timer: 0.0,
                     movement_sound_timer: 0.0,
+                },
+                room_intro::EnemyEntrance {
+                    base_scale: Vec3::splat(scale),
+                    delay_s: index as f32 / last_index * appear_spread_s,
                 },
                 RoomEntity,
             ))

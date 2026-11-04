@@ -45,6 +45,7 @@ pub(super) enum SoundCue {
     EnemyTelegraph(EnemySoundStyle),
     EnemyAttack(EnemySoundStyle),
     BossIntro,
+    EnemiesAppear,
     EnemyHurt(EnemySoundStyle),
     EnemyDeath(EnemySoundStyle),
     BossPhase,

@@ -23,6 +23,7 @@ pub(super) fn cue_specs() -> Vec<(SoundCue, f32, f32, f32, f32)> {
         (PlayerHurt, 190.0, 90.0, 0.24, 0.25),
         (Pickup, 620.0, 1040.0, 0.20, 0.16),
         (BossIntro, 72.0, 220.0, 0.9, 0.3),
+        (EnemiesAppear, 140.0, 460.0, 0.38, 0.13),
         (BossPhase, 110.0, 220.0, 0.55, 0.22),
         (RoomClear, 440.0, 880.0, 0.45, 0.19),
         (DoorAppear, 260.0, 440.0, 0.14, 0.10),

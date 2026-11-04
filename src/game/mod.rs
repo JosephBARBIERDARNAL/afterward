@@ -18,6 +18,7 @@ mod interface;
 mod pause_blur;
 mod player;
 mod player_model;
+mod room_intro;
 mod screens;
 mod settings;
 mod visual_walkthrough;
@@ -93,12 +94,16 @@ impl Plugin for GamePlugin {
                 combat::clear_room_combat_effects,
             )
             .add_systems(
-                OnEnter(GameScreen::BossIntro),
+                OnEnter(GameScreen::RoomIntro),
                 (
                     world::spawn_room,
-                    flow::start_boss_intro,
-                    audio::queue_boss_intro,
+                    room_intro::start_room_intro,
+                    audio::start_chapter_music,
                 ),
+            )
+            .add_systems(
+                OnEnter(GameScreen::BossIntro),
+                (flow::start_boss_intro, audio::queue_boss_intro),
             )
             .add_systems(
                 OnEnter(GameScreen::RoomLoading),
@@ -159,11 +164,24 @@ impl Plugin for GamePlugin {
                 Update,
                 player_model::animate_player_model
                     .after(combat::player_attacks)
-                    .run_if(in_state(GameScreen::Playing)),
+                    .after(room_intro::pose_room_intro)
+                    .run_if(in_state(GameScreen::Playing).or_else(in_state(GameScreen::RoomIntro))),
             )
             .add_systems(
                 Update,
                 flow::handle_bonus_input.run_if(in_state(GameScreen::Bonus)),
+            )
+            .add_systems(
+                Update,
+                (
+                    room_intro::update_room_intro.run_if(in_state(GameScreen::RoomIntro)),
+                    room_intro::pose_room_intro.run_if(
+                        in_state(GameScreen::RoomLoading)
+                            .or_else(in_state(GameScreen::TransitioningOut))
+                            .or_else(in_state(GameScreen::RoomIntro)),
+                    ),
+                )
+                    .chain(),
             )
             .add_systems(
                 Update,
@@ -184,7 +202,8 @@ impl Plugin for GamePlugin {
             )
             .add_systems(
                 Update,
-                assets::animate_sprites.run_if(in_state(GameScreen::Playing)),
+                assets::animate_sprites
+                    .run_if(in_state(GameScreen::Playing).or_else(in_state(GameScreen::RoomIntro))),
             )
             .add_systems(
                 PostUpdate,
@@ -197,6 +216,8 @@ impl Plugin for GamePlugin {
 enum GameScreen {
     #[default]
     MainMenu,
+    /// Room entrance: the player walks in, then the enemies appear.
+    RoomIntro,
     Playing,
     Paused,
     RoomClear,

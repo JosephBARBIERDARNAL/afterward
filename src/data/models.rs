@@ -111,8 +111,36 @@ pub struct RoomFlowConfig {
     pub bonus_reroll_animation_s: f32,
     pub boss_intro_duration_s: f32,
     pub room_transition_duration_s: f32,
+    pub room_intro: RoomIntroConfig,
     pub exit_side: String,
     pub bonus_rerolls_per_run: u8,
+}
+
+/// Room entrance timeline: the player walks in, holds idle while the enemies
+/// materialize one after another, then the fight starts.
+#[derive(Debug, Deserialize)]
+pub struct RoomIntroConfig {
+    pub player_walk_in_s: f32,
+    pub player_walk_in_speed_h_s: f32,
+    pub player_fade_in_s: f32,
+    pub player_idle_hold_s: f32,
+    pub enemy_appear_s: f32,
+    pub enemy_appear_spread_s: f32,
+    pub fight_start_delay_s: f32,
+}
+
+impl RoomIntroConfig {
+    /// Seconds into the intro at which the first enemy starts to appear.
+    pub(crate) fn enemies_start_s(&self) -> f32 {
+        self.player_walk_in_s + self.player_idle_hold_s
+    }
+
+    pub(crate) fn duration_s(&self) -> f32 {
+        self.enemies_start_s()
+            + self.enemy_appear_spread_s
+            + self.enemy_appear_s
+            + self.fight_start_delay_s
+    }
 }
 
 #[derive(Debug, Deserialize)]

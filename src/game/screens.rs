@@ -73,7 +73,7 @@ pub(super) fn update_screen_text(
         }
         GameScreen::Dead => String::from("RUN ENDED\n\nENTER  Return to menu"),
         GameScreen::Complete => String::from("CHAPTER ONE CLEARED\n\nENTER  Return to menu"),
-        GameScreen::Playing | GameScreen::Bonus => String::new(),
+        GameScreen::RoomIntro | GameScreen::Playing | GameScreen::Bonus => String::new(),
     };
     for mut text in &mut labels {
         text.0 = message.clone();
@@ -228,7 +228,7 @@ pub(super) fn handle_screen_input(
 }
 
 /// Resets the run to `start_room` and returns the screen that opens it: the
-/// boss room opens on its intro, like arriving there through a door.
+/// room entrance, like arriving there through a door.
 fn reset_run(session: &mut RunSession, data: &GameData, start_room: StartRoom) -> GameScreen {
     session.room_id = start_room.0;
     session.max_health = data.gameplay.player.max_health;
@@ -242,9 +242,5 @@ fn reset_run(session: &mut RunSession, data: &GameData, start_room: StartRoom) -
     session.room_ward_used = false;
     session.door_open = false;
     session.world_loaded = false;
-    if session.room_id == 10 {
-        GameScreen::BossIntro
-    } else {
-        GameScreen::Playing
-    }
+    GameScreen::RoomIntro
 }

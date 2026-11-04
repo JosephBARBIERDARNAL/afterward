@@ -295,10 +295,8 @@ pub(super) fn update_room_transition_fade_out(
     }
     next_screen.set(if session.door_open {
         GameScreen::Complete
-    } else if session.room_id == 10 {
-        GameScreen::BossIntro
     } else {
-        GameScreen::Playing
+        GameScreen::RoomIntro
     });
 }
 

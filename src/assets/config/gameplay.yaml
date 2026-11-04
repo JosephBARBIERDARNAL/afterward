@@ -39,6 +39,18 @@ room_flow:
   bonus_reroll_animation_s: 0.25
   boss_intro_duration_s: 0.9
   room_transition_duration_s: 0.8
+  # Room entrance, played every time a room opens: the player walks in from
+  # the left and stops on `player_spawn` (input locked), holds idle, then the
+  # enemies materialize one after another (spread evenly over
+  # `enemy_appear_spread_s`, each taking `enemy_appear_s`) before combat starts.
+  room_intro:
+    player_walk_in_s: 0.5
+    player_walk_in_speed_h_s: 3
+    player_fade_in_s: 0.2
+    player_idle_hold_s: 0.3
+    enemy_appear_s: 0.4
+    enemy_appear_spread_s: 0.45
+    fight_start_delay_s: 0.2
   exit_side: right
   bonus_rerolls_per_run: 3
 

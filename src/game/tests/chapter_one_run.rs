@@ -76,6 +76,10 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
             (spawn_test_room, flow::start_room_transition_fade_out).chain(),
         )
         .add_systems(
+            OnEnter(GameScreen::RoomIntro),
+            (spawn_test_room, room_intro::start_room_intro).chain(),
+        )
+        .add_systems(
             OnEnter(GameScreen::BossIntro),
             (spawn_test_room, flow::start_boss_intro).chain(),
         )
@@ -215,6 +219,10 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
         )
         .add_systems(
             Update,
+            room_intro::update_room_intro.run_if(in_state(GameScreen::RoomIntro)),
+        )
+        .add_systems(
+            Update,
             flow::update_boss_intro.run_if(in_state(GameScreen::BossIntro)),
         );
 
@@ -227,6 +235,7 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
     let mut bonus_rooms = BTreeSet::new();
     let mut cleared_rosters = BTreeMap::new();
     let mut saw_boss_intro = false;
+    let mut intro_rooms = BTreeSet::new();
     let mut enemy_bodies = app.world_mut().query::<&EnemyBody>();
     for _ in 0..10_000 {
         app.update();
@@ -254,6 +263,9 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
             bonus_rooms.insert(room_id);
         }
         saw_boss_intro |= screen == GameScreen::BossIntro;
+        if screen == GameScreen::RoomIntro {
+            intro_rooms.insert(room_id);
+        }
         if screen == GameScreen::Complete {
             break;
         }
@@ -324,6 +336,11 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
     );
     assert_eq!(session.room_id, 10);
     assert!(saw_boss_intro, "the run should show the room 10 boss intro");
+    assert_eq!(
+        intro_rooms,
+        (1..=10).collect(),
+        "every room should open on its entrance animation"
+    );
     assert_eq!(bonus_rooms, (1..=10).collect());
     assert_eq!(session.owned_bonuses.len(), 10);
     assert_eq!(owned_bonuses.len(), session.owned_bonuses.len());

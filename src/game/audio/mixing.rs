@@ -121,6 +121,7 @@ mod tests {
         }
 
         for screen in [
+            GameScreen::RoomIntro,
             GameScreen::Playing,
             GameScreen::RoomClear,
             GameScreen::Bonus,
