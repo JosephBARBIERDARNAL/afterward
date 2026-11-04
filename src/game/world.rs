@@ -208,6 +208,7 @@ pub(super) fn spawn_player(
             facing: 1.0,
             grounded: true,
             jumps_used: 0,
+            jump_held: false,
             dash_timer: 0.0,
             dash_cooldown: 0.0,
             dash_direction: 1.0,

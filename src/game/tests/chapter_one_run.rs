@@ -139,7 +139,10 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
                         let enemy_within_jump_reach = enemy_transform.translation.y
                             - player_transform.translation.y
                             <= data.gameplay.player.jump_height_h * H_WORLD_UNITS;
-                        if enemy_above_player && enemy_within_jump_reach && player.grounded {
+                        // Hold jump through the rise for a full-height jump.
+                        if (enemy_above_player && enemy_within_jump_reach && player.grounded)
+                            || player.jump_held
+                        {
                             keys.press(KeyCode::Space);
                         }
                         keys.press(KeyCode::KeyJ);

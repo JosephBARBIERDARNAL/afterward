@@ -77,6 +77,7 @@ pub struct PlayerConfig {
     pub gravity_h_s2: f32,
     pub jump_impulse_h_s: f32,
     pub jumps_per_takeoff: u8,
+    pub jump_release_velocity_multiplier: f32,
     pub dash_distance_h: f32,
     pub dash_duration_s: f32,
     pub dash_cooldown_s: f32,

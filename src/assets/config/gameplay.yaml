@@ -12,6 +12,9 @@ player:
   gravity_h_s2: 32
   jump_impulse_h_s: 12
   jumps_per_takeoff: 1
+  # Releasing jump while rising multiplies the upward velocity by this factor,
+  # so a tap gives a short hop and holding the button gives the full jump.
+  jump_release_velocity_multiplier: 0.5
   dash_distance_h: 5
   dash_duration_s: 0.2
   dash_cooldown_s: 0.8

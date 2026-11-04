@@ -86,8 +86,15 @@ pub(super) fn update_player(
             };
             player.velocity.y = tuning.jump_impulse_h_s * jump_factor * H_WORLD_UNITS;
             player.jumps_used += 1;
+            player.jump_held = true;
             player.grounded = false;
             sounds.push(SoundCue::Jump);
+        }
+    }
+    if player.jump_held && !controls.pressed(GameAction::Jump, &keys) {
+        player.jump_held = false;
+        if player.velocity.y > 0.0 {
+            player.velocity.y *= tuning.jump_release_velocity_multiplier;
         }
     }
 
@@ -125,6 +132,9 @@ pub(super) fn update_player(
         transform.translation.y += player.velocity.y * normal_step;
     } else if dash_step > 0.0 {
         transform.translation.y += player.velocity.y * dash_step;
+    }
+    if player.velocity.y <= 0.0 {
+        player.jump_held = false;
     }
 
     let room = &data.rooms[&session.room_id];

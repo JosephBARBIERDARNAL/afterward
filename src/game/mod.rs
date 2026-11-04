@@ -318,6 +318,8 @@ struct PlayerBody {
     facing: f32,
     grounded: bool,
     jumps_used: u8,
+    /// Rising from a jump whose button is still held; releasing it cuts the rise.
+    jump_held: bool,
     dash_timer: f32,
     dash_cooldown: f32,
     dash_direction: f32,

@@ -39,6 +39,7 @@ These are initial balance constants and should be easy to tune during iteration.
 | `PLAYER_GRAVITY`                   | 32    | H/s² downward                                                     |
 | `PLAYER_JUMP_IMPULSE`              | 12    | H/s upward; produces the specified jump height under this gravity |
 | `PLAYER_JUMPS_PER_TAKEOFF`         | 1     | No double jump by default                                         |
+| `PLAYER_JUMP_RELEASE_MULTIPLIER`   | 0.5   | Upward velocity kept when jump is released while rising           |
 | `BONUS_DOUBLE_JUMP_EXTRA_JUMPS`    | 1     | Additional mid-air jump; resets on landing                        |
 | `BONUS_DOUBLE_JUMP_IMPULSE_FACTOR` | 0.8   | Multiplier of the normal jump impulse                             |
 | `PLAYER_DASH_DISTANCE`             | 5     | H                                                                 |
@@ -216,7 +217,7 @@ next_room_id: null # null only for room 100
 Default controls:
 
 - ZQSD (AZERTY) or arrow keys: move.
-- Space: jump.
+- Space: jump. Jump height depends on how long Space is held: holding it through the rise gives the full `PLAYER_JUMP_HEIGHT`, releasing it early cuts the rise (`PLAYER_JUMP_RELEASE_MULTIPLIER`). The same applies to mid-air jumps.
 - Left Shift: dash.
 - J: swing the sword (press repeatedly to chain a combo).
 - E: interact with an element.

@@ -163,6 +163,11 @@ impl GameData {
                 "jump height, gravity, and jump impulse must describe the same jump",
             ));
         }
+        if !(0.0..=1.0).contains(&self.gameplay.player.jump_release_velocity_multiplier) {
+            return Err(InvalidGameData::from(
+                "the jump release velocity multiplier must be between 0 and 1",
+            ));
+        }
         if self.gameplay.room_flow.clear_animation_s <= 0.0
             || self.gameplay.room_flow.bonus_reroll_animation_s <= 0.0
             || self.gameplay.room_flow.boss_intro_duration_s <= 0.0
