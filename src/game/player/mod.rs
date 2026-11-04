@@ -112,7 +112,8 @@ pub(super) fn update_player(
     if player.wall_jump_lock_timer > 0.0 {
         // The wall-jump kick carries the player away from the wall.
     } else if direction != 0.0 {
-        if !was_dashing {
+        // The wall jump keeps the player facing away from the wall it left.
+        if !was_dashing && player.action != Some(PlayerAction::WallJump) {
             // Reversing on the ground plays a turn-around step.
             if direction != player.facing
                 && player.grounded
@@ -255,6 +256,8 @@ pub(super) fn update_player(
         && player.velocity.y < 0.0
         && player.wall_side.is_some_and(|side| side == direction);
     if wall_sliding {
+        // On a wall the player's back is against it, facing (and aiming) away.
+        player.facing = -direction;
         player.wall_contact_s += dt;
         player.velocity.y = if player.wall_contact_s <= walls.latch_s {
             0.0

@@ -65,7 +65,7 @@ These are initial balance constants and should be easy to tune during iteration.
 ### Walls, Ledges, and Platforms
 
 - Rooms are built from solid terrain (floors, walls, ceilings, pillars) that blocks the player from every side, and one-way platforms that the player lands on, jumps through from below, and drops through with Down + Jump.
-- Wall slide: while falling and pressing into a solid wall (or the room edge), the player first clings to it for `PLAYER_WALL_LATCH_DURATION` (no falling), then slides down no faster than `PLAYER_WALL_SLIDE_MAX_FALL_SPEED`.
+- Wall slide: while falling and pressing into a solid wall (or the room edge), the player first clings to it for `PLAYER_WALL_LATCH_DURATION` (no falling), then slides down no faster than `PLAYER_WALL_SLIDE_MAX_FALL_SPEED`. On a wall the player's back is against it: the player faces (and shoots) away from the wall, and keeps facing away through the wall jump's animation even while the direction toward the wall is held.
 - Wall jump: pressing jump while airborne against a wall kicks the player up and away from it. Horizontal input is ignored for `PLAYER_WALL_JUMP_CONTROL_LOCK`. A wall jump uses up the take-off jump, so Double Jump still grants its mid-air jump afterwards. Releasing jump early cuts the rise, as for any jump.
 - Ledge mantle: while airborne and moving toward a solid block whose top is above the feet and at most `PLAYER_LEDGE_GRAB_REACH` above the head, the player climbs onto it automatically over `PLAYER_LEDGE_CLIMB_DURATION`, provided there is room to stand on it.
 

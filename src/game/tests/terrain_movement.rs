@@ -325,6 +325,16 @@ fn jumping_off_a_wall_kicks_the_player_away_from_it() {
         }
     }
     assert!(sliding, "the player should slide down the wall");
+    // The wall art has the player's back to the wall: on it, it faces away.
+    for _ in 0..15 {
+        app.update();
+    }
+    let mut players = app.world_mut().query::<(&PlayerBody, &Sprite)>();
+    let (player, sprite) = players.single(app.world()).expect("one player");
+    assert!(
+        player.wall_side == Some(1.0) && player.facing < 0.0 && sprite.flip_x,
+        "a player on a wall to its right faces left"
+    );
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -337,4 +347,23 @@ fn jumping_off_a_wall_kicks_the_player_away_from_it() {
         "a wall jump kicks up and away from the wall, got {:?}",
         player.velocity
     );
+    // Still holding toward the wall, the player keeps facing away from it
+    // through the whole wall-jump animation.
+    let mut wall_jump_frames = 0;
+    for _ in 0..30 {
+        {
+            let mut keys = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
+            keys.clear();
+            keys.release(KeyCode::Space);
+        }
+        app.update();
+        let mut players = app.world_mut().query::<&PlayerBody>();
+        let player = players.single(app.world()).expect("one player");
+        if player.action != Some(PlayerAction::WallJump) {
+            break;
+        }
+        wall_jump_frames += 1;
+        assert!(player.facing < 0.0, "the wall jump turned back to the wall");
+    }
+    assert!(wall_jump_frames > 0, "the wall jump plays its animation");
 }
