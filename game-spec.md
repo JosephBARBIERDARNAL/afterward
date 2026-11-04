@@ -35,9 +35,9 @@ These are initial balance constants and should be easy to tune during iteration.
 | `PLAYER_AIR_MAX_SPEED`             | 6     | H/s while airborne; matches grounded maximum speed                |
 | `PLAYER_ACCELERATION`              | 36    | H/s²                                                              |
 | `PLAYER_DECELERATION`              | 48    | H/s²                                                              |
-| `PLAYER_JUMP_HEIGHT`               | 2.25  | H                                                                 |
+| `PLAYER_JUMP_HEIGHT`               | 2.925 | H                                                                 |
 | `PLAYER_GRAVITY`                   | 32    | H/s² downward                                                     |
-| `PLAYER_JUMP_IMPULSE`              | 12    | H/s upward; produces the specified jump height under this gravity |
+| `PLAYER_JUMP_IMPULSE`              | 13.68 | H/s upward; produces the specified jump height under this gravity |
 | `PLAYER_JUMPS_PER_TAKEOFF`         | 1     | No double jump by default                                         |
 | `PLAYER_JUMP_RELEASE_MULTIPLIER`   | 0.5   | Upward velocity kept when jump is released while rising           |
 | `BONUS_DOUBLE_JUMP_EXTRA_JUMPS`    | 1     | Additional mid-air jump; resets on landing                        |
@@ -159,7 +159,7 @@ next_room_id: null # null only for room 100
 
 - Chapter 1 boss `evil_wizard`: 300 HP; moves at 3 H/s; jumps 2.75 H high. Its three attacks are a two-hit melee combo (10 damage per hit, Attack 1 animation), a telegraphed lunge (15 damage, Attack 2 animation), and a jump slam: after a crouched wind-up it leaps toward the player and deals 18 damage within 2 H of its landing point on touchdown (Jump and Fall animations). Use 0.45–0.8 s wind-ups and 1.4–2.5 s cooldowns. At 50% HP, reduce cooldowns by 20%. These values are initial and tunable.
 - Every enemy has idle, movement, hit-reaction, and death animations.
-- Every enemy, bosses included, can jump. Jumps follow the player's gravity and are tuned in `enemy_types.yaml`: a shared `ENEMY_JUMP_HEIGHT` (2.25 H, the player's jump height) that each type may override, a 5 H/s horizontal air speed, and a 0.6 s cooldown between jumps. Enemies jump only when it brings them toward the player: the player counts as on another level when their grounded feet differ from the enemy's by more than 1 H; a player in mid-jump does not trigger level changes.
+- Every enemy, bosses included, can jump. Jumps follow the player's gravity and are tuned in `enemy_types.yaml`: a shared `ENEMY_JUMP_HEIGHT` (2.25 H) that each type may override, a 5 H/s horizontal air speed, and a 0.6 s cooldown between jumps. Enemies jump only when it brings them toward the player: the player counts as on another level when their grounded feet differ from the enemy's by more than 1 H; a player in mid-jump does not trigger level changes.
   - When the player stands higher, an enemy targets the reachable platform closest to the player and no higher than them. It walks to a take-off point under or beside that platform, then jumps onto it, repeating step by step.
   - When the player is at its level, an enemy reaching the ledge it walks toward jumps the gap to the next platform if it can make it.
   - When the player is lower, enemies walk off the nearest ledge and fall; they never jump down.

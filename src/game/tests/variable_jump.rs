@@ -102,7 +102,7 @@ fn jump_peak_h(hold_frames: usize) -> f32 {
 
 #[test]
 fn jump_height_grows_with_how_long_jump_is_held() {
-    let full_height_h = 2.25;
+    let full_height_h = 2.925;
     let tap = jump_peak_h(1);
     let medium = jump_peak_h(40);
     let held = jump_peak_h(480);

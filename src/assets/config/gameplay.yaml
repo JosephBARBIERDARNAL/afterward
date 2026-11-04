@@ -8,9 +8,9 @@ player:
   air_max_speed_h_s: 6
   acceleration_h_s2: 36
   deceleration_h_s2: 48
-  jump_height_h: 2.25
+  jump_height_h: 2.925
   gravity_h_s2: 32
-  jump_impulse_h_s: 12
+  jump_impulse_h_s: 13.68
   jumps_per_takeoff: 1
   # Releasing jump while rising multiplies the upward velocity by this factor,
   # so a tap gives a short hop and holding the button gives the full jump.
