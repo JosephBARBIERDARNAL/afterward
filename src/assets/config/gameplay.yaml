@@ -43,20 +43,42 @@ player:
     # (while airborne and moving toward it) climbs onto it automatically.
     ledge_grab_reach_h: 0.35
     ledge_climb_s: 0.16
+    # Reaching a wall while falling and pressing into it clings to it this
+    # long (Wall Latch) before sliding down.
+    latch_s: 0.15
   # Down + Jump on a one-way platform drops through it.
   drop_through_s: 0.25
-  sword:
-    damage: 25
-    range_h: 3
-    attack_interval_s: 0.5
+  # Holding Down on the ground crouches; the crouch walk is slower.
+  crouch_speed_h_s: 3
+  # Holding Cover on the ground raises a guard: the player can neither move
+  # nor shoot, and damage from enemies in front is multiplied by this.
+  cover_damage_taken_multiplier: 0.5
+  # Dying plays the death animation, then holds its last frame this long
+  # before the run ends.
+  death_hold_s: 0.6
+  gun:
+    damage: 20
+    # Holding the trigger keeps firing at this interval.
+    fire_interval_s: 0.2
+    magazine_size: 10
+    # An empty magazine reloads automatically; Reload refills it early.
+    reload_s: 0.9
+    bullet_speed_h_s: 18
+    bullet_range_h: 12
+    bullet_size_h: { width: 0.3, height: 0.08 }
+    # Up or Down while firing tilts the shot this far from horizontal.
+    diagonal_angle_degrees: 45
     boss_knockback_h_s: 2.5
-    # Spamming J chains the combo: a press made before the sword is ready again
-    # continues it, and hit N of a chain deals `damage * damage_multipliers[N]`
-    # and plays the player's `sword_combo[N]` animation. The chain resets after
-    # its last hit (the finisher), or once the sword is ready and no press is
-    # waiting (the player stopped attacking).
-    combo:
-      damage_multipliers: [1.0, 1.75]
+    # Where bullets leave the gun, from the collision-box center with the
+    # player facing right, per aim direction.
+    muzzle_offset_h:
+      straight: { x: 0.4, y: 0.05 }
+      down: { x: 0.4, y: -0.15 }
+      up: { x: 0.3, y: 0.3 }
+    # Fiery bursts drawn at the muzzle on every shot and where a bullet hits
+    # an enemy: a hot core that swells and fades while embers fly outward.
+    muzzle_flash: { radius_h: 0.18, duration_s: 0.12, embers: 4, ember_speed_h_s: 3 }
+    impact_burst: { radius_h: 0.32, duration_s: 0.24, embers: 7, ember_speed_h_s: 4.5 }
 
 health_pickup:
   healing: 10
@@ -103,7 +125,10 @@ controls:
   navigate_down: [ArrowDown]
   jump: [Space]
   dash: [ShiftLeft]
-  sword: [KeyJ]
+  shoot: [KeyJ]
+  aim_up: [KeyW, ArrowUp]
+  reload: [KeyR]
+  cover: [KeyL]
   interact: [KeyE, Enter]
   pause: [Escape]
   toggle_fullscreen: [KeyF]

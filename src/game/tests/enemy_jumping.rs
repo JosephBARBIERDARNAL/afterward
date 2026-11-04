@@ -37,7 +37,13 @@ fn ground_enemy_climbs_the_staircase_to_a_player_on_a_higher_platform() {
             |mut commands: Commands, data: Res<GameData>, sheets: Res<SpriteSheets>| {
                 let room = &data.rooms[&3];
                 world::spawn_room_platforms(&mut commands, room);
-                world::spawn_player(&mut commands, room, &data, &sheets);
+                world::spawn_player(
+                    &mut commands,
+                    room,
+                    &data,
+                    &sheets,
+                    data.gameplay.player.gun.magazine_size,
+                );
                 world::spawn_enemies(&mut commands, room, &data, &sheets);
             },
         )
@@ -143,7 +149,13 @@ fn evil_wizard_jump_slam_damages_the_player_on_landing() {
             |mut commands: Commands, data: Res<GameData>, sheets: Res<SpriteSheets>| {
                 let room = &data.rooms[&10];
                 world::spawn_room_platforms(&mut commands, room);
-                world::spawn_player(&mut commands, room, &data, &sheets);
+                world::spawn_player(
+                    &mut commands,
+                    room,
+                    &data,
+                    &sheets,
+                    data.gameplay.player.gun.magazine_size,
+                );
                 world::spawn_enemies(&mut commands, room, &data, &sheets);
             },
         )

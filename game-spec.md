@@ -16,9 +16,14 @@ Important: the following is the game specifications, focusing on the first chapt
 ## Player
 
 - The game has one protagonist. Character creation is not included.
-- The protagonist uses the Ozzbit Games "Male Hero Template" (free version: personal, non-commercial use only; credit "Ozzbit Games"). Its sheets live in `src/assets/player/sheets/`, and `src/assets/player/animations.yaml` lists every clip (frames, frame rate) and how the 128×128 frames map onto the collision box: the 32 px body is drawn 0.75 H tall (`body_height_h`), feet on the collision box's baseline.
-- Every player action, including idle, has a dedicated animation: idle, walk (while accelerating or below 60% of maximum speed), run, jump (rising), fall (apex transition, then a falling loop), dash, wall slide, ledge climb, and one animation per sword-combo hit (the pack's `combo_1` slash, then its `combo_1_end` follow-through as the finisher). The pack has no dash, wall, or ledge art: the dash replays the run cycle at a much higher frame rate, the wall slide slows the falling loop, and the ledge climb replays the jump rise quickly.
-- Prototype: `src/assets/player/model.yaml` can replace the sprite sheets with a 3D glTF model (`enabled: true`). An off-screen orthographic camera renders the model into a texture drawn as the player sprite, so it looks high definition against the pixel-art world; each player clip plays a mapped glTF animation, with one-shot actions fitted to the clip's duration. The sample model is "RobotExpressive" by Tomás Laulhé (CC0).
+- The protagonist uses "The Dude" Premium v0.51 pack. Its sheets live in `src/assets/player/sheets/` (the pack's Aseprite sources in `src/assets/player/source/`), and `src/assets/player/animations.yaml` lists every clip (sheet, grid row and first frame, frame count, frame rate) and how the 128×128 frames map onto the collision box: the 45 px body is drawn 0.75 H tall (`body_height_h`), feet on the collision box's baseline. The player always holds the gun, so gun versions of the pack's animations are used wherever they exist; the pack's sword, sword-and-shield, push, pull, roll, slide, interact, and unarmed idle/walk/wounded animations are not used.
+- Every player action, including idle, has a dedicated animation:
+  - Idle: the alert idle while enemies are alive, the calm gun idle once the room is clear, and the wounded idle below 25% health (`wounded_health_fraction`). After `idle_fidget_after_s` (4 s) standing still, a left- or right-hand fidget plays (alternating), then the idle resumes.
+  - Ground movement: walk while accelerating or below 60% of maximum speed (`jog_speed_fraction`), jog above it, and sprint while the Sprinter bonus sprint is active. Reversing direction on the ground plays a turn-around step (the running variant above jog speed). Holding Down plays the crouch (stealth) idle and walk.
+  - Air: jump take-off then a rising loop, a falling loop, a landing crouch when touching down without horizontal input, and for walls the latch cling, the landing against the wall, the wall slide, and the wall jump. Mantling onto a ledge plays the grab.
+  - Actions: dash, cover, reload (stretched over the whole reload while standing; moving keeps the movement animation), hit reaction when taking damage, and death.
+  - Shooting: one shot clip per aim direction (straight, diagonal down, diagonal up), each with two variants (two-handed, one-handed) that consecutive shots alternate between. After a shot, the matching aim pose holds for `aim_hold_s` (0.4 s) and as long as Shoot is held. Firing straight while moving on the ground plays the run-shooting cycle instead, restarted on its shot frame.
+- Prototype (disabled): `src/assets/player/model.yaml` can replace the sprite sheets with a 3D glTF model (`enabled: true`). An off-screen orthographic camera renders the model into a texture drawn as the player sprite, so it looks high definition against the pixel-art world; each player clip plays a mapped glTF animation, with one-shot actions fitted to the clip's duration. The sample model is "RobotExpressive" by Tomás Laulhé (CC0).
 
 ## Player Movement and Combat
 
@@ -52,37 +57,48 @@ These are initial balance constants and should be easy to tune during iteration.
 | `PLAYER_LEDGE_GRAB_REACH`          | 0.35  | H above the top of the body                                       |
 | `PLAYER_LEDGE_CLIMB_DURATION`      | 0.16  | s                                                                 |
 | `PLAYER_DROP_THROUGH_DURATION`     | 0.25  | s one-way platforms are ignored after Down + Jump                 |
+| `PLAYER_WALL_LATCH_DURATION`       | 0.15  | s clinging to a wall before sliding down it                       |
+| `PLAYER_CROUCH_SPEED`              | 3     | H/s while crouching                                               |
+| `PLAYER_COVER_DAMAGE_MULTIPLIER`   | 0.5   | Damage taken from the front while in cover                        |
+| `PLAYER_DEATH_HOLD`                | 0.6   | s the last death frame holds before the run ends                  |
 
 ### Walls, Ledges, and Platforms
 
 - Rooms are built from solid terrain (floors, walls, ceilings, pillars) that blocks the player from every side, and one-way platforms that the player lands on, jumps through from below, and drops through with Down + Jump.
-- Wall slide: while airborne and pressing into a solid wall (or the room edge), the player falls no faster than `PLAYER_WALL_SLIDE_MAX_FALL_SPEED`.
+- Wall slide: while falling and pressing into a solid wall (or the room edge), the player first clings to it for `PLAYER_WALL_LATCH_DURATION` (no falling), then slides down no faster than `PLAYER_WALL_SLIDE_MAX_FALL_SPEED`.
 - Wall jump: pressing jump while airborne against a wall kicks the player up and away from it. Horizontal input is ignored for `PLAYER_WALL_JUMP_CONTROL_LOCK`. A wall jump uses up the take-off jump, so Double Jump still grants its mid-air jump afterwards. Releasing jump early cuts the rise, as for any jump.
 - Ledge mantle: while airborne and moving toward a solid block whose top is above the feet and at most `PLAYER_LEDGE_GRAB_REACH` above the head, the player climbs onto it automatically over `PLAYER_LEDGE_CLIMB_DURATION`, provided there is room to stand on it.
 
 ### Weapon Specifications
 
-The sword is the player's only weapon. It attacks horizontally in the direction the player faces, hitting all enemies in a broad forward-facing area. Its reach should let the player hit enemies without standing directly beside them.
+The gun is the player's only weapon. Holding Shoot (J) fires a bullet every `PLAYER_GUN_FIRE_INTERVAL` while the magazine has rounds; there is no combo. Each shot fires horizontally in the facing direction, or diagonally (`PLAYER_GUN_DIAGONAL_ANGLE` above or below horizontal) while Up or Down is held. A crouching player stands up for the shot (the diagonal-down aim) and crouches again afterwards.
 
-Sword attacks form a combo. Each press of J starts a swing (a press made while the previous swing is still cooling down is buffered and fires as soon as the sword is ready). Combos have no timing window: spamming the sword attack chains it. Any press made before the sword is ready again continues the chain, and each further step multiplies the hit's damage by the next `PLAYER_SWORD_COMBO_DAMAGE_MULTIPLIERS` entry, so longer combos hit harder. The last step is the finisher: it ends the chain, and the next swing starts over at the first step. The chain also resets once the sword is ready with no press waiting, meaning the player stopped attacking. Each hit plays its own combo animation (`sword_combo` in `src/assets/player/animations.yaml`, one clip per multiplier), so the animation shows the player how far the combo has gone; there is no on-screen combo text.
+- Bullets are visible projectiles that leave the gun's muzzle (per-aim offsets in `player.gun.muzzle_offset_h`), fly straight at `PLAYER_BULLET_SPEED`, and stop at the first enemy they touch, at solid terrain, at the room's edges, or after `PLAYER_BULLET_RANGE`. They fly through one-way platforms. A bullet hits only one enemy. An enemy pressed against the player is still hit point-blank.
+- Every shot bursts into a small fiery explosion at the muzzle, and every bullet hitting an enemy bursts into a larger one at the impact: a hot core that swells and cools from yellow to red while embers fly outward, then fades (`muzzle_flash` and `impact_burst` in `player.gun`). A bullet hitting terrain makes a small burst.
+- The magazine holds `PLAYER_GUN_MAGAZINE_SIZE` rounds and starts full in every room. Emptying it reloads automatically; Reload (R) refills a partial magazine early. Reloading takes `PLAYER_GUN_RELOAD_DURATION`, during which the gun cannot fire. Reserve ammunition is unlimited.
+- Ammo HUD: the bottom-right corner shows the rounds left over the magazine size (for example `7 / 10`) above one small pip per round. Spent rounds are dimmed; while reloading the text reads `RELOADING` and the pips refill one by one with the reload's progress.
+- Cover (L, held on the ground): the player raises a guard and can neither move, jump, dash, shoot, nor start a reload. Damage from enemies in front of the player is multiplied by `PLAYER_COVER_DAMAGE_MULTIPLIER`; hits from behind are not reduced.
 
-| Constant                                 | Value    | Unit or notes                               |
-| ---------------------------------------- | -------- | ------------------------------------------- |
-| `PLAYER_SWORD_DAMAGE`                    | 25       | Damage per hit, before combo multipliers    |
-| `PLAYER_SWORD_RANGE`                     | 3.0      | H forward from the player's collision-box center |
-| `PLAYER_SWORD_ATTACK_INTERVAL`           | 0.5      | s between attacks (2 attacks per second)    |
-| `PLAYER_SWORD_COMBO_DAMAGE_MULTIPLIERS`  | 1.0, 1.75 | Damage multiplier per combo hit; the last hit is the finisher |
-| `BOSS_KNOCKBACK_FROM_SWORD`              | 2.5      | H/s horizontally away from the player       |
-| `PLAYER_DAMAGE_INVULNERABILITY_DURATION` | 0.55     | s after taking damage (33 frames at 60 FPS) |
-| `PLAYER_DASH_INVULNERABILITY_DURATION`   | 0.12     | s at the start of the dash                  |
+| Constant                                 | Value | Unit or notes                                         |
+| ---------------------------------------- | ----- | ----------------------------------------------------- |
+| `PLAYER_GUN_DAMAGE`                      | 20    | Damage per bullet                                     |
+| `PLAYER_GUN_FIRE_INTERVAL`               | 0.2   | s between shots (5 shots per second)                  |
+| `PLAYER_GUN_MAGAZINE_SIZE`               | 10    | Rounds                                                |
+| `PLAYER_GUN_RELOAD_DURATION`             | 0.9   | s                                                     |
+| `PLAYER_BULLET_SPEED`                    | 18    | H/s                                                   |
+| `PLAYER_BULLET_RANGE`                    | 12    | H                                                     |
+| `PLAYER_GUN_DIAGONAL_ANGLE`              | 45    | Degrees above or below horizontal                     |
+| `BOSS_KNOCKBACK_FROM_BULLETS`            | 2.5   | H/s horizontally away from the player                 |
+| `PLAYER_DAMAGE_INVULNERABILITY_DURATION` | 0.55  | s after taking damage (33 frames at 60 FPS)           |
+| `PLAYER_DASH_INVULNERABILITY_DURATION`   | 0.12  | s at the start of the dash                            |
 
 ### Combat Feedback and Room Flow
 
 - Combat is fast, mobility-heavy, and skill-based.
 - The player never receives knockback. Damage may trigger the usual feedback and hit reaction, but must not displace the player.
-- Bosses are the only enemies affected by knockback. Sword hits may push bosses horizontally away from the player using the boss knockback constant above. Ordinary enemies are never displaced by knockback.
+- Bosses are the only enemies affected by knockback. Bullet hits may push bosses horizontally away from the player using the boss knockback constant above. Ordinary enemies are never displaced by knockback.
 - Whenever the player deals or receives damage, show a brief floating damage number. Damage dealt appears over the enemy; damage received appears over the player in bold red. Numbers pop up, drift upward, and fade quickly so they remain legible without obscuring combat.
-- Each player move, including sword attacks and dashing, has a dedicated animation. Use placeholder sounds only for now (see Sound Design).
+- Each player move, including shooting, reloading, and dashing, has a dedicated animation. Use placeholder sounds only for now (see Sound Design).
 - Every room, the first included, opens with an entrance sequence before combat starts. The player walks in from the left at walking pace for 0.5 s, fading in, and stops on the room's player spawn, then stays idle; input is locked for the whole sequence. Once the player stands idle, the enemies materialize one after another (each rises out of its spawn point from a shadow tint into full color, with a slight overshoot) and their health bars fade in with them, with a placeholder cue. The fight starts right after the last enemy has appeared; in the boss room the boss introduction follows the entrance. Timings live in `room_flow.room_intro` in `src/assets/config/gameplay.yaml`.
 - After all enemies in a room are defeated, play a 0.5-second, full-screen room-clear animation, then show the bonus choices.
 - After the player chooses a bonus, a door appears on the right side of the room. Touching it opens the door and starts the next room's combat.
@@ -198,11 +214,11 @@ next_room_id: null # null only for room 100
 - Every bonus has a name, description, and category.
 - Categories: combat, defense, agility, intelligence, and combined (a mix of at least two other categories).
 - Each category has its own icon and color: red for combat, blue for defense, green for agility, pale yellow for intelligence, and orange for combined.
-- Initial bonus pool (20 bonuses):
-  - **Honed Edge** (_Combat_): Increase sword damage by 20%.
-  - **Keen Finisher** (_Combat_): The final hit of a sword combo deals 30% more damage.
-  - **Quick Cut** (_Combat_): Increase sword attack speed by 15%.
-  - **Long Reach** (_Combat_): Increase sword range by 20%.
+- Initial bonus pool (21 bonuses):
+  - **Hollow Points** (_Combat_): Increase bullet damage by 20%.
+  - **Last Round** (_Combat_): The last bullet of each magazine deals 50% more damage.
+  - **Hair Trigger** (_Combat_): Increase fire rate by 15%.
+  - **Extended Magazine** (_Combat_): Increase magazine size by 4 rounds.
   - **Thick Skin** (_Defense_): Increase defense by 10%, causing attacks to deal 10% less damage.
   - **Room Ward** (_Defense_): Negate the first damage event in each room.
   - **Vitality** (_Defense_): Increase maximum health by 15 and restore 15 health when acquired.
@@ -211,14 +227,15 @@ next_room_id: null # null only for room 100
   - **High Jump** (_Agility_): Increase jump height by 15%.
   - **Dash Recharge** (_Agility_): Reduce dash cooldown by 20% (from 0.8 s to 0.64 s at the current baseline).
   - **Double Jump** (_Agility_): Gain one additional mid-air jump at 80% of the normal jump impulse.
-  - **Marked Prey** (_Intelligence_): A sword hit marks an enemy for 2 s; further sword hits deal 15% more damage to that enemy while marked.
-  - **Rhythm Training** (_Intelligence_): Each hit within 1.5 s of the previous hit increases sword attack speed by 4%, up to 16%; the bonus resets after 1.5 s without a hit.
+  - **Sprinter** (_Agility_): Ending a grounded dash while still holding its direction keeps the player sprinting at 8.5 H/s (Sprint animation on the ground; the speed carries through jumps) until they stop, turn, crouch, take cover, or run into a wall.
+  - **Marked Prey** (_Intelligence_): A bullet hit marks an enemy for 2 s; further bullets deal 15% more damage to that enemy while marked.
+  - **Rhythm Training** (_Intelligence_): Each hit within 1.5 s of the previous hit increases fire rate by 4%, up to 16%; the bonus resets after 1.5 s without a hit.
   - **Chain Reaction** (_Intelligence_): Killing an enemy increases damage by 15% for 2 s.
-  - **Combo Flow** (_Intelligence_): Follow-up sword combo swings come 25% faster.
-  - **Vampiric Edge** (_Combined: Combat + Defense_): Each enemy hit by the sword restores 1 health, up to 5 health per swing.
-  - **Dash Strike** (_Combined: Combat + Agility_): A sword attack within 1 s after dashing deals 25% more damage.
-  - **Aerial Edge** (_Combined: Combat + Agility_): Deal 20% more sword damage while airborne.
-  - **Sated Fury** (_Combined: Combat + Defense_): After collecting a healing pickup, increase sword attack speed by 15% for 3 s.
+  - **Speed Loader** (_Intelligence_): Reload 30% faster.
+  - **Vampiric Rounds** (_Combined: Combat + Defense_): Each bullet hit restores 1 health, up to 5 health per magazine.
+  - **Dash Shot** (_Combined: Combat + Agility_): The first shot within 1 s after dashing deals 25% more damage.
+  - **Aerial Gunner** (_Combined: Combat + Agility_): Deal 20% more bullet damage while airborne.
+  - **Sated Fury** (_Combined: Combat + Defense_): After collecting a healing pickup, increase fire rate by 15% for 3 s.
 
 ## Assets
 
@@ -232,12 +249,15 @@ next_room_id: null # null only for room 100
 
 Default controls:
 
-- ZQSD (AZERTY) or arrow keys: move. Down (S or Down arrow) + Space drops through a one-way platform.
+- ZQSD (AZERTY) or arrow keys: move. Down (S or Down arrow) crouches on the ground and aims diagonally down while shooting; Down + Space drops through a one-way platform. Up (Z on AZERTY, W on QWERTY, or Up arrow) aims diagonally up while shooting.
 - Space: jump; against a wall in the air, wall jump. Jump height depends on how long Space is held: holding it through the rise gives the full `PLAYER_JUMP_HEIGHT`, releasing it early cuts the rise (`PLAYER_JUMP_RELEASE_MULTIPLIER`). The same applies to mid-air jumps.
 - Left Shift: dash.
-- J: swing the sword (press repeatedly to chain a combo).
+- J: shoot (hold to keep firing).
+- R: reload.
+- L: cover (hold).
 - E: interact with an element.
 - 1 / 2: choose the first / second bonus. R: reroll the bonus offers. Up/Down + Enter, or a mouse click, also work on the bonus screen.
+- Death: the death animation plays and holds for `PLAYER_DEATH_HOLD` with every control ignored before the run-ended screen appears.
 - Escape: open or close the pause menu. The menu offers Continue, Restart, Settings, and Leave. Leave returns to the main menu shown before a run.
 
 Settings:
@@ -262,8 +282,8 @@ Settings:
 
 ### Gameplay Sound Effects
 
-- Player actions have sound effects synchronized with their animations. Include movement and surface-specific footsteps, jumping, landing, sword swings and hits (with a distinct combo-finisher hit), enemy projectiles striking the environment, dashing, taking damage, healing pickups, and death. Idle sounds may be subtle and should not become repetitive or distracting.
-- Sword swings must sound different when they hit an enemy. Damage and healing sounds must be easy to recognize.
+- Player actions have sound effects synchronized with their animations. Include movement and surface-specific footsteps, jumping, landing, gunshots and bullet hits (with a distinct, heavier hit for the Last Round bullet), reloading, cover blocking a hit, enemy projectiles striking the environment, dashing, taking damage, healing pickups, and death. Idle sounds may be subtle and should not become repetitive or distracting.
+- A bullet hitting an enemy must sound different from one hitting terrain. Damage and healing sounds must be easy to recognize.
 - Each enemy type has a recognizable sound identity, with sounds for idle, movement, attack execution, taking damage, and death. Include attack-preparation cues where applicable. Enemy hit sounds clearly confirm a successful hit, dangerous attacks have clear warning cues, and death sounds are short enough to avoid clutter when several enemies die together.
 - Stronger attacks have more powerful impact sounds.
 - Bosses have distinctive sounds for their movement, attacks, phase changes when applicable, damage, and defeat. Boss attack cues must remain audible during combat.
@@ -287,7 +307,7 @@ Settings:
 
 ### Audio Assets
 
-- Store audio assets in `src/assets/audio/`, organized by category, with descriptive, consistent filenames. Name numbered variations with suffixes such as `sword_hit_01.wav` and `sword_hit_02.wav`.
+- Store audio assets in `src/assets/audio/`, organized by category, with descriptive, consistent filenames. Name numbered variations with suffixes such as `bullet_hit_01.wav` and `bullet_hit_02.wav`.
 - Choose audio formats appropriate to playback latency and quality. Preload frequently used sound effects, and ensure missing optional audio assets do not crash the game.
 
 Important for audio production: use temporary placeholders (simple generated tones/noise or silence) for required events. Keep placeholder calls easy to replace, and make sure missing audio files never prevent the game from running.

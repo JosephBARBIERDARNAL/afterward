@@ -74,29 +74,46 @@ impl GameData {
             ));
         }
         let player = &self.gameplay.player;
-        if !player.max_speed_h_s.is_finite()
-            || player.max_speed_h_s <= 0.0
-            || !player.air_max_speed_h_s.is_finite()
-            || player.air_max_speed_h_s <= 0.0
-            || !player.sword.range_h.is_finite()
-            || player.sword.range_h <= 0.0
+        if [
+            player.max_speed_h_s,
+            player.air_max_speed_h_s,
+            player.crouch_speed_h_s,
+        ]
+        .iter()
+        .any(|speed| !speed.is_finite() || *speed <= 0.0)
+            || !(0.0..=1.0).contains(&player.cover_damage_taken_multiplier)
+            || !(player.death_hold_s.is_finite() && player.death_hold_s >= 0.0)
+            || !(player.walls.latch_s.is_finite() && player.walls.latch_s >= 0.0)
         {
             return Err(InvalidGameData::from(
-                "player movement speeds and sword range must be finite and positive",
+                "player speeds must be positive, the cover multiplier within 0..=1, \
+                 and the death hold and wall latch nonnegative",
             ));
         }
-        let sword = &player.sword;
-        if !(sword.attack_interval_s.is_finite() && sword.attack_interval_s > 0.0)
-            || sword.combo.damage_multipliers.is_empty()
-            || sword
-                .combo
-                .damage_multipliers
-                .iter()
-                .any(|multiplier| !multiplier.is_finite() || *multiplier <= 0.0)
+        let gun = &player.gun;
+        let bursts = [&gun.muzzle_flash, &gun.impact_burst];
+        if gun.magazine_size == 0
+            || [
+                gun.damage,
+                gun.fire_interval_s,
+                gun.reload_s,
+                gun.bullet_speed_h_s,
+                gun.bullet_range_h,
+                gun.bullet_size_h.width,
+                gun.bullet_size_h.height,
+            ]
+            .iter()
+            .chain(
+                bursts
+                    .iter()
+                    .flat_map(|burst| [&burst.radius_h, &burst.duration_s]),
+            )
+            .any(|value| !value.is_finite() || *value <= 0.0)
+            || !(0.0..90.0).contains(&gun.diagonal_angle_degrees)
         {
             return Err(InvalidGameData::from(
-                "the sword needs a positive attack interval and at least one positive \
-                 combo damage multiplier",
+                "the gun needs a magazine, positive damage, timings, bullet and burst sizes, \
+                 and a diagonal angle below 90 degrees",
             ));
         }
         let animations = &self.player_animations;
@@ -104,15 +121,23 @@ impl GameData {
             || !(animations.body_height_h.is_finite() && animations.body_height_h > 0.0)
             || !(animations.body_height_px..=animations.frame_size_px.height as f32)
                 .contains(&animations.feet_row_px)
-            || !(animations.run_speed_fraction > 0.0 && animations.run_speed_fraction <= 1.0)
+            || !(animations.jog_speed_fraction > 0.0 && animations.jog_speed_fraction <= 1.0)
+            || !(0.0..=1.0).contains(&animations.wounded_health_fraction)
+            || !(animations.idle_fidget_after_s.is_finite() && animations.idle_fidget_after_s > 0.0)
+            || !(animations.aim_hold_s.is_finite() && animations.aim_hold_s >= 0.0)
+            || animations.run_shooting_shot_frame >= animations.clips.run_shooting.frames
         {
             return Err(InvalidGameData::from(
-                "player sprite body heights, feet row, and run speed fraction are out of range",
+                "player sprite body heights, feet row, speed and health fractions, fidget delay, \
+                 or run-shooting shot frame are out of range",
             ));
         }
-        if animations.sword_combo.len() != sword.combo.damage_multipliers.len() {
+        if Aim::ALL.iter().any(|aim| {
+            let clips = animations.shooting.get(*aim);
+            clips.shot.is_empty() || clips.shot.len() != clips.aim.len()
+        }) {
             return Err(InvalidGameData::from(
-                "the player needs exactly one sword-combo animation per combo damage multiplier",
+                "each aim direction needs at least one shot clip and one aim pose per shot clip",
             ));
         }
         let model = &self.player_model;
@@ -198,7 +223,10 @@ impl GameData {
             &controls.navigate_down,
             &controls.jump,
             &controls.dash,
-            &controls.sword,
+            &controls.shoot,
+            &controls.aim_up,
+            &controls.reload,
+            &controls.cover,
             &controls.interact,
             &controls.pause,
             &controls.toggle_fullscreen,
@@ -247,9 +275,9 @@ impl GameData {
             ));
         }
 
-        if self.bonuses.bonuses.len() != 20 {
+        if self.bonuses.bonuses.len() != 21 {
             return Err(InvalidGameData::from(
-                "the bonus pool must contain exactly 20 entries",
+                "the bonus pool must contain exactly 21 entries",
             ));
         }
 
@@ -474,7 +502,7 @@ mod tests {
         let data = GameData::load(&asset_root).expect("Chapter 1 YAML should be valid");
 
         assert_eq!(data.rooms.len(), 10);
-        assert_eq!(data.bonuses.bonuses.len(), 20);
+        assert_eq!(data.bonuses.bonuses.len(), 21);
         assert_eq!(data.rooms[&10].enemy_spawns[0].type_id, "evil_wizard");
         for room in data.rooms.values() {
             assert!(
@@ -493,14 +521,6 @@ mod tests {
         assert_eq!(
             data.gameplay.player.max_speed_h_s,
             data.gameplay.player.air_max_speed_h_s
-        );
-        let combo = &data.gameplay.player.sword.combo;
-        assert!(
-            combo
-                .damage_multipliers
-                .windows(2)
-                .all(|pair| pair[1] > pair[0]),
-            "longer sword combos must deal more damage per hit"
         );
     }
 

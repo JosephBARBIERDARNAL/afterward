@@ -36,7 +36,13 @@ fn swordsman_bobs_while_walking_and_returns_to_idle_pose() {
              mut session: ResMut<RunSession>,
              sheets: Res<SpriteSheets>| {
                 let room = &data.rooms[&1];
-                world::spawn_player(&mut commands, room, &data, &sheets);
+                world::spawn_player(
+                    &mut commands,
+                    room,
+                    &data,
+                    &sheets,
+                    data.gameplay.player.gun.magazine_size,
+                );
                 world::spawn_enemies(&mut commands, room, &data, &sheets);
                 session.world_loaded = true;
             },

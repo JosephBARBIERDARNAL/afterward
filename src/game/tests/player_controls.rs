@@ -42,7 +42,13 @@ fn default_controls_move_jump_and_dash_the_player() {
             Startup,
             |mut commands: Commands, data: Res<GameData>, sheets: Res<SpriteSheets>| {
                 let room = &data.rooms[&1];
-                world::spawn_player(&mut commands, room, &data, &sheets);
+                world::spawn_player(
+                    &mut commands,
+                    room,
+                    &data,
+                    &sheets,
+                    data.gameplay.player.gun.magazine_size,
+                );
                 let width = room.width_h(&data.gameplay) * H_WORLD_UNITS;
                 commands.spawn(PlatformSurface {
                     left: 0.0,
@@ -58,7 +64,8 @@ fn default_controls_move_jump_and_dash_the_player() {
             Update,
             (
                 player::update_player,
-                combat::player_attacks,
+                combat::player_gun,
+                combat::update_player_bullets,
                 assets::animate_sprites,
             )
                 .chain(),
@@ -106,7 +113,7 @@ fn default_controls_move_jump_and_dash_the_player() {
             .get::<AnimatedSprite>(player)
             .expect("player animation should remain available")
             .sheet,
-        "player_run"
+        "player_jog"
     );
 
     {
@@ -114,13 +121,16 @@ fn default_controls_move_jump_and_dash_the_player() {
         keys.clear();
         keys.press(KeyCode::KeyJ);
     }
+    // The gun fires after movement, so its clip shows from the next frame.
+    app.update();
     app.update();
     assert_eq!(
         app.world()
             .get::<AnimatedSprite>(player)
             .expect("player animation should remain available")
             .sheet,
-        "player_sword_combo_1"
+        "player_run_shooting",
+        "firing straight while jogging plays the run-shooting cycle"
     );
 
     {
@@ -140,7 +150,8 @@ fn default_controls_move_jump_and_dash_the_player() {
             .get::<AnimatedSprite>(player)
             .expect("player animation should remain available")
             .sheet,
-        "player_idle"
+        "player_idle",
+        "with no enemy around, the player relaxes into the calm idle"
     );
 
     {

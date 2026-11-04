@@ -17,7 +17,8 @@ pub(super) fn spawn_room(
     }
     let room = &data.rooms[&session.room_id];
     draw_room(&mut commands, room, &data, &asset_server);
-    spawn_player(&mut commands, room, &data, &sheets);
+    let ammo = session.magazine_capacity(&data);
+    spawn_player(&mut commands, room, &data, &sheets, ammo);
     spawn_enemies(&mut commands, room, &data, &sheets);
 
     if let Ok((mut transform, mut rig)) = camera.single_mut() {
@@ -160,6 +161,7 @@ pub(super) fn spawn_player(
     room: &RoomConfig,
     data: &GameData,
     sheets: &SpriteSheets,
+    ammo: u32,
 ) {
     let animations = &data.player_animations;
     let key = "player_idle";
@@ -207,33 +209,7 @@ pub(super) fn spawn_player(
             timer: Timer::from_seconds(1.0 / sheet.fps, TimerMode::Repeating),
             looping: true,
         },
-        PlayerBody {
-            velocity: Vec2::ZERO,
-            facing: 1.0,
-            grounded: true,
-            jumps_used: 0,
-            jump_held: false,
-            dash_timer: 0.0,
-            dash_cooldown: 0.0,
-            dash_direction: 1.0,
-            sword_cooldown: 0.0,
-            combo_step: 0,
-            sword_buffered: false,
-            invulnerability_timer: 0.0,
-            dash_invulnerability_timer: 0.0,
-            dash_strike_timer: 0.0,
-            rhythm_timer: 0.0,
-            rhythm_stacks: 0,
-            chain_reaction_timer: 0.0,
-            sated_fury_timer: 0.0,
-            action_animation_timer: 0.0,
-            footstep_timer: 0.0,
-            wall_side: None,
-            wall_jump_lock_timer: 0.0,
-            drop_through_timer: 0.0,
-            on_one_way: false,
-            mantle: None,
-        },
+        PlayerBody { ammo, ..default() },
         RoomEntity,
     ));
 }

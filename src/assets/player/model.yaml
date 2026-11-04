@@ -2,8 +2,8 @@
 # An off-screen orthographic camera renders the model into a square texture,
 # which becomes the player's sprite. The 2D animation state machine still runs
 # (clip timings come from animations.yaml); each player clip plays the glTF
-# animation mapped below. Set `enabled: false` to go back to the sprite sheets.
-enabled: true
+# animation mapped below. Set `enabled: true` to replace the sprite sheets.
+enabled: false
 # Sample model: "RobotExpressive" by Tomás Laulhé (CC0), via the three.js examples.
 scene: player/model/robot_expressive.glb
 # Texture resolution; higher is sharper ("HD") against the pixel-art world.
@@ -23,13 +23,41 @@ blend_s: 0.12
 # 7 Sitting, 8 Standing, 9 ThumbsUp, 10 Walking, 11 WalkJump, 12 Wave, 13 Yes.
 clips:
   idle: 2
+  idle_alert: 2
+  idle_wounded: 2
+  idle_fidget_left: 12
+  idle_fidget_right: 13
   walk: 10
-  run: 6
+  jog: 6
+  sprint: 6
+  crouch: 7
+  crouch_walk: 10
+  turn: 8
+  turn_run: 6
   dash: 6
   jump: 11
-  fall: 3
-  fall_loop: 3
+  ascend: 3
+  descend: 3
+  land: 8
+  wall_latch: 3
+  wall_land: 3
   wall_slide: 3
-  ledge_climb: 11
-  sword_combo_1: 5
-  sword_combo_2: 5
+  wall_jump: 11
+  ledge_grab: 11
+  reload: 4
+  cover: 7
+  hit: 4
+  death: 1
+  run_shooting: 6
+  shoot_straight_1: 5
+  shoot_straight_2: 5
+  shoot_down_1: 5
+  shoot_down_2: 5
+  shoot_up_1: 5
+  shoot_up_2: 5
+  aim_straight_1: 8
+  aim_straight_2: 8
+  aim_down_1: 8
+  aim_down_2: 8
+  aim_up_1: 8
+  aim_up_2: 8

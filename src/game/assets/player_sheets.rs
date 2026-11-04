@@ -1,4 +1,4 @@
-use super::super::SpriteSheetSpec;
+use super::super::{SpriteSheetSpec, UVec2};
 use crate::data::PlayerAnimations;
 
 pub(super) fn sprites(animations: &PlayerAnimations) -> Vec<SpriteSheetSpec> {
@@ -12,6 +12,7 @@ pub(super) fn sprites(animations: &PlayerAnimations) -> Vec<SpriteSheetSpec> {
             frame_height: animations.frame_size_px.height,
             frames: clip.frames,
             fps: clip.fps,
+            first_cell: UVec2::new(clip.first_frame, clip.row),
         })
         .collect()
 }

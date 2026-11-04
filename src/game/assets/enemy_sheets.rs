@@ -1,4 +1,4 @@
-use super::super::SpriteSheetSpec;
+use super::super::{SpriteSheetSpec, UVec2};
 
 pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
     vec![
@@ -9,6 +9,7 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             frame_height: 128,
             frames: 5,
             fps: 5.0,
+            first_cell: UVec2::ZERO,
         },
         SpriteSheetSpec {
             key: "enemy_swordsman_attack".into(),
@@ -17,6 +18,7 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             frame_height: 128,
             frames: 4,
             fps: 12.0,
+            first_cell: UVec2::ZERO,
         },
         SpriteSheetSpec {
             key: "enemy_swordsman_hurt".into(),
@@ -25,6 +27,7 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             frame_height: 128,
             frames: 3,
             fps: 12.0,
+            first_cell: UVec2::ZERO,
         },
         SpriteSheetSpec {
             key: "enemy_swordsman_dead".into(),
@@ -33,6 +36,7 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             frame_height: 128,
             frames: 4,
             fps: 8.0,
+            first_cell: UVec2::ZERO,
         },
         SpriteSheetSpec {
             key: "enemy_infantry_idle".into(),
@@ -41,6 +45,7 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             frame_height: 128,
             frames: 6,
             fps: 5.0,
+            first_cell: UVec2::ZERO,
         },
         SpriteSheetSpec {
             key: "enemy_infantry_walk".into(),
@@ -49,6 +54,7 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             frame_height: 128,
             frames: 6,
             fps: 8.0,
+            first_cell: UVec2::ZERO,
         },
         SpriteSheetSpec {
             key: "enemy_infantry_attack".into(),
@@ -57,6 +63,7 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             frame_height: 128,
             frames: 11,
             fps: 12.0,
+            first_cell: UVec2::ZERO,
         },
         SpriteSheetSpec {
             key: "enemy_infantry_hurt".into(),
@@ -65,6 +72,7 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             frame_height: 128,
             frames: 4,
             fps: 12.0,
+            first_cell: UVec2::ZERO,
         },
         SpriteSheetSpec {
             key: "enemy_infantry_dead".into(),
@@ -73,6 +81,7 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             frame_height: 128,
             frames: 5,
             fps: 8.0,
+            first_cell: UVec2::ZERO,
         },
         SpriteSheetSpec {
             key: "enemy_destroyer_idle".into(),
@@ -81,6 +90,7 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             frame_height: 128,
             frames: 5,
             fps: 5.0,
+            first_cell: UVec2::ZERO,
         },
         SpriteSheetSpec {
             key: "enemy_destroyer_walk".into(),
@@ -89,6 +99,7 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             frame_height: 128,
             frames: 8,
             fps: 7.0,
+            first_cell: UVec2::ZERO,
         },
         SpriteSheetSpec {
             key: "enemy_destroyer_attack".into(),
@@ -97,6 +108,7 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             frame_height: 128,
             frames: 8,
             fps: 10.0,
+            first_cell: UVec2::ZERO,
         },
         SpriteSheetSpec {
             key: "enemy_destroyer_hurt".into(),
@@ -105,6 +117,7 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             frame_height: 128,
             frames: 3,
             fps: 12.0,
+            first_cell: UVec2::ZERO,
         },
         SpriteSheetSpec {
             key: "enemy_destroyer_dead".into(),
@@ -113,6 +126,7 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             frame_height: 128,
             frames: 7,
             fps: 8.0,
+            first_cell: UVec2::ZERO,
         },
         SpriteSheetSpec {
             key: "enemy_gorgon_1_idle".into(),
@@ -121,6 +135,7 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             frame_height: 128,
             frames: 7,
             fps: 6.0,
+            first_cell: UVec2::ZERO,
         },
         SpriteSheetSpec {
             key: "enemy_gorgon_1_run".into(),
@@ -129,6 +144,7 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             frame_height: 128,
             frames: 7,
             fps: 9.0,
+            first_cell: UVec2::ZERO,
         },
         SpriteSheetSpec {
             key: "enemy_gorgon_1_attack".into(),
@@ -137,6 +153,7 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             frame_height: 128,
             frames: 16,
             fps: 12.0,
+            first_cell: UVec2::ZERO,
         },
         SpriteSheetSpec {
             key: "enemy_gorgon_1_hurt".into(),
@@ -145,6 +162,7 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             frame_height: 128,
             frames: 3,
             fps: 12.0,
+            first_cell: UVec2::ZERO,
         },
         SpriteSheetSpec {
             key: "enemy_gorgon_1_dead".into(),
@@ -153,6 +171,7 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             frame_height: 128,
             frames: 3,
             fps: 8.0,
+            first_cell: UVec2::ZERO,
         },
         SpriteSheetSpec {
             key: "enemy_gorgon_2_idle".into(),
@@ -161,6 +180,7 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             frame_height: 128,
             frames: 7,
             fps: 6.0,
+            first_cell: UVec2::ZERO,
         },
         SpriteSheetSpec {
             key: "enemy_gorgon_2_run".into(),
@@ -169,6 +189,7 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             frame_height: 128,
             frames: 7,
             fps: 9.0,
+            first_cell: UVec2::ZERO,
         },
         SpriteSheetSpec {
             key: "enemy_gorgon_2_attack".into(),
@@ -177,6 +198,7 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             frame_height: 128,
             frames: 5,
             fps: 10.0,
+            first_cell: UVec2::ZERO,
         },
         SpriteSheetSpec {
             key: "enemy_gorgon_2_hurt".into(),
@@ -185,6 +207,7 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             frame_height: 128,
             frames: 3,
             fps: 12.0,
+            first_cell: UVec2::ZERO,
         },
         SpriteSheetSpec {
             key: "enemy_gorgon_2_dead".into(),
@@ -193,6 +216,7 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             frame_height: 128,
             frames: 3,
             fps: 8.0,
+            first_cell: UVec2::ZERO,
         },
         SpriteSheetSpec {
             key: "enemy_gorgon_3_idle".into(),
@@ -201,6 +225,7 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             frame_height: 128,
             frames: 7,
             fps: 6.0,
+            first_cell: UVec2::ZERO,
         },
         SpriteSheetSpec {
             key: "enemy_gorgon_3_attack".into(),
@@ -209,6 +234,7 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             frame_height: 128,
             frames: 16,
             fps: 10.0,
+            first_cell: UVec2::ZERO,
         },
         SpriteSheetSpec {
             key: "enemy_gorgon_3_hurt".into(),
@@ -217,6 +243,7 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             frame_height: 128,
             frames: 3,
             fps: 12.0,
+            first_cell: UVec2::ZERO,
         },
         SpriteSheetSpec {
             key: "enemy_gorgon_3_dead".into(),
@@ -225,6 +252,7 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             frame_height: 128,
             frames: 3,
             fps: 8.0,
+            first_cell: UVec2::ZERO,
         },
         SpriteSheetSpec {
             key: "enemy_gorgon_3_run".into(),
@@ -233,6 +261,7 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             frame_height: 128,
             frames: 7,
             fps: 7.0,
+            first_cell: UVec2::ZERO,
         },
     ]
 }

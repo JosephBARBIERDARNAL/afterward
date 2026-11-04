@@ -20,7 +20,11 @@ fn fullscreen_default_binding_can_be_remapped() {
 
     {
         let mut bindings = app.world_mut().resource_mut::<controls::ControlBindings>();
-        for _ in 0..10 {
+        let fullscreen = GameAction::ALL
+            .iter()
+            .position(|action| *action == GameAction::ToggleFullscreen)
+            .expect("fullscreen is a game action");
+        for _ in 0..fullscreen {
             bindings.move_selection(1);
         }
         assert_eq!(bindings.selected_action(), GameAction::ToggleFullscreen);
@@ -28,7 +32,7 @@ fn fullscreen_default_binding_can_be_remapped() {
     }
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
-        .press(KeyCode::KeyL);
+        .press(KeyCode::KeyK);
 
     let remapped =
         app.world_mut()
@@ -40,6 +44,6 @@ fn fullscreen_default_binding_can_be_remapped() {
         app.world()
             .resource::<controls::ControlBindings>()
             .binding_label(GameAction::ToggleFullscreen),
-        "L"
+        "K"
     );
 }

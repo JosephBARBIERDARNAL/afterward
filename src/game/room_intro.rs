@@ -127,7 +127,7 @@ pub(super) fn pose_room_intro(
         let key = if walk < 1.0 {
             "player_walk"
         } else {
-            "player_idle"
+            "player_idle_alert"
         };
         set_animation(&mut sprite, &mut animation, &sheets, key, true);
     }

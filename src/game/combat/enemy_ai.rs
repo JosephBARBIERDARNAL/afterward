@@ -24,7 +24,6 @@ pub(in crate::game) struct EnemyAiResources<'w> {
     data: Res<'w, GameData>,
     sheets: Res<'w, SpriteSheets>,
     session: ResMut<'w, RunSession>,
-    next_screen: ResMut<'w, NextState<GameScreen>>,
     sounds: ResMut<'w, SoundQueue>,
 }
 
@@ -40,7 +39,6 @@ pub(in crate::game) fn update_enemy_ai(
         data,
         sheets,
         mut session,
-        mut next_screen,
         mut sounds,
     } = resources;
     let Ok((player_transform, mut player)) = player_query.single_mut() else {
@@ -141,12 +139,12 @@ pub(in crate::game) fn update_enemy_ai(
                         commands: &mut commands,
                         data: &data,
                         session: &mut session,
-                        next_screen: &mut next_screen,
                         sounds: &mut sounds,
                     },
                     PlayerDamageTarget {
                         player: &mut player,
                         transform: player_transform,
+                        attacker_x: transform.translation.x,
                     },
                     attack.damage,
                 );
@@ -238,12 +236,12 @@ pub(in crate::game) fn update_enemy_ai(
                                 commands: &mut commands,
                                 data: &data,
                                 session: &mut session,
-                                next_screen: &mut next_screen,
                                 sounds: &mut sounds,
                             },
                             PlayerDamageTarget {
                                 player: &mut player,
                                 transform: player_transform,
+                                attacker_x: transform.translation.x,
                             },
                             attack.damage,
                         );

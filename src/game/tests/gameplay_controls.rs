@@ -44,7 +44,13 @@ fn default_inputs_move_and_defeat_a_room_enemy() {
             |mut commands: Commands, data: Res<GameData>, sheets: Res<SpriteSheets>| {
                 let room = &data.rooms[&1];
                 world::spawn_room_platforms(&mut commands, room);
-                world::spawn_player(&mut commands, room, &data, &sheets);
+                world::spawn_player(
+                    &mut commands,
+                    room,
+                    &data,
+                    &sheets,
+                    data.gameplay.player.gun.magazine_size,
+                );
                 world::spawn_enemies(&mut commands, room, &data, &sheets);
             },
         )
@@ -57,7 +63,7 @@ fn default_inputs_move_and_defeat_a_room_enemy() {
                     keys.clear();
                     keys.release(KeyCode::KeyD);
                     keys.release(KeyCode::ArrowLeft);
-                    // Release J every frame so each press starts a fresh swing.
+                    // Release J every frame so each press fires a fresh shot.
                     keys.release(KeyCode::KeyJ);
                     let (Ok(player), Some((_, target))) = (
                         players.single(),
@@ -74,7 +80,8 @@ fn default_inputs_move_and_defeat_a_room_enemy() {
                     keys.press(KeyCode::KeyJ);
                 },
                 player::update_player,
-                combat::player_attacks,
+                combat::player_gun,
+                combat::update_player_bullets,
                 combat::update_enemy_ai,
                 combat::update_projectiles,
             )
@@ -115,7 +122,7 @@ fn default_inputs_move_and_defeat_a_room_enemy() {
             .expect("the enemy should remain available for verification")
             .health,
         0.0,
-        "the player should defeat the swordsman using movement and sword inputs"
+        "the player should defeat the swordsman using movement and gun inputs"
     );
     assert!(
         app.world()

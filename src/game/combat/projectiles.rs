@@ -12,7 +12,6 @@ pub(in crate::game) struct ProjectileResources<'w> {
     time: Res<'w, Time>,
     data: Res<'w, GameData>,
     session: ResMut<'w, RunSession>,
-    next_screen: ResMut<'w, NextState<GameScreen>>,
     sounds: ResMut<'w, SoundQueue>,
 }
 
@@ -27,7 +26,6 @@ pub(in crate::game) fn update_projectiles(
         time,
         data,
         mut session,
-        mut next_screen,
         mut sounds,
     } = resources;
     let dt = time.delta_secs().min(0.05);
@@ -51,12 +49,12 @@ pub(in crate::game) fn update_projectiles(
                     commands: &mut commands,
                     data: &data,
                     session: &mut session,
-                    next_screen: &mut next_screen,
                     sounds: &mut sounds,
                 },
                 PlayerDamageTarget {
                     player: &mut player,
                     transform: player_transform,
+                    attacker_x: projectile_transform.translation.x - projectile.velocity_x,
                 },
                 projectile.damage,
             );

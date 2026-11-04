@@ -1,7 +1,11 @@
 use super::*;
 
+mod animation;
+
+use animation::{AnimationState, PlayerSprite};
+
 #[derive(SystemParam)]
-pub(super) struct PlayerUpdateResources<'w> {
+pub(super) struct PlayerUpdateResources<'w, 's> {
     time: Res<'w, Time>,
     keys: Res<'w, ButtonInput<KeyCode>>,
     controls: Res<'w, ControlBindings>,
@@ -9,6 +13,7 @@ pub(super) struct PlayerUpdateResources<'w> {
     session: Res<'w, RunSession>,
     sheets: Res<'w, SpriteSheets>,
     sounds: ResMut<'w, SoundQueue>,
+    enemies: Query<'w, 's, &'static EnemyBody>,
 }
 
 pub(super) fn update_player(
@@ -29,6 +34,7 @@ pub(super) fn update_player(
         session,
         sheets,
         mut sounds,
+        enemies,
     } = resources;
     let Ok((mut player, mut transform, mut sprite, mut animation)) = player_query.single_mut()
     else {
@@ -37,12 +43,21 @@ pub(super) fn update_player(
     let dt = time.delta_secs().min(0.05);
     let tuning = &data.gameplay.player;
     let walls = &tuning.walls;
+    let clips = &data.player_animations.clips;
     let terrain = Terrain(room_query.iter().collect());
     player.action_animation_timer = (player.action_animation_timer - dt).max(0.0);
-    player.dash_strike_timer = (player.dash_strike_timer - dt).max(0.0);
+    if player.action_animation_timer == 0.0 {
+        player.action = None;
+    }
+    player.dash_shot_timer = (player.dash_shot_timer - dt).max(0.0);
     player.dash_cooldown = (player.dash_cooldown - dt).max(0.0);
     player.wall_jump_lock_timer = (player.wall_jump_lock_timer - dt).max(0.0);
     player.drop_through_timer = (player.drop_through_timer - dt).max(0.0);
+    let mut sprite_view = PlayerSprite {
+        sprite: &mut sprite,
+        animation: &mut animation,
+        sheets: &sheets,
+    };
 
     // Mantling onto a ledge owns the body until the climb ends.
     if let Some(mut mantle) = player.mantle.take() {
@@ -61,34 +76,67 @@ pub(super) fn update_player(
             player.velocity = Vec2::ZERO;
             sounds.push(SoundCue::Landing);
         }
-        set_animation(
-            &mut sprite,
-            &mut animation,
-            &sheets,
-            "player_ledge_climb",
-            false,
-        );
-        sprite.flip_x = player.facing < 0.0;
+        sprite_view.play("player_ledge_grab", false);
+        sprite_view.sprite.flip_x = player.facing < 0.0;
         return;
     }
 
+    // A dying player only falls; every control is ignored.
+    let alive = player.dying_s.is_none();
+    let held = |action| alive && controls.pressed(action, &keys);
+    let tapped = |action| alive && controls.just_pressed(action, &keys);
+    player.covering = player.grounded && player.dash_timer == 0.0 && held(GameAction::Cover);
+    player.crouching = player.grounded && !player.covering && held(GameAction::MoveDown);
+
     let movement_multiplier =
-        bonus_multiplier(&session, &data, "fleet_feet", "movement_speed_multiplier");
+        session.bonus_multiplier(&data, "fleet_feet", "movement_speed_multiplier");
+    let jog_speed = data.player_animations.jog_speed_fraction
+        * tuning.max_speed_h_s
+        * movement_multiplier
+        * H_WORLD_UNITS;
     let was_dashing = player.dash_timer > 0.0;
     let mut direction: f32 = 0.0;
-    if controls.pressed(GameAction::MoveLeft, &keys) {
+    if held(GameAction::MoveLeft) {
         direction -= 1.0;
     }
-    if controls.pressed(GameAction::MoveRight, &keys) {
+    if held(GameAction::MoveRight) {
         direction += 1.0;
+    }
+    if player.covering {
+        direction = 0.0;
+    }
+    // Sprinting lasts until the player stops, turns, crouches, or covers.
+    if direction != player.facing || player.crouching || player.covering {
+        player.sprinting = false;
     }
     if player.wall_jump_lock_timer > 0.0 {
         // The wall-jump kick carries the player away from the wall.
     } else if direction != 0.0 {
         if !was_dashing {
+            // Reversing on the ground plays a turn-around step.
+            if direction != player.facing
+                && player.grounded
+                && player.velocity.x * direction < -MOVING_SPEED_THRESHOLD
+                && !matches!(
+                    player.action,
+                    Some(PlayerAction::Shot { .. } | PlayerAction::Hit)
+                )
+            {
+                let running = player.velocity.x.abs() >= jog_speed;
+                let clip = if running {
+                    &clips.turn_run
+                } else {
+                    &clips.turn
+                };
+                player.start_action(PlayerAction::Turn { running }, clip.duration_s());
+            }
             player.facing = direction.signum();
         }
-        let max_speed_h_s = if player.grounded {
+        let max_speed_h_s = if player.sprinting {
+            data.bonus_effect("sprinter", "sprint_speed_h_s")
+        } else if player.crouching {
+            tuning.crouch_speed_h_s
+        } else if player.grounded {
             tuning.max_speed_h_s
         } else {
             tuning.air_max_speed_h_s
@@ -107,14 +155,14 @@ pub(super) fn update_player(
         );
     }
 
-    if controls.just_pressed(GameAction::Jump, &keys) {
-        let extra_jump = if session.owned_bonuses.iter().any(|id| id == "double_jump") {
+    if tapped(GameAction::Jump) && !player.covering {
+        let extra_jump = if session.has_bonus("double_jump") {
             data.bonus_effect("double_jump", "extra_midair_jumps") as u8
         } else {
             0
         };
         let jumps_allowed = tuning.jumps_per_takeoff + extra_jump;
-        if player.grounded && player.on_one_way && controls.pressed(GameAction::MoveDown, &keys) {
+        if player.grounded && player.on_one_way && held(GameAction::MoveDown) {
             player.drop_through_timer = tuning.drop_through_s;
             player.grounded = false;
         } else if let (false, Some(side)) = (player.grounded, player.wall_side) {
@@ -124,10 +172,14 @@ pub(super) fn update_player(
             player.jumps_used = player.jumps_used.max(tuning.jumps_per_takeoff);
             player.jump_held = true;
             player.wall_jump_lock_timer = walls.jump_control_lock_s;
+            player.wall_contact_s = 0.0;
+            player.start_action(PlayerAction::WallJump, clips.wall_jump.duration_s());
             sounds.push(SoundCue::Jump);
         } else if player.grounded || player.jumps_used < jumps_allowed {
             let jump_factor = if player.jumps_used == 0 {
-                bonus_multiplier(&session, &data, "high_jump", "jump_height_multiplier").sqrt()
+                session
+                    .bonus_multiplier(&data, "high_jump", "jump_height_multiplier")
+                    .sqrt()
             } else {
                 data.bonus_effect("double_jump", "extra_jump_impulse_factor")
             };
@@ -138,17 +190,17 @@ pub(super) fn update_player(
             sounds.push(SoundCue::Jump);
         }
     }
-    if player.jump_held && !controls.pressed(GameAction::Jump, &keys) {
+    if player.jump_held && !held(GameAction::Jump) {
         player.jump_held = false;
         if player.velocity.y > 0.0 {
             player.velocity.y *= tuning.jump_release_velocity_multiplier;
         }
     }
 
-    if controls.just_pressed(GameAction::Dash, &keys) && player.dash_cooldown == 0.0 {
+    if tapped(GameAction::Dash) && player.dash_cooldown == 0.0 && !player.covering {
         player.dash_timer = tuning.dash_duration_s;
         player.dash_cooldown = tuning.dash_cooldown_s
-            * bonus_multiplier(&session, &data, "dash_recharge", "dash_cooldown_multiplier");
+            * session.bonus_multiplier(&data, "dash_recharge", "dash_cooldown_multiplier");
         player.dash_invulnerability_timer = tuning.dash_invulnerability_s;
         player.dash_direction = player.facing;
         sounds.push(SoundCue::Dash);
@@ -158,11 +210,19 @@ pub(super) fn update_player(
     player.dash_timer = (player.dash_timer - dash_step).max(0.0);
     let normal_step = dt - dash_step;
     if was_dashing && player.dash_timer == 0.0 {
-        player.dash_strike_timer = if session.owned_bonuses.iter().any(|id| id == "dash_strike") {
-            data.bonus_effect("dash_strike", "post_dash_window_s")
+        player.dash_shot_timer = if session.has_bonus("dash_shot") {
+            data.bonus_effect("dash_shot", "post_dash_window_s")
         } else {
             0.0
         };
+        // Sprinter: a grounded dash still pushed forward turns into a sprint.
+        if session.has_bonus("sprinter") && player.grounded && direction == player.dash_direction {
+            player.sprinting = true;
+            player.velocity.x = direction
+                * data.bonus_effect("sprinter", "sprint_speed_h_s")
+                * movement_multiplier
+                * H_WORLD_UNITS;
+        }
     }
 
     // Horizontal motion first, from the frame's starting height, so a body
@@ -178,6 +238,7 @@ pub(super) fn update_player(
     );
     if wall_hit.is_some() {
         player.velocity.x = 0.0;
+        player.sprinting = false;
     }
     let room = &data.rooms[&session.room_id];
     let room_width_world = room.width_h(&data.gameplay) * H_WORLD_UNITS;
@@ -188,15 +249,23 @@ pub(super) fn update_player(
     if normal_step > 0.0 {
         player.velocity.y -= tuning.gravity_h_s2 * H_WORLD_UNITS * normal_step;
     }
-    // Pressing into a wall while falling slides down it slowly.
+    // Pressing into a wall while falling first clings to it (the latch), then
+    // slides down it slowly.
     let wall_sliding = !player.grounded
         && player.velocity.y < 0.0
         && player.wall_side.is_some_and(|side| side == direction);
     if wall_sliding {
-        player.velocity.y = player
-            .velocity
-            .y
-            .max(-walls.slide_max_fall_speed_h_s * H_WORLD_UNITS);
+        player.wall_contact_s += dt;
+        player.velocity.y = if player.wall_contact_s <= walls.latch_s {
+            0.0
+        } else {
+            player
+                .velocity
+                .y
+                .max(-walls.slide_max_fall_speed_h_s * H_WORLD_UNITS)
+        };
+    } else {
+        player.wall_contact_s = 0.0;
     }
     transform.translation.y += player.velocity.y * dt;
     if player.velocity.y <= 0.0 {
@@ -261,15 +330,26 @@ pub(super) fn update_player(
         player.dash_timer = 0.0;
         player.jump_held = false;
         player.wall_side = None;
+        player.wall_contact_s = 0.0;
     }
 
     if player.grounded {
         player.jumps_used = 0;
         if !was_grounded {
             sounds.push(SoundCue::Landing);
+            // Touching down in place plays the landing crouch.
+            if direction == 0.0 && player.action.is_none() && alive {
+                player.start_action(PlayerAction::Land, clips.land.duration_s());
+            }
         }
+    } else if matches!(
+        player.action,
+        Some(PlayerAction::Land | PlayerAction::Turn { .. })
+    ) {
+        player.action = None;
     }
-    if player.grounded && player.velocity.x.abs() > 20.0 {
+    let moving = player.velocity.x.abs() > MOVING_SPEED_THRESHOLD;
+    if player.grounded && moving {
         player.footstep_timer = if was_grounded {
             (player.footstep_timer - dt).max(0.0)
         } else {
@@ -285,40 +365,15 @@ pub(super) fn update_player(
         player.footstep_timer = 0.0;
     }
 
-    let moving = player.velocity.x.abs() > 20.0;
-    if player.action_animation_timer <= 0.0 {
-        let run_speed = data.player_animations.run_speed_fraction
-            * tuning.max_speed_h_s
-            * movement_multiplier
-            * H_WORLD_UNITS;
-        let fall_finished = animation.sheet == "player_fall_loop"
-            || (animation.sheet == "player_fall" && animation.frame + 1 == animation.frames);
-        let (animation_key, looping) = if player.dash_timer > 0.0 {
-            ("player_dash", true)
-        } else if wall_sliding {
-            ("player_wall_slide", true)
-        } else if !player.grounded && player.velocity.y > 0.0 {
-            ("player_jump", false)
-        } else if !player.grounded && fall_finished {
-            ("player_fall_loop", true)
-        } else if !player.grounded {
-            ("player_fall", false)
-        } else if player.velocity.x.abs() >= run_speed {
-            ("player_run", true)
-        } else if moving {
-            ("player_walk", true)
-        } else {
-            ("player_idle", true)
-        };
-        set_animation(&mut sprite, &mut animation, &sheets, animation_key, looping);
-    }
-    sprite.flip_x = player.facing < 0.0;
-}
-
-fn bonus_multiplier(session: &RunSession, data: &GameData, id: &str, effect: &str) -> f32 {
-    if session.owned_bonuses.iter().any(|owned| owned == id) {
-        data.bonus_effect(id, effect)
-    } else {
-        1.0
-    }
+    let state = AnimationState {
+        moving,
+        wall_sliding,
+        latch_s: walls.latch_s,
+        jog_speed,
+        dt,
+        enemies_alive: enemies.iter().any(|enemy| enemy.health > 0.0),
+        health_fraction: session.health / session.max_health.max(1.0),
+    };
+    sprite_view.update(&mut player, &data.player_animations, &state);
+    sprite_view.sprite.flip_x = player.facing < 0.0;
 }

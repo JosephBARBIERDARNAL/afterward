@@ -3,9 +3,10 @@ mod chapter_one_run;
 mod control_bindings;
 mod enemy_jumping;
 mod gameplay_controls;
+mod gun;
 mod player_controls;
+mod player_stances;
 mod procedural_movement;
-mod sword_combo;
 mod terrain_movement;
 mod variable_jump;
 

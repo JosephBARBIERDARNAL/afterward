@@ -6,7 +6,11 @@ pub(in crate::game) fn clear_room_combat_effects(
     damage_numbers: Query<Entity, With<DamageNumber>>,
     corpses: Query<Entity, With<DeadEnemy>>,
     impacts: Query<Entity, With<ImpactEffect>>,
+    bullets: Query<Entity, With<PlayerBullet>>,
 ) {
+    for entity in &bullets {
+        commands.entity(entity).despawn();
+    }
     for entity in &projectiles {
         commands.entity(entity).despawn();
     }
@@ -61,6 +65,9 @@ mod tests {
             .world_mut()
             .spawn(ImpactEffect {
                 timer: Timer::from_seconds(0.35, TimerMode::Once),
+                velocity: Vec2::ZERO,
+                growth: 0.5,
+                color: Color::WHITE,
             })
             .id();
 

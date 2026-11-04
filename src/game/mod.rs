@@ -6,9 +6,10 @@ use std::{
 use bevy::{ecs::system::SystemParam, prelude::*};
 
 use crate::data::{
-    EnemyAttackConfig, EnemyTypeId, GameData, PLAYER_COLLISION_WIDTH_H, PlatformMaterial,
+    Aim, EnemyAttackConfig, EnemyTypeId, GameData, PLAYER_COLLISION_WIDTH_H, PlatformMaterial,
 };
 
+mod ammo_hud;
 mod assets;
 mod audio;
 mod bonus_screen;
@@ -38,6 +39,8 @@ use settings::AudioSettings;
 use terrain::{PlatformSurface, Terrain};
 
 const H_WORLD_UNITS: f32 = 48.0;
+/// Horizontal speed, in world units per second, above which a body counts as moving.
+const MOVING_SPEED_THRESHOLD: f32 = 20.0;
 
 pub struct GamePlugin;
 
@@ -80,6 +83,7 @@ impl Plugin for GamePlugin {
                 (
                     camera::spawn_camera,
                     interface::spawn_interface,
+                    ammo_hud::spawn_ammo_hud,
                     bonus_screen::spawn_bonus_screen,
                     assets::load_sprites,
                     player_model::setup_player_model.after(assets::load_sprites),
@@ -137,6 +141,7 @@ impl Plugin for GamePlugin {
                     bonus_screen::update_bonus_screen,
                     camera::update_background_parallax,
                     interface::update_hud,
+                    ammo_hud::update_ammo_hud,
                 ),
             )
             .add_systems(
@@ -144,7 +149,8 @@ impl Plugin for GamePlugin {
                 (
                     camera::follow_camera,
                     player::update_player,
-                    combat::player_attacks,
+                    combat::player_gun,
+                    combat::update_player_bullets,
                     combat::update_enemy_ai,
                     combat::update_enemy_platform_physics,
                     combat::update_projectiles,
@@ -153,6 +159,7 @@ impl Plugin for GamePlugin {
                     combat::update_impact_effects,
                     combat::update_health_bars,
                     combat::update_health_pickups,
+                    combat::update_player_death,
                     flow::handle_door_touch,
                     flow::room_clear_check,
                 )
@@ -166,7 +173,7 @@ impl Plugin for GamePlugin {
             .add_systems(
                 Update,
                 player_model::animate_player_model
-                    .after(combat::player_attacks)
+                    .after(combat::player_gun)
                     .after(room_intro::pose_room_intro)
                     .run_if(in_state(GameScreen::Playing).or_else(in_state(GameScreen::RoomIntro))),
             )
@@ -251,6 +258,31 @@ struct RunSession {
     world_loaded: bool,
 }
 
+impl RunSession {
+    fn has_bonus(&self, id: &str) -> bool {
+        self.owned_bonuses.iter().any(|owned| owned == id)
+    }
+
+    /// An owned bonus's multiplier effect, or 1 without the bonus.
+    fn bonus_multiplier(&self, data: &GameData, id: &str, effect: &str) -> f32 {
+        if self.has_bonus(id) {
+            data.bonus_effect(id, effect)
+        } else {
+            1.0
+        }
+    }
+
+    /// Rounds a full magazine holds, with Extended Magazine.
+    fn magazine_capacity(&self, data: &GameData) -> u32 {
+        let extra = if self.has_bonus("extended_magazine") {
+            data.bonus_effect("extended_magazine", "extra_magazine_rounds") as u32
+        } else {
+            0
+        };
+        data.gameplay.player.gun.magazine_size + extra
+    }
+}
+
 impl Default for RunSession {
     fn default() -> Self {
         Self {
@@ -326,19 +358,44 @@ struct PlayerBody {
     dash_timer: f32,
     dash_cooldown: f32,
     dash_direction: f32,
-    sword_cooldown: f32,
-    /// Swings already made in the current sword combo chain.
-    combo_step: usize,
-    /// A sword press made while the previous swing was still cooling down.
-    sword_buffered: bool,
+    /// Seconds until the gun can fire again.
+    fire_cooldown: f32,
+    /// Rounds left in the magazine.
+    ammo: u32,
+    reload: Option<Reload>,
+    /// Shot variant the next shot plays; consecutive shots alternate.
+    shot_variant: usize,
+    /// Direction of the last shot, held by the aim pose.
+    aim: Aim,
+    /// Seconds the aim pose keeps holding after a shot.
+    aim_hold_timer: f32,
+    /// Health Vampiric Rounds restored from the current magazine.
+    magazine_healing: f32,
+    crouching: bool,
+    covering: bool,
+    /// Sprinter bonus: running faster since a grounded dash.
+    sprinting: bool,
+    /// Seconds spent against the current wall while falling.
+    wall_contact_s: f32,
+    /// Seconds spent standing idle, for the hand fidgets.
+    idle_s: f32,
+    /// The next fidget uses the right hand.
+    fidget_right: bool,
+    /// Seconds since the player died, while the death animation plays.
+    dying_s: Option<f32>,
     invulnerability_timer: f32,
     dash_invulnerability_timer: f32,
-    dash_strike_timer: f32,
+    dash_shot_timer: f32,
     rhythm_timer: f32,
     rhythm_stacks: u8,
     chain_reaction_timer: f32,
     sated_fury_timer: f32,
+    /// One-shot animation playing over the movement clips.
+    action: Option<PlayerAction>,
+    /// Seconds left on `action`; it only grows when an action (re)starts.
     action_animation_timer: f32,
+    /// `action` (re)started since the animation last showed it.
+    action_started: bool,
     footstep_timer: f32,
     /// Side (-1 left, 1 right) of the wall an airborne player is touching.
     wall_side: Option<f32>,
@@ -347,6 +404,84 @@ struct PlayerBody {
     /// Standing on a one-way platform, which Down + Jump drops through.
     on_one_way: bool,
     mantle: Option<Mantle>,
+}
+
+impl Default for PlayerBody {
+    fn default() -> Self {
+        Self {
+            velocity: Vec2::ZERO,
+            facing: 1.0,
+            grounded: true,
+            jumps_used: 0,
+            jump_held: false,
+            dash_timer: 0.0,
+            dash_cooldown: 0.0,
+            dash_direction: 1.0,
+            fire_cooldown: 0.0,
+            ammo: 0,
+            reload: None,
+            shot_variant: 0,
+            aim: Aim::Straight,
+            aim_hold_timer: 0.0,
+            magazine_healing: 0.0,
+            crouching: false,
+            covering: false,
+            sprinting: false,
+            wall_contact_s: 0.0,
+            idle_s: 0.0,
+            fidget_right: false,
+            dying_s: None,
+            invulnerability_timer: 0.0,
+            dash_invulnerability_timer: 0.0,
+            dash_shot_timer: 0.0,
+            rhythm_timer: 0.0,
+            rhythm_stacks: 0,
+            chain_reaction_timer: 0.0,
+            sated_fury_timer: 0.0,
+            action: None,
+            action_animation_timer: 0.0,
+            action_started: false,
+            footstep_timer: 0.0,
+            wall_side: None,
+            wall_jump_lock_timer: 0.0,
+            drop_through_timer: 0.0,
+            on_one_way: false,
+            mantle: None,
+        }
+    }
+}
+
+impl PlayerBody {
+    /// Starts a one-shot animation lasting `duration_s`.
+    fn start_action(&mut self, action: PlayerAction, duration_s: f32) {
+        self.action = Some(action);
+        self.action_animation_timer = duration_s;
+        self.action_started = true;
+    }
+}
+
+/// A one-shot player animation played over the movement clips.
+#[derive(Clone, Copy, Debug, PartialEq)]
+enum PlayerAction {
+    /// Firing; a straight shot while running plays the run-shooting cycle.
+    Shot {
+        aim: Aim,
+        variant: usize,
+        running: bool,
+    },
+    Hit,
+    Land,
+    Turn {
+        running: bool,
+    },
+    WallJump,
+}
+
+/// A magazine refill under way.
+#[derive(Clone, Copy, Debug)]
+struct Reload {
+    remaining_s: f32,
+    duration_s: f32,
 }
 
 /// An automatic climb onto a ledge, between two body-center positions.
@@ -445,9 +580,28 @@ struct CombatProjectile {
     half_size: Vec2,
 }
 
+/// A piece of a fiery burst (its hot core or a flying ember): it drifts,
+/// swells by `growth`, cools from yellow to red, and fades out.
 #[derive(Component)]
 struct ImpactEffect {
     timer: Timer,
+    velocity: Vec2,
+    growth: f32,
+    color: Color,
+}
+
+/// A bullet fired by the player; it stops at the first enemy or solid block.
+#[derive(Component)]
+struct PlayerBullet {
+    velocity: Vec2,
+    damage: f32,
+    remaining_range: f32,
+    half_size: Vec2,
+    /// The last round of a magazine, which plays the heavier hit sound.
+    last_round: bool,
+    /// Where the shooter's body is: the first step traces from here, so an
+    /// enemy pressed against the player is hit point-blank.
+    fired_from: Option<Vec2>,
 }
 
 #[derive(Component)]
@@ -499,6 +653,11 @@ impl RandomState {
         (self.next_u64() as usize) % length
     }
 
+    /// A uniform value in `0.0..1.0`.
+    fn fraction(&mut self) -> f32 {
+        (self.next_u64() >> 40) as f32 / (1u64 << 24) as f32
+    }
+
     fn chance(&mut self, probability: f32) -> bool {
         (self.next_u64() as f64 / u64::MAX as f64) < f64::from(probability)
     }
@@ -535,6 +694,8 @@ struct SpriteSheetSpec {
     frame_height: u32,
     frames: usize,
     fps: f32,
+    /// Grid cell (column, row) of the clip's first frame within its sheet.
+    first_cell: UVec2,
 }
 
 fn move_towards(current: f32, target: f32, max_delta: f32) -> f32 {

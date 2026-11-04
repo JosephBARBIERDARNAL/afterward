@@ -7,7 +7,7 @@ use std::{
 
 use bevy::{prelude::MinimalPlugins, state::app::StatesPlugin, time::TimeUpdateStrategy};
 
-const TEST_PILOT_COMBAT_DISTANCE_H: f32 = 2.0;
+const TEST_PILOT_COMBAT_DISTANCE_H: f32 = 4.0;
 
 type TestPilotPlayers<'w, 's> = Query<
     'w,
@@ -140,11 +140,19 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
                         let dx = enemy_transform.translation.x - player_transform.translation.x;
                         let enemy_above_player = enemy_transform.translation.y
                             > player_transform.translation.y + H_WORLD_UNITS * 0.5;
+                        // Shoot up diagonally at an enemy above, from about as
+                        // far to the side as it is high.
+                        let rise_h = (enemy_transform.translation.y
+                            - player_transform.translation.y)
+                            / H_WORLD_UNITS;
                         let combat_distance_h = if enemy_above_player {
-                            1.0
+                            rise_h.clamp(1.0, 3.0)
                         } else {
                             TEST_PILOT_COMBAT_DISTANCE_H
                         };
+                        if enemy_above_player {
+                            keys.press(KeyCode::KeyW);
+                        }
                         let walking = dx.abs() > H_WORLD_UNITS * combat_distance_h
                             || dx.signum() != player.facing;
                         if walking {
@@ -194,11 +202,13 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
                     }
                 },
                 player::update_player,
-                combat::player_attacks,
+                combat::player_gun,
+                combat::update_player_bullets,
                 combat::update_enemy_ai,
                 combat::update_enemy_platform_physics,
                 combat::update_projectiles,
                 combat::update_health_pickups,
+                combat::update_player_death,
                 flow::handle_door_touch,
                 flow::room_clear_check,
             )
@@ -222,8 +232,8 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
                             "room_ward",
                             "vitality",
                             "thick_skin",
-                            "vampiric_edge",
-                            "keen_finisher",
+                            "vampiric_rounds",
+                            "last_round",
                             "rhythm_training",
                         ]
                         .into_iter()
@@ -405,7 +415,13 @@ fn spawn_test_room(
     }
     let room = &data.rooms[&session.room_id];
     world::spawn_room_platforms(&mut commands, room);
-    world::spawn_player(&mut commands, room, &data, &sheets);
+    world::spawn_player(
+        &mut commands,
+        room,
+        &data,
+        &sheets,
+        data.gameplay.player.gun.magazine_size,
+    );
     world::spawn_enemies(&mut commands, room, &data, &sheets);
     session.world_loaded = true;
 }

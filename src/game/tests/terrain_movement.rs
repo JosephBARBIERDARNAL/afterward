@@ -39,7 +39,13 @@ fn solid_terrain_stops_the_player_and_low_ledges_are_mantled() {
         .add_systems(
             Startup,
             |mut commands: Commands, data: Res<GameData>, sheets: Res<SpriteSheets>| {
-                world::spawn_player(&mut commands, &data.rooms[&1], &data, &sheets);
+                world::spawn_player(
+                    &mut commands,
+                    &data.rooms[&1],
+                    &data,
+                    &sheets,
+                    data.gameplay.player.gun.magazine_size,
+                );
                 // Player spawn is (2.5, 1): a floor, a ceiling over the spawn,
                 // and a 2 H tall wall to the right.
                 for (left, bottom, right, top) in [
@@ -171,7 +177,13 @@ fn one_way_platforms_are_jumped_through_and_dropped_through() {
         .add_systems(
             Startup,
             |mut commands: Commands, data: Res<GameData>, sheets: Res<SpriteSheets>| {
-                world::spawn_player(&mut commands, &data.rooms[&1], &data, &sheets);
+                world::spawn_player(
+                    &mut commands,
+                    &data.rooms[&1],
+                    &data,
+                    &sheets,
+                    data.gameplay.player.gun.magazine_size,
+                );
                 // A floor, and a plank 2 H above the player spawn at (2.5, 1).
                 for (left, bottom, right, top, one_way) in
                     [(0.0, 0.0, 32.0, 1.0, false), (1.0, 2.75, 6.0, 3.0, true)]
@@ -270,7 +282,13 @@ fn jumping_off_a_wall_kicks_the_player_away_from_it() {
         .add_systems(
             Startup,
             |mut commands: Commands, data: Res<GameData>, sheets: Res<SpriteSheets>| {
-                world::spawn_player(&mut commands, &data.rooms[&1], &data, &sheets);
+                world::spawn_player(
+                    &mut commands,
+                    &data.rooms[&1],
+                    &data,
+                    &sheets,
+                    data.gameplay.player.gun.magazine_size,
+                );
                 // A floor and a wall too tall to mantle, right of the spawn.
                 for (left, bottom, right, top) in [(0.0, 0.0, 32.0, 1.0), (4.0, 1.0, 5.0, 13.0)] {
                     commands.spawn(PlatformSurface {

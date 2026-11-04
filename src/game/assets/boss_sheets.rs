@@ -1,4 +1,4 @@
-use super::super::SpriteSheetSpec;
+use super::super::{SpriteSheetSpec, UVec2};
 
 pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
     vec![
@@ -9,6 +9,7 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             frame_height: 250,
             frames: 8,
             fps: 8.0,
+            first_cell: UVec2::ZERO,
         },
         SpriteSheetSpec {
             key: "boss_walk".into(),
@@ -17,6 +18,7 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             frame_height: 250,
             frames: 8,
             fps: 10.0,
+            first_cell: UVec2::ZERO,
         },
         SpriteSheetSpec {
             key: "boss_attack".into(),
@@ -25,6 +27,7 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             frame_height: 250,
             frames: 8,
             fps: 14.0,
+            first_cell: UVec2::ZERO,
         },
         SpriteSheetSpec {
             key: "boss_attack_2".into(),
@@ -33,6 +36,7 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             frame_height: 250,
             frames: 8,
             fps: 12.0,
+            first_cell: UVec2::ZERO,
         },
         SpriteSheetSpec {
             key: "boss_jump".into(),
@@ -41,6 +45,7 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             frame_height: 250,
             frames: 2,
             fps: 8.0,
+            first_cell: UVec2::ZERO,
         },
         SpriteSheetSpec {
             key: "boss_fall".into(),
@@ -49,6 +54,7 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             frame_height: 250,
             frames: 2,
             fps: 8.0,
+            first_cell: UVec2::ZERO,
         },
         SpriteSheetSpec {
             key: "boss_hurt".into(),
@@ -57,6 +63,7 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             frame_height: 250,
             frames: 3,
             fps: 12.0,
+            first_cell: UVec2::ZERO,
         },
         SpriteSheetSpec {
             key: "boss_dead".into(),
@@ -65,6 +72,7 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             frame_height: 250,
             frames: 7,
             fps: 9.0,
+            first_cell: UVec2::ZERO,
         },
     ]
 }

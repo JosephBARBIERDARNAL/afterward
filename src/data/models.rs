@@ -10,6 +10,8 @@ use bevy::{image::ImageSampler, prelude::Color};
 use serde::{Deserialize, Deserializer, de::Error as DeserializeError};
 use yaml_serde::Value;
 
+use super::PerAim;
+
 /// Width of the player's (and every enemy's) collision box, in H. Its height
 /// is 1 H by definition.
 pub const PLAYER_COLLISION_WIDTH_H: f32 = 0.6;
@@ -52,7 +54,10 @@ pub struct ControlsConfig {
     pub navigate_down: Vec<String>,
     pub jump: Vec<String>,
     pub dash: Vec<String>,
-    pub sword: Vec<String>,
+    pub shoot: Vec<String>,
+    pub aim_up: Vec<String>,
+    pub reload: Vec<String>,
+    pub cover: Vec<String>,
     pub interact: Vec<String>,
     pub pause: Vec<String>,
     pub toggle_fullscreen: Vec<String>,
@@ -107,7 +112,12 @@ pub struct PlayerConfig {
     pub walls: WallMovementConfig,
     /// Seconds one-way platforms ignore the player after Down + Jump.
     pub drop_through_s: f32,
-    pub sword: SwordConfig,
+    pub crouch_speed_h_s: f32,
+    /// Damage multiplier for hits from the front while Cover is held.
+    pub cover_damage_taken_multiplier: f32,
+    /// Seconds the last death frame holds before the run ends.
+    pub death_hold_s: f32,
+    pub gun: GunConfig,
 }
 
 /// Wall slide, wall jump, and ledge mantling.
@@ -122,20 +132,47 @@ pub struct WallMovementConfig {
     /// How far above the top of the body a ledge can still be grabbed.
     pub ledge_grab_reach_h: f32,
     pub ledge_climb_s: f32,
+    /// Seconds a falling player pressing into a wall clings to it before sliding.
+    pub latch_s: f32,
 }
 
+/// The player's only weapon: a gun firing visible bullets from a magazine.
 #[derive(Debug, Deserialize)]
-pub struct SwordConfig {
+pub struct GunConfig {
     pub damage: f32,
-    pub range_h: f32,
-    pub attack_interval_s: f32,
+    pub fire_interval_s: f32,
+    pub magazine_size: u32,
+    pub reload_s: f32,
+    pub bullet_speed_h_s: f32,
+    pub bullet_range_h: f32,
+    pub bullet_size_h: SizeH,
+    pub diagonal_angle_degrees: f32,
     pub boss_knockback_h_s: f32,
-    pub combo: SwordComboConfig,
+    /// Bullet origin from the body center, facing right.
+    pub muzzle_offset_h: PerAim<PointH>,
+    pub muzzle_flash: BurstConfig,
+    pub impact_burst: BurstConfig,
 }
 
+/// A fiery burst: a swelling, fading core and embers flying outward.
 #[derive(Debug, Deserialize)]
-pub struct SwordComboConfig {
-    pub damage_multipliers: Vec<f32>,
+pub struct BurstConfig {
+    pub radius_h: f32,
+    pub duration_s: f32,
+    pub embers: u8,
+    pub ember_speed_h_s: f32,
+}
+
+#[derive(Debug, Clone, Copy, Deserialize)]
+pub struct PointH {
+    pub x: f32,
+    pub y: f32,
+}
+
+#[derive(Debug, Clone, Copy, Deserialize)]
+pub struct SizeH {
+    pub width: f32,
+    pub height: f32,
 }
 
 #[derive(Debug, Deserialize)]

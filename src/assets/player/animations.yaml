@@ -1,35 +1,92 @@
-# Player sprite sheets (Ozzbit Games "Male Hero Template", free version).
-# Every sheet is a single row of equally sized frames. The character's body is
-# `body_height_px` tall and stands on `feet_row_px` (rows counted from the top
-# of a frame). It is drawn `body_height_h` tall, feet on the collision box's
-# baseline; the collision box itself stays 1 H tall.
+# Player sprite sheets ("The Dude" Premium v0.51 pack; Aseprite sources in
+# `player/source/`). Every sheet is a grid of equally sized frames. A clip
+# reads `frames` frames from row `row` (default 0) of its sheet, starting at
+# column `first_frame` (default 0). The character's body is `body_height_px`
+# tall and stands on `feet_row_px` (rows counted from the top of a frame). It
+# is drawn `body_height_h` tall, feet on the collision box's baseline; the
+# collision box itself stays 1 H tall.
 frame_size_px: { width: 128, height: 128 }
-body_height_px: 32
-feet_row_px: 80
+body_height_px: 45
+feet_row_px: 90
 body_height_h: 0.75
-# Grounded movement switches from the walk to the run cycle at this fraction of
+# Grounded movement switches from the walk to the jog cycle at this fraction of
 # the player's maximum speed.
-run_speed_fraction: 0.6
+jog_speed_fraction: 0.6
+# Below this fraction of maximum health the idle becomes the wounded idle.
+wounded_health_fraction: 0.25
+# Standing idle this long plays a hand fidget (alternating left and right),
+# then the timer starts over.
+idle_fidget_after_s: 4
+# After a shot, the aim pose holds this long (and as long as the trigger is
+# held) before the player relaxes back to the idle.
+aim_hold_s: 0.4
 
 clips:
-  idle: { sheet: player/sheets/idle.png, frames: 10, fps: 8 }
-  walk: { sheet: player/sheets/walk.png, frames: 10, fps: 12 }
-  run: { sheet: player/sheets/run.png, frames: 10, fps: 14 }
-  # The pack has no dash art: the dash replays the run cycle much faster.
-  dash: { sheet: player/sheets/run.png, frames: 10, fps: 40 }
-  # Rising part of a jump; holds its last frame until the player starts falling.
-  jump: { sheet: player/sheets/jump.png, frames: 6, fps: 14 }
-  # Apex-to-falling transition, then the falling loop.
-  fall: { sheet: player/sheets/fall.png, frames: 4, fps: 12 }
-  fall_loop: { sheet: player/sheets/fall_loop.png, frames: 3, fps: 8 }
-  # The pack has no wall or ledge art: sliding down a wall slows the falling
-  # loop, and mantling onto a ledge replays the jump rise quickly.
-  wall_slide: { sheet: player/sheets/fall_loop.png, frames: 3, fps: 4 }
-  ledge_climb: { sheet: player/sheets/jump.png, frames: 6, fps: 32 }
+  # Calm idle, once the room is clear.
+  idle: { sheet: player/sheets/idle.png, frames: 4, fps: 6 }
+  # Idle while enemies are still alive.
+  idle_alert: { sheet: player/sheets/idle_alert.png, frames: 8, fps: 8 }
+  idle_wounded: { sheet: player/sheets/idle_wounded.png, frames: 4, fps: 5 }
+  idle_fidget_left: { sheet: player/sheets/idle_fidget_left.png, frames: 4, fps: 5 }
+  idle_fidget_right: { sheet: player/sheets/idle_fidget_right.png, frames: 4, fps: 5 }
+  walk: { sheet: player/sheets/walk.png, frames: 8, fps: 10 }
+  jog: { sheet: player/sheets/jog.png, frames: 8, fps: 13 }
+  # Sprinter bonus only.
+  sprint: { sheet: player/sheets/sprint.png, frames: 8, fps: 18 }
+  # Holding Down on the ground.
+  crouch: { sheet: player/sheets/crouch.png, frames: 4, fps: 6 }
+  crouch_walk: { sheet: player/sheets/crouch_walk.png, frames: 8, fps: 10 }
+  # Reversing direction on the ground: below, then above the jog speed.
+  turn: { sheet: player/sheets/turn.png, frames: 4, fps: 20 }
+  turn_run: { sheet: player/sheets/turn_run.png, frames: 5, fps: 20 }
+  dash: { sheet: player/sheets/dash.png, frames: 5, fps: 25 }
+  # Take-off, then the rising loop until the player starts falling.
+  jump: { sheet: player/sheets/jump.png, frames: 5, fps: 16 }
+  ascend: { sheet: player/sheets/ascend.png, frames: 2, fps: 8 }
+  descend: { sheet: player/sheets/descend.png, frames: 3, fps: 8 }
+  # Touching down without horizontal input.
+  land: { sheet: player/sheets/land.png, frames: 4, fps: 20 }
+  # Reaching a wall: the latch cling, the landing against it, then the slide.
+  wall_latch: { sheet: player/sheets/wall_latch.png, frames: 1, fps: 1 }
+  wall_land: { sheet: player/sheets/wall_land.png, frames: 4, fps: 20 }
+  wall_slide: { sheet: player/sheets/wall_slide.png, frames: 3, fps: 8 }
+  wall_jump: { sheet: player/sheets/wall_jump.png, frames: 3, fps: 16 }
+  # Mantling onto a ledge.
+  ledge_grab: { sheet: player/sheets/ledge_grab.png, frames: 1, fps: 1 }
+  # Played over the whole reload, whatever its length.
+  reload: { sheet: player/sheets/reload.png, frames: 9, fps: 10 }
+  # Raising the guard; holds its last frame while Cover is held.
+  cover: { sheet: player/sheets/cover.png, frames: 3, fps: 16 }
+  hit: { sheet: player/sheets/hit.png, frames: 4, fps: 16 }
+  death: { sheet: player/sheets/death.png, frames: 8, fps: 10 }
+  # Firing straight ahead while moving on the ground: the jog cycle with the
+  # gun raised. A shot restarts it on `run_shooting_shot_frame`.
+  run_shooting: { sheet: player/sheets/run_shooting.png, frames: 8, fps: 13 }
 
-# One clip per sword-combo hit, in chain order (the pack's `combo_1` slash, then
-# its `combo_1_end` follow-through as the finisher). Must have as many entries
-# as `player.sword.combo.damage_multipliers` in config/gameplay.yaml.
-sword_combo:
-  - { sheet: player/sheets/sword_combo_1.png, frames: 3, fps: 12 }
-  - { sheet: player/sheets/sword_combo_2.png, frames: 4, fps: 12 }
+run_shooting_shot_frame: 2
+
+# Standing (and airborne) shots per aim direction. Consecutive shots alternate
+# between the variants (two-handed, then one-handed); after a shot, the
+# matching `aim` pose holds while the gun cools down or the trigger is held.
+shooting:
+  straight:
+    shot:
+      - { sheet: player/sheets/shooting.png, row: 0, frames: 4, fps: 20 }
+      - { sheet: player/sheets/shooting.png, row: 1, frames: 4, fps: 20 }
+    aim:
+      - { sheet: player/sheets/aiming.png, first_frame: 0, frames: 1, fps: 1 }
+      - { sheet: player/sheets/aiming.png, first_frame: 1, frames: 1, fps: 1 }
+  down:
+    shot:
+      - { sheet: player/sheets/shooting.png, row: 2, frames: 4, fps: 20 }
+      - { sheet: player/sheets/shooting.png, row: 3, frames: 4, fps: 20 }
+    aim:
+      - { sheet: player/sheets/aiming.png, first_frame: 2, frames: 1, fps: 1 }
+      - { sheet: player/sheets/aiming.png, first_frame: 3, frames: 1, fps: 1 }
+  up:
+    shot:
+      - { sheet: player/sheets/shooting.png, row: 4, frames: 4, fps: 20 }
+      - { sheet: player/sheets/shooting.png, row: 5, frames: 4, fps: 20 }
+    aim:
+      - { sheet: player/sheets/aiming.png, first_frame: 4, frames: 1, fps: 1 }
+      - { sheet: player/sheets/aiming.png, first_frame: 5, frames: 1, fps: 1 }

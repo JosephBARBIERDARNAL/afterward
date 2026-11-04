@@ -24,7 +24,7 @@ pub(super) fn load_sprites(
             spec.frames as u32,
             1,
             None,
-            None,
+            Some(spec.first_cell * UVec2::new(spec.frame_width, spec.frame_height)),
         ));
         sheets.insert(
             spec.key,
@@ -100,16 +100,18 @@ mod tests {
 
             let image_width = u32::from_be_bytes(bytes[16..20].try_into().unwrap());
             let image_height = u32::from_be_bytes(bytes[20..24].try_into().unwrap());
-            assert_eq!(
-                image_width,
-                spec.frame_width * spec.frames as u32,
-                "{} atlas width does not match its configured frame count",
+            // Sheets are grids of whole frames, and a clip (which may read a
+            // slice of one) must fit inside its grid.
+            assert!(
+                image_width % spec.frame_width == 0
+                    && image_width >= spec.frame_width * (spec.first_cell.x + spec.frames as u32),
+                "{} atlas width does not fit its configured frames",
                 path.display()
             );
-            assert_eq!(
-                image_height,
-                spec.frame_height,
-                "{} atlas height does not match its configured frame height",
+            assert!(
+                image_height % spec.frame_height == 0
+                    && image_height >= spec.frame_height * (spec.first_cell.y + 1),
+                "{} atlas height does not fit its configured frame rows",
                 path.display()
             );
         }
