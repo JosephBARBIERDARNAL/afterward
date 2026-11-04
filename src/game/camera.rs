@@ -18,9 +18,7 @@ pub(super) fn spawn_camera(mut commands: Commands, data: Res<GameData>) {
         },
         pause_blur::PauseBlur::default(),
         RoomCamera {
-            width_h: first_room.width_h(&data.gameplay),
-            fixed_y_h: first_room.camera.fixed_y_h,
-            follows_player: first_room.camera.follow_player_x,
+            size_h: Vec2::new(first_room.width_h(&data.gameplay), first_room.size.height_h),
         },
         Transform::from_xyz(
             data.gameplay.viewport_width_h() / 2.0 * H_WORLD_UNITS,
@@ -30,6 +28,8 @@ pub(super) fn spawn_camera(mut commands: Commands, data: Res<GameData>) {
     ));
 }
 
+/// Tracks the player horizontally, and vertically once they leave the dead
+/// zone around the screen center; the view never leaves the room.
 pub(super) fn follow_camera(
     player: Query<&Transform, (With<PlayerBody>, Without<Camera2d>)>,
     mut camera: Query<(&mut Transform, &RoomCamera), With<Camera2d>>,
@@ -41,19 +41,20 @@ pub(super) fn follow_camera(
     let Ok((mut transform, room_camera)) = camera.single_mut() else {
         return;
     };
-    if !room_camera.follows_player {
-        return;
-    }
-    let visible_width_h = data.gameplay.viewport_width_h();
-    let half_width = visible_width_h * H_WORLD_UNITS / 2.0;
-    let room_width = room_camera.width_h * H_WORLD_UNITS;
-    transform.translation.x = player
-        .translation
-        .x
-        .clamp(half_width, room_width - half_width);
-    transform.translation.y = room_camera.fixed_y_h * H_WORLD_UNITS;
+    let player_h = player.translation.truncate() / H_WORLD_UNITS;
+    let camera_y_h = transform.translation.y / H_WORLD_UNITS;
+    let dead_zone_h = data.gameplay.camera.vertical_dead_zone_h;
+    let target_h = Vec2::new(
+        player_h.x,
+        camera_y_h.clamp(player_h.y - dead_zone_h, player_h.y + dead_zone_h),
+    );
+    let center_h = room_camera.clamp_center_h(target_h, &data.gameplay);
+    transform.translation.x = center_h.x * H_WORLD_UNITS;
+    transform.translation.y = center_h.y * H_WORLD_UNITS;
 }
 
+/// Background layers scroll horizontally at their parallax rate and stay
+/// centered on the camera vertically, behind the room's drawn terrain.
 pub(super) fn update_background_parallax(
     camera: Query<&Transform, With<Camera2d>>,
     mut backgrounds: Query<(&mut Transform, &BackgroundParallax), Without<Camera2d>>,
@@ -64,5 +65,6 @@ pub(super) fn update_background_parallax(
     for (mut transform, background) in &mut backgrounds {
         transform.translation.x =
             background.base_x + camera.translation.x * (1.0 - background.factor);
+        transform.translation.y = camera.translation.y;
     }
 }

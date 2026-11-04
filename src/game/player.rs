@@ -36,8 +36,42 @@ pub(super) fn update_player(
     };
     let dt = time.delta_secs().min(0.05);
     let tuning = &data.gameplay.player;
+    let walls = &tuning.walls;
+    let terrain = Terrain(room_query.iter().collect());
     player.action_animation_timer = (player.action_animation_timer - dt).max(0.0);
     player.dash_strike_timer = (player.dash_strike_timer - dt).max(0.0);
+    player.dash_cooldown = (player.dash_cooldown - dt).max(0.0);
+    player.wall_jump_lock_timer = (player.wall_jump_lock_timer - dt).max(0.0);
+    player.drop_through_timer = (player.drop_through_timer - dt).max(0.0);
+
+    // Mantling onto a ledge owns the body until the climb ends.
+    if let Some(mut mantle) = player.mantle.take() {
+        mantle.elapsed_s += dt;
+        let progress = (mantle.elapsed_s / walls.ledge_climb_s).min(1.0);
+        // Rise beside the wall first, then step over onto the ledge.
+        let rise = (progress / 0.6).min(1.0);
+        let step = ((progress - 0.6) / 0.4).clamp(0.0, 1.0);
+        transform.translation.x = mantle.from.x + (mantle.to.x - mantle.from.x) * step;
+        transform.translation.y = mantle.from.y + (mantle.to.y - mantle.from.y) * rise;
+        if progress < 1.0 {
+            player.mantle = Some(mantle);
+        } else {
+            player.grounded = true;
+            player.jumps_used = 0;
+            player.velocity = Vec2::ZERO;
+            sounds.push(SoundCue::Landing);
+        }
+        set_animation(
+            &mut sprite,
+            &mut animation,
+            &sheets,
+            "player_ledge_climb",
+            false,
+        );
+        sprite.flip_x = player.facing < 0.0;
+        return;
+    }
+
     let movement_multiplier =
         bonus_multiplier(&session, &data, "fleet_feet", "movement_speed_multiplier");
     let was_dashing = player.dash_timer > 0.0;
@@ -48,7 +82,9 @@ pub(super) fn update_player(
     if controls.pressed(GameAction::MoveRight, &keys) {
         direction += 1.0;
     }
-    if direction != 0.0 {
+    if player.wall_jump_lock_timer > 0.0 {
+        // The wall-jump kick carries the player away from the wall.
+    } else if direction != 0.0 {
         if !was_dashing {
             player.facing = direction.signum();
         }
@@ -78,7 +114,18 @@ pub(super) fn update_player(
             0
         };
         let jumps_allowed = tuning.jumps_per_takeoff + extra_jump;
-        if player.grounded || player.jumps_used < jumps_allowed {
+        if player.grounded && player.on_one_way && controls.pressed(GameAction::MoveDown, &keys) {
+            player.drop_through_timer = tuning.drop_through_s;
+            player.grounded = false;
+        } else if let (false, Some(side)) = (player.grounded, player.wall_side) {
+            player.velocity = Vec2::new(-side * walls.jump_kick_speed_h_s, walls.jump_impulse_h_s)
+                * H_WORLD_UNITS;
+            player.facing = -side;
+            player.jumps_used = player.jumps_used.max(tuning.jumps_per_takeoff);
+            player.jump_held = true;
+            player.wall_jump_lock_timer = walls.jump_control_lock_s;
+            sounds.push(SoundCue::Jump);
+        } else if player.grounded || player.jumps_used < jumps_allowed {
             let jump_factor = if player.jumps_used == 0 {
                 bonus_multiplier(&session, &data, "high_jump", "jump_height_multiplier").sqrt()
             } else {
@@ -98,7 +145,6 @@ pub(super) fn update_player(
         }
     }
 
-    player.dash_cooldown = (player.dash_cooldown - dt).max(0.0);
     if controls.just_pressed(GameAction::Dash, &keys) && player.dash_cooldown == 0.0 {
         player.dash_timer = tuning.dash_duration_s;
         player.dash_cooldown = tuning.dash_cooldown_s
@@ -119,49 +165,104 @@ pub(super) fn update_player(
         };
     }
 
-    let previous_bottom = transform.translation.y - H_WORLD_UNITS / 2.0;
-    if dash_step > 0.0 {
-        transform.translation.x += player.dash_direction * tuning.dash_distance_h
-            / tuning.dash_duration_s
-            * H_WORLD_UNITS
-            * dash_step;
+    // Horizontal motion first, from the frame's starting height, so a body
+    // sinking into a floor it lands on is never pushed sideways by it.
+    let previous_feet = transform.translation.y - H_WORLD_UNITS / 2.0;
+    let dash_dx =
+        player.dash_direction * tuning.dash_distance_h / tuning.dash_duration_s * H_WORLD_UNITS;
+    let dx = dash_dx * dash_step + player.velocity.x * normal_step;
+    let (mut x, wall_hit) = terrain.move_horizontally(
+        transform.translation.x,
+        transform.translation.x + dx,
+        previous_feet,
+    );
+    if wall_hit.is_some() {
+        player.velocity.x = 0.0;
     }
+    let room = &data.rooms[&session.room_id];
+    let room_width_world = room.width_h(&data.gameplay) * H_WORLD_UNITS;
+    let half_width = PLAYER_COLLISION_WIDTH_H * H_WORLD_UNITS / 2.0;
+    x = x.clamp(half_width, room_width_world - half_width);
+    transform.translation.x = x;
+
     if normal_step > 0.0 {
-        transform.translation.x += player.velocity.x * normal_step;
         player.velocity.y -= tuning.gravity_h_s2 * H_WORLD_UNITS * normal_step;
-        transform.translation.y += player.velocity.y * normal_step;
-    } else if dash_step > 0.0 {
-        transform.translation.y += player.velocity.y * dash_step;
     }
+    // Pressing into a wall while falling slides down it slowly.
+    let wall_sliding = !player.grounded
+        && player.velocity.y < 0.0
+        && player.wall_side.is_some_and(|side| side == direction);
+    if wall_sliding {
+        player.velocity.y = player
+            .velocity
+            .y
+            .max(-walls.slide_max_fall_speed_h_s * H_WORLD_UNITS);
+    }
+    transform.translation.y += player.velocity.y * dt;
     if player.velocity.y <= 0.0 {
         player.jump_held = false;
     }
 
-    let room = &data.rooms[&session.room_id];
-    let room_width_world = room.width_h(&data.gameplay) * H_WORLD_UNITS;
-    let half_width = PLAYER_COLLISION_WIDTH_H * H_WORLD_UNITS / 2.0;
-    transform.translation.x = transform
-        .translation
-        .x
-        .clamp(half_width, room_width_world - half_width);
-
     let was_grounded = player.grounded;
     player.grounded = false;
     let mut grounded_material = None;
+    let feet = transform.translation.y - H_WORLD_UNITS / 2.0;
     if player.velocity.y <= 0.0 {
-        let current_bottom = transform.translation.y - H_WORLD_UNITS / 2.0;
-        for platform in &room_query {
-            if platform.supports_body_at(transform.translation.x)
-                && previous_bottom >= platform.top - 1.0
-                && current_bottom <= platform.top
-            {
-                transform.translation.y = platform.top + H_WORLD_UNITS / 2.0;
-                player.velocity.y = 0.0;
-                player.grounded = true;
-                grounded_material = Some(platform.material);
-            }
+        if let Some(block) =
+            terrain.landing(x, previous_feet, feet, player.drop_through_timer > 0.0)
+        {
+            transform.translation.y = block.top + H_WORLD_UNITS / 2.0;
+            player.velocity.y = 0.0;
+            player.grounded = true;
+            player.on_one_way = block.one_way;
+            grounded_material = Some(block.material);
         }
+    } else if let Some(bottom) =
+        terrain.ceiling(x, previous_feet + H_WORLD_UNITS, feet + H_WORLD_UNITS)
+    {
+        transform.translation.y = bottom - H_WORLD_UNITS / 2.0;
+        player.velocity.y = 0.0;
+        player.jump_held = false;
     }
+    let room_top = room.size.height_h * H_WORLD_UNITS;
+    if transform.translation.y + H_WORLD_UNITS / 2.0 > room_top {
+        transform.translation.y = room_top - H_WORLD_UNITS / 2.0;
+        player.velocity.y = player.velocity.y.min(0.0);
+    }
+
+    let feet = transform.translation.y - H_WORLD_UNITS / 2.0;
+    player.wall_side = if player.grounded {
+        None
+    } else {
+        terrain.wall_contact(x, feet).or_else(|| {
+            if x <= half_width + 1.0 {
+                Some(-1.0)
+            } else if x >= room_width_world - half_width - 1.0 {
+                Some(1.0)
+            } else {
+                None
+            }
+        })
+    };
+    // Reaching a ledge while moving toward its wall climbs onto it.
+    if !player.grounded
+        && player.wall_jump_lock_timer == 0.0
+        && direction != 0.0
+        && player.wall_side == Some(direction)
+        && let Some(ledge_feet) =
+            terrain.ledge(x, feet, direction, walls.ledge_grab_reach_h * H_WORLD_UNITS)
+    {
+        player.mantle = Some(Mantle {
+            from: transform.translation.truncate(),
+            to: ledge_feet + Vec2::Y * H_WORLD_UNITS / 2.0,
+            elapsed_s: 0.0,
+        });
+        player.velocity = Vec2::ZERO;
+        player.dash_timer = 0.0;
+        player.jump_held = false;
+        player.wall_side = None;
+    }
+
     if player.grounded {
         player.jumps_used = 0;
         if !was_grounded {
@@ -194,6 +295,8 @@ pub(super) fn update_player(
             || (animation.sheet == "player_fall" && animation.frame + 1 == animation.frames);
         let (animation_key, looping) = if player.dash_timer > 0.0 {
             ("player_dash", true)
+        } else if wall_sliding {
+            ("player_wall_slide", true)
         } else if !player.grounded && player.velocity.y > 0.0 {
             ("player_jump", false)
         } else if !player.grounded && fall_finished {

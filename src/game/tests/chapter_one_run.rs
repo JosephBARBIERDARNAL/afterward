@@ -91,7 +91,17 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
                  session: Res<RunSession>,
                  mut keys: ResMut<ButtonInput<KeyCode>>,
                  players: TestPilotPlayers<'_, '_>,
-                 enemies: TestPilotEnemies<'_, '_>| {
+                 enemies: TestPilotEnemies<'_, '_>,
+                 platforms: Query<&PlatformSurface>| {
+                    // Keep holding jump like a player would: re-pressing it every
+                    // frame would count as fresh presses and chain wall jumps.
+                    let space_was_held = keys.pressed(KeyCode::Space);
+                    let press_jump = |keys: &mut ButtonInput<KeyCode>| {
+                        keys.press(KeyCode::Space);
+                        if space_was_held {
+                            keys.clear_just_pressed(KeyCode::Space);
+                        }
+                    };
                     keys.release_all();
                     keys.clear();
                     if *screen.get() != GameScreen::Playing {
@@ -99,6 +109,17 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
                     }
                     let Ok((player_transform, player)) = players.single() else {
                         return;
+                    };
+                    // A solid wall right ahead of the feet: jump (and mantle) over it.
+                    let terrain = Terrain(platforms.iter().collect());
+                    let wall_ahead = |direction: f32| {
+                        let x = player_transform.translation.x;
+                        let feet_y = player_transform.translation.y - H_WORLD_UNITS / 2.0;
+                        player.grounded
+                            && terrain
+                                .move_horizontally(x, x + direction * 2.0, feet_y)
+                                .1
+                                .is_some()
                     };
                     if let Some((_, enemy_transform)) = enemies
                         .iter()
@@ -124,14 +145,23 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
                         } else {
                             TEST_PILOT_COMBAT_DISTANCE_H
                         };
-                        if dx.abs() > H_WORLD_UNITS * combat_distance_h
-                            || dx.signum() != player.facing
-                        {
+                        let walking = dx.abs() > H_WORLD_UNITS * combat_distance_h
+                            || dx.signum() != player.facing;
+                        if walking {
                             keys.press(if dx >= 0.0 {
                                 KeyCode::KeyD
                             } else {
                                 KeyCode::KeyA
                             });
+                        }
+                        let blocked = walking && wall_ahead(dx.signum());
+                        // An enemy right below a plank: drop through it.
+                        let enemy_below = enemy_transform.translation.y
+                            < player_transform.translation.y - H_WORLD_UNITS
+                            && dx.abs() < H_WORLD_UNITS * 1.5;
+                        if enemy_below && player.grounded && player.on_one_way {
+                            keys.press(KeyCode::KeyS);
+                            press_jump(&mut keys);
                         }
                         // Jumping at an enemy out of reach would keep the pilot
                         // airborne forever, and enemies only drop down to a
@@ -141,17 +171,25 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
                             <= data.gameplay.player.jump_height_h * H_WORLD_UNITS;
                         // Hold jump through the rise for a full-height jump.
                         if (enemy_above_player && enemy_within_jump_reach && player.grounded)
+                            || blocked
                             || player.jump_held
                         {
-                            keys.press(KeyCode::Space);
+                            press_jump(&mut keys);
                         }
                         keys.press(KeyCode::KeyJ);
                     } else {
                         let room = &data.rooms[&session.room_id];
-                        if room.exit.x_h * H_WORLD_UNITS - player_transform.translation.x
+                        let feet_h = player_transform.translation.y / H_WORLD_UNITS - 0.5;
+                        if room.exit.y_h < feet_h - 0.5 && player.grounded && player.on_one_way {
+                            keys.press(KeyCode::KeyS);
+                            press_jump(&mut keys);
+                        } else if room.exit.x_h * H_WORLD_UNITS - player_transform.translation.x
                             > H_WORLD_UNITS * 0.65
                         {
                             keys.press(KeyCode::KeyD);
+                            if wall_ahead(1.0) || player.jump_held {
+                                press_jump(&mut keys);
+                            }
                         }
                     }
                 },

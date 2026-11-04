@@ -1,63 +1,65 @@
-# Room coordinates use H from the lower-left. Platform positions are centers;
-# player and enemy spawn y_h values mark the feet baseline.
-# Layout: Canopy walkway: a long broken high walkway over open ground.
+# Room coordinates use H from the lower-left. Terrain and platform `rect_h`
+# give each block's lower-left corner and size; player, enemy, and exit y
+# values mark the feet baseline on a block top.
+# Layout: Canopy walkway: a broken high walkway over a long hall, a sniper perch above it.
 room_id: 3
 chapter_id: 1
 size:
   width_viewports: 3
-  height_h: 9
+  height_h: 18
 background_profile: chapter_01_forest
 player_spawn:
-  x_h: 2
-  y_h: 0.8
-camera:
-  follow_player_x: true
-  fixed_y_h: 4.5
+  x_h: 2.5
+  y_h: 1
+# Solid blocks: they stop bodies and projectiles from every side.
+terrain:
+  - surface: soil # floor
+    rect_h: { x: 0, y: 0, width: 48, height: 1 }
+  - surface: stone # ceiling
+    rect_h: { x: 0, y: 17, width: 48, height: 1 }
+  - surface: stone # left wall above the entrance doorway
+    rect_h: { x: 0, y: 4, width: 1, height: 13 }
+  - surface: stone # right wall above the exit doorway
+    rect_h: { x: 47, y: 4, width: 1, height: 13 }
+  - surface: stone # walkway west
+    rect_h: { x: 13, y: 6, width: 14, height: 1 }
+  - surface: stone # walkway east
+    rect_h: { x: 30, y: 6, width: 10, height: 1 }
+  - surface: stone # step
+    rect_h: { x: 28, y: 1, width: 2, height: 1.5 }
+  - surface: stone # hanging rock
+    rect_h: { x: 20, y: 12, width: 6, height: 5 }
+# One-way platforms: land on top, jump through from below, Down + Jump drops.
 platforms:
-  - position_h: { x: 24, y: 0.3 }
-    surface: soil
-    size_h: { width: 48, height: 1 }
-  - position_h: { x: 6, y: 1.65 }
-    surface: stone
-    size_h: { width: 3, height: 0.5 }
-  - position_h: { x: 10, y: 3.05 }
-    surface: stone
-    size_h: { width: 3, height: 0.5 }
-  - position_h: { x: 17, y: 3.75 }
-    surface: stone
-    size_h: { width: 8, height: 0.5 }
-  - position_h: { x: 22, y: 1.95 }
-    surface: stone
-    size_h: { width: 2.5, height: 0.5 }
-  - position_h: { x: 27.5, y: 3.75 }
-    surface: stone
-    size_h: { width: 9, height: 0.5 }
-  - position_h: { x: 33, y: 2.05 }
-    surface: stone
-    size_h: { width: 2.5, height: 0.5 }
-  - position_h: { x: 37, y: 3.75 }
-    surface: stone
-    size_h: { width: 6, height: 0.5 }
-  - position_h: { x: 44, y: 2.25 }
-    surface: stone
-    size_h: { width: 3, height: 0.5 }
+  - surface: wood
+    rect_h: { x: 6, y: 2.75, width: 3, height: 0.25 }
+  - surface: wood
+    rect_h: { x: 10, y: 4.75, width: 3, height: 0.25 }
+  - surface: wood
+    rect_h: { x: 33, y: 8.75, width: 3, height: 0.25 }
+  - surface: wood
+    rect_h: { x: 37, y: 10.75, width: 3, height: 0.25 }
+  - surface: wood
+    rect_h: { x: 41, y: 4.75, width: 3, height: 0.25 }
+  - surface: wood
+    rect_h: { x: 44, y: 2.75, width: 2, height: 0.25 }
 decorations: []
 enemy_spawns:
   - type_id: gorgon_1
-    position_h: { x: 12.2, y: 0.8 }
+    position_h: { x: 8, y: 1 }
   - type_id: infantryman
-    position_h: { x: 16, y: 4 }
+    position_h: { x: 20, y: 7 }
   - type_id: gorgon_1
-    position_h: { x: 22, y: 2.2 }
+    position_h: { x: 24, y: 1 }
   - type_id: swordsman
-    position_h: { x: 27, y: 4 }
+    position_h: { x: 35, y: 7 }
   - type_id: infantryman
-    position_h: { x: 37, y: 4 }
+    position_h: { x: 38.5, y: 11 }
   - type_id: gorgon_1
-    position_h: { x: 41, y: 0.8 }
+    position_h: { x: 43, y: 1 }
   - type_id: swordsman
-    position_h: { x: 44, y: 2.5 }
+    position_h: { x: 29, y: 2.5 }
 exit:
-  x_h: 46.5
-  y_h: 0.8
+  x_h: 45.5
+  y_h: 1
 next_room_id: 4

@@ -10,9 +10,15 @@ use bevy::{image::ImageSampler, prelude::Color};
 use serde::{Deserialize, Deserializer, de::Error as DeserializeError};
 use yaml_serde::Value;
 
+/// Width of the player's (and every enemy's) collision box, in H. Its height
+/// is 1 H by definition.
+pub const PLAYER_COLLISION_WIDTH_H: f32 = 0.6;
+
 #[derive(Debug, Deserialize)]
 pub struct GameplayConfig {
     pub viewport: ViewportConfig,
+    pub room_size_limits: RoomSizeLimits,
+    pub camera: CameraFollowConfig,
     pub player: PlayerConfig,
     pub health_pickup: HealthPickupConfig,
     pub room_flow: RoomFlowConfig,
@@ -41,6 +47,7 @@ pub struct AudioConfig {
 pub struct ControlsConfig {
     pub move_left: Vec<String>,
     pub move_right: Vec<String>,
+    pub move_down: Vec<String>,
     pub navigate_up: Vec<String>,
     pub navigate_down: Vec<String>,
     pub jump: Vec<String>,
@@ -58,6 +65,20 @@ pub struct ControlsConfig {
 pub struct ViewportConfig {
     pub aspect_ratio: AspectRatio,
     pub height_h: f32,
+}
+
+/// Allowed room dimensions, in multiples of the gameplay viewport.
+#[derive(Debug, Deserialize)]
+pub struct RoomSizeLimits {
+    pub width_viewports: RangeConfig,
+    pub height_viewports: RangeConfig,
+}
+
+/// The camera follows the player on both axes, clamped to the room. It only
+/// moves vertically once the player leaves a band around the screen center.
+#[derive(Debug, Deserialize)]
+pub struct CameraFollowConfig {
+    pub vertical_dead_zone_h: f32,
 }
 
 #[derive(Debug, Deserialize)]
@@ -83,7 +104,24 @@ pub struct PlayerConfig {
     pub dash_cooldown_s: f32,
     pub damage_invulnerability_s: f32,
     pub dash_invulnerability_s: f32,
+    pub walls: WallMovementConfig,
+    /// Seconds one-way platforms ignore the player after Down + Jump.
+    pub drop_through_s: f32,
     pub sword: SwordConfig,
+}
+
+/// Wall slide, wall jump, and ledge mantling.
+#[derive(Debug, Deserialize)]
+pub struct WallMovementConfig {
+    pub slide_max_fall_speed_h_s: f32,
+    pub jump_impulse_h_s: f32,
+    pub jump_kick_speed_h_s: f32,
+    /// Seconds after a wall jump during which horizontal input is ignored, so
+    /// the kick carries the player away from the wall.
+    pub jump_control_lock_s: f32,
+    /// How far above the top of the body a ledge can still be grabbed.
+    pub ledge_grab_reach_h: f32,
+    pub ledge_climb_s: f32,
 }
 
 #[derive(Debug, Deserialize)]
@@ -230,7 +268,7 @@ pub struct EnemyTypeConfig {
     pub jump_height_h: Option<f32>,
     pub behavior: String,
     pub procedural_movement: Option<ProceduralMovementConfig>,
-    pub preferred_distance_h: Option<DistanceRange>,
+    pub preferred_distance_h: Option<RangeConfig>,
     pub attack: Option<EnemyAttackConfig>,
     #[serde(default)]
     pub attacks: Vec<EnemyAttackConfig>,
@@ -245,7 +283,7 @@ pub struct ProceduralMovementConfig {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct DistanceRange {
+pub struct RangeConfig {
     pub min: f32,
     pub max: f32,
 }
@@ -423,8 +461,13 @@ pub struct RoomConfig {
     pub size: RoomSizeConfig,
     pub background_profile: String,
     pub player_spawn: SpawnPosition,
-    pub camera: CameraConfig,
-    pub platforms: Vec<PlatformConfig>,
+    /// Solid blocks (floors, walls, ceilings, pillars): they block bodies and
+    /// projectiles from every side.
+    pub terrain: Vec<TerrainBlockConfig>,
+    /// One-way platforms: bodies land on their top, jump through them from
+    /// below, and drop through them on purpose.
+    #[serde(default)]
+    pub platforms: Vec<TerrainBlockConfig>,
     #[serde(default)]
     pub decorations: Vec<DecorationConfig>,
     pub enemy_spawns: Vec<EnemySpawnConfig>,
@@ -437,16 +480,29 @@ impl RoomConfig {
         f32::from(self.size.width_viewports) * gameplay.viewport_width_h()
     }
 
-    pub(crate) fn surface_y_at(&self, x_h: f32) -> Option<f32> {
-        self.platforms
+    /// Whether feet at (`x_h`, `y_h`) stand on a block top with a body's
+    /// worth of room above them, free of solid terrain.
+    pub(crate) fn has_footing_at(&self, x_h: f32, y_h: f32) -> bool {
+        let stands =
+            self.terrain.iter().chain(&self.platforms).any(|block| {
+                block.rect_h.covers_x(x_h) && (block.rect_h.top() - y_h).abs() <= 0.01
+            });
+        stands && self.body_is_clear(x_h, y_h)
+    }
+
+    /// Whether a 1 H tall collision box centered on `x_h`, with its feet at
+    /// `y_h`, overlaps no solid terrain.
+    pub(crate) fn body_is_clear(&self, x_h: f32, y_h: f32) -> bool {
+        let body = RectH {
+            x: x_h - PLAYER_COLLISION_WIDTH_H / 2.0,
+            y: y_h,
+            width: PLAYER_COLLISION_WIDTH_H,
+            height: 1.0,
+        };
+        !self
+            .terrain
             .iter()
-            .filter(|platform| {
-                let half_width = platform.size_h.width_h / 2.0;
-                (platform.position_h.x_h - half_width..=platform.position_h.x_h + half_width)
-                    .contains(&x_h)
-            })
-            .map(|platform| platform.position_h.y_h + platform.size_h.height_h / 2.0)
-            .max_by(f32::total_cmp)
+            .any(|block| block.rect_h.overlaps(&body))
     }
 }
 
@@ -465,16 +521,41 @@ pub struct SpawnPosition {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct CameraConfig {
-    pub follow_player_x: bool,
-    pub fixed_y_h: f32,
+pub struct TerrainBlockConfig {
+    pub surface: PlatformMaterial,
+    pub rect_h: RectH,
 }
 
-#[derive(Debug, Deserialize)]
-pub struct PlatformConfig {
-    pub surface: PlatformMaterial,
-    pub position_h: SpawnPosition,
-    pub size_h: PlatformSize,
+/// An axis-aligned rectangle in H; `x`/`y` is its lower-left corner.
+#[derive(Debug, Clone, Copy, Deserialize)]
+pub struct RectH {
+    pub x: f32,
+    pub y: f32,
+    pub width: f32,
+    pub height: f32,
+}
+
+impl RectH {
+    pub(crate) fn right(&self) -> f32 {
+        self.x + self.width
+    }
+
+    pub(crate) fn top(&self) -> f32 {
+        self.y + self.height
+    }
+
+    fn covers_x(&self, x: f32) -> bool {
+        (self.x..=self.right()).contains(&x)
+    }
+
+    /// Strict overlap: rectangles that only share an edge do not overlap.
+    fn overlaps(&self, other: &Self) -> bool {
+        const EPSILON: f32 = 0.001;
+        self.x < other.right() - EPSILON
+            && other.x < self.right() - EPSILON
+            && self.y < other.top() - EPSILON
+            && other.y < self.top() - EPSILON
+    }
 }
 
 #[derive(Debug, Clone, Copy, Deserialize, Eq, Ord, PartialEq, PartialOrd)]
@@ -482,14 +563,7 @@ pub struct PlatformConfig {
 pub enum PlatformMaterial {
     Soil,
     Stone,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct PlatformSize {
-    #[serde(alias = "width")]
-    pub width_h: f32,
-    #[serde(alias = "height")]
-    pub height_h: f32,
+    Wood,
 }
 
 #[derive(Debug, Deserialize)]

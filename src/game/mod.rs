@@ -5,7 +5,9 @@ use std::{
 
 use bevy::{ecs::system::SystemParam, prelude::*};
 
-use crate::data::{EnemyAttackConfig, EnemyTypeId, GameData, PlatformMaterial};
+use crate::data::{
+    EnemyAttackConfig, EnemyTypeId, GameData, PLAYER_COLLISION_WIDTH_H, PlatformMaterial,
+};
 
 mod assets;
 mod audio;
@@ -21,6 +23,7 @@ mod player_model;
 mod room_intro;
 mod screens;
 mod settings;
+mod terrain;
 mod visual_walkthrough;
 mod world;
 
@@ -32,9 +35,9 @@ mod tests;
 use audio::{SoundCue, SoundQueue};
 use controls::{ControlBindings, GameAction};
 use settings::AudioSettings;
+use terrain::{PlatformSurface, Terrain};
 
 const H_WORLD_UNITS: f32 = 48.0;
-const PLAYER_COLLISION_WIDTH_H: f32 = 0.6;
 
 pub struct GamePlugin;
 
@@ -337,6 +340,21 @@ struct PlayerBody {
     sated_fury_timer: f32,
     action_animation_timer: f32,
     footstep_timer: f32,
+    /// Side (-1 left, 1 right) of the wall an airborne player is touching.
+    wall_side: Option<f32>,
+    wall_jump_lock_timer: f32,
+    drop_through_timer: f32,
+    /// Standing on a one-way platform, which Down + Jump drops through.
+    on_one_way: bool,
+    mantle: Option<Mantle>,
+}
+
+/// An automatic climb onto a ledge, between two body-center positions.
+#[derive(Clone, Copy)]
+struct Mantle {
+    from: Vec2,
+    to: Vec2,
+    elapsed_s: f32,
 }
 
 #[derive(Component)]
@@ -353,6 +371,7 @@ struct EnemyBody {
     jump_height_h: f32,
     jump_cooldown: f32,
     jump: Option<EnemyJump>,
+    drop_through_timer: f32,
     behavior: String,
     procedural_movement: Option<ProceduralMovementState>,
     preferred_distance_h: Option<(f32, f32)>,
@@ -489,46 +508,23 @@ impl RandomState {
 struct PhaseTimer(Timer);
 
 #[derive(Component)]
-struct PlatformSurface {
-    left: f32,
-    right: f32,
-    bottom: f32,
-    top: f32,
-    material: PlatformMaterial,
-}
-
-impl PlatformSurface {
-    /// Whether a body centered at `x` overlaps this platform horizontally, so
-    /// it can stand on it. Shared by physics and AI so they agree at ledges.
-    fn supports_body_at(&self, x: f32) -> bool {
-        let half_width = PLAYER_COLLISION_WIDTH_H * H_WORLD_UNITS / 2.0;
-        x + half_width > self.left && x - half_width < self.right
-    }
-
-    fn intersects_projectile(&self, start: Vec2, end: Vec2, half_size: Vec2) -> bool {
-        let projectile_left = start.x.min(end.x) - half_size.x;
-        let projectile_right = start.x.max(end.x) + half_size.x;
-        let projectile_bottom = start.y.min(end.y) - half_size.y;
-        let projectile_top = start.y.max(end.y) + half_size.y;
-
-        projectile_left <= self.right
-            && projectile_right >= self.left
-            && projectile_bottom <= self.top
-            && projectile_top >= self.bottom
-    }
-}
-
-#[derive(Component)]
 struct BackgroundParallax {
     base_x: f32,
     factor: f32,
 }
 
+/// The room the camera is confined to, in H.
 #[derive(Component)]
 struct RoomCamera {
-    width_h: f32,
-    fixed_y_h: f32,
-    follows_player: bool,
+    size_h: Vec2,
+}
+
+impl RoomCamera {
+    /// `center_h` moved just enough to keep the viewport inside the room.
+    fn clamp_center_h(&self, center_h: Vec2, gameplay: &crate::data::GameplayConfig) -> Vec2 {
+        let half_view_h = Vec2::new(gameplay.viewport_width_h(), gameplay.viewport.height_h) / 2.0;
+        center_h.clamp(half_view_h, (self.size_h - half_view_h).max(half_view_h))
+    }
 }
 
 #[derive(Debug)]

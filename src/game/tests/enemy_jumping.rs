@@ -51,13 +51,13 @@ fn ground_enemy_climbs_the_staircase_to_a_player_on_a_higher_platform() {
         );
     app.update();
 
-    // Room 3 has a high walkway reached through low ledges. Keep only the
-    // ground Gorgon at x = 12.2 and stand the player on the walkway, at x = 18.
+    // Room 3 has a high walkway reached through plank steps. Keep only the
+    // ground Gorgon at x = 8 and stand the player on the walkway, at x = 18.
     let mut enemies = app.world_mut().query::<(Entity, &EnemyBody, &Transform)>();
     let (climber, others) = enemies.iter(app.world()).fold(
         (None, Vec::new()),
         |(climber, mut others), (entity, enemy, transform)| {
-            if enemy.type_id == "gorgon_1" && transform.translation.x == 12.2 * H_WORLD_UNITS {
+            if enemy.type_id == "gorgon_1" && transform.translation.x == 8.0 * H_WORLD_UNITS {
                 (Some(entity), others)
             } else {
                 others.push(entity);
@@ -65,11 +65,11 @@ fn ground_enemy_climbs_the_staircase_to_a_player_on_a_higher_platform() {
             }
         },
     );
-    let climber = climber.expect("room 3 should spawn a ground Gorgon at x = 12.2 H");
+    let climber = climber.expect("room 3 should spawn a ground Gorgon at x = 8 H");
     for entity in others {
         app.world_mut().despawn(entity);
     }
-    let player_feet_y = 4.0 * H_WORLD_UNITS;
+    let player_feet_y = 7.0 * H_WORLD_UNITS;
     let mut players = app
         .world_mut()
         .query_filtered::<&mut Transform, With<PlayerBody>>();

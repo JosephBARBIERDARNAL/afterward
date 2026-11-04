@@ -48,9 +48,9 @@ fn default_controls_move_jump_and_dash_the_player() {
                     left: 0.0,
                     right: width,
                     bottom: -H_WORLD_UNITS,
-                    top: room.platforms[0].position_h.y_h * H_WORLD_UNITS
-                        + room.platforms[0].size_h.height_h * H_WORLD_UNITS / 2.0,
+                    top: room.player_spawn.y_h * H_WORLD_UNITS,
                     material: PlatformMaterial::Soil,
+                    one_way: false,
                 });
             },
         )

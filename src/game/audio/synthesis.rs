@@ -15,6 +15,7 @@ pub(super) fn cue_specs() -> Vec<(SoundCue, f32, f32, f32, f32)> {
         (Landing, 120.0, 80.0, 0.09, 0.12),
         (Footstep(PlatformMaterial::Soil), 90.0, 58.0, 0.07, 0.055),
         (Footstep(PlatformMaterial::Stone), 240.0, 390.0, 0.055, 0.05),
+        (Footstep(PlatformMaterial::Wood), 160.0, 210.0, 0.06, 0.05),
         (Dash, 180.0, 90.0, 0.18, 0.18),
         (SwordSwing, 540.0, 190.0, 0.13, 0.12),
         (SwordHit, 920.0, 380.0, 0.12, 0.18),
@@ -267,6 +268,7 @@ mod tests {
         }
         assert!(cues.contains(&SoundCue::Footstep(PlatformMaterial::Soil)));
         assert!(cues.contains(&SoundCue::Footstep(PlatformMaterial::Stone)));
+        assert!(cues.contains(&SoundCue::Footstep(PlatformMaterial::Wood)));
         assert!(cues.contains(&SoundCue::RunRestarted));
     }
 

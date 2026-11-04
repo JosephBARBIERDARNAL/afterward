@@ -1,86 +1,85 @@
-# Room coordinates use H from the lower-left. Platform positions are centers;
-# player and enemy spawn y_h values mark the feet baseline.
-# Layout: Gauntlet: low bridge, tower and sniper gallery, island pit, final hill.
+# Room coordinates use H from the lower-left. Terrain and platform `rect_h`
+# give each block's lower-left corner and size; player, enemy, and exit y
+# values mark the feet baseline on a block top.
+# Layout: Gauntlet: low bridge, a divider wall and tower, sniper gallery, plank islands, final mound.
 room_id: 9
 chapter_id: 1
 size:
   width_viewports: 4
-  height_h: 9
+  height_h: 18
 background_profile: chapter_01_autumn_sunbeams
 player_spawn:
-  x_h: 2
-  y_h: 0.8
-camera:
-  follow_player_x: true
-  fixed_y_h: 4.5
+  x_h: 2.5
+  y_h: 1
+# Solid blocks: they stop bodies and projectiles from every side.
+terrain:
+  - surface: soil # floor
+    rect_h: { x: 0, y: 0, width: 64, height: 1 }
+  - surface: stone # ceiling
+    rect_h: { x: 0, y: 17, width: 64, height: 1 }
+  - surface: stone # left wall above the entrance doorway
+    rect_h: { x: 0, y: 4, width: 1, height: 13 }
+  - surface: stone # right wall above the exit doorway
+    rect_h: { x: 63, y: 4, width: 1, height: 13 }
+  - surface: stone # divider wall
+    rect_h: { x: 18, y: 6, width: 2, height: 11 }
+  - surface: stone # tower
+    rect_h: { x: 20, y: 1, width: 3, height: 2 }
+  - surface: stone # sniper gallery
+    rect_h: { x: 24, y: 6, width: 10, height: 1 }
+  - surface: soil # mound base
+    rect_h: { x: 54, y: 1, width: 6, height: 2 }
+  - surface: soil # mound top
+    rect_h: { x: 56, y: 3, width: 3, height: 2 }
+# One-way platforms: land on top, jump through from below, Down + Jump drops.
 platforms:
-  - position_h: { x: 32, y: 0.3 }
-    surface: soil
-    size_h: { width: 64, height: 1 }
-  - position_h: { x: 10, y: 1.65 }
-    surface: stone
-    size_h: { width: 8, height: 0.5 }
-  - position_h: { x: 19, y: 1.55 }
-    surface: stone
-    size_h: { width: 2.5, height: 0.5 }
-  - position_h: { x: 22, y: 3.15 }
-    surface: stone
-    size_h: { width: 2.5, height: 0.5 }
-  - position_h: { x: 19, y: 4.75 }
-    surface: stone
-    size_h: { width: 2.5, height: 0.5 }
-  - position_h: { x: 30, y: 3.95 }
-    surface: stone
-    size_h: { width: 8, height: 0.5 }
-  - position_h: { x: 38, y: 1.35 }
-    surface: stone
-    size_h: { width: 2, height: 0.5 }
-  - position_h: { x: 42, y: 2.35 }
-    surface: stone
-    size_h: { width: 2, height: 0.5 }
-  - position_h: { x: 46, y: 1.35 }
-    surface: stone
-    size_h: { width: 2, height: 0.5 }
-  - position_h: { x: 51, y: 1.75 }
-    surface: stone
-    size_h: { width: 3, height: 0.5 }
-  - position_h: { x: 55, y: 3.15 }
-    surface: stone
-    size_h: { width: 3, height: 0.5 }
-  - position_h: { x: 59, y: 1.95 }
-    surface: stone
-    size_h: { width: 3, height: 0.5 }
+  - surface: wood
+    rect_h: { x: 6, y: 2.75, width: 8, height: 0.25 }
+  - surface: wood
+    rect_h: { x: 15, y: 4.75, width: 3, height: 0.25 }
+  - surface: wood
+    rect_h: { x: 21, y: 4.75, width: 3, height: 0.25 }
+  - surface: wood
+    rect_h: { x: 35, y: 4.75, width: 3, height: 0.25 }
+  - surface: wood
+    rect_h: { x: 38, y: 2.75, width: 3, height: 0.25 }
+  - surface: wood
+    rect_h: { x: 42, y: 2.75, width: 2, height: 0.25 }
+  - surface: wood
+    rect_h: { x: 45, y: 4.75, width: 2, height: 0.25 }
+  - surface: wood
+    rect_h: { x: 48, y: 2.75, width: 2, height: 0.25 }
 decorations: []
 enemy_spawns:
   - type_id: infantryman
-    position_h: { x: 10, y: 1.9 }
+    position_h: { x: 10, y: 3 }
   - type_id: gorgon_1
-    position_h: { x: 15.5, y: 0.8 }
+    position_h: { x: 8, y: 1 }
   - type_id: gorgon_2
-    position_h: { x: 19, y: 5 }
+    position_h: { x: 16.5, y: 5 }
   - type_id: swordsman
-    position_h: { x: 22, y: 3.4 }
+    position_h: { x: 21.5, y: 3 }
   - type_id: gorgon_3
-    position_h: { x: 24.5, y: 0.8 }
+    position_h: { x: 27, y: 1 }
   - type_id: destroyer
-    position_h: { x: 29, y: 4.2 }
+    position_h: { x: 26, y: 7 }
   - type_id: destroyer
-    position_h: { x: 33, y: 4.2 }
+    position_h: { x: 32, y: 7 }
   - type_id: gorgon_1
-    position_h: { x: 36, y: 0.8 }
+    position_h: { x: 38, y: 1 }
   - type_id: gorgon_3
-    position_h: { x: 42, y: 2.6 }
+    position_h: { x: 44, y: 1 }
   - type_id: gorgon_2
-    position_h: { x: 44, y: 0.8 }
+    position_h: { x: 46, y: 5 }
   - type_id: infantryman
-    position_h: { x: 46, y: 1.6 }
+    position_h: { x: 49, y: 3 }
   - type_id: gorgon_3
-    position_h: { x: 49, y: 0.8 }
+    position_h: { x: 55, y: 3 }
   - type_id: destroyer
-    position_h: { x: 55, y: 3.4 }
+    position_h: { x: 57.5, y: 5 }
   - type_id: swordsman
-    position_h: { x: 61, y: 0.8 }
+    position_h: { x: 61, y: 1 }
 exit:
-  x_h: 62.5
-  y_h: 0.8
+  x_h: 62
+  y_h: 1
 next_room_id: 10

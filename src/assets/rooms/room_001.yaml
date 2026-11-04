@@ -1,47 +1,49 @@
-# Room coordinates use H from the lower-left. Platform positions are centers;
-# player and enemy spawn y_h values mark the feet baseline.
-# Layout: Forest edge: open ground with a few low ledges to learn jumping.
+# Room coordinates use H from the lower-left. Terrain and platform `rect_h`
+# give each block's lower-left corner and size; player, enemy, and exit y
+# values mark the feet baseline on a block top.
+# Layout: Crypt entrance: a low hall with a step and a raised gallery reached by planks.
 room_id: 1
 chapter_id: 1
 size:
   width_viewports: 2
-  height_h: 9
+  height_h: 14
 background_profile: chapter_01_forest
 player_spawn:
-  x_h: 2
-  y_h: 0.8
-camera:
-  follow_player_x: true
-  fixed_y_h: 4.5
+  x_h: 2.5
+  y_h: 1
+# Solid blocks: they stop bodies and projectiles from every side.
+terrain:
+  - surface: soil # floor
+    rect_h: { x: 0, y: 0, width: 32, height: 1 }
+  - surface: stone # ceiling
+    rect_h: { x: 0, y: 13, width: 32, height: 1 }
+  - surface: stone # left wall above the entrance doorway
+    rect_h: { x: 0, y: 4, width: 1, height: 9 }
+  - surface: stone # right wall above the exit doorway
+    rect_h: { x: 31, y: 4, width: 1, height: 9 }
+  - surface: stone # step
+    rect_h: { x: 10, y: 1, width: 2, height: 1.5 }
+  - surface: stone # gallery
+    rect_h: { x: 22, y: 6, width: 9, height: 1 }
+# One-way platforms: land on top, jump through from below, Down + Jump drops.
 platforms:
-  - position_h: { x: 16, y: 0.3 }
-    surface: soil
-    size_h: { width: 32, height: 1 }
-  - position_h: { x: 7, y: 1.35 }
-    surface: stone
-    size_h: { width: 3, height: 0.5 }
-  - position_h: { x: 12.5, y: 2.15 }
-    surface: stone
-    size_h: { width: 4, height: 0.5 }
-  - position_h: { x: 20, y: 1.45 }
-    surface: stone
-    size_h: { width: 5, height: 0.5 }
-  - position_h: { x: 26.5, y: 2.65 }
-    surface: stone
-    size_h: { width: 3, height: 0.5 }
+  - surface: wood
+    rect_h: { x: 14, y: 2.75, width: 4, height: 0.25 }
+  - surface: wood
+    rect_h: { x: 18.5, y: 4.75, width: 3, height: 0.25 }
 decorations: []
 enemy_spawns:
   - type_id: swordsman
-    position_h: { x: 10, y: 0.8 }
+    position_h: { x: 6, y: 1 }
   - type_id: infantryman
-    position_h: { x: 12.5, y: 2.4 }
+    position_h: { x: 16, y: 3 }
   - type_id: swordsman
-    position_h: { x: 17, y: 0.8 }
+    position_h: { x: 20, y: 1 }
   - type_id: infantryman
-    position_h: { x: 26.5, y: 2.9 }
+    position_h: { x: 27, y: 7 }
   - type_id: swordsman
-    position_h: { x: 29.5, y: 0.8 }
+    position_h: { x: 28, y: 1 }
 exit:
-  x_h: 30.5
-  y_h: 0.8
+  x_h: 29.5
+  y_h: 1
 next_room_id: 2

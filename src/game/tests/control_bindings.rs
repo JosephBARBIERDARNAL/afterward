@@ -20,7 +20,7 @@ fn fullscreen_default_binding_can_be_remapped() {
 
     {
         let mut bindings = app.world_mut().resource_mut::<controls::ControlBindings>();
-        for _ in 0..9 {
+        for _ in 0..10 {
             bindings.move_selection(1);
         }
         assert_eq!(bindings.selected_action(), GameAction::ToggleFullscreen);

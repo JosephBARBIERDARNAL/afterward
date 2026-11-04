@@ -55,6 +55,11 @@ fn jump_peak_h(hold_frames: usize) -> f32 {
                     sated_fury_timer: 0.0,
                     action_animation_timer: 0.0,
                     footstep_timer: 0.0,
+                    wall_side: None,
+                    wall_jump_lock_timer: 0.0,
+                    drop_through_timer: 0.0,
+                    on_one_way: false,
+                    mantle: None,
                 },
             ));
             commands.spawn(PlatformSurface {
@@ -63,6 +68,7 @@ fn jump_peak_h(hold_frames: usize) -> f32 {
                 bottom: ground_top - H_WORLD_UNITS,
                 top: ground_top,
                 material: PlatformMaterial::Soil,
+                one_way: false,
             });
         })
         .add_systems(Update, player::update_player);

@@ -2,6 +2,17 @@ viewport:
   aspect_ratio: { width: 16, height: 9 }
   height_h: 9
 
+# Rooms are enclosed, multi-level spaces larger than the viewport.
+room_size_limits:
+  width_viewports: { min: 2, max: 4 }
+  height_viewports: { min: 1.5, max: 3 }
+
+# The camera follows the player on both axes, clamped to the room bounds. It
+# moves vertically only once the player is this far above or below the
+# screen center, so ordinary jumps do not shake the view.
+camera:
+  vertical_dead_zone_h: 1.5
+
 player:
   max_health: 100
   max_speed_h_s: 6
@@ -20,6 +31,20 @@ player:
   dash_cooldown_s: 0.8
   damage_invulnerability_s: 0.55
   dash_invulnerability_s: 0.12
+  # Airborne against a solid wall: holding toward it slides down slowly, and
+  # jumping kicks off it. A wall jump uses up the take-off jump, so Double Jump
+  # still grants its mid-air jump afterwards.
+  walls:
+    slide_max_fall_speed_h_s: 4
+    jump_impulse_h_s: 12.5
+    jump_kick_speed_h_s: 7
+    jump_control_lock_s: 0.16
+    # Reaching a solid ledge whose top is at most this far above the head
+    # (while airborne and moving toward it) climbs onto it automatically.
+    ledge_grab_reach_h: 0.35
+    ledge_climb_s: 0.16
+  # Down + Jump on a one-way platform drops through it.
+  drop_through_s: 0.25
   sword:
     damage: 25
     range_h: 3
@@ -73,6 +98,7 @@ audio:
 controls:
   move_left: [KeyA, KeyQ, ArrowLeft]
   move_right: [KeyD, ArrowRight]
+  move_down: [KeyS, ArrowDown]
   navigate_up: [ArrowUp]
   navigate_down: [ArrowDown]
   jump: [Space]

@@ -1,56 +1,47 @@
-# Room coordinates use H from the lower-left. Platform positions are centers;
-# player and enemy spawn y_h values mark the feet baseline.
+# Room coordinates use H from the lower-left. Terrain and platform `rect_h`
+# give each block's lower-left corner and size; player, enemy, and exit y
+# values mark the feet baseline on a block top.
+# Layout: Boss arena: an enclosed hall with wall ledges, low planks, and hanging pillars.
 room_id: 10
 chapter_id: 1
 size:
-  width_viewports: 4
-  height_h: 9
+  width_viewports: 3
+  height_h: 14
 background_profile: chapter_01_autumn_sunbeams
 player_spawn:
-  x_h: 43
-  y_h: 1.45
-camera:
-  follow_player_x: true
-  fixed_y_h: 4.5
+  x_h: 2.5
+  y_h: 1
+# Solid blocks: they stop bodies and projectiles from every side.
+terrain:
+  - surface: soil # floor
+    rect_h: { x: 0, y: 0, width: 48, height: 1 }
+  - surface: stone # ceiling
+    rect_h: { x: 0, y: 13, width: 48, height: 1 }
+  - surface: stone # left wall above the entrance doorway
+    rect_h: { x: 0, y: 4, width: 1, height: 9 }
+  - surface: stone # right wall above the exit doorway
+    rect_h: { x: 47, y: 4, width: 1, height: 9 }
+  - surface: stone # west ledge
+    rect_h: { x: 1, y: 5, width: 6, height: 1 }
+  - surface: stone # east ledge
+    rect_h: { x: 41, y: 5, width: 6, height: 1 }
+  - surface: stone # hanging pillar
+    rect_h: { x: 14, y: 9, width: 2, height: 4 }
+  - surface: stone # hanging pillar
+    rect_h: { x: 32, y: 9, width: 2, height: 4 }
+# One-way platforms: land on top, jump through from below, Down + Jump drops.
 platforms:
-  - position_h: { x: 32, y: 0.3 }
-    surface: soil
-    size_h: { width: 64, height: 1 }
-  - position_h: { x: 6, y: 1.1 }
-    surface: stone
-    size_h: { width: 4, height: 0.5 }
-  - position_h: { x: 12, y: 1.65 }
-    surface: stone
-    size_h: { width: 4, height: 0.5 }
-  - position_h: { x: 18, y: 2.2 }
-    surface: stone
-    size_h: { width: 4, height: 0.5 }
-  - position_h: { x: 24, y: 2.75 }
-    surface: stone
-    size_h: { width: 4, height: 0.5 }
-  - position_h: { x: 30, y: 3.3 }
-    surface: stone
-    size_h: { width: 4, height: 0.5 }
-  - position_h: { x: 36, y: 3.85 }
-    surface: stone
-    size_h: { width: 4, height: 0.5 }
-  - position_h: { x: 42, y: 1.2 }
-    surface: stone
-    size_h: { width: 4, height: 0.5 }
-  - position_h: { x: 48, y: 1.85 }
-    surface: stone
-    size_h: { width: 4, height: 0.5 }
-  - position_h: { x: 54, y: 2.65 }
-    surface: stone
-    size_h: { width: 4, height: 0.5 }
-  - position_h: { x: 60, y: 3.45 }
-    surface: stone
-    size_h: { width: 4, height: 0.5 }
+  - surface: wood
+    rect_h: { x: 10, y: 2.75, width: 4, height: 0.25 }
+  - surface: wood
+    rect_h: { x: 34, y: 2.75, width: 4, height: 0.25 }
+  - surface: wood
+    rect_h: { x: 20, y: 4.75, width: 8, height: 0.25 }
 decorations: []
 enemy_spawns:
   - type_id: evil_wizard
-    position_h: { x: 48, y: 2.1 }
+    position_h: { x: 18, y: 1 }
 exit:
-  x_h: 62.5
-  y_h: 0.8
+  x_h: 45.5
+  y_h: 1
 next_room_id: 11

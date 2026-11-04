@@ -29,5 +29,7 @@ clips:
   jump: 11
   fall: 3
   fall_loop: 3
+  wall_slide: 3
+  ledge_climb: 11
   sword_combo_1: 5
   sword_combo_2: 5

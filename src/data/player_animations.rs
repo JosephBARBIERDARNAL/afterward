@@ -30,6 +30,8 @@ impl PlayerAnimations {
             ("player_jump", &clips.jump),
             ("player_fall", &clips.fall),
             ("player_fall_loop", &clips.fall_loop),
+            ("player_wall_slide", &clips.wall_slide),
+            ("player_ledge_climb", &clips.ledge_climb),
         ]
         .into_iter()
         .map(|(key, clip)| (key.to_string(), clip))
@@ -52,6 +54,8 @@ pub struct PlayerAnimationClips {
     pub jump: AnimationClip,
     pub fall: AnimationClip,
     pub fall_loop: AnimationClip,
+    pub wall_slide: AnimationClip,
+    pub ledge_climb: AnimationClip,
 }
 
 #[derive(Debug, Deserialize)]

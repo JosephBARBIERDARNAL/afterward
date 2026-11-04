@@ -22,6 +22,10 @@ clips:
   # Apex-to-falling transition, then the falling loop.
   fall: { sheet: player/sheets/fall.png, frames: 4, fps: 12 }
   fall_loop: { sheet: player/sheets/fall_loop.png, frames: 3, fps: 8 }
+  # The pack has no wall or ledge art: sliding down a wall slows the falling
+  # loop, and mantling onto a ledge replays the jump rise quickly.
+  wall_slide: { sheet: player/sheets/fall_loop.png, frames: 3, fps: 4 }
+  ledge_climb: { sheet: player/sheets/jump.png, frames: 6, fps: 32 }
 
 # One clip per sword-combo hit, in chain order (the pack's `combo_1` slash, then
 # its `combo_1_end` follow-through as the finisher). Must have as many entries

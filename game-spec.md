@@ -17,7 +17,7 @@ Important: the following is the game specifications, focusing on the first chapt
 
 - The game has one protagonist. Character creation is not included.
 - The protagonist uses the Ozzbit Games "Male Hero Template" (free version: personal, non-commercial use only; credit "Ozzbit Games"). Its sheets live in `src/assets/player/sheets/`, and `src/assets/player/animations.yaml` lists every clip (frames, frame rate) and how the 128×128 frames map onto the collision box: the 32 px body is drawn 0.75 H tall (`body_height_h`), feet on the collision box's baseline.
-- Every player action, including idle, has a dedicated animation: idle, walk (while accelerating or below 60% of maximum speed), run, jump (rising), fall (apex transition, then a falling loop), dash, and one animation per sword-combo hit (the pack's `combo_1` slash, then its `combo_1_end` follow-through as the finisher). The pack has no dash art, so the dash replays the run cycle at a much higher frame rate.
+- Every player action, including idle, has a dedicated animation: idle, walk (while accelerating or below 60% of maximum speed), run, jump (rising), fall (apex transition, then a falling loop), dash, wall slide, ledge climb, and one animation per sword-combo hit (the pack's `combo_1` slash, then its `combo_1_end` follow-through as the finisher). The pack has no dash, wall, or ledge art: the dash replays the run cycle at a much higher frame rate, the wall slide slows the falling loop, and the ledge climb replays the jump rise quickly.
 - Prototype: `src/assets/player/model.yaml` can replace the sprite sheets with a 3D glTF model (`enabled: true`). An off-screen orthographic camera renders the model into a texture drawn as the player sprite, so it looks high definition against the pixel-art world; each player clip plays a mapped glTF animation, with one-shot actions fitted to the clip's duration. The sample model is "RobotExpressive" by Tomás Laulhé (CC0).
 
 ## Player Movement and Combat
@@ -45,6 +45,20 @@ These are initial balance constants and should be easy to tune during iteration.
 | `PLAYER_DASH_DISTANCE`             | 5     | H                                                                 |
 | `PLAYER_DASH_DURATION`             | 0.2   | s; usable on the ground or in the air                             |
 | `PLAYER_DASH_COOLDOWN`             | 0.8   | s from dash start                                                 |
+| `PLAYER_WALL_SLIDE_MAX_FALL_SPEED` | 4     | H/s while airborne, pressing into a solid wall                    |
+| `PLAYER_WALL_JUMP_IMPULSE`         | 12.5  | H/s upward                                                        |
+| `PLAYER_WALL_JUMP_KICK_SPEED`      | 7     | H/s horizontally away from the wall                               |
+| `PLAYER_WALL_JUMP_CONTROL_LOCK`    | 0.16  | s of ignored horizontal input after a wall jump                   |
+| `PLAYER_LEDGE_GRAB_REACH`          | 0.35  | H above the top of the body                                       |
+| `PLAYER_LEDGE_CLIMB_DURATION`      | 0.16  | s                                                                 |
+| `PLAYER_DROP_THROUGH_DURATION`     | 0.25  | s one-way platforms are ignored after Down + Jump                 |
+
+### Walls, Ledges, and Platforms
+
+- Rooms are built from solid terrain (floors, walls, ceilings, pillars) that blocks the player from every side, and one-way platforms that the player lands on, jumps through from below, and drops through with Down + Jump.
+- Wall slide: while airborne and pressing into a solid wall (or the room edge), the player falls no faster than `PLAYER_WALL_SLIDE_MAX_FALL_SPEED`.
+- Wall jump: pressing jump while airborne against a wall kicks the player up and away from it. Horizontal input is ignored for `PLAYER_WALL_JUMP_CONTROL_LOCK`. A wall jump uses up the take-off jump, so Double Jump still grants its mid-air jump afterwards. Releasing jump early cuts the rise, as for any jump.
+- Ledge mantle: while airborne and moving toward a solid block whose top is above the feet and at most `PLAYER_LEDGE_GRAB_REACH` above the head, the player climbs onto it automatically over `PLAYER_LEDGE_CLIMB_DURATION`, provided there is room to stand on it.
 
 ### Weapon Specifications
 
@@ -96,12 +110,15 @@ Sword attacks form a combo. Each press of J starts a swing (a press made while t
 
 - All 100 rooms are authored before a build and played in fixed order. Room layouts and enemy rosters are not procedurally generated.
 - Store each room in its own YAML file under `src/assets/rooms/`, named by its zero-padded room number (for example, `src/assets/rooms/room_001.yaml` through `src/assets/rooms/room_100.yaml`). These files are the source of truth for constructing the rooms.
-- Each room file describes its ID, chapter, dimensions, player spawn, background profile, camera anchor, platforms and other collidable geometry, decorative props and their positions, enemy spawns and their configured attributes, and exit position.
+- Rooms are enclosed, multi-level spaces in the style of Dead Cells rather than open side-scrolling fields: solid floors, walls, and ceilings bound each room, with galleries, ledges, pillars, hanging rock, and plank platforms stacked at several heights.
+- Each room file describes its ID, chapter, dimensions, player spawn, background profile, solid terrain, one-way platforms, decorative props and their positions, enemy spawns and their configured attributes, and exit position.
 - Player and enemy spawn `position_h.y_h` values mark the feet baseline. The player and every enemy stand on the configured platform top, and sprites are bottom-aligned to that shared baseline even when their source frames have different heights.
-- Platform layouts should form reachable routes: keep platform tops within the player's jump height of nearby surfaces, use short horizontal gaps, and include enough stepping points for the room's width. Place some enemy spawn feet on raised platform tops and the rest on the ground.
-- A room is 2 to 4 times the fixed gameplay viewport's width (32 to 64 H at the initial viewport settings). Room geometry positions and dimensions use `H`, the player's collision-box height, as the reference unit.
-- Each background profile defines a backdrop and parallax layers, and consecutive rooms share a profile. Chapter 1 uses `chapter_01_forest` for rooms 1–3, `chapter_01_hills` for rooms 4–6, `chapter_01_autumn_canopy` for rooms 7–8, and `chapter_01_autumn_sunbeams` for rooms 9–10. Room layouts, platform placement, enemy placement, and decorative props vary so rooms in a chapter do not all look alike. Each background profile also declares its texture `filtering`: `nearest` keeps upscaled pixel art crisp on large displays instead of blurring it, `linear` smooths it.
-- Room platform entries declare a `surface`: the `soil` ground collider follows the visible ground in the chapter background and controls footsteps without drawing a second soil slab; raised platforms use `stone` and are drawn separately. The material controls platform appearance and footsteps.
+- Terrain blocks and one-way platforms are rectangles given by their lower-left corner and size (`rect_h`). Solid `terrain` blocks stop bodies and enemy projectiles from every side; one-way `platforms` (at most 0.5 H thick) only hold up bodies landing on them, and projectiles fly through them.
+- Layouts should form reachable routes. The ground floor runs continuously from the entrance doorway to the exit, with steps no higher than a jump. Upper levels step up 2 H at a time through planks and ledges so enemies can follow the player; higher ledges may require the player's mantle or a wall jump. Upper floors keep at least one open edge so enemies can come back down. Place some enemy spawn feet on raised tops and the rest on the ground.
+- Each room has a doorway clear of solid terrain in its left wall where the player walks in, and the exit stands on the ground floor near the right wall.
+- A room is 2 to 4 times the fixed gameplay viewport's width (32 to 64 H) and 1.5 to 3 times its height (13.5 to 27 H). These limits live in `room_size_limits` in `src/assets/config/gameplay.yaml`. Room geometry positions and dimensions use `H`, the player's collision-box height, as the reference unit.
+- Each background profile defines a backdrop and parallax layers, and consecutive rooms share a profile. Layers scroll horizontally at their parallax rate and stay centered on the camera vertically, behind the room's drawn terrain. Chapter 1 uses `chapter_01_forest` for rooms 1–3, `chapter_01_hills` for rooms 4–6, `chapter_01_autumn_canopy` for rooms 7–8, and `chapter_01_autumn_sunbeams` for rooms 9–10. Room layouts, platform placement, enemy placement, and decorative props vary so rooms in a chapter do not all look alike. Each background profile also declares its texture `filtering`: `nearest` keeps upscaled pixel art crisp on large displays instead of blurring it, `linear` smooths it.
+- Terrain and platform entries declare a `surface`: solid terrain uses `soil` (earth with a grass edge) or `stone`, and one-way platforms use `wood` planks. The material controls the block's (placeholder) appearance and footsteps. All terrain is drawn by the game; it does not rely on ground painted into the background.
 - Keep decorations separate from platforms and other collidable geometry so visual placement does not implicitly make an object climbable.
 - Each room's `enemy_spawns` list defines its fixed enemy roster. The number of enemies is the list length; do not duplicate it in a separately edited count. Each entry specifies an enemy type and position and resolves its configured attributes from YAML, using shared enemy-type defaults and any room-specific overrides. Enemy counts, types, positions, and configured attributes do not randomize at runtime; enemy AI still runs during play.
 - Each room contains 5 to 15 enemy spawns and at least two enemy types, except boss rooms. Bosses are included in their room's enemy spawn list.
@@ -109,8 +126,8 @@ Sword attacks form a combo. Each press of J starts a swing (a press made while t
 
 ### Camera
 
-- The camera follows the player's horizontal position and is clamped to the room's horizontal bounds.
-- The camera's vertical position is fixed at the room's configured vertical anchor. It does not follow the player when they jump or fall.
+- The camera follows the player on both axes and is clamped so it never shows anything outside the room.
+- Vertically, the camera moves only once the player is more than `camera.vertical_dead_zone_h` (1.5 H) above or below the screen center, so ordinary jumps do not shake the view.
 
 ### Room YAML Structure
 
@@ -121,15 +138,13 @@ room_id: null
 chapter_id: null
 size:
   width_viewports: null # 2 to 4
-  height_h: null
+  height_h: null # 1.5 to 3 viewport heights
 background_profile: null # shared with neighboring rooms in this chapter
-player_spawn: # y_h marks the player's feet baseline
+player_spawn: # y_h marks the player's feet baseline; a doorway leads in from the left
   x_h: null
   y_h: null
-camera:
-  follow_player_x: true
-  fixed_y_h: null
-platforms: [] # entries define surface (soil or stone), position_h, size_h, and collision geometry
+terrain: [] # solid blocks: surface (soil or stone) and rect_h { x, y, width, height }, lower-left corner
+platforms: [] # one-way platforms: surface (wood) and rect_h, at most 0.5 H thick
 decorations: [] # entries define asset, position_h, and visual layer
 enemy_spawns: [] # position_h.y_h marks enemy feet; entries define type_id and optional stat overrides
 exit:
@@ -162,7 +177,8 @@ next_room_id: null # null only for room 100
 - Every enemy, bosses included, can jump. Jumps follow the player's gravity and are tuned in `enemy_types.yaml`: a shared `ENEMY_JUMP_HEIGHT` (2.25 H) that each type may override, a 5 H/s horizontal air speed, and a 0.6 s cooldown between jumps. Enemies jump only when it brings them toward the player: the player counts as on another level when their grounded feet differ from the enemy's by more than 1 H; a player in mid-jump does not trigger level changes.
   - When the player stands higher, an enemy targets the reachable platform closest to the player and no higher than them. It walks to a take-off point under or beside that platform, then jumps onto it, repeating step by step.
   - When the player is at its level, an enemy reaching the ledge it walks toward jumps the gap to the next platform if it can make it.
-  - When the player is lower, enemies walk off the nearest ledge and fall; they never jump down.
+  - When the player is lower, enemies drop through a one-way platform they stand on, or walk off the nearest ledge that is not walled off and fall; they never jump down.
+  - Solid terrain blocks enemies like the player. An enemy walking into a wall low enough to jump hops onto it, and an enemy leaping into a ledge within reach climbs onto it like the player's mantle.
   - With no reachable route up, an enemy waits under the player instead of jittering. Enemies attack only when the player is on their level. Enemies without jump art hold their movement frame while airborne.
 
 ## Bonuses
@@ -216,8 +232,8 @@ next_room_id: null # null only for room 100
 
 Default controls:
 
-- ZQSD (AZERTY) or arrow keys: move.
-- Space: jump. Jump height depends on how long Space is held: holding it through the rise gives the full `PLAYER_JUMP_HEIGHT`, releasing it early cuts the rise (`PLAYER_JUMP_RELEASE_MULTIPLIER`). The same applies to mid-air jumps.
+- ZQSD (AZERTY) or arrow keys: move. Down (S or Down arrow) + Space drops through a one-way platform.
+- Space: jump; against a wall in the air, wall jump. Jump height depends on how long Space is held: holding it through the rise gives the full `PLAYER_JUMP_HEIGHT`, releasing it early cuts the rise (`PLAYER_JUMP_RELEASE_MULTIPLIER`). The same applies to mid-air jumps.
 - Left Shift: dash.
 - J: swing the sword (press repeatedly to chain a combo).
 - E: interact with an element.

@@ -21,16 +21,13 @@ pub(super) fn spawn_room(
     spawn_enemies(&mut commands, room, &data, &sheets);
 
     if let Ok((mut transform, mut rig)) = camera.single_mut() {
-        rig.width_h = room.width_h(&data.gameplay);
-        rig.fixed_y_h = room.camera.fixed_y_h;
-        rig.follows_player = room.camera.follow_player_x;
-        let half_viewport_width_h = data.gameplay.viewport_width_h() / 2.0;
-        transform.translation.x = room
-            .player_spawn
-            .x_h
-            .clamp(half_viewport_width_h, rig.width_h - half_viewport_width_h)
-            * H_WORLD_UNITS;
-        transform.translation.y = rig.fixed_y_h * H_WORLD_UNITS;
+        rig.size_h = Vec2::new(room.width_h(&data.gameplay), room.size.height_h);
+        let center_h = rig.clamp_center_h(
+            Vec2::new(room.player_spawn.x_h, room.player_spawn.y_h + 0.5),
+            &data.gameplay,
+        );
+        transform.translation.x = center_h.x * H_WORLD_UNITS;
+        transform.translation.y = center_h.y * H_WORLD_UNITS;
     }
     session.world_loaded = true;
 }
@@ -78,11 +75,8 @@ pub(super) fn draw_room(
             ));
             commands.spawn((
                 sprite,
-                Transform::from_xyz(
-                    base_x,
-                    room.camera.fixed_y_h * H_WORLD_UNITS,
-                    -80.0 + layer_index as f32,
-                ),
+                // `update_background_parallax` keeps it centered on the camera vertically.
+                Transform::from_xyz(base_x, 0.0, -80.0 + layer_index as f32),
                 BackgroundParallax {
                     base_x,
                     factor: parallax,
@@ -115,39 +109,49 @@ pub(super) fn draw_room(
 }
 
 pub(super) fn spawn_room_platforms(commands: &mut Commands, room: &RoomConfig) {
-    for platform in &room.platforms {
+    let blocks = room
+        .terrain
+        .iter()
+        .map(|block| (block, false))
+        .chain(room.platforms.iter().map(|block| (block, true)));
+    for (block, one_way) in blocks {
+        let rect = block.rect_h;
+        let surface = PlatformSurface {
+            left: rect.x * H_WORLD_UNITS,
+            right: rect.right() * H_WORLD_UNITS,
+            bottom: rect.y * H_WORLD_UNITS,
+            top: rect.top() * H_WORLD_UNITS,
+            material: block.surface,
+            one_way,
+        };
+        let size = Vec2::new(surface.right - surface.left, surface.top - surface.bottom);
         let center = Vec2::new(
-            platform.position_h.x_h * H_WORLD_UNITS,
-            platform.position_h.y_h * H_WORLD_UNITS,
+            (surface.left + surface.right) / 2.0,
+            (surface.bottom + surface.top) / 2.0,
         );
-        let size = Vec2::new(
-            platform.size_h.width_h * H_WORLD_UNITS,
-            platform.size_h.height_h * H_WORLD_UNITS,
-        );
+        commands.spawn((surface, RoomEntity));
+        // Placeholder art, kept separate from the data-only collider so a
+        // future tileset can replace these shapes without changing physics.
+        let (body, edge) = match block.surface {
+            PlatformMaterial::Soil => (Color::srgb(0.17, 0.13, 0.11), Color::srgb(0.29, 0.38, 0.2)),
+            PlatformMaterial::Stone => {
+                (Color::srgb(0.2, 0.21, 0.24), Color::srgb(0.42, 0.43, 0.42))
+            }
+            PlatformMaterial::Wood => {
+                (Color::srgb(0.36, 0.24, 0.14), Color::srgb(0.55, 0.39, 0.22))
+            }
+        };
         commands.spawn((
-            PlatformSurface {
-                left: center.x - size.x / 2.0,
-                right: center.x + size.x / 2.0,
-                bottom: center.y - size.y / 2.0,
-                top: center.y + size.y / 2.0,
-                material: platform.surface,
-            },
+            Sprite::from_color(body, size),
+            Transform::from_xyz(center.x, center.y, 0.0),
             RoomEntity,
         ));
-        if platform.surface == PlatformMaterial::Stone {
-            // Keep placeholder art separate from the data-only collider so a future
-            // stone sprite or tilemap can replace these shapes without changing physics.
-            commands.spawn((
-                Sprite::from_color(Color::srgb(0.32, 0.34, 0.36), size),
-                Transform::from_xyz(center.x, center.y, 0.0),
-                RoomEntity,
-            ));
-            commands.spawn((
-                Sprite::from_color(Color::srgb(0.48, 0.49, 0.46), Vec2::new(size.x, 5.0)),
-                Transform::from_xyz(center.x, center.y + size.y / 2.0 - 2.5, 0.2),
-                RoomEntity,
-            ));
-        }
+        let edge_height = 5.0_f32.min(size.y);
+        commands.spawn((
+            Sprite::from_color(edge, Vec2::new(size.x, edge_height)),
+            Transform::from_xyz(center.x, surface.top - edge_height / 2.0, 0.2),
+            RoomEntity,
+        ));
     }
 }
 
@@ -224,6 +228,11 @@ pub(super) fn spawn_player(
             sated_fury_timer: 0.0,
             action_animation_timer: 0.0,
             footstep_timer: 0.0,
+            wall_side: None,
+            wall_jump_lock_timer: 0.0,
+            drop_through_timer: 0.0,
+            on_one_way: false,
+            mantle: None,
         },
         RoomEntity,
     ));
@@ -344,6 +353,7 @@ pub(super) fn spawn_enemies(
                         .unwrap_or(data.enemies.jumping.jump_height_h),
                     jump_cooldown: 0.0,
                     jump: None,
+                    drop_through_timer: 0.0,
                     behavior: profile.behavior.clone(),
                     procedural_movement: profile.procedural_movement.as_ref().map(|movement| {
                         ProceduralMovementState {
