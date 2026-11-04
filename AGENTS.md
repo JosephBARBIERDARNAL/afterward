@@ -30,6 +30,7 @@ Once you finish making a change (fixing a bug or adding a feature), make sure al
 - Prefer a tailored API over `std::mem::take`. `Option::take`, `Vec::split_off` and `HashMap::remove` name what moves and leave the container usable, where `mem::take` silently swaps in a `Default`.
 - Treat every git change you did not explicitly make as belonging to someone else working on the project simultaneously; preserve it exactly and do not revert, restore, overwrite, format, or otherwise “clean up” that file.
 - Don't add content in the README.md, relevant development knowledge should live in AGENTS.md
+- When you finished implementing a feature or fixing a bug, make sure to commit it with a clear and concise commit message. Don't push to GitHub. Always git add all files, even the ones you didn't touch yourself, unless it looks like an error (for example a too large file)
 
 ## Bevy
 
