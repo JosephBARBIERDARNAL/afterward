@@ -1,5 +1,6 @@
 # Room coordinates use H from the lower-left. Platform positions are centers;
 # player and enemy spawn y_h values mark the feet baseline.
+# Layout: Hollow trees: three zigzag towers of short ledges with low logs between.
 room_id: 7
 chapter_id: 1
 size:
@@ -16,57 +17,63 @@ platforms:
   - position_h: { x: 24, y: 0.3 }
     surface: soil
     size_h: { width: 48, height: 1 }
-  - position_h: { x: 5, y: 1.1 }
+  - position_h: { x: 9, y: 1.95 }
     surface: stone
-    size_h: { width: 3.5, height: 0.5 }
-  - position_h: { x: 10, y: 1.71 }
+    size_h: { width: 2.5, height: 0.5 }
+  - position_h: { x: 11.5, y: 3.55 }
     surface: stone
-    size_h: { width: 3.5, height: 0.5 }
-  - position_h: { x: 15, y: 2.12 }
+    size_h: { width: 2.5, height: 0.5 }
+  - position_h: { x: 9, y: 5.15 }
     surface: stone
-    size_h: { width: 3.5, height: 0.5 }
-  - position_h: { x: 20, y: 2.63 }
+    size_h: { width: 2.5, height: 0.5 }
+  - position_h: { x: 17, y: 1.2 }
     surface: stone
-    size_h: { width: 3.5, height: 0.5 }
-  - position_h: { x: 25, y: 3.24 }
+    size_h: { width: 4, height: 0.4 }
+  - position_h: { x: 23, y: 1.55 }
     surface: stone
-    size_h: { width: 3.5, height: 0.5 }
-  - position_h: { x: 30, y: 3.65 }
+    size_h: { width: 3, height: 0.5 }
+  - position_h: { x: 25.5, y: 3.15 }
     surface: stone
-    size_h: { width: 3.5, height: 0.5 }
-  - position_h: { x: 35, y: 4.16 }
+    size_h: { width: 2.5, height: 0.5 }
+  - position_h: { x: 23, y: 4.75 }
     surface: stone
-    size_h: { width: 3.5, height: 0.5 }
-  - position_h: { x: 40, y: 4.77 }
+    size_h: { width: 2.5, height: 0.5 }
+  - position_h: { x: 24.5, y: 6.15 }
     surface: stone
-    size_h: { width: 3.5, height: 0.5 }
-  - position_h: { x: 45, y: 5.18 }
+    size_h: { width: 2, height: 0.5 }
+  - position_h: { x: 31, y: 1.2 }
     surface: stone
-    size_h: { width: 3.5, height: 0.5 }
+    size_h: { width: 4, height: 0.4 }
+  - position_h: { x: 37, y: 2.15 }
+    surface: stone
+    size_h: { width: 2.5, height: 0.5 }
+  - position_h: { x: 39.5, y: 3.75 }
+    surface: stone
+    size_h: { width: 2.5, height: 0.5 }
 decorations: []
 enemy_spawns:
   - type_id: swordsman
-    position_h: { x: 5, y: 1.35 }
+    position_h: { x: 6, y: 0.8 }
   - type_id: infantryman
-    position_h: { x: 10, y: 1.96 }
+    position_h: { x: 9, y: 5.4 }
   - type_id: gorgon_1
-    position_h: { x: 12.5, y: 0.8 }
+    position_h: { x: 14, y: 0.8 }
   - type_id: gorgon_3
-    position_h: { x: 17.5, y: 0.8 }
-  - type_id: destroyer
-    position_h: { x: 20, y: 2.88 }
-  - type_id: infantryman
-    position_h: { x: 25, y: 3.49 }
+    position_h: { x: 17, y: 1.4 }
   - type_id: gorgon_2
-    position_h: { x: 30, y: 3.9 }
+    position_h: { x: 22.5, y: 5 }
   - type_id: swordsman
-    position_h: { x: 32.5, y: 0.8 }
-  - type_id: gorgon_1
-    position_h: { x: 37.5, y: 0.8 }
-  - type_id: gorgon_3
-    position_h: { x: 40, y: 5.02 }
+    position_h: { x: 26.3, y: 3.4 }
   - type_id: destroyer
-    position_h: { x: 45, y: 5.43 }
+    position_h: { x: 24.5, y: 6.4 }
+  - type_id: gorgon_1
+    position_h: { x: 28.5, y: 0.8 }
+  - type_id: infantryman
+    position_h: { x: 31, y: 1.4 }
+  - type_id: gorgon_3
+    position_h: { x: 34.5, y: 0.8 }
+  - type_id: destroyer
+    position_h: { x: 39.5, y: 4 }
 exit:
   x_h: 46.5
   y_h: 0.8

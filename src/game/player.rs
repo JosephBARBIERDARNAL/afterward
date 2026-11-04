@@ -141,9 +141,9 @@ pub(super) fn update_player(
     if player.velocity.y <= 0.0 {
         let current_bottom = transform.translation.y - H_WORLD_UNITS / 2.0;
         for platform in &room_query {
-            let overlaps_x = transform.translation.x + half_width > platform.left
-                && transform.translation.x - half_width < platform.right;
-            if overlaps_x && previous_bottom >= platform.top - 1.0 && current_bottom <= platform.top
+            if platform.supports_body_at(transform.translation.x)
+                && previous_bottom >= platform.top - 1.0
+                && current_bottom <= platform.top
             {
                 transform.translation.y = platform.top + H_WORLD_UNITS / 2.0;
                 player.velocity.y = 0.0;

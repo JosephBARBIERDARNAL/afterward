@@ -1,5 +1,6 @@
 # Room coordinates use H from the lower-left. Platform positions are centers;
 # player and enemy spawn y_h values mark the feet baseline.
+# Layout: Ziggurat: a stepped stone mound in the middle, shooters on its tiers.
 room_id: 2
 chapter_id: 1
 size:
@@ -16,41 +17,38 @@ platforms:
   - position_h: { x: 16, y: 0.3 }
     surface: soil
     size_h: { width: 32, height: 1 }
-  - position_h: { x: 5, y: 1.1 }
+  - position_h: { x: 8.5, y: 1.25 }
     surface: stone
-    size_h: { width: 2.8, height: 0.5 }
-  - position_h: { x: 9, y: 1.68 }
+    size_h: { width: 2.5, height: 0.5 }
+  - position_h: { x: 16, y: 1.35 }
     surface: stone
-    size_h: { width: 2.8, height: 0.5 }
-  - position_h: { x: 13, y: 2.36 }
+    size_h: { width: 10, height: 0.5 }
+  - position_h: { x: 16, y: 3.05 }
     surface: stone
-    size_h: { width: 2.8, height: 0.5 }
-  - position_h: { x: 17, y: 3.14 }
+    size_h: { width: 6, height: 0.5 }
+  - position_h: { x: 16, y: 4.75 }
     surface: stone
-    size_h: { width: 2.8, height: 0.5 }
-  - position_h: { x: 21, y: 3.72 }
+    size_h: { width: 2.5, height: 0.5 }
+  - position_h: { x: 23.5, y: 1.25 }
     surface: stone
-    size_h: { width: 2.8, height: 0.5 }
-  - position_h: { x: 25, y: 4.4 }
+    size_h: { width: 2.5, height: 0.5 }
+  - position_h: { x: 28.5, y: 2.35 }
     surface: stone
-    size_h: { width: 2.8, height: 0.5 }
-  - position_h: { x: 29, y: 5.18 }
-    surface: stone
-    size_h: { width: 2.8, height: 0.5 }
+    size_h: { width: 3, height: 0.5 }
 decorations: []
 enemy_spawns:
   - type_id: swordsman
-    position_h: { x: 5, y: 1.35 }
+    position_h: { x: 5, y: 0.8 }
   - type_id: infantryman
-    position_h: { x: 9, y: 1.93 }
-  - type_id: gorgon_1
-    position_h: { x: 15, y: 0.8 }
+    position_h: { x: 12, y: 1.6 }
+  - type_id: infantryman
+    position_h: { x: 18.5, y: 3.3 }
+  - type_id: infantryman
+    position_h: { x: 16, y: 5 }
   - type_id: swordsman
-    position_h: { x: 19, y: 0.8 }
-  - type_id: infantryman
-    position_h: { x: 25, y: 4.65 }
-  - type_id: infantryman
-    position_h: { x: 29, y: 5.43 }
+    position_h: { x: 23.5, y: 1.5 }
+  - type_id: gorgon_1
+    position_h: { x: 26, y: 0.8 }
 exit:
   x_h: 30.5
   y_h: 0.8

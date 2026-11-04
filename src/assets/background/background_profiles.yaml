@@ -1,11 +1,14 @@
 # Shared chapter scenery. Layers are listed back-to-front and preserve the
 # source image's dimensions; each layer scrolls at its configured parallax rate.
+# `filtering: nearest` samples the low-resolution pixel art without smoothing,
+# so it stays crisp instead of blurry when scaled up on large displays.
 profiles:
   chapter_01_forest:
     backdrop: background/forest/PNG/Background layers/Layer_0011_0.png
     source_size_px: { width: 928, height: 793 }
     tile_h: 9
     repeat_horizontal: true
+    filtering: nearest
     layers:
       - asset: background/forest/PNG/Background layers/Layer_0010_1.png
         parallax: 0.02
@@ -34,6 +37,7 @@ profiles:
     source_size_px: { width: 512, height: 256 }
     tile_h: 9
     repeat_horizontal: true
+    filtering: nearest
     layers:
       - asset: background/forest-desert/PNG/Hills Layer 02.png
         parallax: 0.05
@@ -50,6 +54,7 @@ profiles:
     source_size_px: { width: 272, height: 160 }
     tile_h: 10
     repeat_horizontal: true
+    filtering: nearest
     layers:
       - asset: background/autumn-forest/PNG/light-rays.png
         parallax: 0.2
@@ -62,6 +67,7 @@ profiles:
     source_size_px: { width: 272, height: 160 }
     tile_h: 10
     repeat_horizontal: true
+    filtering: nearest
     layers:
       - asset: background/autumn-forest/PNG/middle-trees-brown.png
         parallax: 0.4

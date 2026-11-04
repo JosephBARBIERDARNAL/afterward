@@ -1,6 +1,6 @@
 use super::*;
 use crate::data::RoomConfig;
-use bevy::sprite::Anchor;
+use bevy::{image::ImageLoaderSettings, sprite::Anchor};
 
 const ENEMY_SPRITE_SCALE: f32 = 0.62;
 
@@ -61,10 +61,17 @@ pub(super) fn draw_room(
             .map(|layer| (layer.asset.as_str(), layer.parallax)),
     );
 
+    let filtering = profile.filtering;
     for (layer_index, (asset, parallax)) in layers.into_iter().enumerate() {
+        let image = asset_server
+            .load_builder()
+            .with_settings(move |settings: &mut ImageLoaderSettings| {
+                settings.sampler = filtering.into();
+            })
+            .load(asset.to_string());
         for tile_index in first_tile..=last_tile {
             let base_x = (tile_index as f32 + 0.5) * tile_width_h * H_WORLD_UNITS;
-            let mut sprite = Sprite::from_image(asset_server.load(asset.to_string()));
+            let mut sprite = Sprite::from_image(image.clone());
             sprite.custom_size = Some(Vec2::new(
                 tile_width_h * H_WORLD_UNITS,
                 tile_h * H_WORLD_UNITS,

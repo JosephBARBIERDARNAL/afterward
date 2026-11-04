@@ -271,8 +271,7 @@ pub(in crate::game) fn update_enemy_ai(
         let other_level = player.grounded && rise.abs() > level_change_threshold;
         let standing = platforms.iter().find(|platform| {
             enemy.grounded
-                && feet.x > platform.left
-                && feet.x < platform.right
+                && platform.supports_body_at(feet.x)
                 && (platform.top - feet.y).abs() <= 1.0
         });
         let should_approach = distance_h > maximum_distance || other_level;
@@ -413,7 +412,6 @@ pub(in crate::game) fn update_enemy_platform_physics(
 ) {
     let dt = time.delta_secs().min(0.05);
     let gravity = data.gameplay.player.gravity_h_s2 * H_WORLD_UNITS;
-    let half_width = PLAYER_COLLISION_WIDTH_H * H_WORLD_UNITS / 2.0;
     let room_width = data.rooms[&session.room_id].width_h(&data.gameplay) * H_WORLD_UNITS;
 
     for (mut enemy, mut transform) in &mut enemies {
@@ -427,10 +425,8 @@ pub(in crate::game) fn update_enemy_platform_physics(
         }
         let gait_offset = transform.translation.y - enemy.home_y;
         let previous_foot_y = enemy.home_y - enemy.feet_offset;
-        let overlaps_platform = |platform: &PlatformSurface| {
-            transform.translation.x + half_width > platform.left
-                && transform.translation.x - half_width < platform.right
-        };
+        let overlaps_platform =
+            |platform: &PlatformSurface| platform.supports_body_at(transform.translation.x);
         let standing_platform = platforms.iter().find(|platform| {
             enemy.vertical_velocity <= 0.0
                 && overlaps_platform(platform)

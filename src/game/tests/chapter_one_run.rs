@@ -129,7 +129,13 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
                                 KeyCode::KeyA
                             });
                         }
-                        if enemy_above_player && player.grounded {
+                        // Jumping at an enemy out of reach would keep the pilot
+                        // airborne forever, and enemies only drop down to a
+                        // grounded player; wait below for those instead.
+                        let enemy_within_jump_reach = enemy_transform.translation.y
+                            - player_transform.translation.y
+                            <= data.gameplay.player.jump_height_h * H_WORLD_UNITS;
+                        if enemy_above_player && enemy_within_jump_reach && player.grounded {
                             keys.press(KeyCode::Space);
                         }
                         keys.press(KeyCode::KeyJ);

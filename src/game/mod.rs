@@ -475,6 +475,13 @@ struct PlatformSurface {
 }
 
 impl PlatformSurface {
+    /// Whether a body centered at `x` overlaps this platform horizontally, so
+    /// it can stand on it. Shared by physics and AI so they agree at ledges.
+    fn supports_body_at(&self, x: f32) -> bool {
+        let half_width = PLAYER_COLLISION_WIDTH_H * H_WORLD_UNITS / 2.0;
+        x + half_width > self.left && x - half_width < self.right
+    }
+
     fn intersects_projectile(&self, start: Vec2, end: Vec2, half_size: Vec2) -> bool {
         let projectile_left = start.x.min(end.x) - half_size.x;
         let projectile_right = start.x.max(end.x) + half_size.x;
