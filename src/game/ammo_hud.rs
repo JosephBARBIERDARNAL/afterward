@@ -125,7 +125,7 @@ pub(super) fn update_ammo_hud(
         text.0 = if player.reload.is_some() {
             String::from("RELOADING")
         } else {
-            format!("{} / {capacity}", player.ammo)
+            format!("{}/{capacity}", player.ammo)
         };
     }
     for (row, mut pip_row) in &mut rows {
