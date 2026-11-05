@@ -37,7 +37,7 @@ fn crouching_slows_cover_blocks_frontal_hits_and_death_plays_out_before_the_run_
         .insert_resource(TimeUpdateStrategy::ManualDuration(Duration::from_millis(
             50,
         )))
-        .init_state::<GameScreen>()
+        .insert_state(GameScreen::Playing)
         .init_resource::<RunSession>()
         .insert_resource(RandomState(0x7374_616e_6365_7321))
         .init_resource::<SoundQueue>()
@@ -171,7 +171,7 @@ fn crouching_slows_cover_blocks_frontal_hits_and_death_plays_out_before_the_run_
     assert_eq!(sheet(&app), "player_death");
     assert_eq!(
         *app.world().resource::<State<GameScreen>>().get(),
-        GameScreen::MainMenu,
+        GameScreen::Playing,
         "the run only ends after the death animation"
     );
     for _ in 0..(death_s / 0.05).ceil() as usize + 2 {

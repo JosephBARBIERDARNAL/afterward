@@ -1,7 +1,7 @@
 use super::super::*;
 use std::{path::Path, time::Duration};
 
-use bevy::{prelude::MinimalPlugins, time::TimeUpdateStrategy};
+use bevy::{prelude::MinimalPlugins, state::app::StatesPlugin, time::TimeUpdateStrategy};
 
 #[test]
 fn default_controls_move_jump_and_dash_the_player() {
@@ -26,7 +26,8 @@ fn default_controls_move_jump_and_dash_the_player() {
         .collect();
 
     let mut app = App::new();
-    app.add_plugins(MinimalPlugins)
+    app.add_plugins((MinimalPlugins, StatesPlugin))
+        .insert_state(GameScreen::Playing)
         .insert_resource(data)
         .insert_resource(SpriteSheets(sheets))
         .insert_resource(TimeUpdateStrategy::ManualDuration(Duration::from_millis(

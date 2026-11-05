@@ -1,7 +1,7 @@
 use super::super::*;
 use std::{path::Path, time::Duration};
 
-use bevy::{prelude::MinimalPlugins, time::TimeUpdateStrategy};
+use bevy::{prelude::MinimalPlugins, state::app::StatesPlugin, time::TimeUpdateStrategy};
 
 #[test]
 fn solid_terrain_stops_the_player_and_low_ledges_are_mantled() {
@@ -25,7 +25,8 @@ fn solid_terrain_stops_the_player_and_low_ledges_are_mantled() {
         })
         .collect();
     let mut app = App::new();
-    app.add_plugins(MinimalPlugins)
+    app.add_plugins((MinimalPlugins, StatesPlugin))
+        .insert_state(GameScreen::Playing)
         .insert_resource(data)
         .insert_resource(SpriteSheets(sheets))
         .insert_resource(TimeUpdateStrategy::ManualDuration(Duration::from_micros(
@@ -163,7 +164,8 @@ fn one_way_platforms_are_jumped_through_and_dropped_through() {
         })
         .collect();
     let mut app = App::new();
-    app.add_plugins(MinimalPlugins)
+    app.add_plugins((MinimalPlugins, StatesPlugin))
+        .insert_state(GameScreen::Playing)
         .insert_resource(data)
         .insert_resource(SpriteSheets(sheets))
         .insert_resource(TimeUpdateStrategy::ManualDuration(Duration::from_micros(
@@ -268,7 +270,8 @@ fn jumping_off_a_wall_kicks_the_player_away_from_it() {
         })
         .collect();
     let mut app = App::new();
-    app.add_plugins(MinimalPlugins)
+    app.add_plugins((MinimalPlugins, StatesPlugin))
+        .insert_state(GameScreen::Playing)
         .insert_resource(data)
         .insert_resource(SpriteSheets(sheets))
         .insert_resource(TimeUpdateStrategy::ManualDuration(Duration::from_micros(

@@ -1,7 +1,7 @@
 use super::super::*;
 use std::{path::Path, time::Duration};
 
-use bevy::{prelude::MinimalPlugins, time::TimeUpdateStrategy};
+use bevy::{prelude::MinimalPlugins, state::app::StatesPlugin, time::TimeUpdateStrategy};
 
 /// Jumps from the ground, holding Space for `hold_frames` frames, and returns
 /// the highest point the player's feet reach above the take-off, in H.
@@ -9,7 +9,8 @@ fn jump_peak_h(hold_frames: usize) -> f32 {
     let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
     let data = GameData::load(&asset_root).expect("Chapter 1 data should load");
     let mut app = App::new();
-    app.add_plugins(MinimalPlugins)
+    app.add_plugins((MinimalPlugins, StatesPlugin))
+        .insert_state(GameScreen::Playing)
         .insert_resource(data)
         .insert_resource(SpriteSheets(Default::default()))
         .insert_resource(TimeUpdateStrategy::ManualDuration(Duration::from_micros(

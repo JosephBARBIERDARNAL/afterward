@@ -9,6 +9,7 @@ pub(super) use body::{Mantle, PlayerAction, PlayerBody, Reload};
 #[derive(SystemParam)]
 pub(super) struct PlayerUpdateResources<'w, 's> {
     time: Res<'w, Time>,
+    screen: Res<'w, State<GameScreen>>,
     keys: Res<'w, ButtonInput<KeyCode>>,
     controls: Res<'w, ControlBindings>,
     data: Res<'w, GameData>,
@@ -30,6 +31,7 @@ pub(super) fn update_player(
 ) {
     let PlayerUpdateResources {
         time,
+        screen,
         keys,
         controls,
         data,
@@ -83,10 +85,13 @@ pub(super) fn update_player(
         return;
     }
 
-    // A dying player only falls; every control is ignored.
+    // A dying player only falls; every control is ignored. The player also
+    // keeps living, without input, behind the room-clear flash and the bonus
+    // screen: an airborne player lands, then idles.
     let alive = player.dying_s.is_none();
-    let held = |action| alive && controls.pressed(action, &keys);
-    let tapped = |action| alive && controls.just_pressed(action, &keys);
+    let controllable = alive && *screen.get() == GameScreen::Playing;
+    let held = |action| controllable && controls.pressed(action, &keys);
+    let tapped = |action| controllable && controls.just_pressed(action, &keys);
     player.covering = player.grounded && player.dash_timer == 0.0 && held(GameAction::Cover);
     player.crouching = player.grounded && !player.covering && held(GameAction::MoveDown);
 

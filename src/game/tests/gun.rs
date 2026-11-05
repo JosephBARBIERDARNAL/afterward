@@ -2,7 +2,7 @@ use super::super::*;
 use crate::game::combat::PlayerBullet;
 use std::{path::Path, time::Duration};
 
-use bevy::{prelude::MinimalPlugins, time::TimeUpdateStrategy};
+use bevy::{prelude::MinimalPlugins, state::app::StatesPlugin, time::TimeUpdateStrategy};
 
 #[test]
 fn the_gun_fires_alternating_shots_aims_and_reloads_its_magazine() {
@@ -46,7 +46,8 @@ fn the_gun_fires_alternating_shots_aims_and_reloads_its_magazine() {
     }
 
     let mut app = App::new();
-    app.add_plugins(MinimalPlugins)
+    app.add_plugins((MinimalPlugins, StatesPlugin))
+        .insert_state(GameScreen::Playing)
         .insert_resource(data)
         .insert_resource(SpriteSheets(sheets))
         .insert_resource(TimeUpdateStrategy::ManualDuration(Duration::from_millis(

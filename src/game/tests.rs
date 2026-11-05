@@ -1,4 +1,5 @@
 use super::*;
+mod bonus_screen_idle;
 mod chapter_one_run;
 mod control_bindings;
 mod enemy_jumping;

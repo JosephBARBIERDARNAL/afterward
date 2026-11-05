@@ -100,6 +100,7 @@ The gun is the player's only weapon. Holding Shoot (J) fires a bullet every `PLA
 - Each player move, including shooting, reloading, and dashing, has a dedicated animation. Use placeholder sounds only for now (see Sound Design).
 - Every room, the first included, opens with an entrance sequence before combat starts. The player walks in from the left at walking pace for 0.5 s, fading in, and stops on the room's player spawn, then stays idle; input is locked for the whole sequence. Once the player stands idle, the enemies materialize one after another (each rises out of its spawn point from a shadow tint into full color, with a slight overshoot) and their health bars fade in with them, with a placeholder cue. The fight starts right after the last enemy has appeared; in the boss room the boss introduction follows the entrance. Timings live in `room_flow.room_intro` in `src/assets/config/gameplay.yaml`.
 - After all enemies in a room are defeated, play a 0.5-second, full-screen room-clear animation, then show the bonus choices.
+- The game is not paused during the room-clear animation and the bonus screen: the room keeps running behind them, and the player keeps living without taking movement or combat input (an airborne player lands, then plays the calm idle and its fidgets).
 - After the player chooses a bonus, a door appears on the right side of the room. Touching it opens the door and starts the next room's combat.
 
 ## Health
