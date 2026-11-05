@@ -4,6 +4,8 @@ The entire game specification lives in `game-spec.md`. It is the reference for e
 
 The game is in development, focused on Chapter 1 (rooms 1–10). Content and systems needed only for later chapters (rooms 11–100) are low priority unless explicitly requested.
 
+The project is at an early, experimental stage. Many choices (assets, room layouts and materials, tuning values, editor features, even parts of the spec) are trials that may be reworked or dropped soon. Expect them to change: prefer simple, easy-to-replace solutions over heavy abstractions or polish, don't treat the current state as a settled design, and when something looks like a placeholder or a half-made decision, ask rather than build on it as final.
+
 ## Run and check
 
 Once you finish making a change (fixing a bug or adding a feature), make sure all code is well formatted, linted and tested. Everything should be green. This will run in CI too. Common commands:

@@ -13,6 +13,8 @@
 
 Important: the following is the game specifications, focusing on the first chapter (first 10 rooms), not the entire game.
 
+This specification describes an early-stage project. Much of it, especially assets, room layouts and materials, tuning values, and debug tooling, records current experiments rather than final decisions, and is expected to change as the game is played and iterated on.
+
 ## Player
 
 - The game has one protagonist. Character creation is not included.
