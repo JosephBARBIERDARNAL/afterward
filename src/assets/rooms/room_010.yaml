@@ -24,7 +24,7 @@ terrain:
     rect_h: { x: 0, y: 4, width: 1, height: 9 }
   - label: right wall above the exit doorway
     material: stone_dark_cobble
-    rect_h: { x: 47, y: 4, width: 1, height: 9 }
+    rect_h: { x: 47, y: 1, width: 1, height: 12 }
   - label: west ledge
     material: stone_cracked_slab
     rect_h: { x: 1, y: 5, width: 6, height: 1 }
@@ -59,6 +59,6 @@ enemy_spawns:
   - type_id: evil_wizard
     position_h: { x: 18, y: 1 }
 exit:
-  x_h: 45.5
+  x_h: 46.25
   y_h: 1
 next_room_id: 11

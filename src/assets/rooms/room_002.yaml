@@ -24,7 +24,7 @@ terrain:
     rect_h: { x: 0, y: 4, width: 1, height: 11 }
   - label: right wall above the exit doorway
     material: stone_cobble
-    rect_h: { x: 31, y: 4, width: 1, height: 11 }
+    rect_h: { x: 31, y: 1, width: 1, height: 14 }
   - label: ziggurat base
     material: stone_bricks
     rect_h: { x: 11, y: 1, width: 10, height: 2 }
@@ -64,6 +64,6 @@ enemy_spawns:
   - type_id: gorgon_1
     position_h: { x: 25, y: 3 }
 exit:
-  x_h: 29.5
+  x_h: 30
   y_h: 1
 next_room_id: 3
