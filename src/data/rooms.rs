@@ -1,13 +1,18 @@
 //! Room layouts from `rooms/room_NNN.yaml`.
 
+use std::path::{Path, PathBuf};
+
 use serde::Deserialize;
 
 use super::{EnemyTypeId, GameplayConfig, PLAYER_COLLISION_WIDTH_H};
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct RoomConfig {
     pub room_id: u16,
     pub chapter_id: u8,
+    /// A short note on the layout's idea, for whoever edits the room.
+    #[serde(default)]
+    pub description: Option<String>,
     pub size: RoomSizeConfig,
     pub background_profile: String,
     pub player_spawn: SpawnPosition,
@@ -26,6 +31,11 @@ pub struct RoomConfig {
 }
 
 impl RoomConfig {
+    /// Where room `room_id` is stored under the asset root.
+    pub(crate) fn file_path(asset_root: &Path, room_id: u16) -> PathBuf {
+        asset_root.join(format!("rooms/room_{room_id:03}.yaml"))
+    }
+
     pub(crate) fn width_h(&self, gameplay: &GameplayConfig) -> f32 {
         f32::from(self.size.width_viewports) * gameplay.viewport_width_h()
     }
@@ -56,13 +66,13 @@ impl RoomConfig {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct RoomSizeConfig {
     pub width_viewports: u8,
     pub height_h: f32,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Deserialize)]
 pub struct SpawnPosition {
     #[serde(alias = "x")]
     pub x_h: f32,
@@ -70,14 +80,17 @@ pub struct SpawnPosition {
     pub y_h: f32,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct TerrainBlockConfig {
+    /// What the block is ("floor", "hanging rock"), shown in the debug editor.
+    #[serde(default)]
+    pub label: Option<String>,
     pub surface: PlatformMaterial,
     pub rect_h: RectH,
 }
 
 /// An axis-aligned rectangle in H; `x`/`y` is its lower-left corner.
-#[derive(Debug, Clone, Copy, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Deserialize)]
 pub struct RectH {
     pub x: f32,
     pub y: f32,
@@ -94,12 +107,12 @@ impl RectH {
         self.y + self.height
     }
 
-    fn covers_x(&self, x: f32) -> bool {
+    pub(crate) fn covers_x(&self, x: f32) -> bool {
         (self.x..=self.right()).contains(&x)
     }
 
     /// Strict overlap: rectangles that only share an edge do not overlap.
-    fn overlaps(&self, other: &Self) -> bool {
+    pub(crate) fn overlaps(&self, other: &Self) -> bool {
         const EPSILON: f32 = 0.001;
         self.x < other.right() - EPSILON
             && other.x < self.right() - EPSILON
@@ -116,21 +129,24 @@ pub enum PlatformMaterial {
     Wood,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct DecorationConfig {
     pub asset: String,
     pub position_h: SpawnPosition,
     pub visual_layer: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct EnemySpawnConfig {
+    /// What the enemy is there for ("sniper perch"), shown in the debug editor.
+    #[serde(default)]
+    pub label: Option<String>,
     pub type_id: EnemyTypeId,
     pub position_h: SpawnPosition,
     pub stat_overrides: Option<EnemyStatOverrides>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Deserialize)]
 pub struct EnemyStatOverrides {
     pub health: Option<f32>,
     pub movement_speed_h_s: Option<f32>,

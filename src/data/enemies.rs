@@ -97,6 +97,18 @@ pub struct EnemyTypeConfig {
     pub phase_two: Option<BossPhaseConfig>,
 }
 
+#[cfg(debug_assertions)]
+impl EnemyTypeConfig {
+    /// Damage of the type's first attack, which a spawn's `attack_damage`
+    /// override replaces on every attack.
+    pub(crate) fn attack_damage(&self) -> Option<f32> {
+        self.attacks
+            .first()
+            .or(self.attack.as_ref())
+            .and_then(|attack| attack.damage.or(attack.damage_per_hit))
+    }
+}
+
 #[derive(Debug, Deserialize)]
 pub struct ProceduralMovementConfig {
     pub bob_height_h: f32,

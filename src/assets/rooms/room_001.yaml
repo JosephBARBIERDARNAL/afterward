@@ -1,9 +1,9 @@
 # Room coordinates use H from the lower-left. Terrain and platform `rect_h`
 # give each block's lower-left corner and size; player, enemy, and exit y
 # values mark the feet baseline on a block top.
-# Layout: Crypt entrance: a low hall with a step and a raised gallery reached by planks.
 room_id: 1
 chapter_id: 1
+description: "Crypt entrance: a low hall with a step and a raised gallery reached by planks."
 size:
   width_viewports: 2
   height_h: 14
@@ -13,17 +13,23 @@ player_spawn:
   y_h: 1
 # Solid blocks: they stop bodies and projectiles from every side.
 terrain:
-  - surface: soil # floor
+  - label: floor
+    surface: soil
     rect_h: { x: 0, y: 0, width: 32, height: 1 }
-  - surface: stone # ceiling
+  - label: ceiling
+    surface: stone
     rect_h: { x: 0, y: 13, width: 32, height: 1 }
-  - surface: stone # left wall above the entrance doorway
+  - label: left wall above the entrance doorway
+    surface: stone
     rect_h: { x: 0, y: 4, width: 1, height: 9 }
-  - surface: stone # right wall above the exit doorway
+  - label: right wall above the exit doorway
+    surface: stone
     rect_h: { x: 31, y: 4, width: 1, height: 9 }
-  - surface: stone # step
+  - label: step
+    surface: stone
     rect_h: { x: 10, y: 1, width: 2, height: 1.5 }
-  - surface: stone # gallery
+  - label: gallery
+    surface: stone
     rect_h: { x: 22, y: 6, width: 9, height: 1 }
 # One-way platforms: land on top, jump through from below, Down + Jump drops.
 platforms:

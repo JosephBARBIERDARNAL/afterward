@@ -1,9 +1,9 @@
 # Room coordinates use H from the lower-left. Terrain and platform `rect_h`
 # give each block's lower-left corner and size; player, enemy, and exit y
 # values mark the feet baseline on a block top.
-# Layout: Gauntlet: low bridge, a divider wall and tower, sniper gallery, plank islands, final mound.
 room_id: 9
 chapter_id: 1
+description: "Gauntlet: low bridge, a divider wall and tower, sniper gallery, plank islands, final mound."
 size:
   width_viewports: 4
   height_h: 18
@@ -13,23 +13,32 @@ player_spawn:
   y_h: 1
 # Solid blocks: they stop bodies and projectiles from every side.
 terrain:
-  - surface: soil # floor
+  - label: floor
+    surface: soil
     rect_h: { x: 0, y: 0, width: 64, height: 1 }
-  - surface: stone # ceiling
+  - label: ceiling
+    surface: stone
     rect_h: { x: 0, y: 17, width: 64, height: 1 }
-  - surface: stone # left wall above the entrance doorway
+  - label: left wall above the entrance doorway
+    surface: stone
     rect_h: { x: 0, y: 4, width: 1, height: 13 }
-  - surface: stone # right wall above the exit doorway
+  - label: right wall above the exit doorway
+    surface: stone
     rect_h: { x: 63, y: 4, width: 1, height: 13 }
-  - surface: stone # divider wall
+  - label: divider wall
+    surface: stone
     rect_h: { x: 18, y: 6, width: 2, height: 11 }
-  - surface: stone # tower
+  - label: tower
+    surface: stone
     rect_h: { x: 20, y: 1, width: 3, height: 2 }
-  - surface: stone # sniper gallery
+  - label: sniper gallery
+    surface: stone
     rect_h: { x: 24, y: 6, width: 10, height: 1 }
-  - surface: soil # mound base
+  - label: mound base
+    surface: soil
     rect_h: { x: 54, y: 1, width: 6, height: 2 }
-  - surface: soil # mound top
+  - label: mound top
+    surface: soil
     rect_h: { x: 56, y: 3, width: 3, height: 2 }
 # One-way platforms: land on top, jump through from below, Down + Jump drops.
 platforms:

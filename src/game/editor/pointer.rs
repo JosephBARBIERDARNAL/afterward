@@ -1,0 +1,207 @@
+//! Mouse editing: click to select, drag to move, drag a selected block's edge
+//! to resize, right- or middle-drag to pan, and the wheel to zoom.
+
+use super::*;
+use bevy::{
+    input::mouse::{AccumulatedMouseScroll, MouseScrollUnit},
+    window::PrimaryWindow,
+};
+
+/// How close to a selected block's edge, in H at 1x zoom, a press resizes it.
+const EDGE_GRAB_H: f32 = 0.2;
+/// Zoom change per wheel line.
+const ZOOM_PER_LINE: f32 = 1.12;
+/// Scroll pixels counted as one wheel line (trackpads report pixels).
+const PIXELS_PER_LINE: f32 = 40.0;
+
+#[derive(SystemParam)]
+pub(super) struct EditorPointerResources<'w, 's> {
+    mouse: Res<'w, ButtonInput<MouseButton>>,
+    keys: Res<'w, ButtonInput<KeyCode>>,
+    scroll: Res<'w, AccumulatedMouseScroll>,
+    editor: ResMut<'w, RoomEditor>,
+    data: ResMut<'w, GameData>,
+    windows: Query<'w, 's, &'static Window, With<PrimaryWindow>>,
+    camera: Query<
+        'w,
+        's,
+        (
+            &'static Camera,
+            &'static GlobalTransform,
+            &'static mut Transform,
+            &'static mut Projection,
+        ),
+        With<Camera2d>,
+    >,
+}
+
+pub(super) fn handle_pointer(resources: EditorPointerResources) {
+    let EditorPointerResources {
+        mouse,
+        keys,
+        scroll,
+        mut editor,
+        mut data,
+        windows,
+        mut camera,
+    } = resources;
+    let (Ok(window), Ok((camera, camera_transform, mut transform, mut projection))) =
+        (windows.single(), camera.single_mut())
+    else {
+        return;
+    };
+    let cursor_h = window
+        .cursor_position()
+        .and_then(|position| camera.viewport_to_world_2d(camera_transform, position).ok())
+        .map(|world| world / H_WORLD_UNITS);
+    editor.cursor_h = cursor_h;
+    let Some(cursor_h) = cursor_h else {
+        return;
+    };
+    let Projection::Orthographic(orthographic) = &mut *projection else {
+        return;
+    };
+
+    let lines = match scroll.unit {
+        MouseScrollUnit::Line => scroll.delta.y,
+        MouseScrollUnit::Pixel => scroll.delta.y / PIXELS_PER_LINE,
+    };
+    if lines.abs() > f32::EPSILON {
+        let old_scale = orthographic.scale;
+        orthographic.scale = (old_scale * ZOOM_PER_LINE.powf(-lines)).clamp(MIN_ZOOM, MAX_ZOOM);
+        // Keep the point under the cursor in place.
+        let camera_h = transform.translation.truncate() / H_WORLD_UNITS;
+        let camera_h = cursor_h + (camera_h - cursor_h) * orthographic.scale / old_scale;
+        transform.translation.x = camera_h.x * H_WORLD_UNITS;
+        transform.translation.y = camera_h.y * H_WORLD_UNITS;
+    }
+
+    if mouse.any_just_pressed([MouseButton::Right, MouseButton::Middle]) {
+        editor.drag = Some(Drag::Pan { anchor: cursor_h });
+    }
+    if let Some(Drag::Pan { anchor }) = editor.drag {
+        if mouse.any_pressed([MouseButton::Right, MouseButton::Middle]) {
+            let shift = (anchor - cursor_h) * H_WORLD_UNITS;
+            transform.translation.x += shift.x;
+            transform.translation.y += shift.y;
+        } else {
+            editor.drag = None;
+        }
+        return;
+    }
+
+    let room_id = editor.room_id;
+    let Some(room) = data.rooms.get_mut(&room_id) else {
+        return;
+    };
+    let fine = keys.any_pressed([KeyCode::ShiftLeft, KeyCode::ShiftRight]);
+
+    if mouse.just_pressed(MouseButton::Left) && editor.text_entry.is_none() {
+        let grab_h = EDGE_GRAB_H * orthographic.scale;
+        let resize = editor
+            .selected
+            .filter(|item| !item.stands_on_surface())
+            .and_then(|item| item.bounds(room).map(|rect| (item, rect)))
+            .and_then(|(item, rect)| {
+                let reach = Rect::new(rect.x, rect.y, rect.right(), rect.top()).inflate(grab_h);
+                let near = |edge: f32, at: f32| (edge - at).abs() <= grab_h;
+                let edges = Edges {
+                    left: near(rect.x, cursor_h.x),
+                    right: near(rect.right(), cursor_h.x) && !near(rect.x, cursor_h.x),
+                    bottom: near(rect.y, cursor_h.y),
+                    top: near(rect.top(), cursor_h.y) && !near(rect.y, cursor_h.y),
+                };
+                (reach.contains(cursor_h) && edges != Edges::default()).then_some((item, edges))
+            });
+        if let Some((item, edges)) = resize {
+            editor.drag = Some(Drag::Resize {
+                item,
+                edges,
+                before: room.clone(),
+            });
+        } else {
+            let picked = EditorItem::at(room, cursor_h);
+            if picked != editor.selected {
+                editor.field = 0;
+            }
+            editor.selected = picked;
+            editor.text_entry = None;
+            if let Some(EditorItem::Enemy(index)) = picked {
+                editor.enemy_type = room
+                    .enemy_spawns
+                    .get(index)
+                    .map(|spawn| spawn.type_id.clone());
+            }
+            editor.drag = picked.and_then(|item| {
+                item.origin(room).map(|origin| Drag::Move {
+                    item,
+                    grab: cursor_h - origin,
+                    before: room.clone(),
+                })
+            });
+        }
+    }
+
+    if mouse.pressed(MouseButton::Left) {
+        let before = room.clone();
+        match &editor.drag {
+            Some(Drag::Move { item, grab, .. }) => {
+                let target = cursor_h - *grab;
+                let origin = if item.stands_on_surface() {
+                    let x_h = snap(target.x, fine);
+                    // Feet land on the highest block top under the dragged body.
+                    let y_h = floor_under(room, x_h, target.y + 0.5)
+                        .unwrap_or_else(|| snap(target.y, fine));
+                    Vec2::new(x_h, y_h)
+                } else {
+                    Vec2::new(snap(target.x, fine), snap(target.y, fine))
+                };
+                item.set_origin(room, origin);
+            }
+            Some(Drag::Resize { item, edges, .. }) => {
+                if let Some(rect) = item.rect_mut(room) {
+                    let (right, top) = (rect.right(), rect.top());
+                    let x = snap(cursor_h.x, fine);
+                    let y = snap(cursor_h.y, fine);
+                    let min_size = if fine { FINE_SNAP_H } else { SNAP_H };
+                    if edges.left {
+                        rect.x = x.min(right - min_size);
+                        rect.width = right - rect.x;
+                    }
+                    if edges.right {
+                        rect.width = (x - rect.x).max(min_size);
+                    }
+                    if edges.bottom {
+                        rect.y = y.min(top - min_size);
+                        rect.height = top - rect.y;
+                    }
+                    if edges.top {
+                        rect.height = (y - rect.y).max(min_size);
+                    }
+                }
+            }
+            Some(Drag::Pan { .. }) | None => {}
+        }
+        if *room != before {
+            editor.view_dirty = true;
+        }
+    }
+
+    if mouse.just_released(MouseButton::Left) {
+        let edited = room.clone();
+        match editor.drag.take() {
+            Some(Drag::Move { before, .. } | Drag::Resize { before, .. }) if edited != before => {
+                editor.record(before);
+            }
+            _ => {}
+        }
+    }
+
+    editor.hovered = if editor.drag.is_none() {
+        data.rooms
+            .get(&room_id)
+            .and_then(|room| EditorItem::at(room, cursor_h))
+    } else {
+        None
+    };
+}

@@ -3,6 +3,7 @@ mod bonuses;
 mod enemies;
 mod gameplay;
 mod player_animations;
+mod room_yaml;
 mod rooms;
 
 pub use backgrounds::*;
@@ -17,7 +18,7 @@ use std::{
     error::Error,
     fmt::{self, Display, Formatter},
     fs,
-    path::Path,
+    path::{Path, PathBuf},
 };
 
 use bevy::prelude::Resource;
@@ -25,6 +26,8 @@ use serde::de::DeserializeOwned;
 
 #[derive(Resource, Debug)]
 pub struct GameData {
+    /// The `src/assets` folder the data was read from; the debug editor saves rooms there.
+    pub asset_root: PathBuf,
     pub gameplay: GameplayConfig,
     pub player_animations: PlayerAnimations,
     pub enemies: EnemyTypes,
@@ -43,12 +46,12 @@ impl GameData {
         let mut rooms = BTreeMap::new();
 
         for room_id in 1..=10 {
-            let path = asset_root.join(format!("rooms/room_{room_id:03}.yaml"));
-            let room: RoomConfig = read_yaml(&path)?;
+            let room: RoomConfig = read_yaml(&RoomConfig::file_path(asset_root, room_id))?;
             rooms.insert(room.room_id, room);
         }
 
         let data = Self {
+            asset_root: asset_root.to_path_buf(),
             gameplay,
             player_animations,
             enemies,
@@ -56,7 +59,7 @@ impl GameData {
             bonuses,
             rooms,
         };
-        data.validate(asset_root)?;
+        data.validate()?;
         Ok(data)
     }
 
@@ -71,7 +74,10 @@ impl GameData {
             .unwrap_or_default()
     }
 
-    fn validate(&self, asset_root: &Path) -> Result<(), InvalidGameData> {
+    /// Checks the loaded data against the spec's rules; the debug editor
+    /// re-runs it before saving or playtesting an edited room.
+    pub(crate) fn validate(&self) -> Result<(), InvalidGameData> {
+        let asset_root = &self.asset_root;
         if self.gameplay.viewport.height_h != 9.0
             || self.gameplay.viewport.aspect_ratio.width != 16
             || self.gameplay.viewport.aspect_ratio.height != 9
@@ -449,7 +455,7 @@ fn read_yaml<T: DeserializeOwned>(path: &Path) -> Result<T, Box<dyn Error + Send
 }
 
 #[derive(Debug)]
-struct InvalidGameData(String);
+pub(crate) struct InvalidGameData(String);
 
 impl From<&str> for InvalidGameData {
     fn from(message: &str) -> Self {

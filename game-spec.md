@@ -126,7 +126,7 @@ The gun is the player's only weapon. Holding Shoot (J) fires a bullet every `PLA
 - All 100 rooms are authored before a build and played in fixed order. Room layouts and enemy rosters are not procedurally generated.
 - Store each room in its own YAML file under `src/assets/rooms/`, named by its zero-padded room number (for example, `src/assets/rooms/room_001.yaml` through `src/assets/rooms/room_100.yaml`). These files are the source of truth for constructing the rooms.
 - Rooms are enclosed, multi-level spaces in the style of Dead Cells rather than open side-scrolling fields: solid floors, walls, and ceilings bound each room, with galleries, ledges, pillars, hanging rock, and plank platforms stacked at several heights.
-- Each room file describes its ID, chapter, dimensions, player spawn, background profile, solid terrain, one-way platforms, decorative props and their positions, enemy spawns and their configured attributes, and exit position.
+- Each room file describes its ID, chapter, an optional description of the layout's idea, dimensions, player spawn, background profile, solid terrain, one-way platforms, decorative props and their positions, enemy spawns and their configured attributes, and exit position. Terrain blocks, platforms, and enemy spawns may carry an optional `label` naming their role ("floor", "hanging rock"); labels and the description are data fields rather than YAML comments, so tools that rewrite the files keep them.
 - Player and enemy spawn `position_h.y_h` values mark the feet baseline. The player and every enemy stand on the configured platform top, and sprites are bottom-aligned to that shared baseline even when their source frames have different heights.
 - Terrain blocks and one-way platforms are rectangles given by their lower-left corner and size (`rect_h`). Solid `terrain` blocks stop bodies and enemy projectiles from every side; one-way `platforms` (at most 0.5 H thick) only hold up bodies landing on them, and projectiles fly through them.
 - Layouts should form reachable routes. The ground floor runs continuously from the entrance doorway to the exit, with steps no higher than a jump. Upper levels step up 2 H at a time through planks and ledges so enemies can follow the player; higher ledges may require the player's mantle or a wall jump. Upper floors keep at least one open edge so enemies can come back down. Place some enemy spawn feet on raised tops and the rest on the ground.
@@ -151,6 +151,7 @@ The following is a schema example; each room file supplies concrete values and e
 ```yaml
 room_id: null
 chapter_id: null
+description: null # optional note on the layout's idea
 size:
   width_viewports: null # 2 to 4
   height_h: null # 1.5 to 3 viewport heights
@@ -158,10 +159,10 @@ background_profile: null # shared with neighboring rooms in this chapter
 player_spawn: # y_h marks the player's feet baseline; a doorway leads in from the left
   x_h: null
   y_h: null
-terrain: [] # solid blocks: surface (soil or stone) and rect_h { x, y, width, height }, lower-left corner
-platforms: [] # one-way platforms: surface (wood) and rect_h, at most 0.5 H thick
+terrain: [] # solid blocks: optional label, surface (soil or stone), and rect_h { x, y, width, height }, lower-left corner
+platforms: [] # one-way platforms: optional label, surface (wood), and rect_h, at most 0.5 H thick
 decorations: [] # entries define asset, position_h, and visual layer
-enemy_spawns: [] # position_h.y_h marks enemy feet; entries define type_id and optional stat overrides
+enemy_spawns: [] # position_h.y_h marks enemy feet; entries define an optional label, type_id, and optional stat_overrides (health, movement_speed_h_s, attack_damage)
 exit:
   x_h: null
   y_h: null

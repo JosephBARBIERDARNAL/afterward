@@ -1,9 +1,9 @@
 # Room coordinates use H from the lower-left. Terrain and platform `rect_h`
 # give each block's lower-left corner and size; player, enemy, and exit y
 # values mark the feet baseline on a block top.
-# Layout: Hollow trees: three hanging trunks with zigzag plank ledges, low logs on the floor.
 room_id: 7
 chapter_id: 1
+description: "Hollow trees: three hanging trunks with zigzag plank ledges, low logs on the floor."
 size:
   width_viewports: 3
   height_h: 22
@@ -13,23 +13,32 @@ player_spawn:
   y_h: 1
 # Solid blocks: they stop bodies and projectiles from every side.
 terrain:
-  - surface: soil # floor
+  - label: floor
+    surface: soil
     rect_h: { x: 0, y: 0, width: 48, height: 1 }
-  - surface: stone # ceiling
+  - label: ceiling
+    surface: stone
     rect_h: { x: 0, y: 21, width: 48, height: 1 }
-  - surface: stone # left wall above the entrance doorway
+  - label: left wall above the entrance doorway
+    surface: stone
     rect_h: { x: 0, y: 4, width: 1, height: 17 }
-  - surface: stone # right wall above the exit doorway
+  - label: right wall above the exit doorway
+    surface: stone
     rect_h: { x: 47, y: 4, width: 1, height: 17 }
-  - surface: soil # hanging trunk
+  - label: hanging trunk
+    surface: soil
     rect_h: { x: 10, y: 13, width: 2, height: 8 }
-  - surface: soil # hanging trunk
+  - label: hanging trunk
+    surface: soil
     rect_h: { x: 23, y: 13, width: 2, height: 8 }
-  - surface: soil # hanging trunk
+  - label: hanging trunk
+    surface: soil
     rect_h: { x: 36, y: 13, width: 2, height: 8 }
-  - surface: soil # log
+  - label: log
+    surface: soil
     rect_h: { x: 16, y: 1, width: 2, height: 1 }
-  - surface: soil # log
+  - label: log
+    surface: soil
     rect_h: { x: 30, y: 1, width: 2, height: 1 }
 # One-way platforms: land on top, jump through from below, Down + Jump drops.
 platforms:

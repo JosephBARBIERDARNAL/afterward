@@ -1,9 +1,9 @@
 # Room coordinates use H from the lower-left. Terrain and platform `rect_h`
 # give each block's lower-left corner and size; player, enemy, and exit y
 # values mark the feet baseline on a block top.
-# Layout: Hollow arena: wall ledges on both sides, plank tiers around a high central bridge.
 room_id: 6
 chapter_id: 1
+description: "Hollow arena: wall ledges on both sides, plank tiers around a high central bridge."
 size:
   width_viewports: 2
   height_h: 18
@@ -13,23 +13,32 @@ player_spawn:
   y_h: 1
 # Solid blocks: they stop bodies and projectiles from every side.
 terrain:
-  - surface: soil # floor
+  - label: floor
+    surface: soil
     rect_h: { x: 0, y: 0, width: 32, height: 1 }
-  - surface: stone # ceiling
+  - label: ceiling
+    surface: stone
     rect_h: { x: 0, y: 17, width: 32, height: 1 }
-  - surface: stone # left wall above the entrance doorway
+  - label: left wall above the entrance doorway
+    surface: stone
     rect_h: { x: 0, y: 4, width: 1, height: 13 }
-  - surface: stone # right wall above the exit doorway
+  - label: right wall above the exit doorway
+    surface: stone
     rect_h: { x: 31, y: 4, width: 1, height: 13 }
-  - surface: stone # west ledge
+  - label: west ledge
+    surface: stone
     rect_h: { x: 1, y: 4, width: 5, height: 1 }
-  - surface: stone # east ledge
+  - label: east ledge
+    surface: stone
     rect_h: { x: 26, y: 4, width: 5, height: 1 }
-  - surface: stone # west high ledge
+  - label: west high ledge
+    surface: stone
     rect_h: { x: 1, y: 8, width: 4, height: 1 }
-  - surface: stone # east high ledge
+  - label: east high ledge
+    surface: stone
     rect_h: { x: 27, y: 8, width: 4, height: 1 }
-  - surface: stone # hanging pillar
+  - label: hanging pillar
+    surface: stone
     rect_h: { x: 15, y: 12, width: 2, height: 5 }
 # One-way platforms: land on top, jump through from below, Down + Jump drops.
 platforms:

@@ -1,9 +1,9 @@
 # Room coordinates use H from the lower-left. Terrain and platform `rect_h`
 # give each block's lower-left corner and size; player, enemy, and exit y
 # values mark the feet baseline on a block top.
-# Layout: Scattered stones: small stone islands at every height, two high ledges to mantle onto.
 room_id: 8
 chapter_id: 1
+description: "Scattered stones: small stone islands at every height, two high ledges to mantle onto."
 size:
   width_viewports: 3
   height_h: 20
@@ -13,37 +13,53 @@ player_spawn:
   y_h: 1
 # Solid blocks: they stop bodies and projectiles from every side.
 terrain:
-  - surface: soil # floor
+  - label: floor
+    surface: soil
     rect_h: { x: 0, y: 0, width: 48, height: 1 }
-  - surface: stone # ceiling
+  - label: ceiling
+    surface: stone
     rect_h: { x: 0, y: 19, width: 48, height: 1 }
-  - surface: stone # left wall above the entrance doorway
+  - label: left wall above the entrance doorway
+    surface: stone
     rect_h: { x: 0, y: 4, width: 1, height: 15 }
-  - surface: stone # right wall above the exit doorway
+  - label: right wall above the exit doorway
+    surface: stone
     rect_h: { x: 47, y: 4, width: 1, height: 15 }
-  - surface: stone # island
+  - label: island
+    surface: stone
     rect_h: { x: 6, y: 2, width: 3, height: 1 }
-  - surface: stone # island
+  - label: island
+    surface: stone
     rect_h: { x: 10, y: 4, width: 3, height: 1 }
-  - surface: stone # island
+  - label: island
+    surface: stone
     rect_h: { x: 14, y: 6, width: 2, height: 1 }
-  - surface: stone # island
+  - label: island
+    surface: stone
     rect_h: { x: 18, y: 2, width: 3, height: 1 }
-  - surface: stone # island
+  - label: island
+    surface: stone
     rect_h: { x: 22, y: 4, width: 3, height: 1 }
-  - surface: stone # island
+  - label: island
+    surface: stone
     rect_h: { x: 26, y: 6, width: 3, height: 1 }
-  - surface: stone # island
+  - label: island
+    surface: stone
     rect_h: { x: 31, y: 2, width: 3, height: 1 }
-  - surface: stone # island
+  - label: island
+    surface: stone
     rect_h: { x: 35, y: 4, width: 3, height: 1 }
-  - surface: stone # island
+  - label: island
+    surface: stone
     rect_h: { x: 39, y: 6, width: 3, height: 1 }
-  - surface: stone # high ledge
+  - label: high ledge
+    surface: stone
     rect_h: { x: 16, y: 10, width: 4, height: 1 }
-  - surface: stone # high ledge
+  - label: high ledge
+    surface: stone
     rect_h: { x: 30, y: 10, width: 4, height: 1 }
-  - surface: stone # hanging rock
+  - label: hanging rock
+    surface: stone
     rect_h: { x: 22, y: 13, width: 4, height: 6 }
 # One-way platforms: land on top, jump through from below, Down + Jump drops.
 platforms: []

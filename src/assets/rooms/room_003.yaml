@@ -1,9 +1,9 @@
 # Room coordinates use H from the lower-left. Terrain and platform `rect_h`
 # give each block's lower-left corner and size; player, enemy, and exit y
 # values mark the feet baseline on a block top.
-# Layout: Canopy walkway: a broken high walkway over a long hall, a sniper perch above it.
 room_id: 3
 chapter_id: 1
+description: "Canopy walkway: a broken high walkway over a long hall, a sniper perch above it."
 size:
   width_viewports: 3
   height_h: 18
@@ -13,21 +13,29 @@ player_spawn:
   y_h: 1
 # Solid blocks: they stop bodies and projectiles from every side.
 terrain:
-  - surface: soil # floor
+  - label: floor
+    surface: soil
     rect_h: { x: 0, y: 0, width: 48, height: 1 }
-  - surface: stone # ceiling
+  - label: ceiling
+    surface: stone
     rect_h: { x: 0, y: 17, width: 48, height: 1 }
-  - surface: stone # left wall above the entrance doorway
+  - label: left wall above the entrance doorway
+    surface: stone
     rect_h: { x: 0, y: 4, width: 1, height: 13 }
-  - surface: stone # right wall above the exit doorway
+  - label: right wall above the exit doorway
+    surface: stone
     rect_h: { x: 47, y: 4, width: 1, height: 13 }
-  - surface: stone # walkway west
+  - label: walkway west
+    surface: stone
     rect_h: { x: 13, y: 6, width: 14, height: 1 }
-  - surface: stone # walkway east
+  - label: walkway east
+    surface: stone
     rect_h: { x: 30, y: 6, width: 10, height: 1 }
-  - surface: stone # step
+  - label: step
+    surface: stone
     rect_h: { x: 28, y: 1, width: 2, height: 1.5 }
-  - surface: stone # hanging rock
+  - label: hanging rock
+    surface: stone
     rect_h: { x: 20, y: 12, width: 6, height: 5 }
 # One-way platforms: land on top, jump through from below, Down + Jump drops.
 platforms:

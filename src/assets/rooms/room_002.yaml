@@ -1,9 +1,9 @@
 # Room coordinates use H from the lower-left. Terrain and platform `rect_h`
 # give each block's lower-left corner and size; player, enemy, and exit y
 # values mark the feet baseline on a block top.
-# Layout: Ziggurat hall: a stepped stone mound under hanging rock, shooters on its tiers.
 room_id: 2
 chapter_id: 1
+description: "Ziggurat hall: a stepped stone mound under hanging rock, shooters on its tiers."
 size:
   width_viewports: 2
   height_h: 16
@@ -13,23 +13,32 @@ player_spawn:
   y_h: 1
 # Solid blocks: they stop bodies and projectiles from every side.
 terrain:
-  - surface: soil # floor
+  - label: floor
+    surface: soil
     rect_h: { x: 0, y: 0, width: 32, height: 1 }
-  - surface: stone # ceiling
+  - label: ceiling
+    surface: stone
     rect_h: { x: 0, y: 15, width: 32, height: 1 }
-  - surface: stone # left wall above the entrance doorway
+  - label: left wall above the entrance doorway
+    surface: stone
     rect_h: { x: 0, y: 4, width: 1, height: 11 }
-  - surface: stone # right wall above the exit doorway
+  - label: right wall above the exit doorway
+    surface: stone
     rect_h: { x: 31, y: 4, width: 1, height: 11 }
-  - surface: stone # ziggurat base
+  - label: ziggurat base
+    surface: stone
     rect_h: { x: 11, y: 1, width: 10, height: 2 }
-  - surface: stone # ziggurat middle
+  - label: ziggurat middle
+    surface: stone
     rect_h: { x: 13, y: 3, width: 6, height: 2 }
-  - surface: stone # ziggurat top
+  - label: ziggurat top
+    surface: stone
     rect_h: { x: 15, y: 5, width: 2, height: 2 }
-  - surface: stone # hanging rock
+  - label: hanging rock
+    surface: stone
     rect_h: { x: 6, y: 11, width: 5, height: 4 }
-  - surface: stone # hanging rock
+  - label: hanging rock
+    surface: stone
     rect_h: { x: 22, y: 10, width: 4, height: 5 }
 # One-way platforms: land on top, jump through from below, Down + Jump drops.
 platforms:

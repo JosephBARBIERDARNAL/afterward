@@ -1,0 +1,362 @@
+//! Editor shortcuts: typing into text fields, adding and deleting items, the
+//! inspector, undo, switching rooms, saving, playtesting, and leaving.
+
+use super::*;
+use crate::data::{EnemySpawnConfig, PlatformMaterial, SpawnPosition, TerrainBlockConfig};
+use bevy::input::{ButtonState, keyboard::KeyboardInput};
+use std::fs;
+
+/// Feeds typed characters into the open text field; Enter keeps the text,
+/// Escape drops it. Keys handled here are hidden from the shortcuts.
+pub(super) fn type_text(
+    mut typed: MessageReader<KeyboardInput>,
+    mut editor: ResMut<RoomEditor>,
+    mut data: ResMut<GameData>,
+) {
+    editor.keys_consumed = editor.text_entry.is_some();
+    for input in typed.read() {
+        if input.state != ButtonState::Pressed {
+            continue;
+        }
+        let Some(mut text) = editor.text_entry.take() else {
+            continue;
+        };
+        match input.key_code {
+            KeyCode::Enter | KeyCode::NumpadEnter => {
+                let field = editor.fields().get(editor.field).copied();
+                let item = editor.selected;
+                if let Some(field) = field {
+                    editor.edit(&mut data, |room| field.set_text(room, item, &text));
+                }
+                continue;
+            }
+            KeyCode::Escape => continue,
+            KeyCode::Backspace => {
+                text.pop();
+            }
+            _ => {
+                if let Some(typed_text) = &input.text {
+                    text.extend(
+                        typed_text
+                            .chars()
+                            .filter(|character| !character.is_control()),
+                    );
+                }
+            }
+        }
+        editor.text_entry = Some(text);
+    }
+}
+
+#[derive(SystemParam)]
+pub(super) struct EditorKeyResources<'w, 's> {
+    keys: Res<'w, ButtonInput<KeyCode>>,
+    editor: ResMut<'w, RoomEditor>,
+    data: ResMut<'w, GameData>,
+    session: ResMut<'w, RunSession>,
+    start_room: ResMut<'w, StartRoom>,
+    next_screen: ResMut<'w, NextState<GameScreen>>,
+    camera: Query<'w, 's, (&'static mut Transform, &'static mut Projection), With<Camera2d>>,
+}
+
+pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
+    let EditorKeyResources {
+        keys,
+        mut editor,
+        mut data,
+        mut session,
+        mut start_room,
+        mut next_screen,
+        mut camera,
+    } = resources;
+    if editor.keys_consumed || keys.get_just_pressed().next().is_none() {
+        return;
+    }
+    let command = keys.any_pressed([
+        KeyCode::ControlLeft,
+        KeyCode::ControlRight,
+        KeyCode::SuperLeft,
+        KeyCode::SuperRight,
+    ]);
+    let shift = keys.any_pressed([KeyCode::ShiftLeft, KeyCode::ShiftRight]);
+    let pressed = |key: KeyCode| keys.just_pressed(key);
+    if !pressed(KeyCode::Escape) {
+        editor.leave_armed = false;
+    }
+    let room_ids = data.rooms.keys().copied().collect::<Vec<_>>();
+    let field = editor.fields().get(editor.field).copied();
+    let cursor_h = editor.cursor_h.unwrap_or_default();
+
+    if command && pressed(KeyCode::KeyS) {
+        if let Err(problem) = data.validate() {
+            editor.status = format!("Not saved: {problem}");
+            return;
+        }
+        let mut written = Vec::new();
+        for room_id in editor.unsaved_rooms(&data) {
+            let Some(room) = data.rooms.get(&room_id) else {
+                continue;
+            };
+            let path = RoomConfig::file_path(&data.asset_root, room_id);
+            if let Err(error) = fs::write(&path, room.to_string()) {
+                editor.status = format!("Could not write {}: {error}", path.display());
+                return;
+            }
+            editor.saved.insert(room_id, room.clone());
+            written.push(format!("room_{room_id:03}.yaml"));
+        }
+        editor.status = if written.is_empty() {
+            String::from("Nothing to save.")
+        } else {
+            format!("Saved {}.", written.join(", "))
+        };
+    } else if command && pressed(KeyCode::KeyR) {
+        if let Err(problem) = data.validate() {
+            editor.status = format!("Can't playtest: {problem}");
+            return;
+        }
+        *start_room = StartRoom(editor.room_id);
+        next_screen.set(screens::reset_run(&mut session, &data, *start_room));
+    } else if command && (pressed(KeyCode::KeyY) || shift && pressed(KeyCode::KeyZ)) {
+        let Some((room_id, room)) = editor.redo.pop() else {
+            editor.status = String::from("Nothing to redo.");
+            return;
+        };
+        if let Some(current) = data.rooms.insert(room_id, room) {
+            editor.undo.push((room_id, current));
+        }
+        if room_id != editor.room_id {
+            editor.open_room(room_id);
+        }
+        editor.view_dirty = true;
+    } else if command && pressed(KeyCode::KeyZ) {
+        let Some((room_id, room)) = editor.undo.pop() else {
+            editor.status = String::from("Nothing to undo.");
+            return;
+        };
+        if let Some(current) = data.rooms.insert(room_id, room) {
+            editor.redo.push((room_id, current));
+        }
+        if room_id != editor.room_id {
+            editor.open_room(room_id);
+        }
+        editor.view_dirty = true;
+    } else if command && pressed(KeyCode::KeyD) {
+        let Some(item) = editor.selected else {
+            return;
+        };
+        let mut duplicate = None;
+        editor.edit(&mut data, |room| {
+            duplicate = match item {
+                EditorItem::Terrain(index) => room.terrain.get(index).cloned().map(|mut block| {
+                    block.rect_h.x += 1.0;
+                    room.terrain.push(block);
+                    EditorItem::Terrain(room.terrain.len() - 1)
+                }),
+                EditorItem::Platform(index) => {
+                    room.platforms.get(index).cloned().map(|mut block| {
+                        block.rect_h.x += 1.0;
+                        room.platforms.push(block);
+                        EditorItem::Platform(room.platforms.len() - 1)
+                    })
+                }
+                EditorItem::Enemy(index) => {
+                    room.enemy_spawns.get(index).cloned().map(|mut spawn| {
+                        spawn.position_h.x_h += 1.0;
+                        room.enemy_spawns.push(spawn);
+                        EditorItem::Enemy(room.enemy_spawns.len() - 1)
+                    })
+                }
+                EditorItem::PlayerSpawn | EditorItem::Exit => None,
+            };
+        });
+        if duplicate.is_some() {
+            editor.selected = duplicate;
+        }
+    } else if command {
+    } else if pressed(KeyCode::KeyT) || pressed(KeyCode::KeyP) {
+        let one_way = pressed(KeyCode::KeyP);
+        let (width, height) = if one_way { (3.0, SNAP_H) } else { (2.0, 1.0) };
+        let block = TerrainBlockConfig {
+            label: None,
+            surface: if one_way {
+                PlatformMaterial::Wood
+            } else {
+                PlatformMaterial::Stone
+            },
+            rect_h: RectH {
+                x: snap(cursor_h.x - width / 2.0, false),
+                y: snap(cursor_h.y - height / 2.0, false),
+                width,
+                height,
+            },
+        };
+        let mut added = None;
+        editor.edit(&mut data, |room| {
+            let blocks = if one_way {
+                &mut room.platforms
+            } else {
+                &mut room.terrain
+            };
+            blocks.push(block);
+            let index = blocks.len() - 1;
+            added = Some(if one_way {
+                EditorItem::Platform(index)
+            } else {
+                EditorItem::Terrain(index)
+            });
+        });
+        editor.selected = added;
+        editor.field = 0;
+    } else if pressed(KeyCode::KeyE) {
+        let type_id = editor
+            .enemy_type
+            .clone()
+            .or_else(|| data.enemies.types.keys().next().cloned());
+        let Some(type_id) = type_id else {
+            return;
+        };
+        let mut added = None;
+        editor.edit(&mut data, |room| {
+            let x_h = snap(cursor_h.x, false);
+            let y_h = floor_under(room, x_h, cursor_h.y).unwrap_or(snap(cursor_h.y, false));
+            room.enemy_spawns.push(EnemySpawnConfig {
+                label: None,
+                type_id,
+                position_h: SpawnPosition { x_h, y_h },
+                stat_overrides: None,
+            });
+            added = Some(EditorItem::Enemy(room.enemy_spawns.len() - 1));
+        });
+        editor.selected = added;
+        editor.field = 0;
+    } else if pressed(KeyCode::Delete) || pressed(KeyCode::Backspace) {
+        let Some(item) = editor.selected else {
+            return;
+        };
+        editor.edit(&mut data, |room| match item {
+            EditorItem::Terrain(index) if index < room.terrain.len() => {
+                room.terrain.remove(index);
+            }
+            EditorItem::Platform(index) if index < room.platforms.len() => {
+                room.platforms.remove(index);
+            }
+            EditorItem::Enemy(index) if index < room.enemy_spawns.len() => {
+                room.enemy_spawns.remove(index);
+            }
+            _ => {}
+        });
+        if matches!(item, EditorItem::PlayerSpawn | EditorItem::Exit) {
+            editor.status = String::from("The player spawn and the exit can only be moved.");
+        } else {
+            editor.selected = None;
+            editor.field = 0;
+        }
+    } else if pressed(KeyCode::ArrowUp) || pressed(KeyCode::ArrowDown) {
+        let count = editor.fields().len().max(1);
+        editor.field = if pressed(KeyCode::ArrowUp) {
+            (editor.field + count - 1) % count
+        } else {
+            (editor.field + 1) % count
+        };
+    } else if pressed(KeyCode::ArrowLeft) || pressed(KeyCode::ArrowRight) {
+        let direction = if pressed(KeyCode::ArrowLeft) {
+            -1.0
+        } else {
+            1.0
+        };
+        let steps = if shift { direction * 4.0 } else { direction };
+        let item = editor.selected;
+        match field {
+            Some(Field::Room) => {
+                let position = room_ids.iter().position(|id| *id == editor.room_id);
+                let next = position.and_then(|position| {
+                    let next = position as isize + direction as isize;
+                    room_ids.get(usize::try_from(next).ok()?).copied()
+                });
+                if let Some(room_id) = next {
+                    editor.open_room(room_id);
+                }
+            }
+            Some(field) => {
+                let snapshot = &*data;
+                let mut room = snapshot.rooms.get(&editor.room_id).cloned();
+                if let Some(room) = &mut room {
+                    field.adjust(room, item, snapshot, steps);
+                }
+                if let Some(room) = room {
+                    editor.edit(&mut data, |edited| *edited = room);
+                }
+                if let Some(EditorItem::Enemy(index)) = item
+                    && field == Field::EnemyType
+                {
+                    editor.enemy_type = data
+                        .rooms
+                        .get(&editor.room_id)
+                        .and_then(|room| room.enemy_spawns.get(index))
+                        .map(|spawn| spawn.type_id.clone());
+                }
+            }
+            None => {}
+        }
+    } else if pressed(KeyCode::PageUp) || pressed(KeyCode::PageDown) {
+        let position = room_ids.iter().position(|id| *id == editor.room_id);
+        let next = position.and_then(|position| {
+            let next = if pressed(KeyCode::PageUp) {
+                position.checked_sub(1)?
+            } else {
+                position + 1
+            };
+            room_ids.get(next).copied()
+        });
+        if let Some(room_id) = next {
+            editor.open_room(room_id);
+        }
+    } else if pressed(KeyCode::Enter) || pressed(KeyCode::NumpadEnter) {
+        if let Some(field) = field.filter(|field| field.is_text()) {
+            let item = editor.selected;
+            editor.text_entry = Some(
+                data.rooms
+                    .get(&editor.room_id)
+                    .and_then(|room| field.text(room, item))
+                    .unwrap_or_default(),
+            );
+        }
+    } else if pressed(KeyCode::KeyC) {
+        if let Some(field) = field {
+            let item = editor.selected;
+            editor.edit(&mut data, |room| field.clear(room, item));
+        }
+    } else if pressed(KeyCode::Home) {
+        let (Ok((mut transform, mut projection)), Some(room)) =
+            (camera.single_mut(), data.rooms.get(&editor.room_id))
+        else {
+            return;
+        };
+        let room_size_h = Vec2::new(room.width_h(&data.gameplay), room.size.height_h);
+        let view_size_h = Vec2::new(
+            data.gameplay.viewport_width_h(),
+            data.gameplay.viewport.height_h,
+        );
+        if let Projection::Orthographic(orthographic) = &mut *projection {
+            orthographic.scale = (room_size_h / view_size_h * 1.05)
+                .max_element()
+                .clamp(MIN_ZOOM, MAX_ZOOM);
+        }
+        transform.translation.x = room_size_h.x / 2.0 * H_WORLD_UNITS;
+        transform.translation.y = room_size_h.y / 2.0 * H_WORLD_UNITS;
+    } else if pressed(KeyCode::Escape) {
+        let unsaved = editor.unsaved_rooms(&data);
+        if editor.selected.is_some() {
+            editor.selected = None;
+            editor.field = 0;
+        } else if unsaved.is_empty() || editor.leave_armed {
+            next_screen.set(GameScreen::MainMenu);
+        } else {
+            editor.leave_armed = true;
+            editor.status = String::from(
+                "Unsaved rooms: Ctrl+S saves them, Esc again leaves (edits stay in memory until the game quits).",
+            );
+        }
+    }
+}

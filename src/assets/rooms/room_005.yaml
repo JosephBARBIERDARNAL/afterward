@@ -1,9 +1,9 @@
 # Room coordinates use H from the lower-left. Terrain and platform `rect_h`
 # give each block's lower-left corner and size; player, enemy, and exit y
 # values mark the feet baseline on a block top.
-# Layout: Twin mounds: two stepped stone mounds facing each other across a hall, rock overhead.
 room_id: 5
 chapter_id: 1
+description: "Twin mounds: two stepped stone mounds facing each other across a hall, rock overhead."
 size:
   width_viewports: 3
   height_h: 16
@@ -13,27 +13,38 @@ player_spawn:
   y_h: 1
 # Solid blocks: they stop bodies and projectiles from every side.
 terrain:
-  - surface: soil # floor
+  - label: floor
+    surface: soil
     rect_h: { x: 0, y: 0, width: 48, height: 1 }
-  - surface: stone # ceiling
+  - label: ceiling
+    surface: stone
     rect_h: { x: 0, y: 15, width: 48, height: 1 }
-  - surface: stone # left wall above the entrance doorway
+  - label: left wall above the entrance doorway
+    surface: stone
     rect_h: { x: 0, y: 4, width: 1, height: 11 }
-  - surface: stone # right wall above the exit doorway
+  - label: right wall above the exit doorway
+    surface: stone
     rect_h: { x: 47, y: 4, width: 1, height: 11 }
-  - surface: stone # west mound base
+  - label: west mound base
+    surface: stone
     rect_h: { x: 9, y: 1, width: 8, height: 2 }
-  - surface: stone # west mound middle
+  - label: west mound middle
+    surface: stone
     rect_h: { x: 10.5, y: 3, width: 5, height: 2 }
-  - surface: stone # west mound top
+  - label: west mound top
+    surface: stone
     rect_h: { x: 12, y: 5, width: 2, height: 2 }
-  - surface: stone # east mound base
+  - label: east mound base
+    surface: stone
     rect_h: { x: 31, y: 1, width: 10, height: 2 }
-  - surface: stone # east mound middle
+  - label: east mound middle
+    surface: stone
     rect_h: { x: 33, y: 3, width: 6, height: 2 }
-  - surface: stone # east mound top
+  - label: east mound top
+    surface: stone
     rect_h: { x: 35, y: 5, width: 2, height: 2 }
-  - surface: stone # hanging rock
+  - label: hanging rock
+    surface: stone
     rect_h: { x: 20, y: 11, width: 8, height: 4 }
 # One-way platforms: land on top, jump through from below, Down + Jump drops.
 platforms:

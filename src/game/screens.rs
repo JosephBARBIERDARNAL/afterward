@@ -2,6 +2,13 @@ use super::*;
 use crate::game::interface::ScreenLabel;
 use bevy::window::{MonitorSelection, PrimaryWindow, WindowMode};
 
+/// Menu line for the debug room editor, shown in debug builds only.
+const EDITOR_MENU_LINE: &str = if cfg!(debug_assertions) {
+    "\nD  Debug editor"
+} else {
+    ""
+};
+
 pub(super) fn update_screen_text(
     screen: Res<State<GameScreen>>,
     session: Res<RunSession>,
@@ -11,10 +18,10 @@ pub(super) fn update_screen_text(
     mut labels: Query<&mut Text, With<ScreenLabel>>,
 ) {
     let message = match screen.get() {
-        GameScreen::MainMenu => String::from("AFTERWARD\n\nENTER  Begin run"),
-        GameScreen::Paused => {
-            String::from("PAUSED\n\nENTER  Continue\nS  Settings\nR  Restart\nM  Main menu")
-        }
+        GameScreen::MainMenu => format!("AFTERWARD\n\nENTER  Begin run{EDITOR_MENU_LINE}"),
+        GameScreen::Paused => format!(
+            "PAUSED\n\nENTER  Continue\nS  Settings\nR  Restart\nM  Main menu{EDITOR_MENU_LINE}"
+        ),
         GameScreen::RoomClear => String::from("ROOM CLEARED"),
         GameScreen::BossIntro => String::from("CHAPTER ONE\n\nTHE EVIL WIZARD"),
         GameScreen::Transitioning => data
@@ -75,6 +82,8 @@ pub(super) fn update_screen_text(
         GameScreen::Dead => String::from("RUN ENDED\n\nENTER  Return to menu"),
         GameScreen::Complete => String::from("CHAPTER ONE CLEARED\n\nENTER  Return to menu"),
         GameScreen::RoomIntro | GameScreen::Playing | GameScreen::Bonus => String::new(),
+        #[cfg(debug_assertions)]
+        GameScreen::Editor => String::new(),
     };
     for mut text in &mut labels {
         text.0 = message.clone();
@@ -114,6 +123,16 @@ pub(super) fn handle_screen_input(
     match screen.get() {
         GameScreen::MainMenu if controls.just_pressed(GameAction::Interact, &keys) => {
             next_screen.set(reset_run(&mut session, &data, *start_room));
+            sounds.push(SoundCue::UiConfirm);
+        }
+        #[cfg(debug_assertions)]
+        GameScreen::MainMenu | GameScreen::Paused if keys.just_pressed(KeyCode::KeyD) => {
+            // From the main menu the editor opens the room runs start in;
+            // from the pause menu, the room being played.
+            if *screen.get() == GameScreen::MainMenu {
+                session.room_id = start_room.0;
+            }
+            next_screen.set(GameScreen::Editor);
             sounds.push(SoundCue::UiConfirm);
         }
         GameScreen::Playing if controls.just_pressed(GameAction::Pause, &keys) => {
@@ -230,7 +249,11 @@ pub(super) fn handle_screen_input(
 
 /// Resets the run to `start_room` and returns the screen that opens it: the
 /// room entrance, like arriving there through a door.
-fn reset_run(session: &mut RunSession, data: &GameData, start_room: StartRoom) -> GameScreen {
+pub(super) fn reset_run(
+    session: &mut RunSession,
+    data: &GameData,
+    start_room: StartRoom,
+) -> GameScreen {
     session.room_id = start_room.0;
     session.max_health = data.gameplay.player.max_health;
     session.health = session.max_health;

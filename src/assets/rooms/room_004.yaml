@@ -1,9 +1,9 @@
 # Room coordinates use H from the lower-left. Terrain and platform `rect_h`
 # give each block's lower-left corner and size; player, enemy, and exit y
 # values mark the feet baseline on a block top.
-# Layout: Cliff descent: enter high on a cliff, fight down its steps, then up to a sniper perch.
 room_id: 4
 chapter_id: 1
+description: "Cliff descent: enter high on a cliff, fight down its steps, then up to a sniper perch."
 size:
   width_viewports: 2
   height_h: 18
@@ -13,21 +13,29 @@ player_spawn:
   y_h: 9
 # Solid blocks: they stop bodies and projectiles from every side.
 terrain:
-  - surface: soil # cliff
+  - label: cliff
+    surface: soil
     rect_h: { x: 0, y: 0, width: 10, height: 9 }
-  - surface: soil # upper step
+  - label: upper step
+    surface: soil
     rect_h: { x: 10, y: 0, width: 3, height: 7 }
-  - surface: soil # lower step
+  - label: lower step
+    surface: soil
     rect_h: { x: 13, y: 0, width: 3, height: 5 }
-  - surface: soil # floor
+  - label: floor
+    surface: soil
     rect_h: { x: 16, y: 0, width: 16, height: 1 }
-  - surface: stone # ceiling
+  - label: ceiling
+    surface: stone
     rect_h: { x: 0, y: 17, width: 32, height: 1 }
-  - surface: stone # left wall above the entrance doorway
+  - label: left wall above the entrance doorway
+    surface: stone
     rect_h: { x: 0, y: 12, width: 1, height: 5 }
-  - surface: stone # right wall above the exit doorway
+  - label: right wall above the exit doorway
+    surface: stone
     rect_h: { x: 31, y: 4, width: 1, height: 13 }
-  - surface: stone # sniper perch
+  - label: sniper perch
+    surface: stone
     rect_h: { x: 25, y: 6, width: 5, height: 1 }
 # One-way platforms: land on top, jump through from below, Down + Jump drops.
 platforms:

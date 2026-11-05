@@ -13,6 +13,8 @@ mod bonus_screen;
 mod camera;
 mod combat;
 mod controls;
+#[cfg(debug_assertions)]
+mod editor;
 mod flow;
 mod interface;
 mod pause_blur;
@@ -77,6 +79,8 @@ impl std::str::FromStr for StartRoom {
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
+        #[cfg(debug_assertions)]
+        app.add_plugins(editor::EditorPlugin);
         app.add_plugins(pause_blur::PauseBlurPlugin)
             .init_state::<GameScreen>()
             .init_resource::<RunSession>()
@@ -241,6 +245,9 @@ enum GameScreen {
     Controls,
     Dead,
     Complete,
+    /// Debug room editor (debug builds only).
+    #[cfg(debug_assertions)]
+    Editor,
 }
 
 fn move_towards(current: f32, target: f32, max_delta: f32) -> f32 {
