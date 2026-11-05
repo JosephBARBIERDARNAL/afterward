@@ -5,7 +5,10 @@ use std::{
     time::Duration,
 };
 
-use bevy::{prelude::MinimalPlugins, state::app::StatesPlugin, time::TimeUpdateStrategy};
+use bevy::{
+    input::keyboard::KeyboardInput, prelude::MinimalPlugins, state::app::StatesPlugin,
+    time::TimeUpdateStrategy,
+};
 
 const TEST_PILOT_COMBAT_DISTANCE_H: f32 = 4.0;
 
@@ -55,6 +58,7 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
         .init_resource::<ControlBindings>()
         .insert_resource(PreferencesDir(None))
         .init_resource::<ButtonInput<KeyCode>>()
+        .add_message::<KeyboardInput>()
         .add_message::<PointerOver>()
         .add_message::<PointerClick>()
         .add_systems(Startup, controls::initialize_control_bindings)

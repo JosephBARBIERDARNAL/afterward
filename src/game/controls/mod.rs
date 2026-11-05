@@ -2,7 +2,13 @@ use crate::{
     data::{ControlsConfig, GameData},
     game::settings::PreferencesDir,
 };
-use bevy::prelude::*;
+use bevy::{
+    input::{
+        ButtonState,
+        keyboard::{Key, KeyboardInput},
+    },
+    prelude::*,
+};
 use serde::{Deserialize, Serialize};
 use std::{
     collections::BTreeMap,
@@ -14,6 +20,34 @@ use std::{
 mod key_codes;
 
 use key_codes::{KeyBindingName, KeyLabel};
+
+/// The letters typed this frame on the active keyboard layout. Menu letter
+/// shortcuts match these instead of key positions, so M is the key labeled M
+/// on AZERTY too (where it sits at QWERTY's semicolon).
+pub(super) struct TypedLetters(Vec<char>);
+
+impl TypedLetters {
+    pub(super) fn contains(&self, letter: char) -> bool {
+        self.0.contains(&letter)
+    }
+}
+
+impl<'a> FromIterator<&'a KeyboardInput> for TypedLetters {
+    fn from_iter<I: IntoIterator<Item = &'a KeyboardInput>>(inputs: I) -> Self {
+        Self(
+            inputs
+                .into_iter()
+                .filter(|input| input.state == ButtonState::Pressed && !input.repeat)
+                .filter_map(|input| match &input.logical_key {
+                    Key::Character(text) => text.chars().next(),
+                    _ => None,
+                })
+                .map(|letter| letter.to_ascii_lowercase())
+                .collect(),
+        )
+    }
+}
+
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub(super) enum GameAction {
     MoveLeft,

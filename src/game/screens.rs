@@ -1,6 +1,7 @@
 use super::*;
-use crate::game::interface::ScreenLabel;
+use crate::game::{controls::TypedLetters, interface::ScreenLabel};
 use bevy::window::{MonitorSelection, PrimaryWindow, WindowMode};
+use bevy::{app::AppExit, input::keyboard::KeyboardInput};
 
 pub(super) fn update_screen_text(
     screen: Res<State<GameScreen>>,
@@ -64,7 +65,10 @@ pub(super) fn handle_screen_input(
     resources: ScreenInputResources,
     room_entities: Query<Entity, With<RoomEntity>>,
     mut windows: Query<&mut Window, With<PrimaryWindow>>,
+    mut keyboard: MessageReader<KeyboardInput>,
+    mut exit: MessageWriter<AppExit>,
 ) {
+    let typed: TypedLetters = keyboard.read().collect();
     let ScreenInputResources {
         keys,
         screen,
@@ -83,7 +87,7 @@ pub(super) fn handle_screen_input(
             sounds.push(SoundCue::UiConfirm);
         }
         #[cfg(debug_assertions)]
-        GameScreen::MainMenu | GameScreen::Paused if keys.just_pressed(KeyCode::KeyD) => {
+        GameScreen::MainMenu | GameScreen::Paused if typed.contains('d') => {
             // From the main menu the editor opens the room runs start in;
             // from the pause menu, the room being played.
             if *screen.get() == GameScreen::MainMenu {
@@ -91,6 +95,9 @@ pub(super) fn handle_screen_input(
             }
             next_screen.set(GameScreen::Editor);
             sounds.push(SoundCue::UiConfirm);
+        }
+        GameScreen::MainMenu | GameScreen::Paused if typed.contains('q') => {
+            exit.write(AppExit::Success);
         }
         GameScreen::Playing if controls.just_pressed(GameAction::Pause, &keys) => {
             next_screen.set(GameScreen::Paused);
@@ -103,15 +110,15 @@ pub(super) fn handle_screen_input(
             next_screen.set(GameScreen::Playing);
             sounds.push(SoundCue::UiConfirm);
         }
-        GameScreen::Paused if keys.just_pressed(KeyCode::KeyS) => {
+        GameScreen::Paused if typed.contains('s') => {
             next_screen.set(GameScreen::Settings);
             sounds.push(SoundCue::UiConfirm);
         }
-        GameScreen::Paused if keys.just_pressed(KeyCode::KeyM) => {
+        GameScreen::Paused if typed.contains('m') => {
             next_screen.set(GameScreen::MainMenu);
             sounds.push(SoundCue::UiCancel);
         }
-        GameScreen::Paused if keys.just_pressed(KeyCode::KeyR) => {
+        GameScreen::Paused if typed.contains('r') => {
             for entity in &room_entities {
                 commands.entity(entity).despawn();
             }
@@ -187,7 +194,7 @@ pub(super) fn handle_screen_input(
                 controls.begin_rebinding();
                 sounds.push(SoundCue::UiConfirm);
             }
-            if keys.just_pressed(KeyCode::KeyR) {
+            if typed.contains('r') {
                 controls.restore_defaults(&preferences);
                 sounds.push(SoundCue::UiConfirm);
             }

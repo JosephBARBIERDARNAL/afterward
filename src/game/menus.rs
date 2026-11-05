@@ -100,6 +100,7 @@ impl MenuState<'_> {
                 [MenuRow::action(key(GameAction::Interact), "Begin run")]
                     .into_iter()
                     .chain(editor_row)
+                    .chain([MenuRow::action("Q", "Quit")])
                     .collect(),
             ),
             GameScreen::Paused => plain(
@@ -113,6 +114,7 @@ impl MenuState<'_> {
                 ]
                 .into_iter()
                 .chain(editor_row)
+                .chain([MenuRow::action("Q", "Quit")])
                 .collect(),
             ),
             GameScreen::Settings => {

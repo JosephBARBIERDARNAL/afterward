@@ -264,7 +264,8 @@ Default controls:
 - E: interact with an element.
 - 1 / 2: choose the first / second bonus. R: reroll the bonus offers. Up/Down + Enter, or a mouse click, also work on the bonus screen.
 - Death: the death animation plays and holds for `PLAYER_DEATH_HOLD` with every control ignored before the run-ended screen appears.
-- Escape: open or close the pause menu. The menu offers Continue, Restart, Settings, and Leave. Leave returns to the main menu shown before a run.
+- Escape: open or close the pause menu. The menu offers Continue (Enter), Settings (S), Restart (R), Main menu (M), and Quit (Q). Main menu returns to the main menu shown before a run, which offers Begin run (the Interact key) and Quit (Q). Quit closes the game.
+- Menu letter shortcuts match the letter the key types on the active keyboard layout, not its position, so M is the key labeled M on AZERTY too.
 - Every menu (main, pause, settings, controls, run ended, chapter cleared) shares the bonus screen's look over the blurred game: a centered title, then one dark bordered card per option with its key in a badge. Settings show each volume as a bar; the controls list fills two columns, and the selected row is highlighted.
 
 Settings:
