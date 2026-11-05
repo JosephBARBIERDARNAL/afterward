@@ -244,7 +244,7 @@ next_room_id: null # null only for room 100
 - Player assets are stored in `src/assets/player/`.
 - Enemy assets are stored in `src/assets/enemies/`. Each enemy type has its own subfolder (for example, `src/assets/enemies/type1/` and `src/assets/enemies/type2/`). Boss assets are stored in corresponding boss folders (for example, `src/assets/enemies/boss1/` holds the Chapter 1 Evil Wizard).
 - Background assets are stored in `src/assets/background/`.
-- Assets may be provided as PNG, PSD, or Aseprite files.
+- Assets may be provided as PNG or Aseprite files. Source PSDs are not kept in the repository.
 
 ## Controls and Settings
 
