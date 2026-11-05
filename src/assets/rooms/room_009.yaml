@@ -7,7 +7,7 @@ description: "Gauntlet: low bridge, a divider wall and tower, sniper gallery, pl
 size:
   width_viewports: 4
   height_h: 18
-background_profile: chapter_01_autumn_sunbeams
+background_profile: clouds_night_blue
 player_spawn:
   x_h: 2.5
   y_h: 1

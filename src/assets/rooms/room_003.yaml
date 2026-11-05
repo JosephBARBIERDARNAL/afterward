@@ -7,7 +7,7 @@ description: "Canopy walkway: a broken high walkway over a long hall, a sniper p
 size:
   width_viewports: 3
   height_h: 18
-background_profile: chapter_01_forest
+background_profile: clouds_bright_blue
 player_spawn:
   x_h: 2.5
   y_h: 1

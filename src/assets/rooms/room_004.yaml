@@ -7,7 +7,7 @@ description: "Cliff descent: enter high on a cliff, fight down its steps, then u
 size:
   width_viewports: 2
   height_h: 18
-background_profile: chapter_01_hills
+background_profile: clouds_golden_tower
 player_spawn:
   x_h: 2.5
   y_h: 9

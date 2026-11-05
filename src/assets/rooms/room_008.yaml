@@ -7,7 +7,7 @@ description: "Scattered stones: small stone islands at every height, two high le
 size:
   width_viewports: 3
   height_h: 20
-background_profile: chapter_01_autumn_canopy
+background_profile: clouds_dusk_mauve
 player_spawn:
   x_h: 2.5
   y_h: 1

@@ -7,7 +7,7 @@ description: "Boss arena: an enclosed hall with wall ledges, low planks, and han
 size:
   width_viewports: 3
   height_h: 14
-background_profile: chapter_01_autumn_sunbeams
+background_profile: clouds_thunderstorm
 player_spawn:
   x_h: 2.5
   y_h: 1

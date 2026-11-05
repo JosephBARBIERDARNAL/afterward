@@ -7,7 +7,7 @@ description: "Ziggurat hall: a stepped stone mound under hanging rock, shooters 
 size:
   width_viewports: 2
   height_h: 16
-background_profile: chapter_01_forest
+background_profile: chapter_01_hills
 player_spawn:
   x_h: 2.5
   y_h: 1

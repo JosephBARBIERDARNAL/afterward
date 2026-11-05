@@ -7,7 +7,7 @@ description: "Twin mounds: two stepped stone mounds facing each other across a h
 size:
   width_viewports: 3
   height_h: 16
-background_profile: chapter_01_hills
+background_profile: clouds_pastel_tower
 player_spawn:
   x_h: 2.5
   y_h: 1

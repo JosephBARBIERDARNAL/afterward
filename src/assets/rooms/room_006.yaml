@@ -7,7 +7,7 @@ description: "Hollow arena: wall ledges on both sides, plank tiers around a high
 size:
   width_viewports: 2
   height_h: 18
-background_profile: chapter_01_hills
+background_profile: chapter_01_autumn_canopy
 player_spawn:
   x_h: 2.5
   y_h: 1
