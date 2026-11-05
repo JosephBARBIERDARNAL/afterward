@@ -3,7 +3,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use bevy::{ecs::system::SystemParam, prelude::*};
 
 use crate::data::{
-    Aim, EnemyAttackConfig, EnemyTypeId, GameData, PLAYER_COLLISION_WIDTH_H, PlatformMaterial,
+    Aim, EnemyAttackConfig, EnemyTypeId, FootstepSound, GameData, PLAYER_COLLISION_WIDTH_H,
 };
 
 mod ammo_hud;
@@ -27,6 +27,7 @@ mod session;
 mod settings;
 mod sprites;
 mod terrain;
+mod terrain_art;
 mod ui_style;
 mod visual_walkthrough;
 mod world;

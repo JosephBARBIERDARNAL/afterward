@@ -64,7 +64,7 @@ fn the_gun_fires_alternating_shots_aims_and_reloads_its_magazine() {
             Startup,
             |mut commands: Commands, data: Res<GameData>, sheets: Res<SpriteSheets>| {
                 let room = &data.rooms[&1];
-                world::spawn_room_platforms(&mut commands, room);
+                world::spawn_room_platforms(&mut commands, room, &data);
                 world::spawn_player(
                     &mut commands,
                     room,

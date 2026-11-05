@@ -87,29 +87,13 @@ pub(super) fn draw_room(
         }
     }
 
-    spawn_room_platforms(commands, room);
-
-    for decoration in &room.decorations {
-        let mut sprite = Sprite::from_image(asset_server.load(decoration.asset.clone()));
-        sprite.custom_size = Some(Vec2::splat(H_WORLD_UNITS));
-        let z = if decoration.visual_layer == "foreground" {
-            6.0
-        } else {
-            -10.0
-        };
-        commands.spawn((
-            sprite,
-            Transform::from_xyz(
-                decoration.position_h.x_h * H_WORLD_UNITS,
-                decoration.position_h.y_h * H_WORLD_UNITS,
-                z,
-            ),
-            RoomEntity,
-        ));
-    }
+    spawn_room_platforms(commands, room, data);
+    terrain_art::draw_terrain(commands, room, data, asset_server);
 }
 
-pub(super) fn spawn_room_platforms(commands: &mut Commands, room: &RoomConfig) {
+/// Spawns the colliders of the room's solid blocks and one-way platforms;
+/// `terrain_art::draw_terrain` draws them.
+pub(super) fn spawn_room_platforms(commands: &mut Commands, room: &RoomConfig, data: &GameData) {
     let blocks = room
         .terrain
         .iter()
@@ -117,40 +101,19 @@ pub(super) fn spawn_room_platforms(commands: &mut Commands, room: &RoomConfig) {
         .chain(room.platforms.iter().map(|block| (block, true)));
     for (block, one_way) in blocks {
         let rect = block.rect_h;
-        let surface = PlatformSurface {
-            left: rect.x * H_WORLD_UNITS,
-            right: rect.right() * H_WORLD_UNITS,
-            bottom: rect.y * H_WORLD_UNITS,
-            top: rect.top() * H_WORLD_UNITS,
-            material: block.surface,
-            one_way,
-        };
-        let size = Vec2::new(surface.right - surface.left, surface.top - surface.bottom);
-        let center = Vec2::new(
-            (surface.left + surface.right) / 2.0,
-            (surface.bottom + surface.top) / 2.0,
-        );
-        commands.spawn((surface, RoomEntity));
-        // Placeholder art, kept separate from the data-only collider so a
-        // future tileset can replace these shapes without changing physics.
-        let (body, edge) = match block.surface {
-            PlatformMaterial::Soil => (Color::srgb(0.17, 0.13, 0.11), Color::srgb(0.29, 0.38, 0.2)),
-            PlatformMaterial::Stone => {
-                (Color::srgb(0.2, 0.21, 0.24), Color::srgb(0.42, 0.43, 0.42))
-            }
-            PlatformMaterial::Wood => {
-                (Color::srgb(0.36, 0.24, 0.14), Color::srgb(0.55, 0.39, 0.22))
-            }
-        };
         commands.spawn((
-            Sprite::from_color(body, size),
-            Transform::from_xyz(center.x, center.y, 0.0),
-            RoomEntity,
-        ));
-        let edge_height = 5.0_f32.min(size.y);
-        commands.spawn((
-            Sprite::from_color(edge, Vec2::new(size.x, edge_height)),
-            Transform::from_xyz(center.x, surface.top - edge_height / 2.0, 0.2),
+            PlatformSurface {
+                left: rect.x * H_WORLD_UNITS,
+                right: rect.right() * H_WORLD_UNITS,
+                bottom: rect.y * H_WORLD_UNITS,
+                top: rect.top() * H_WORLD_UNITS,
+                footstep: data
+                    .terrain
+                    .materials
+                    .get(&block.material)
+                    .map_or(FootstepSound::Stone, |material| material.footstep),
+                one_way,
+            },
             RoomEntity,
         ));
     }

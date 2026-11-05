@@ -14,46 +14,47 @@ player_spawn:
 # Solid blocks: they stop bodies and projectiles from every side.
 terrain:
   - label: floor
-    surface: soil
+    material: grassy_red_rock
     rect_h: { x: 0, y: 0, width: 32, height: 1 }
   - label: ceiling
-    surface: stone
+    material: brick_red
     rect_h: { x: 0, y: 17, width: 32, height: 1 }
   - label: left wall above the entrance doorway
-    surface: stone
+    material: brick_overgrown
     rect_h: { x: 0, y: 4, width: 1, height: 13 }
   - label: right wall above the exit doorway
-    surface: stone
+    material: brick_overgrown
     rect_h: { x: 31, y: 4, width: 1, height: 13 }
   - label: west ledge
-    surface: stone
+    material: mossy_red_brick
     rect_h: { x: 1, y: 4, width: 5, height: 1 }
   - label: east ledge
-    surface: stone
+    material: mossy_red_brick
     rect_h: { x: 26, y: 4, width: 5, height: 1 }
   - label: west high ledge
-    surface: stone
+    material: mossy_red_brick
     rect_h: { x: 1, y: 8, width: 4, height: 1 }
   - label: east high ledge
-    surface: stone
+    material: mossy_red_brick
     rect_h: { x: 27, y: 8, width: 4, height: 1 }
   - label: hanging pillar
-    surface: stone
+    material: brick_block
     rect_h: { x: 15, y: 12, width: 2, height: 5 }
 # One-way platforms: land on top, jump through from below, Down + Jump drops.
 platforms:
-  - surface: wood
+  - material: brick_offset
     rect_h: { x: 7, y: 2.75, width: 3, height: 0.25 }
-  - surface: wood
+  - material: brick_offset
     rect_h: { x: 22, y: 2.75, width: 3, height: 0.25 }
-  - surface: wood
+  - material: brick_offset
     rect_h: { x: 8, y: 6.75, width: 3, height: 0.25 }
-  - surface: wood
+  - material: brick_offset
     rect_h: { x: 21, y: 6.75, width: 3, height: 0.25 }
-  - surface: wood
+  - material: brick_offset
     rect_h: { x: 12, y: 8.75, width: 8, height: 0.25 }
-  - surface: wood
+  - material: brick_offset
     rect_h: { x: 14, y: 4.75, width: 4, height: 0.25 }
+# Decorations: non-solid panels behind the terrain or in front of the bodies.
 decorations: []
 enemy_spawns:
   - type_id: swordsman

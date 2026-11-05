@@ -5,6 +5,7 @@ mod gameplay;
 mod player_animations;
 mod room_yaml;
 mod rooms;
+mod terrain;
 
 pub use backgrounds::*;
 pub use bonuses::*;
@@ -12,6 +13,7 @@ pub use enemies::*;
 pub use gameplay::*;
 pub use player_animations::*;
 pub use rooms::*;
+pub use terrain::*;
 
 use std::{
     collections::BTreeMap,
@@ -33,6 +35,7 @@ pub struct GameData {
     pub enemies: EnemyTypes,
     pub backgrounds: BackgroundProfiles,
     pub bonuses: BonusesConfig,
+    pub terrain: TerrainMaterials,
     pub rooms: BTreeMap<u16, RoomConfig>,
 }
 
@@ -43,6 +46,7 @@ impl GameData {
         let enemies = read_yaml(&asset_root.join("enemies/enemy_types.yaml"))?;
         let backgrounds = read_yaml(&asset_root.join("background/background_profiles.yaml"))?;
         let bonuses = read_yaml(&asset_root.join("config/bonuses.yaml"))?;
+        let terrain = read_yaml(&asset_root.join("terrain/materials.yaml"))?;
         let mut rooms = BTreeMap::new();
 
         for room_id in 1..=10 {
@@ -57,6 +61,7 @@ impl GameData {
             enemies,
             backgrounds,
             bonuses,
+            terrain,
             rooms,
         };
         data.validate()?;
@@ -374,6 +379,32 @@ impl GameData {
                      one-way platforms at most 0.5 H thick"
                 )));
             }
+            let materials = room
+                .terrain
+                .iter()
+                .chain(&room.platforms)
+                .map(|block| &block.material)
+                .chain(
+                    room.decorations
+                        .iter()
+                        .map(|decoration| &decoration.material),
+                );
+            for material in materials {
+                if !self.terrain.materials.contains_key(material) {
+                    return Err(InvalidGameData::from(format!(
+                        "room {room_id} references unknown terrain material {material}"
+                    )));
+                }
+            }
+            if room
+                .decorations
+                .iter()
+                .any(|decoration| decoration.rect_h.width <= 0.0 || decoration.rect_h.height <= 0.0)
+            {
+                return Err(InvalidGameData::from(format!(
+                    "room {room_id} decorations need a positive size"
+                )));
+            }
             if !room.has_footing_at(room.player_spawn.x_h, room.player_spawn.y_h)
                 || !room.has_footing_at(room.exit.x_h, room.exit.y_h)
             {
@@ -444,6 +475,45 @@ impl GameData {
             }
         }
 
+        let terrain = &self.terrain;
+        let edges = &terrain.edges;
+        let layers = &terrain.decoration_layers;
+        if terrain.texture_px == 0
+            || !(terrain.texture_tile_h.is_finite() && terrain.texture_tile_h > 0.0)
+            || [edges.outline_px, edges.highlight_px]
+                .iter()
+                .any(|thickness| !(thickness.is_finite() && *thickness >= 0.0))
+            || [
+                edges.outline_alpha,
+                edges.highlight_alpha,
+                layers.background.alpha,
+                layers.foreground.alpha,
+            ]
+            .iter()
+            .any(|alpha| !(0.0..=1.0).contains(alpha))
+        {
+            return Err(InvalidGameData::from(
+                "terrain textures need a positive size, edges a nonnegative thickness, \
+                 and every alpha must be within 0..=1",
+            ));
+        }
+        for (material_id, material) in &terrain.materials {
+            let cap = material.top.as_ref();
+            if cap.is_some_and(|cap| !(cap.depth_px.is_finite() && cap.depth_px > 0.0)) {
+                return Err(InvalidGameData::from(format!(
+                    "terrain material {material_id} needs a positive top depth"
+                )));
+            }
+            let textures = [Some(&material.texture), cap.map(|cap| &cap.texture)];
+            for texture in textures.into_iter().flatten() {
+                if !asset_root.join(texture).is_file() {
+                    return Err(InvalidGameData::from(format!(
+                        "missing terrain texture: {texture}"
+                    )));
+                }
+            }
+        }
+
         let recorded = &self.gameplay.audio.recorded_effects;
         for effect in [&recorded.gun_shot, &recorded.reload, &recorded.door_open] {
             if !asset_root.join(&effect.asset).is_file() {
@@ -499,20 +569,10 @@ mod tests {
         assert_eq!(data.rooms.len(), 10);
         assert_eq!(data.bonuses.bonuses.len(), 21);
         assert_eq!(data.rooms[&10].enemy_spawns[0].type_id, "evil_wizard");
-        for room in data.rooms.values() {
-            assert!(
-                room.terrain
-                    .iter()
-                    .all(|block| block.surface != PlatformMaterial::Wood),
-                "solid terrain is soil or stone"
-            );
-            assert!(
-                room.platforms
-                    .iter()
-                    .all(|platform| platform.surface == PlatformMaterial::Wood),
-                "one-way platforms are wooden planks"
-            );
-        }
+        assert!(
+            data.terrain.materials.len() >= 64,
+            "every texture of the pack is a material"
+        );
         assert_eq!(
             data.gameplay.player.max_speed_h_s,
             data.gameplay.player.air_max_speed_h_s

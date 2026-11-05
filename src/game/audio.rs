@@ -1,5 +1,5 @@
 use super::*;
-use crate::data::PlatformMaterial;
+use crate::data::FootstepSound;
 use bevy::audio::{
     AudioPlayer, AudioSink, AudioSinkPlayback, AudioSource, PlaybackSettings, Volume,
 };
@@ -32,7 +32,7 @@ pub(super) enum SoundCue {
     UiInvalid,
     Jump,
     Landing,
-    Footstep(PlatformMaterial),
+    Footstep(FootstepSound),
     Dash,
     GunShot,
     BulletHit,

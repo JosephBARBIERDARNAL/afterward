@@ -1,0 +1,265 @@
+# Terrain materials: how solid blocks, one-way platforms, and decoration panels
+# look and sound. Room files name one material per block (`material:`).
+#
+# Textures are seamless 16 px squares from the "Textures16x16" pack by Androx
+# (terrain/textures/README.txt; terrain/textures/overview.png shows them all).
+# They tile in world space, so neighboring blocks of one material line up.
+
+texture_px: 16
+# One 16 px tile spans 0.25 H (64 px per H), close to the player sprite's
+# pixel density (60 px per H), and matches the editor's 0.25 H grid.
+texture_tile_h: 0.25
+
+# Drawn along every block edge that no other block covers, so blocks read
+# clearly against the backgrounds. Thicknesses are in texture pixels.
+edges:
+  outline_color: "#10111C"
+  outline_alpha: 0.9
+  outline_px: 1
+  highlight_color: "#FFFFFF"
+  highlight_alpha: 0.22
+  highlight_px: 1
+
+# Decoration panels are non-solid. Background panels sit behind the terrain
+# and are tinted darker so they read as distant; foreground panels are drawn
+# over the bodies.
+decoration_layers:
+  background:
+    tint: "#6E7590"
+    alpha: 1
+  foreground:
+    tint: "#FFFFFF"
+    alpha: 1
+
+materials:
+  # Capped materials: a fill texture with a strip of grass or moss on top.
+  grassy_cobble:
+    texture: terrain/textures/stone/cobble.png
+    top: { texture: terrain/textures/grass/tall.png, depth_px: 7 }
+    footstep: soil
+  grassy_dark_cobble:
+    texture: terrain/textures/stone/dark_cobble.png
+    top: { texture: terrain/textures/grass/speckled.png, depth_px: 7 }
+    footstep: soil
+  grassy_pale_cobble:
+    texture: terrain/textures/stone/pale_cobble.png
+    top: { texture: terrain/textures/grass/tall.png, depth_px: 7 }
+    footstep: soil
+  grassy_red_rock:
+    texture: terrain/textures/red_rock/cobble.png
+    top: { texture: terrain/textures/grass/dense.png, depth_px: 7 }
+    footstep: soil
+  grassy_strata:
+    texture: terrain/textures/red_rock/strata.png
+    top: { texture: terrain/textures/grass/tall.png, depth_px: 7 }
+    footstep: soil
+  mossy_cobble:
+    texture: terrain/textures/stone/cobble.png
+    top: { texture: terrain/textures/moss/leaves.png, depth_px: 5 }
+    footstep: stone
+  mossy_bricks:
+    texture: terrain/textures/stone/bricks.png
+    top: { texture: terrain/textures/moss/leaves.png, depth_px: 5 }
+    footstep: stone
+  mossy_red_brick:
+    texture: terrain/textures/brick/red.png
+    top: { texture: terrain/textures/moss/leaves.png, depth_px: 5 }
+    footstep: stone
+  mossy_slab:
+    texture: terrain/textures/stone/slab.png
+    top: { texture: terrain/textures/moss/leaves.png, depth_px: 5 }
+    footstep: stone
+
+  # Plain materials: one per texture, named <family>_<texture>.
+  stone_cobble:
+    texture: terrain/textures/stone/cobble.png
+    footstep: stone
+  stone_pale_cobble:
+    texture: terrain/textures/stone/pale_cobble.png
+    footstep: stone
+  stone_dark_cobble:
+    texture: terrain/textures/stone/dark_cobble.png
+    footstep: stone
+  stone_bricks:
+    texture: terrain/textures/stone/bricks.png
+    footstep: stone
+  stone_rough_bricks:
+    texture: terrain/textures/stone/rough_bricks.png
+    footstep: stone
+  stone_slab:
+    texture: terrain/textures/stone/slab.png
+    footstep: stone
+  stone_cracked_slab:
+    texture: terrain/textures/stone/cracked_slab.png
+    footstep: stone
+  stone_tiles:
+    texture: terrain/textures/stone/tiles.png
+    footstep: stone
+  lava_crust:
+    texture: terrain/textures/lava/crust.png
+    footstep: stone
+  lava_bubbling:
+    texture: terrain/textures/lava/bubbling.png
+    footstep: stone
+  lava_flow:
+    texture: terrain/textures/lava/flow.png
+    footstep: stone
+  lava_drips:
+    texture: terrain/textures/lava/drips.png
+    footstep: stone
+  lava_river:
+    texture: terrain/textures/lava/river.png
+    footstep: stone
+  lava_cracked:
+    texture: terrain/textures/lava/cracked.png
+    footstep: stone
+  lava_dark_crust:
+    texture: terrain/textures/lava/dark_crust.png
+    footstep: stone
+  lava_dark_cracked:
+    texture: terrain/textures/lava/dark_cracked.png
+    footstep: stone
+  red_rock_cobble:
+    texture: terrain/textures/red_rock/cobble.png
+    footstep: stone
+  red_rock_boulders:
+    texture: terrain/textures/red_rock/boulders.png
+    footstep: stone
+  red_rock_rubble:
+    texture: terrain/textures/red_rock/rubble.png
+    footstep: stone
+  red_rock_cracked:
+    texture: terrain/textures/red_rock/cracked.png
+    footstep: stone
+  red_rock_shards:
+    texture: terrain/textures/red_rock/shards.png
+    footstep: stone
+  red_rock_strata:
+    texture: terrain/textures/red_rock/strata.png
+    footstep: stone
+  red_rock_dark_shards:
+    texture: terrain/textures/red_rock/dark_shards.png
+    footstep: stone
+  red_rock_hex_tiles:
+    texture: terrain/textures/red_rock/hex_tiles.png
+    footstep: stone
+  moss_scales:
+    texture: terrain/textures/moss/scales.png
+    footstep: soil
+  moss_leaves:
+    texture: terrain/textures/moss/leaves.png
+    footstep: soil
+  moss_leafy:
+    texture: terrain/textures/moss/leafy.png
+    footstep: soil
+  moss_thicket:
+    texture: terrain/textures/moss/thicket.png
+    footstep: soil
+  moss_boulders:
+    texture: terrain/textures/moss/boulders.png
+    footstep: soil
+  moss_dark_scales:
+    texture: terrain/textures/moss/dark_scales.png
+    footstep: soil
+  moss_big_leaves:
+    texture: terrain/textures/moss/big_leaves.png
+    footstep: soil
+  moss_bright_leaves:
+    texture: terrain/textures/moss/bright_leaves.png
+    footstep: soil
+  grass_speckled:
+    texture: terrain/textures/grass/speckled.png
+    footstep: soil
+  grass_tall:
+    texture: terrain/textures/grass/tall.png
+    footstep: soil
+  grass_tangled:
+    texture: terrain/textures/grass/tangled.png
+    footstep: soil
+  grass_stripes:
+    texture: terrain/textures/grass/stripes.png
+    footstep: soil
+  grass_dense:
+    texture: terrain/textures/grass/dense.png
+    footstep: soil
+  grass_meadow:
+    texture: terrain/textures/grass/meadow.png
+    footstep: soil
+  grass_flowers:
+    texture: terrain/textures/grass/flowers.png
+    footstep: soil
+  grass_clover:
+    texture: terrain/textures/grass/clover.png
+    footstep: soil
+  water_sparkle:
+    texture: terrain/textures/water/sparkle.png
+    footstep: soil
+  water_waves:
+    texture: terrain/textures/water/waves.png
+    footstep: soil
+  water_crests:
+    texture: terrain/textures/water/crests.png
+    footstep: soil
+  water_foam:
+    texture: terrain/textures/water/foam.png
+    footstep: soil
+  water_shallow:
+    texture: terrain/textures/water/shallow.png
+    footstep: soil
+  water_deep:
+    texture: terrain/textures/water/deep.png
+    footstep: soil
+  water_deep_waves:
+    texture: terrain/textures/water/deep_waves.png
+    footstep: soil
+  water_deep_ripples:
+    texture: terrain/textures/water/deep_ripples.png
+    footstep: soil
+  ice_glass:
+    texture: terrain/textures/ice/glass.png
+    footstep: stone
+  ice_snow_cobble:
+    texture: terrain/textures/ice/snow_cobble.png
+    footstep: stone
+  ice_waves:
+    texture: terrain/textures/ice/waves.png
+    footstep: stone
+  ice_frost:
+    texture: terrain/textures/ice/frost.png
+    footstep: stone
+  ice_floe:
+    texture: terrain/textures/ice/floe.png
+    footstep: stone
+  ice_stripes:
+    texture: terrain/textures/ice/stripes.png
+    footstep: stone
+  ice_snow_rocks:
+    texture: terrain/textures/ice/snow_rocks.png
+    footstep: stone
+  ice_snow_stones:
+    texture: terrain/textures/ice/snow_stones.png
+    footstep: stone
+  brick_red:
+    texture: terrain/textures/brick/red.png
+    footstep: stone
+  brick_pinned:
+    texture: terrain/textures/brick/pinned.png
+    footstep: stone
+  brick_overgrown:
+    texture: terrain/textures/brick/overgrown.png
+    footstep: stone
+  brick_mossy_mortar:
+    texture: terrain/textures/brick/mossy_mortar.png
+    footstep: stone
+  brick_offset:
+    texture: terrain/textures/brick/offset.png
+    footstep: stone
+  brick_overgrown_rows:
+    texture: terrain/textures/brick/overgrown_rows.png
+    footstep: stone
+  brick_block:
+    texture: terrain/textures/brick/block.png
+    footstep: stone
+  brick_mossy_block:
+    texture: terrain/textures/brick/mossy_block.png
+    footstep: stone

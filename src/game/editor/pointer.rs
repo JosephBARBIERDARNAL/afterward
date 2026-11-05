@@ -1,6 +1,7 @@
-//! Mouse editing: click to select, drag to move, drag a selected block's edge
-//! to resize, two-finger scroll or right/middle-drag to pan, and pinch or the
-//! mouse wheel to zoom.
+//! Mouse editing: click to select (Shift+click to add or remove), drag empty
+//! space to box-select, drag to move the selection, drag a selected block's
+//! edge to resize, two-finger scroll or right/middle-drag to pan, and pinch or
+//! the mouse wheel to zoom.
 
 use super::*;
 use bevy::{
@@ -114,13 +115,19 @@ pub(super) fn handle_pointer(resources: EditorPointerResources) {
     let Some(room) = data.rooms.get_mut(&room_id) else {
         return;
     };
-    let fine = keys.any_pressed([KeyCode::ShiftLeft, KeyCode::ShiftRight]);
+    let shift = keys.any_pressed([KeyCode::ShiftLeft, KeyCode::ShiftRight]);
+    let fine = keys.any_pressed([KeyCode::AltLeft, KeyCode::AltRight]);
 
-    if mouse.just_pressed(MouseButton::Left) && editor.text_entry.is_none() {
+    if mouse.just_pressed(MouseButton::Left)
+        && editor.text_entry.is_none()
+        && !editor.pointer_over_panel
+    {
         let grab_h = EDGE_GRAB_H * orthographic.scale;
-        let resize = editor
-            .selected
-            .filter(|item| !item.stands_on_surface())
+        let only = match editor.selected.as_slice() {
+            [item] if !shift && !item.stands_on_surface() => Some(*item),
+            _ => None,
+        };
+        let resize = only
             .and_then(|item| item.bounds(room).map(|rect| (item, rect)))
             .and_then(|(item, rect)| {
                 let reach = Rect::new(rect.x, rect.y, rect.right(), rect.top()).inflate(grab_h);
@@ -141,33 +148,69 @@ pub(super) fn handle_pointer(resources: EditorPointerResources) {
             });
         } else {
             let picked = EditorItem::at(room, cursor_h);
-            if picked != editor.selected {
-                editor.field = 0;
-            }
-            editor.selected = picked;
             editor.text_entry = None;
-            if let Some(EditorItem::Enemy(index)) = picked {
-                editor.enemy_type = room
-                    .enemy_spawns
-                    .get(index)
-                    .map(|spawn| spawn.type_id.clone());
+            match picked {
+                // Shift+click adds the item to the selection or takes it out.
+                Some(item) if shift => {
+                    match editor
+                        .selected
+                        .iter()
+                        .position(|selected| *selected == item)
+                    {
+                        Some(position) => {
+                            editor.selected.remove(position);
+                        }
+                        None => editor.selected.push(item),
+                    }
+                    editor.field = 0;
+                }
+                Some(item) => {
+                    // Pressing a selected item drags the whole selection.
+                    if !editor.selected.contains(&item) {
+                        editor.select(Some(item));
+                    }
+                    if let EditorItem::Enemy(index) = item {
+                        editor.enemy_type = room
+                            .enemy_spawns
+                            .get(index)
+                            .map(|spawn| spawn.type_id.clone());
+                    }
+                    if let Some(material) = item.material(room) {
+                        editor.material = Some(material.clone());
+                    }
+                    let starts = editor
+                        .selected
+                        .iter()
+                        .filter_map(|selected| {
+                            selected.origin(room).map(|origin| (*selected, origin))
+                        })
+                        .collect();
+                    editor.drag = item.origin(room).map(|origin| Drag::Move {
+                        item,
+                        grab: cursor_h - origin,
+                        starts,
+                        before: room.clone(),
+                    });
+                }
+                // Empty space starts a selection box; Shift keeps the selection.
+                None => {
+                    if !shift {
+                        editor.select(None);
+                    }
+                    editor.drag = Some(Drag::Marquee { start: cursor_h });
+                }
             }
-            editor.drag = picked.and_then(|item| {
-                item.origin(room).map(|origin| Drag::Move {
-                    item,
-                    grab: cursor_h - origin,
-                    before: room.clone(),
-                })
-            });
         }
     }
 
     if mouse.pressed(MouseButton::Left) {
         let before = room.clone();
         match &editor.drag {
-            Some(Drag::Move { item, grab, .. }) => {
+            Some(Drag::Move {
+                item, grab, starts, ..
+            }) => {
                 let target = cursor_h - *grab;
-                let origin = if item.stands_on_surface() {
+                let dragged = if starts.len() == 1 && item.stands_on_surface() {
                     let x_h = snap(target.x, fine);
                     // Feet land on the highest block top under the dragged body.
                     let y_h = floor_under(room, x_h, target.y + 0.5)
@@ -176,7 +219,19 @@ pub(super) fn handle_pointer(resources: EditorPointerResources) {
                 } else {
                     Vec2::new(snap(target.x, fine), snap(target.y, fine))
                 };
-                item.set_origin(room, origin);
+                // The rest of the selection keeps its offset from the dragged item.
+                let offset = starts
+                    .iter()
+                    .find(|(moved, _)| moved == item)
+                    .map_or(Vec2::ZERO, |(_, start)| dragged - *start);
+                for (moved, start) in starts {
+                    let origin = if moved == item {
+                        dragged
+                    } else {
+                        *start + offset
+                    };
+                    moved.set_origin(room, origin);
+                }
             }
             Some(Drag::Resize { item, edges, .. }) => {
                 if let Some(rect) = item.rect_mut(room) {
@@ -200,7 +255,7 @@ pub(super) fn handle_pointer(resources: EditorPointerResources) {
                     }
                 }
             }
-            Some(Drag::Pan { .. }) | None => {}
+            Some(Drag::Pan { .. } | Drag::Marquee { .. }) | None => {}
         }
         if *room != before {
             editor.view_dirty = true;
@@ -213,11 +268,29 @@ pub(super) fn handle_pointer(resources: EditorPointerResources) {
             Some(Drag::Move { before, .. } | Drag::Resize { before, .. }) if edited != before => {
                 editor.record(before);
             }
+            Some(Drag::Marquee { start }) => {
+                // Selects every item lying entirely inside the box.
+                let area = Rect::from_corners(start, cursor_h);
+                let boxed = EditorItem::all(room)
+                    .filter(|item| {
+                        item.bounds(room).is_some_and(|rect| {
+                            area.contains(Vec2::new(rect.x, rect.y))
+                                && area.contains(Vec2::new(rect.right(), rect.top()))
+                        })
+                    })
+                    .collect::<Vec<_>>();
+                for item in boxed {
+                    if !editor.selected.contains(&item) {
+                        editor.selected.push(item);
+                    }
+                }
+                editor.field = 0;
+            }
             _ => {}
         }
     }
 
-    editor.hovered = if editor.drag.is_none() {
+    editor.hovered = if editor.drag.is_none() && !editor.pointer_over_panel {
         data.rooms
             .get(&room_id)
             .and_then(|room| EditorItem::at(room, cursor_h))

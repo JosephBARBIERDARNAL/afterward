@@ -60,7 +60,7 @@ fn solid_terrain_stops_the_player_and_low_ledges_are_mantled() {
                         right: right * H_WORLD_UNITS,
                         bottom: bottom * H_WORLD_UNITS,
                         top: top * H_WORLD_UNITS,
-                        material: PlatformMaterial::Stone,
+                        footstep: FootstepSound::Stone,
                         one_way: false,
                     });
                 }
@@ -197,7 +197,7 @@ fn one_way_platforms_are_jumped_through_and_dropped_through() {
                         right: right * H_WORLD_UNITS,
                         bottom: bottom * H_WORLD_UNITS,
                         top: top * H_WORLD_UNITS,
-                        material: PlatformMaterial::Wood,
+                        footstep: FootstepSound::Wood,
                         one_way,
                     });
                 }
@@ -302,7 +302,7 @@ fn jumping_off_a_wall_kicks_the_player_away_from_it() {
                         right: right * H_WORLD_UNITS,
                         bottom: bottom * H_WORLD_UNITS,
                         top: top * H_WORLD_UNITS,
-                        material: PlatformMaterial::Stone,
+                        footstep: FootstepSound::Stone,
                         one_way: false,
                     });
                 }

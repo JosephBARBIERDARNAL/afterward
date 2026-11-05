@@ -14,29 +14,38 @@ player_spawn:
 # Solid blocks: they stop bodies and projectiles from every side.
 terrain:
   - label: floor
-    surface: soil
+    material: grassy_dark_cobble
     rect_h: { x: 0, y: 0, width: 32, height: 1 }
-  - surface: stone
+  - material: stone_dark_cobble
     rect_h: { x: -0, y: 8, width: 32, height: 6 }
   - label: left wall above the entrance doorway
-    surface: stone
+    material: stone_dark_cobble
     rect_h: { x: 0, y: 4, width: 1, height: 4 }
   - label: right wall above the exit doorway
-    surface: stone
+    material: stone_dark_cobble
     rect_h: { x: 31, y: 1, width: 1, height: 12 }
   - label: step
-    surface: stone
+    material: stone_bricks
     rect_h: { x: 10, y: 1, width: 2, height: 1.5 }
   - label: gallery
-    surface: stone
+    material: mossy_bricks
     rect_h: { x: 22, y: 6, width: 8, height: 1 }
 # One-way platforms: land on top, jump through from below, Down + Jump drops.
 platforms:
-  - surface: wood
+  - material: stone_slab
     rect_h: { x: 14, y: 2.75, width: 4, height: 0.25 }
-  - surface: wood
+  - material: stone_slab
     rect_h: { x: 18.5, y: 4.75, width: 3, height: 0.25 }
-decorations: []
+# Decorations: non-solid panels behind the terrain or in front of the bodies.
+decorations:
+  - label: crypt back wall
+    material: stone_bricks
+    layer: background
+    rect_h: { x: 22, y: 1, width: 8, height: 5 }
+  - label: ruined column
+    material: stone_tiles
+    layer: background
+    rect_h: { x: 4, y: 1, width: 1.5, height: 7 }
 enemy_spawns:
   - type_id: swordsman
     position_h: { x: 6, y: 1 }

@@ -44,7 +44,7 @@ fn default_inputs_move_and_defeat_a_room_enemy() {
             Startup,
             |mut commands: Commands, data: Res<GameData>, sheets: Res<SpriteSheets>| {
                 let room = &data.rooms[&1];
-                world::spawn_room_platforms(&mut commands, room);
+                world::spawn_room_platforms(&mut commands, room, &data);
                 world::spawn_player(
                     &mut commands,
                     room,

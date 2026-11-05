@@ -14,43 +14,44 @@ player_spawn:
 # Solid blocks: they stop bodies and projectiles from every side.
 terrain:
   - label: floor
-    surface: soil
+    material: grassy_cobble
     rect_h: { x: 0, y: 0, width: 48, height: 1 }
   - label: ceiling
-    surface: stone
+    material: moss_thicket
     rect_h: { x: 0, y: 17, width: 48, height: 1 }
   - label: left wall above the entrance doorway
-    surface: stone
+    material: stone_cobble
     rect_h: { x: 0, y: 4, width: 1, height: 13 }
   - label: right wall above the exit doorway
-    surface: stone
+    material: stone_cobble
     rect_h: { x: 47, y: 4, width: 1, height: 13 }
   - label: walkway west
-    surface: stone
+    material: mossy_slab
     rect_h: { x: 13, y: 6, width: 14, height: 1 }
   - label: walkway east
-    surface: stone
+    material: mossy_slab
     rect_h: { x: 30, y: 6, width: 10, height: 1 }
   - label: step
-    surface: stone
+    material: stone_bricks
     rect_h: { x: 28, y: 1, width: 2, height: 1.5 }
   - label: hanging rock
-    surface: stone
+    material: moss_boulders
     rect_h: { x: 20, y: 12, width: 6, height: 5 }
 # One-way platforms: land on top, jump through from below, Down + Jump drops.
 platforms:
-  - surface: wood
+  - material: stone_slab
     rect_h: { x: 6, y: 2.75, width: 3, height: 0.25 }
-  - surface: wood
+  - material: stone_slab
     rect_h: { x: 10, y: 4.75, width: 3, height: 0.25 }
-  - surface: wood
+  - material: stone_slab
     rect_h: { x: 33, y: 8.75, width: 3, height: 0.25 }
-  - surface: wood
+  - material: stone_slab
     rect_h: { x: 37, y: 10.75, width: 3, height: 0.25 }
-  - surface: wood
+  - material: stone_slab
     rect_h: { x: 41, y: 4.75, width: 3, height: 0.25 }
-  - surface: wood
+  - material: stone_slab
     rect_h: { x: 44, y: 2.75, width: 2, height: 0.25 }
+# Decorations: non-solid panels behind the terrain or in front of the bodies.
 decorations: []
 enemy_spawns:
   - type_id: gorgon_1

@@ -1,8 +1,11 @@
-//! Editor shortcuts: typing into text fields, adding and deleting items, the
-//! inspector, undo, switching rooms, saving, playtesting, and leaving.
+//! Editor shortcuts: typing into text fields, adding, deleting, duplicating,
+//! copying, and pasting items, the inspector, undo, switching rooms, saving,
+//! playtesting, and leaving.
 
 use super::*;
-use crate::data::{EnemySpawnConfig, PlatformMaterial, SpawnPosition, TerrainBlockConfig};
+use crate::data::{
+    DecorationConfig, DecorationLayer, EnemySpawnConfig, SpawnPosition, TerrainBlockConfig,
+};
 use bevy::input::{
     ButtonState,
     keyboard::{Key, KeyboardInput},
@@ -27,7 +30,7 @@ pub(super) fn type_text(
         match input.key_code {
             KeyCode::Enter | KeyCode::NumpadEnter => {
                 let field = editor.fields().get(editor.field).copied();
-                let item = editor.selected;
+                let item = editor.primary();
                 if let Some(field) = field {
                     editor.edit(&mut data, |room| field.set_text(room, item, &text));
                 }
@@ -92,6 +95,10 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
         })
         .map(ShortcutKey::from)
         .collect::<Vec<_>>();
+    if editor.just_opened {
+        editor.just_opened = false;
+        return;
+    }
     if editor.keys_consumed || presses.is_empty() {
         return;
     }
@@ -166,72 +173,123 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
         }
         editor.view_dirty = true;
     } else if command && letter('d') {
-        let Some(item) = editor.selected else {
+        let Some(copied) = data
+            .rooms
+            .get(&editor.room_id)
+            .and_then(|room| Clipboard::copy(room, &editor.selected))
+        else {
             return;
         };
-        let mut duplicate = None;
+        let mut duplicates = Vec::new();
+        // Duplicates land one H to the right of the originals.
         editor.edit(&mut data, |room| {
-            duplicate = match item {
-                EditorItem::Terrain(index) => room.terrain.get(index).cloned().map(|mut block| {
-                    block.rect_h.x += 1.0;
-                    room.terrain.push(block);
-                    EditorItem::Terrain(room.terrain.len() - 1)
-                }),
-                EditorItem::Platform(index) => {
-                    room.platforms.get(index).cloned().map(|mut block| {
-                        block.rect_h.x += 1.0;
-                        room.platforms.push(block);
-                        EditorItem::Platform(room.platforms.len() - 1)
-                    })
-                }
-                EditorItem::Enemy(index) => {
-                    room.enemy_spawns.get(index).cloned().map(|mut spawn| {
-                        spawn.position_h.x_h += 1.0;
-                        room.enemy_spawns.push(spawn);
-                        EditorItem::Enemy(room.enemy_spawns.len() - 1)
-                    })
-                }
-                EditorItem::PlayerSpawn | EditorItem::Exit => None,
-            };
+            duplicates = copied.paste(room, copied.origin + Vec2::X);
         });
-        if duplicate.is_some() {
-            editor.selected = duplicate;
+        editor.selected = duplicates;
+        editor.field = 0;
+    } else if command && (letter('c') || letter('x')) {
+        let room = data.rooms.get(&editor.room_id);
+        let Some(copied) = room.and_then(|room| Clipboard::copy(room, &editor.selected)) else {
+            editor.status =
+                String::from("Nothing to copy: select blocks, decorations, or enemies.");
+            return;
+        };
+        let count = copied.len();
+        editor.clipboard = Some(copied);
+        if letter('x') {
+            let selection = editor.selected.clone();
+            editor.edit(&mut data, |room| EditorItem::remove_all(room, &selection));
+            editor.select(None);
+            editor.status = format!("Cut {count} items.");
+        } else {
+            editor.status = format!("Copied {count} items.");
+        }
+    } else if command && letter('v') {
+        let Some(copied) = editor.clipboard.clone() else {
+            editor.status = String::from("Nothing to paste.");
+            return;
+        };
+        let at = Vec2::new(snap(cursor_h.x, false), snap(cursor_h.y, false));
+        let mut pasted = Vec::new();
+        editor.edit(&mut data, |room| pasted = copied.paste(room, at));
+        editor.status = format!("Pasted {} items.", pasted.len());
+        editor.selected = pasted;
+        editor.field = 0;
+    } else if command && letter('a') {
+        if let Some(room) = data.rooms.get(&editor.room_id) {
+            editor.selected = EditorItem::all(room)
+                .filter(|item| !matches!(item, EditorItem::PlayerSpawn | EditorItem::Exit))
+                .collect();
+            editor.field = 0;
         }
     } else if command {
-    } else if letter('t') || letter('p') {
-        let one_way = letter('p');
-        let (width, height) = if one_way { (3.0, SNAP_H) } else { (2.0, 1.0) };
-        let block = TerrainBlockConfig {
-            label: None,
-            surface: if one_way {
-                PlatformMaterial::Wood
-            } else {
-                PlatformMaterial::Stone
-            },
-            rect_h: RectH {
-                x: snap(cursor_h.x - width / 2.0, false),
-                y: snap(cursor_h.y - height / 2.0, false),
-                width,
-                height,
-            },
+    } else if letter('t') || letter('p') || letter('d') {
+        let (kind, width, height) = if letter('p') {
+            (EditorItem::Platform(0), 3.0, SNAP_H)
+        } else if letter('d') {
+            (EditorItem::Decoration(0), 4.0, 3.0)
+        } else {
+            (EditorItem::Terrain(0), 2.0, 1.0)
+        };
+        let Some(room) = data.rooms.get(&editor.room_id) else {
+            return;
+        };
+        // The material picked last, else one this room already uses for
+        // this kind of item, else the catalog's first.
+        let same_kind = match kind {
+            EditorItem::Platform(_) => room.platforms.first().map(|block| &block.material),
+            EditorItem::Decoration(_) => room
+                .decorations
+                .first()
+                .map(|decoration| &decoration.material),
+            _ => room.terrain.first().map(|block| &block.material),
+        };
+        let Some(material) = editor
+            .material
+            .as_ref()
+            .or(same_kind)
+            .or_else(|| data.terrain.materials.keys().next())
+            .cloned()
+        else {
+            return;
+        };
+        let rect_h = RectH {
+            x: snap(cursor_h.x - width / 2.0, false),
+            y: snap(cursor_h.y - height / 2.0, false),
+            width,
+            height,
         };
         let mut added = None;
         editor.edit(&mut data, |room| {
-            let blocks = if one_way {
-                &mut room.platforms
-            } else {
-                &mut room.terrain
-            };
-            blocks.push(block);
-            let index = blocks.len() - 1;
-            added = Some(if one_way {
-                EditorItem::Platform(index)
-            } else {
-                EditorItem::Terrain(index)
+            added = Some(match kind {
+                EditorItem::Platform(_) => {
+                    room.platforms.push(TerrainBlockConfig {
+                        label: None,
+                        material,
+                        rect_h,
+                    });
+                    EditorItem::Platform(room.platforms.len() - 1)
+                }
+                EditorItem::Decoration(_) => {
+                    room.decorations.push(DecorationConfig {
+                        label: None,
+                        material,
+                        layer: DecorationLayer::Background,
+                        rect_h,
+                    });
+                    EditorItem::Decoration(room.decorations.len() - 1)
+                }
+                _ => {
+                    room.terrain.push(TerrainBlockConfig {
+                        label: None,
+                        material,
+                        rect_h,
+                    });
+                    EditorItem::Terrain(room.terrain.len() - 1)
+                }
             });
         });
-        editor.selected = added;
-        editor.field = 0;
+        editor.select(added);
     } else if letter('e') {
         let type_id = editor
             .enemy_type
@@ -252,30 +310,20 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
             });
             added = Some(EditorItem::Enemy(room.enemy_spawns.len() - 1));
         });
-        editor.selected = added;
-        editor.field = 0;
+        editor.select(added);
     } else if pressed(KeyCode::Delete) || pressed(KeyCode::Backspace) {
-        let Some(item) = editor.selected else {
+        if editor.selected.is_empty() {
             return;
-        };
-        editor.edit(&mut data, |room| match item {
-            EditorItem::Terrain(index) if index < room.terrain.len() => {
-                room.terrain.remove(index);
-            }
-            EditorItem::Platform(index) if index < room.platforms.len() => {
-                room.platforms.remove(index);
-            }
-            EditorItem::Enemy(index) if index < room.enemy_spawns.len() => {
-                room.enemy_spawns.remove(index);
-            }
-            _ => {}
-        });
-        if matches!(item, EditorItem::PlayerSpawn | EditorItem::Exit) {
-            editor.status = String::from("The player spawn and the exit can only be moved.");
-        } else {
-            editor.selected = None;
-            editor.field = 0;
         }
+        let selection = editor.selected.clone();
+        editor.edit(&mut data, |room| EditorItem::remove_all(room, &selection));
+        if selection
+            .iter()
+            .any(|item| matches!(item, EditorItem::PlayerSpawn | EditorItem::Exit))
+        {
+            editor.status = String::from("The player spawn and the exit can only be moved.");
+        }
+        editor.select(None);
     } else if pressed(KeyCode::ArrowUp) || pressed(KeyCode::ArrowDown) {
         let count = editor.fields().len().max(1);
         editor.field = if pressed(KeyCode::ArrowUp) {
@@ -290,7 +338,8 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
             1.0
         };
         let steps = if shift { direction * 4.0 } else { direction };
-        let item = editor.selected;
+        let selection = editor.selected.clone();
+        let item = editor.primary();
         match field {
             Some(Field::Room) => {
                 let position = room_ids.iter().position(|id| *id == editor.room_id);
@@ -306,7 +355,7 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
                 let snapshot = &*data;
                 let mut room = snapshot.rooms.get(&editor.room_id).cloned();
                 if let Some(room) = &mut room {
-                    field.adjust(room, item, snapshot, steps);
+                    field.adjust(room, &selection, snapshot, steps);
                 }
                 if let Some(room) = room {
                     editor.edit(&mut data, |edited| *edited = room);
@@ -319,6 +368,13 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
                         .get(&editor.room_id)
                         .and_then(|room| room.enemy_spawns.get(index))
                         .map(|spawn| spawn.type_id.clone());
+                }
+                if field == Field::Material {
+                    editor.material = data
+                        .rooms
+                        .get(&editor.room_id)
+                        .and_then(|room| item.and_then(|item| item.material(room)))
+                        .cloned();
                 }
             }
             None => {}
@@ -338,7 +394,7 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
         }
     } else if pressed(KeyCode::Enter) || pressed(KeyCode::NumpadEnter) {
         if let Some(field) = field.filter(|field| field.is_text()) {
-            let item = editor.selected;
+            let item = editor.primary();
             editor.text_entry = Some(
                 data.rooms
                     .get(&editor.room_id)
@@ -348,7 +404,7 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
         }
     } else if letter('c') {
         if let Some(field) = field {
-            let item = editor.selected;
+            let item = editor.primary();
             editor.edit(&mut data, |room| field.clear(room, item));
         }
     } else if pressed(KeyCode::Home) {
@@ -371,9 +427,8 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
         transform.translation.y = room_size_h.y / 2.0 * H_WORLD_UNITS;
     } else if pressed(KeyCode::Escape) {
         let unsaved = editor.unsaved_rooms(&data);
-        if editor.selected.is_some() {
-            editor.selected = None;
-            editor.field = 0;
+        if !editor.selected.is_empty() {
+            editor.select(None);
         } else if unsaved.is_empty() || editor.leave_armed {
             next_screen.set(GameScreen::MainMenu);
         } else {

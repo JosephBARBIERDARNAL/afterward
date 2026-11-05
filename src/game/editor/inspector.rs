@@ -1,8 +1,10 @@
 //! The inspector: the editable fields of the selection (or of the room when
 //! nothing is selected), changed with Left/Right, typed into, or cleared.
+//! With several items selected, Material repaints all of them and X/Y move
+//! them together.
 
 use super::*;
-use crate::data::{EnemyStatOverrides, EnemyTypeConfig, PlatformMaterial};
+use crate::data::{DecorationLayer, EnemyStatOverrides, EnemyTypeConfig};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum Field {
@@ -12,7 +14,8 @@ pub(super) enum Field {
     Background,
     Description,
     Label,
-    Surface,
+    Material,
+    Layer,
     EnemyType,
     X,
     Y,
@@ -24,7 +27,21 @@ pub(super) enum Field {
 }
 
 impl Field {
-    pub(super) fn for_item(item: Option<EditorItem>) -> &'static [Self] {
+    pub(super) fn for_selection(selection: &[EditorItem]) -> &'static [Self] {
+        let item = match selection {
+            [] => None,
+            [item] => Some(*item),
+            _ if selection.iter().any(|item| {
+                matches!(
+                    item,
+                    EditorItem::Terrain(_) | EditorItem::Platform(_) | EditorItem::Decoration(_)
+                )
+            }) =>
+            {
+                return &[Self::Material, Self::X, Self::Y];
+            }
+            _ => return &[Self::X, Self::Y],
+        };
         match item {
             None => &[
                 Self::Room,
@@ -33,17 +50,23 @@ impl Field {
                 Self::Background,
                 Self::Description,
             ],
-            Some(EditorItem::Terrain(_)) => &[
+            Some(EditorItem::Terrain(_) | EditorItem::Platform(_)) => &[
                 Self::Label,
-                Self::Surface,
+                Self::Material,
                 Self::X,
                 Self::Y,
                 Self::Width,
                 Self::Height,
             ],
-            Some(EditorItem::Platform(_)) => {
-                &[Self::Label, Self::X, Self::Y, Self::Width, Self::Height]
-            }
+            Some(EditorItem::Decoration(_)) => &[
+                Self::Label,
+                Self::Material,
+                Self::Layer,
+                Self::X,
+                Self::Y,
+                Self::Width,
+                Self::Height,
+            ],
             Some(EditorItem::Enemy(_)) => &[
                 Self::Label,
                 Self::EnemyType,
@@ -65,7 +88,8 @@ impl Field {
             Self::Background => "Background",
             Self::Description => "Description",
             Self::Label => "Label",
-            Self::Surface => "Surface",
+            Self::Material => "Material",
+            Self::Layer => "Layer",
             Self::EnemyType => "Type",
             Self::X => "X (H)",
             Self::Y => "Y (H)",
@@ -97,6 +121,10 @@ impl Field {
                 .enemy_spawns
                 .get(index)
                 .and_then(|spawn| spawn.label.clone()),
+            (Self::Label, Some(EditorItem::Decoration(index))) => room
+                .decorations
+                .get(index)
+                .and_then(|decoration| decoration.label.clone()),
             _ => None,
         }
     }
@@ -121,6 +149,11 @@ impl Field {
                     spawn.label = text;
                 }
             }
+            (Self::Label, Some(EditorItem::Decoration(index))) => {
+                if let Some(decoration) = room.decorations.get_mut(index) {
+                    decoration.label = text;
+                }
+            }
             _ => {}
         }
     }
@@ -128,9 +161,25 @@ impl Field {
     pub(super) fn value(
         self,
         room: &RoomConfig,
-        item: Option<EditorItem>,
+        selection: &[EditorItem],
         data: &GameData,
     ) -> String {
+        if selection.len() > 1 {
+            return match self {
+                Self::Material => {
+                    let mut materials = selection.iter().filter_map(|item| item.material(room));
+                    let first = materials.next();
+                    match first {
+                        Some(first) if materials.all(|material| material == first) => {
+                            first.to_string()
+                        }
+                        _ => String::from("(mixed)"),
+                    }
+                }
+                _ => format!("Left/Right moves all {}", selection.len()),
+            };
+        }
+        let item = selection.last().copied();
         let rect = item.and_then(|item| item.bounds(room));
         let origin = item.and_then(|item| item.origin(room));
         let spawn = match item {
@@ -152,11 +201,14 @@ impl Field {
             Self::Description | Self::Label => {
                 self.text(room, item).unwrap_or_else(|| String::from("-"))
             }
-            Self::Surface => match item {
-                Some(EditorItem::Terrain(index)) => room
-                    .terrain
+            Self::Material => item
+                .and_then(|item| item.material(room))
+                .map_or_else(String::new, ToString::to_string),
+            Self::Layer => match item {
+                Some(EditorItem::Decoration(index)) => room
+                    .decorations
                     .get(index)
-                    .map_or_else(String::new, |block| block.surface.to_string()),
+                    .map_or_else(String::new, |decoration| decoration.layer.to_string()),
                 _ => String::new(),
             },
             Self::EnemyType => spawn.map_or_else(String::new, |spawn| spawn.type_id.to_string()),
@@ -179,14 +231,16 @@ impl Field {
         }
     }
 
-    /// Steps the field by `steps` (negative to decrease) in the edited room.
+    /// Steps the field by `steps` (negative to decrease) in the edited room,
+    /// for every selected item.
     pub(super) fn adjust(
         self,
         room: &mut RoomConfig,
-        item: Option<EditorItem>,
+        selection: &[EditorItem],
         data: &GameData,
         steps: f32,
     ) {
+        let item = selection.last().copied();
         let cycle = |options: Vec<String>, current: &str| {
             let count = options.len();
             let index = options
@@ -214,13 +268,33 @@ impl Field {
                     room.background_profile = profile;
                 }
             }
-            Self::Surface => {
-                if let Some(EditorItem::Terrain(index)) = item
-                    && let Some(block) = room.terrain.get_mut(index)
+            Self::Material => {
+                let materials = data
+                    .terrain
+                    .materials
+                    .keys()
+                    .map(ToString::to_string)
+                    .collect();
+                let current = selection
+                    .iter()
+                    .rev()
+                    .find_map(|item| item.material(room))
+                    .map_or_else(String::new, ToString::to_string);
+                if let Some(material) =
+                    cycle(materials, &current).and_then(|material| material.parse().ok())
                 {
-                    block.surface = match block.surface {
-                        PlatformMaterial::Soil => PlatformMaterial::Stone,
-                        PlatformMaterial::Stone | PlatformMaterial::Wood => PlatformMaterial::Soil,
+                    for item in selection {
+                        item.set_material(room, &material);
+                    }
+                }
+            }
+            Self::Layer => {
+                if let Some(EditorItem::Decoration(index)) = item
+                    && let Some(decoration) = room.decorations.get_mut(index)
+                {
+                    decoration.layer = match decoration.layer {
+                        DecorationLayer::Background => DecorationLayer::Foreground,
+                        DecorationLayer::Foreground => DecorationLayer::Background,
                     };
                 }
             }
@@ -237,14 +311,14 @@ impl Field {
                 }
             }
             Self::X | Self::Y => {
-                if let Some(item) = item
-                    && let Some(origin) = item.origin(room)
-                {
-                    let step = Vec2::new(
-                        if self == Self::X { steps * SNAP_H } else { 0.0 },
-                        if self == Self::Y { steps * SNAP_H } else { 0.0 },
-                    );
-                    item.set_origin(room, origin + step);
+                let step = Vec2::new(
+                    if self == Self::X { steps * SNAP_H } else { 0.0 },
+                    if self == Self::Y { steps * SNAP_H } else { 0.0 },
+                );
+                for item in selection {
+                    if let Some(origin) = item.origin(room) {
+                        item.set_origin(room, origin + step);
+                    }
                 }
             }
             Self::Width | Self::Height => {

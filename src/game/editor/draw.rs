@@ -2,12 +2,12 @@
 //! editable item over it, and the inspector and help panels.
 
 use super::*;
-use crate::data::PlatformMaterial;
 
 const ROOM_BOUNDS_COLOR: Color = Color::srgb(0.95, 0.3, 0.3);
 const GRID_COLOR: Color = Color::srgba(1.0, 1.0, 1.0, 0.06);
-const SOIL_COLOR: Color = Color::srgb(0.55, 0.75, 0.35);
-const STONE_COLOR: Color = Color::srgb(0.7, 0.72, 0.78);
+const TERRAIN_COLOR: Color = Color::srgb(0.7, 0.72, 0.78);
+const DECORATION_COLOR: Color = Color::srgb(0.75, 0.5, 0.95);
+const MARQUEE_COLOR: Color = Color::srgb(0.4, 0.8, 1.0);
 const PLATFORM_COLOR: Color = Color::srgb(0.95, 0.65, 0.3);
 const PLAYER_COLOR: Color = Color::srgb(0.35, 0.95, 0.5);
 const EXIT_COLOR: Color = Color::srgb(0.35, 0.8, 1.0);
@@ -40,10 +40,10 @@ pub(super) fn refresh_room_view(
     world::spawn_enemies(&mut commands, room, &data, &sheets);
     if editor
         .selected
-        .is_some_and(|item| item.bounds(room).is_none())
+        .iter()
+        .any(|item| item.bounds(room).is_none())
     {
-        editor.selected = None;
-        editor.field = 0;
+        editor.select(None);
     }
     editor.problem = data.validate().err().map(|problem| problem.to_string());
 }
@@ -77,31 +77,36 @@ pub(super) fn draw_overlay(mut gizmos: Gizmos, editor: Res<RoomEditor>, data: Re
         ROOM_BOUNDS_COLOR,
     );
 
-    let items = (0..room.terrain.len())
-        .map(EditorItem::Terrain)
-        .chain((0..room.platforms.len()).map(EditorItem::Platform))
-        .chain((0..room.enemy_spawns.len()).map(EditorItem::Enemy))
-        .chain([EditorItem::PlayerSpawn, EditorItem::Exit]);
-    for item in items {
+    if let (Some(Drag::Marquee { start }), Some(cursor_h)) = (&editor.drag, editor.cursor_h) {
+        let area = Rect::from_corners(*start, cursor_h);
+        outline(
+            RectH {
+                x: area.min.x,
+                y: area.min.y,
+                width: area.width(),
+                height: area.height(),
+            },
+            MARQUEE_COLOR,
+        );
+    }
+
+    for item in EditorItem::all(room) {
+        let selected = editor.selected.contains(&item);
         let Some(rect) = item.bounds(room) else {
             continue;
         };
         let color = match item {
-            _ if editor.selected == Some(item) => SELECTED_COLOR,
+            _ if selected => SELECTED_COLOR,
             _ if editor.hovered == Some(item) => HOVER_COLOR,
-            EditorItem::Terrain(index) => {
-                match room.terrain.get(index).map(|block| block.surface) {
-                    Some(PlatformMaterial::Soil) => SOIL_COLOR,
-                    _ => STONE_COLOR,
-                }
-            }
+            EditorItem::Terrain(_) => TERRAIN_COLOR,
             EditorItem::Platform(_) => PLATFORM_COLOR,
+            EditorItem::Decoration(_) => DECORATION_COLOR,
             EditorItem::Enemy(_) => ENEMY_COLOR,
             EditorItem::PlayerSpawn => PLAYER_COLOR,
             EditorItem::Exit => EXIT_COLOR,
         };
         outline(rect, color);
-        if editor.selected == Some(item) {
+        if selected && editor.selected.len() == 1 {
             // Corner handles mark the edges a drag resizes.
             let handle_h = 0.16;
             for (x, y) in [
@@ -152,15 +157,16 @@ pub(super) fn update_panels(
         lines.push(format!("! {problem}"));
     }
     lines.push(String::new());
-    lines.push(editor.selected.map_or_else(
-        || String::from("Room (click an item to select it)"),
-        |item| format!("Selected: {}", item.describe(room)),
-    ));
+    lines.push(match editor.selected.as_slice() {
+        [] => String::from("Room (click an item to select it)"),
+        [item] => format!("Selected: {}", item.describe(room)),
+        items => format!("Selected: {} items", items.len()),
+    });
     for (index, field) in editor.fields().iter().enumerate() {
         let is_current = index == editor.field;
         let value = match &editor.text_entry {
             Some(text) if is_current => format!("{text}_"),
-            _ => field.value(room, editor.selected, &data),
+            _ => field.value(room, &editor.selected, &data),
         };
         lines.push(format!(
             "{} {:<18} {value}",
@@ -171,7 +177,10 @@ pub(super) fn update_panels(
     if editor.text_entry.is_some() {
         lines.push(String::from("Typing: Enter keeps, Esc cancels"));
     }
-    if let Some(hovered) = editor.hovered.filter(|item| Some(*item) != editor.selected) {
+    if let Some(hovered) = editor
+        .hovered
+        .filter(|item| !editor.selected.contains(item))
+    {
         lines.push(format!("Hover: {}", hovered.describe(room)));
     }
     if let Some(cursor_h) = editor.cursor_h {

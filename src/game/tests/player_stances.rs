@@ -62,7 +62,7 @@ fn crouching_slows_cover_blocks_frontal_hits_and_death_plays_out_before_the_run_
                     right: width,
                     bottom: -H_WORLD_UNITS,
                     top: room.player_spawn.y_h * H_WORLD_UNITS,
-                    material: PlatformMaterial::Soil,
+                    footstep: FootstepSound::Soil,
                     one_way: false,
                 });
             },

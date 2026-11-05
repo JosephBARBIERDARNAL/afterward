@@ -62,3 +62,58 @@ fn the_editor_edits_undoes_with_cmd_z_on_azerty_saves_and_playtests() {
     assert_eq!(game.session().room_id, 1);
     assert_eq!(width(&game), edited);
 }
+
+#[test]
+fn the_editor_selects_all_copies_into_another_room_adds_and_paints_a_decoration() {
+    let mut game = HeadlessGame::with_copied_data();
+    game.tap(KeyCode::KeyD);
+    assert_eq!(game.screen(), GameScreen::Editor);
+    let room = |game: &HeadlessGame, room_id: u16| game.data().rooms[&room_id].clone();
+    let first = room(&game, 1);
+    let second = room(&game, 2);
+    let on_disk: RoomConfig = yaml_serde::from_str(
+        &fs::read_to_string(RoomConfig::file_path(&game.data().asset_root, 1))
+            .expect("room 1 is readable"),
+    )
+    .expect("room 1 is valid YAML");
+    assert_eq!(first, on_disk, "the D that opens the editor adds nothing");
+
+    // Cmd+A and Cmd+C copy every block, decoration, and enemy of room 1;
+    // Cmd+V pastes them into room 2, and Cmd+Z takes them out again.
+    command_presses(&mut game, KeyCode::KeyA, "a", 1);
+    command_presses(&mut game, KeyCode::KeyC, "c", 1);
+    game.tap(KeyCode::PageDown);
+    command_presses(&mut game, KeyCode::KeyV, "v", 1);
+    let pasted = room(&game, 2);
+    assert_eq!(
+        pasted.terrain.len() + pasted.platforms.len(),
+        second.terrain.len() + second.platforms.len() + first.terrain.len() + first.platforms.len()
+    );
+    assert_eq!(
+        pasted.enemy_spawns.len(),
+        second.enemy_spawns.len() + first.enemy_spawns.len()
+    );
+    command_presses(&mut game, KeyCode::KeyZ, "z", 1);
+    assert_eq!(room(&game, 2), second);
+    assert_eq!(room(&game, 1), first, "copying leaves room 1 as it was");
+
+    // D adds a decoration; Down to its Material field and Right repaints it.
+    game.tap(KeyCode::KeyD);
+    let added = room(&game, 2).decorations.len();
+    assert_eq!(added, second.decorations.len() + 1);
+    let material = |game: &HeadlessGame| room(game, 2).decorations[added - 1].material.clone();
+    let before = material(&game);
+    game.tap(KeyCode::ArrowDown);
+    game.tap(KeyCode::ArrowRight);
+    assert_ne!(material(&game), before);
+
+    // Cmd+S writes the decoration to room 2's file.
+    command_presses(&mut game, KeyCode::KeyS, "s", 1);
+    let saved: RoomConfig = yaml_serde::from_str(
+        &fs::read_to_string(RoomConfig::file_path(&game.data().asset_root, 2))
+            .expect("the editor wrote the room file"),
+    )
+    .expect("the saved room is valid YAML");
+    assert_eq!(saved.decorations.len(), added);
+    assert_eq!(saved.decorations[added - 1].material, material(&game));
+}

@@ -1,5 +1,5 @@
 use super::{EnemySoundStyle, SoundCue};
-use crate::data::PlatformMaterial;
+use crate::data::FootstepSound;
 use bevy::audio::AudioSource;
 use std::sync::Arc;
 
@@ -13,9 +13,9 @@ pub(super) fn cue_specs() -> Vec<(SoundCue, f32, f32, f32, f32)> {
         (UiInvalid, 220.0, 180.0, 0.10, 0.10),
         (Jump, 360.0, 590.0, 0.12, 0.13),
         (Landing, 120.0, 80.0, 0.09, 0.12),
-        (Footstep(PlatformMaterial::Soil), 90.0, 58.0, 0.07, 0.055),
-        (Footstep(PlatformMaterial::Stone), 240.0, 390.0, 0.055, 0.05),
-        (Footstep(PlatformMaterial::Wood), 160.0, 210.0, 0.06, 0.05),
+        (Footstep(FootstepSound::Soil), 90.0, 58.0, 0.07, 0.055),
+        (Footstep(FootstepSound::Stone), 240.0, 390.0, 0.055, 0.05),
+        (Footstep(FootstepSound::Wood), 160.0, 210.0, 0.06, 0.05),
         (Dash, 180.0, 90.0, 0.18, 0.18),
         (BulletHit, 920.0, 380.0, 0.12, 0.18),
         (LastRoundHit, 1180.0, 300.0, 0.2, 0.22),
@@ -265,9 +265,9 @@ mod tests {
             assert!(cues.contains(&SoundCue::EnemyHurt(style)));
             assert!(cues.contains(&SoundCue::EnemyDeath(style)));
         }
-        assert!(cues.contains(&SoundCue::Footstep(PlatformMaterial::Soil)));
-        assert!(cues.contains(&SoundCue::Footstep(PlatformMaterial::Stone)));
-        assert!(cues.contains(&SoundCue::Footstep(PlatformMaterial::Wood)));
+        assert!(cues.contains(&SoundCue::Footstep(FootstepSound::Soil)));
+        assert!(cues.contains(&SoundCue::Footstep(FootstepSound::Stone)));
+        assert!(cues.contains(&SoundCue::Footstep(FootstepSound::Wood)));
         assert!(cues.contains(&SoundCue::RunRestarted));
     }
 

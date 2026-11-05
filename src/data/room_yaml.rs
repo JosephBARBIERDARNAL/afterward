@@ -4,7 +4,8 @@
 use std::fmt::{self, Display, Formatter};
 
 use super::{
-    EnemySpawnConfig, EnemyStatOverrides, PlatformMaterial, RectH, RoomConfig, TerrainBlockConfig,
+    DecorationConfig, DecorationLayer, EnemySpawnConfig, EnemyStatOverrides, RectH, RoomConfig,
+    TerrainBlockConfig,
 };
 
 const HEADER: &str = "\
@@ -46,24 +47,11 @@ impl Display for RoomConfig {
             "# One-way platforms: land on top, jump through from below, Down + Jump drops."
         )?;
         write!(formatter, "{}", YamlList("platforms", &self.platforms))?;
-        if self.decorations.is_empty() {
-            writeln!(formatter, "decorations: []")?;
-        } else {
-            writeln!(formatter, "decorations:")?;
-            for decoration in &self.decorations {
-                writeln!(formatter, "  - asset: {}", YamlText(&decoration.asset))?;
-                writeln!(
-                    formatter,
-                    "    position_h: {{ x: {}, y: {} }}",
-                    decoration.position_h.x_h, decoration.position_h.y_h
-                )?;
-                writeln!(
-                    formatter,
-                    "    visual_layer: {}",
-                    YamlText(&decoration.visual_layer)
-                )?;
-            }
-        }
+        writeln!(
+            formatter,
+            "# Decorations: non-solid panels behind the terrain or in front of the bodies."
+        )?;
+        write!(formatter, "{}", YamlList("decorations", &self.decorations))?;
         write!(
             formatter,
             "{}",
@@ -100,7 +88,24 @@ impl Display for TerrainBlockConfig {
             .map(|label| format!("label: {}", YamlText(label)));
         let fields = label
             .chain([
-                format!("surface: {}", self.surface),
+                format!("material: {}", self.material),
+                format!("rect_h: {}", self.rect_h),
+            ])
+            .collect();
+        write!(formatter, "{}", YamlEntry(fields))
+    }
+}
+
+impl Display for DecorationConfig {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
+        let label = self
+            .label
+            .iter()
+            .map(|label| format!("label: {}", YamlText(label)));
+        let fields = label
+            .chain([
+                format!("material: {}", self.material),
+                format!("layer: {}", self.layer),
                 format!("rect_h: {}", self.rect_h),
             ])
             .collect();
@@ -170,12 +175,11 @@ impl Display for RectH {
     }
 }
 
-impl Display for PlatformMaterial {
+impl Display for DecorationLayer {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
         formatter.write_str(match self {
-            Self::Soil => "soil",
-            Self::Stone => "stone",
-            Self::Wood => "wood",
+            Self::Background => "background",
+            Self::Foreground => "foreground",
         })
     }
 }

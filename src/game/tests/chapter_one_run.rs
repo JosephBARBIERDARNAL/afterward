@@ -442,7 +442,7 @@ fn spawn_test_room(
         return;
     }
     let room = &data.rooms[&session.room_id];
-    world::spawn_room_platforms(&mut commands, room);
+    world::spawn_room_platforms(&mut commands, room, &data);
     world::spawn_player(
         &mut commands,
         room,

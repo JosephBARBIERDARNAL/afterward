@@ -284,7 +284,7 @@ pub(super) fn update_player(
 
     let was_grounded = player.grounded;
     player.grounded = false;
-    let mut grounded_material = None;
+    let mut grounded_footstep = None;
     let feet = transform.translation.y - H_WORLD_UNITS / 2.0;
     if player.velocity.y <= 0.0 {
         if let Some(block) =
@@ -294,7 +294,7 @@ pub(super) fn update_player(
             player.velocity.y = 0.0;
             player.grounded = true;
             player.on_one_way = block.one_way;
-            grounded_material = Some(block.material);
+            grounded_footstep = Some(block.footstep);
         }
     } else if let Some(bottom) =
         terrain.ceiling(x, previous_feet + H_WORLD_UNITS, feet + H_WORLD_UNITS)
@@ -366,8 +366,8 @@ pub(super) fn update_player(
             data.gameplay.audio.footstep_interval_s
         };
         if player.footstep_timer == 0.0 {
-            if let Some(material) = grounded_material {
-                sounds.push(SoundCue::Footstep(material));
+            if let Some(footstep) = grounded_footstep {
+                sounds.push(SoundCue::Footstep(footstep));
             }
             player.footstep_timer = data.gameplay.audio.footstep_interval_s;
         }

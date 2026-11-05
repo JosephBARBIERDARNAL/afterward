@@ -17,7 +17,7 @@ pub(super) struct PlatformSurface {
     pub(super) right: f32,
     pub(super) bottom: f32,
     pub(super) top: f32,
-    pub(super) material: PlatformMaterial,
+    pub(super) footstep: FootstepSound,
     pub(super) one_way: bool,
 }
 

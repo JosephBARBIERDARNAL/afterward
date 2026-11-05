@@ -50,7 +50,7 @@ fn behind_the_bonus_screen_the_player_lands_and_idles_without_taking_input() {
                     right: width,
                     bottom: -H_WORLD_UNITS,
                     top: room.player_spawn.y_h * H_WORLD_UNITS,
-                    material: PlatformMaterial::Soil,
+                    footstep: FootstepSound::Soil,
                     one_way: false,
                 });
             },

@@ -14,40 +14,41 @@ player_spawn:
 # Solid blocks: they stop bodies and projectiles from every side.
 terrain:
   - label: floor
-    surface: soil
+    material: grassy_cobble
     rect_h: { x: 0, y: 0, width: 32, height: 1 }
   - label: ceiling
-    surface: stone
+    material: stone_dark_cobble
     rect_h: { x: 0, y: 15, width: 32, height: 1 }
   - label: left wall above the entrance doorway
-    surface: stone
+    material: stone_cobble
     rect_h: { x: 0, y: 4, width: 1, height: 11 }
   - label: right wall above the exit doorway
-    surface: stone
+    material: stone_cobble
     rect_h: { x: 31, y: 4, width: 1, height: 11 }
   - label: ziggurat base
-    surface: stone
+    material: stone_bricks
     rect_h: { x: 11, y: 1, width: 10, height: 2 }
   - label: ziggurat middle
-    surface: stone
+    material: stone_bricks
     rect_h: { x: 13, y: 3, width: 6, height: 2 }
   - label: ziggurat top
-    surface: stone
+    material: mossy_bricks
     rect_h: { x: 15, y: 5, width: 2, height: 2 }
   - label: hanging rock
-    surface: stone
+    material: stone_dark_cobble
     rect_h: { x: 6, y: 11, width: 5, height: 4 }
   - label: hanging rock
-    surface: stone
+    material: stone_dark_cobble
     rect_h: { x: 22, y: 10, width: 4, height: 5 }
 # One-way platforms: land on top, jump through from below, Down + Jump drops.
 platforms:
-  - surface: wood
+  - material: stone_slab
     rect_h: { x: 3, y: 2.75, width: 4, height: 0.25 }
-  - surface: wood
+  - material: stone_slab
     rect_h: { x: 24, y: 2.75, width: 4, height: 0.25 }
-  - surface: wood
+  - material: stone_slab
     rect_h: { x: 26, y: 4.75, width: 4, height: 0.25 }
+# Decorations: non-solid panels behind the terrain or in front of the bodies.
 decorations: []
 enemy_spawns:
   - type_id: swordsman

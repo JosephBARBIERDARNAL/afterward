@@ -19,12 +19,12 @@ fn projectiles_collide_with_solid_terrain_along_their_travel_path() {
         right: 200.0,
         bottom: 0.0,
         top: 20.0,
-        material: PlatformMaterial::Soil,
+        footstep: FootstepSound::Soil,
         one_way: false,
     };
     let plank = PlatformSurface {
         one_way: true,
-        material: PlatformMaterial::Wood,
+        footstep: FootstepSound::Wood,
         ..platform
     };
     assert!(

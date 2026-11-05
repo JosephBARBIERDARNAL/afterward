@@ -43,7 +43,7 @@ fn jump_peak_h(hold_frames: usize) -> f32 {
                 right: width,
                 bottom: ground_top - H_WORLD_UNITS,
                 top: ground_top,
-                material: PlatformMaterial::Soil,
+                footstep: FootstepSound::Soil,
                 one_way: false,
             });
         })

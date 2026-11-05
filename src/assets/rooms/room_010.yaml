@@ -14,38 +14,47 @@ player_spawn:
 # Solid blocks: they stop bodies and projectiles from every side.
 terrain:
   - label: floor
-    surface: soil
+    material: stone_tiles
     rect_h: { x: 0, y: 0, width: 48, height: 1 }
   - label: ceiling
-    surface: stone
+    material: stone_dark_cobble
     rect_h: { x: 0, y: 13, width: 48, height: 1 }
   - label: left wall above the entrance doorway
-    surface: stone
+    material: stone_dark_cobble
     rect_h: { x: 0, y: 4, width: 1, height: 9 }
   - label: right wall above the exit doorway
-    surface: stone
+    material: stone_dark_cobble
     rect_h: { x: 47, y: 4, width: 1, height: 9 }
   - label: west ledge
-    surface: stone
+    material: stone_cracked_slab
     rect_h: { x: 1, y: 5, width: 6, height: 1 }
   - label: east ledge
-    surface: stone
+    material: stone_cracked_slab
     rect_h: { x: 41, y: 5, width: 6, height: 1 }
   - label: hanging pillar
-    surface: stone
+    material: stone_rough_bricks
     rect_h: { x: 14, y: 9, width: 2, height: 4 }
   - label: hanging pillar
-    surface: stone
+    material: stone_rough_bricks
     rect_h: { x: 32, y: 9, width: 2, height: 4 }
 # One-way platforms: land on top, jump through from below, Down + Jump drops.
 platforms:
-  - surface: wood
+  - material: stone_cracked_slab
     rect_h: { x: 10, y: 2.75, width: 4, height: 0.25 }
-  - surface: wood
+  - material: stone_cracked_slab
     rect_h: { x: 34, y: 2.75, width: 4, height: 0.25 }
-  - surface: wood
+  - material: stone_cracked_slab
     rect_h: { x: 20, y: 4.75, width: 8, height: 0.25 }
-decorations: []
+# Decorations: non-solid panels behind the terrain or in front of the bodies.
+decorations:
+  - label: broken column
+    material: stone_rough_bricks
+    layer: background
+    rect_h: { x: 14, y: 1, width: 2, height: 4 }
+  - label: broken column
+    material: stone_rough_bricks
+    layer: background
+    rect_h: { x: 32, y: 1, width: 2, height: 4 }
 enemy_spawns:
   - type_id: evil_wizard
     position_h: { x: 18, y: 1 }

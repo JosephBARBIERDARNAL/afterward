@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 
 use serde::Deserialize;
 
-use super::{EnemyTypeId, GameplayConfig, PLAYER_COLLISION_WIDTH_H};
+use super::{EnemyTypeId, GameplayConfig, MaterialId, PLAYER_COLLISION_WIDTH_H};
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct RoomConfig {
@@ -23,6 +23,7 @@ pub struct RoomConfig {
     /// below, and drop through them on purpose.
     #[serde(default)]
     pub platforms: Vec<TerrainBlockConfig>,
+    /// Non-solid textured panels behind the terrain or in front of the bodies.
     #[serde(default)]
     pub decorations: Vec<DecorationConfig>,
     pub enemy_spawns: Vec<EnemySpawnConfig>,
@@ -85,7 +86,8 @@ pub struct TerrainBlockConfig {
     /// What the block is ("floor", "hanging rock"), shown in the debug editor.
     #[serde(default)]
     pub label: Option<String>,
-    pub surface: PlatformMaterial,
+    /// A material from `terrain/materials.yaml`: its look and footsteps.
+    pub material: MaterialId,
     pub rect_h: RectH,
 }
 
@@ -121,19 +123,24 @@ impl RectH {
     }
 }
 
-#[derive(Debug, Clone, Copy, Deserialize, Eq, Ord, PartialEq, PartialOrd)]
-#[serde(rename_all = "snake_case")]
-pub enum PlatformMaterial {
-    Soil,
-    Stone,
-    Wood,
-}
-
+/// A non-solid panel tiled with a terrain material, such as a ruined back
+/// wall or foliage hanging in front of the action.
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct DecorationConfig {
-    pub asset: String,
-    pub position_h: SpawnPosition,
-    pub visual_layer: String,
+    /// What the panel is ("back wall"), shown in the debug editor.
+    #[serde(default)]
+    pub label: Option<String>,
+    pub material: MaterialId,
+    pub layer: DecorationLayer,
+    pub rect_h: RectH,
+}
+
+/// Where a decoration panel is drawn: behind the terrain, or over the bodies.
+#[derive(Debug, Clone, Copy, Deserialize, Eq, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum DecorationLayer {
+    Background,
+    Foreground,
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]

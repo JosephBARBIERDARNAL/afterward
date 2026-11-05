@@ -14,35 +14,36 @@ player_spawn:
 # Solid blocks: they stop bodies and projectiles from every side.
 terrain:
   - label: cliff
-    surface: soil
+    material: grassy_red_rock
     rect_h: { x: 0, y: 0, width: 10, height: 9 }
   - label: upper step
-    surface: soil
+    material: grassy_red_rock
     rect_h: { x: 10, y: 0, width: 3, height: 7 }
   - label: lower step
-    surface: soil
+    material: grassy_red_rock
     rect_h: { x: 13, y: 0, width: 3, height: 5 }
   - label: floor
-    surface: soil
+    material: grassy_red_rock
     rect_h: { x: 16, y: 0, width: 16, height: 1 }
   - label: ceiling
-    surface: stone
+    material: red_rock_boulders
     rect_h: { x: 0, y: 17, width: 32, height: 1 }
   - label: left wall above the entrance doorway
-    surface: stone
+    material: red_rock_cobble
     rect_h: { x: 0, y: 12, width: 1, height: 5 }
   - label: right wall above the exit doorway
-    surface: stone
+    material: red_rock_cobble
     rect_h: { x: 31, y: 4, width: 1, height: 13 }
   - label: sniper perch
-    surface: stone
+    material: mossy_red_brick
     rect_h: { x: 25, y: 6, width: 5, height: 1 }
 # One-way platforms: land on top, jump through from below, Down + Jump drops.
 platforms:
-  - surface: wood
+  - material: stone_slab
     rect_h: { x: 17, y: 2.75, width: 3, height: 0.25 }
-  - surface: wood
+  - material: stone_slab
     rect_h: { x: 22, y: 4.75, width: 3, height: 0.25 }
+# Decorations: non-solid panels behind the terrain or in front of the bodies.
 decorations: []
 enemy_spawns:
   - type_id: swordsman
