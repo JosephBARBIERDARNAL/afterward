@@ -41,9 +41,9 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Run unit tests
-        run: cargo test --workspace --all-features --locked -- --skip e2e::
+        run: |
+          cargo test --workspace --all-features --locked -- --skip e2e::
 
-      # The real game, headless (no window, GPU, or audio device), played
-      # through keyboard events: see src/game/tests/e2e.rs.
-      - name: Run end-to-end tests
-        run: cargo test --workspace --all-features --locked e2e::
+      - name: Run E2E tests
+        run: |
+          cargo test --workspace --all-features --locked e2e::
