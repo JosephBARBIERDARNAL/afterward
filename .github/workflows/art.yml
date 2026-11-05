@@ -1,8 +1,8 @@
 name: Typst art
 
-# Re-renders the Typst sources in art/ and fails if a committed PNG under
-# src/assets/ differs from its source (edited without `just art`) or a
-# rendered PNG was never committed.
+# Checks the Typst sources in art/ are formatted with typstyle, re-renders
+# them, and fails if a committed PNG under src/assets/ differs from its
+# source (edited without `just art`) or a rendered PNG was never committed.
 
 on:
   push:
@@ -15,9 +15,8 @@ permissions:
   contents: read
 
 env:
-  # Keep in step with the version used locally (AGENTS.md): another Typst
-  # version may encode the same image differently.
   TYPST_VERSION: 0.15.1
+  TYPSTYLE_VERSION: 0.15.2
 
 jobs:
   art:
@@ -36,6 +35,17 @@ jobs:
             "https://github.com/typst/typst/releases/download/v${TYPST_VERSION}/typst-x86_64-unknown-linux-musl.tar.xz" \
             | sudo tar --extract --xz --strip-components=1 --directory /usr/local/bin typst-x86_64-unknown-linux-musl/typst
           typst --version
+
+      - name: Install typstyle
+        run: |
+          sudo curl --fail --location --silent --show-error --output /usr/local/bin/typstyle \
+            "https://github.com/typstyle-rs/typstyle/releases/download/v${TYPSTYLE_VERSION}/typstyle-x86_64-unknown-linux-musl"
+          sudo chmod +x /usr/local/bin/typstyle
+          typstyle --version
+
+      - name: Check Typst formatting
+        # Prints the diff and fails if any source needs formatting.
+        run: typstyle --diff art
 
       - name: Render art
         run: just art

@@ -85,6 +85,7 @@ Some assets are drawn in code with [Typst](https://typst.app) instead of a paint
 - `art/_pixel.typ` makes a page exactly the image's size and draws 1 pt squares, rendered at 72 ppi: one square per pixel, no anti-aliasing. `pixels` draws text art (one character per pixel, looked up in a palette); `pixels-by` computes each pixel from a function.
 - Files starting with `_` are shared libraries, not images: `art/_palettes.typ` for palettes used across families, `_<family>.typ` for a family's own palettes and patterns. A palette swap is a second short source reusing the same pattern (`dark_planks.typ`, `rusty_plates.typ`).
 - Import libraries with relative paths.
+- Format sources with typstyle 0.15.2 (`just art-fmt`, or an editor set to the same version): CI runs `typstyle --diff art` and fails on any unformatted file. Bump `TYPSTYLE_VERSION` in `art.yml` when upgrading.
 - UI images load through `ui_style::load_pixel_art` (nearest sampling, so they stay crisp scaled up). Gray images can be tinted with `ImageNode::color`, like the ammo round.
 - Keep to axis-aligned squares on whole points: curves, diagonal strokes, and text come out anti-aliased.
 

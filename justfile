@@ -33,6 +33,10 @@ e2e:
 test filter="":
     cargo test --locked {{filter}}
 
+# Format the Typst sources in art/ with typstyle (CI checks it).
+art-fmt:
+    typstyle -i art
+
 # Render the Typst pixel art in art/ to PNGs at the same path under src/assets/
 # (art/terrain/textures/wood/planks.typ -> src/assets/terrain/textures/wood/planks.png).
 # Files starting with `_` are shared libraries, not images.
