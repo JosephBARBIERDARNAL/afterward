@@ -79,11 +79,13 @@ Debug builds (`cargo run`, `just run`) add `D  Debug editor` to the main menu (o
 
 ### Typst pixel art
 
-Some assets are drawn in code with [Typst](https://typst.app) instead of a paint program: geometric, grid-aligned art such as the `wood` terrain textures. Sources live in `art/`, mirroring their output path under `src/assets/` (`art/terrain/textures/wood/planks.typ` renders `src/assets/terrain/textures/wood/planks.png`).
+Some assets are drawn in code with [Typst](https://typst.app) instead of a paint program: geometric, grid-aligned art such as the `wood`, `metal`, and `carved` terrain textures and the HUD pieces in `src/assets/ui/`. Sources live in `art/`, mirroring their output path under `src/assets/` (`art/terrain/textures/wood/planks.typ` renders `src/assets/terrain/textures/wood/planks.png`).
 
-- `just art` renders every source (needs `typst` installed). The PNGs are committed, so building and CI never need Typst; rerun `just art` and commit both after editing a source.
+- `just art` renders every source (needs `typst` 0.15.1). The PNGs are committed, so building the game never needs Typst; rerun `just art` and commit both after editing a source. CI (`.github/workflows/art.yml`) re-renders with the same pinned Typst version and fails if any PNG differs from its source; bump `TYPST_VERSION` there when upgrading Typst locally.
 - `art/_pixel.typ` makes a page exactly the image's size and draws 1 pt squares, rendered at 72 ppi: one square per pixel, no anti-aliasing. `pixels` draws text art (one character per pixel, looked up in a palette); `pixels-by` computes each pixel from a function.
-- Files starting with `_` are shared libraries (palettes, patterns), not images. A palette swap is a second three-line source reusing the same pattern (`dark_planks.typ`).
+- Files starting with `_` are shared libraries, not images: `art/_palettes.typ` for palettes used across families, `_<family>.typ` for a family's own palettes and patterns. A palette swap is a second short source reusing the same pattern (`dark_planks.typ`, `rusty_plates.typ`).
+- Import libraries with relative paths.
+- UI images load through `ui_style::load_pixel_art` (nearest sampling, so they stay crisp scaled up). Gray images can be tinted with `ImageNode::color`, like the ammo round.
 - Keep to axis-aligned squares on whole points: curves, diagonal strokes, and text come out anti-aliased.
 
 ### Code layout

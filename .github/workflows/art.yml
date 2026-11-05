@@ -1,0 +1,51 @@
+name: Typst art
+
+# Re-renders the Typst sources in art/ and fails if a committed PNG under
+# src/assets/ differs from its source (edited without `just art`) or a
+# rendered PNG was never committed.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+env:
+  # Keep in step with the version used locally (AGENTS.md): another Typst
+  # version may encode the same image differently.
+  TYPST_VERSION: 0.15.1
+
+jobs:
+  art:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Install just
+        uses: extractions/setup-just@v3
+
+      - name: Install Typst
+        run: |
+          curl --fail --location --silent --show-error \
+            "https://github.com/typst/typst/releases/download/v${TYPST_VERSION}/typst-x86_64-unknown-linux-musl.tar.xz" \
+            | sudo tar --extract --xz --strip-components=1 --directory /usr/local/bin typst-x86_64-unknown-linux-musl/typst
+          typst --version
+
+      - name: Render art
+        run: just art
+
+      - name: Check rendered PNGs are committed and current
+        run: |
+          stale="$(git status --porcelain -- src/assets)"
+          if [ -n "$stale" ]; then
+            echo "These assets differ from their Typst sources in art/:"
+            echo "$stale"
+            echo "Run 'just art' and commit the PNGs."
+            exit 1
+          fi

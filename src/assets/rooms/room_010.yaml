@@ -39,20 +39,20 @@ terrain:
     rect_h: { x: 32, y: 9, width: 2, height: 4 }
 # One-way platforms: land on top, jump through from below, Down + Jump drops.
 platforms:
-  - material: stone_cracked_slab
+  - material: wood_dark_planks
     rect_h: { x: 10, y: 2.75, width: 4, height: 0.25 }
-  - material: stone_cracked_slab
+  - material: wood_dark_planks
     rect_h: { x: 34, y: 2.75, width: 4, height: 0.25 }
-  - material: stone_cracked_slab
+  - material: wood_dark_planks
     rect_h: { x: 20, y: 4.75, width: 8, height: 0.25 }
 # Decorations: non-solid panels behind the terrain or in front of the bodies.
 decorations:
   - label: broken column
-    material: stone_rough_bricks
+    material: carved_pillar
     layer: background
     rect_h: { x: 14, y: 1, width: 2, height: 4 }
   - label: broken column
-    material: stone_rough_bricks
+    material: carved_pillar
     layer: background
     rect_h: { x: 32, y: 1, width: 2, height: 4 }
 enemy_spawns:

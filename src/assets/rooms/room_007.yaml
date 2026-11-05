@@ -42,35 +42,35 @@ terrain:
     rect_h: { x: 30, y: 1, width: 2, height: 1 }
 # One-way platforms: land on top, jump through from below, Down + Jump drops.
 platforms:
-  - material: red_rock_strata
+  - material: wood_planks
     rect_h: { x: 7, y: 2.75, width: 3, height: 0.25 }
-  - material: red_rock_strata
+  - material: wood_planks
     rect_h: { x: 12, y: 4.75, width: 3, height: 0.25 }
-  - material: red_rock_strata
+  - material: wood_planks
     rect_h: { x: 7, y: 6.75, width: 3, height: 0.25 }
-  - material: red_rock_strata
+  - material: wood_planks
     rect_h: { x: 12, y: 8.75, width: 3, height: 0.25 }
-  - material: red_rock_strata
+  - material: wood_planks
     rect_h: { x: 7, y: 10.75, width: 3, height: 0.25 }
-  - material: red_rock_strata
+  - material: wood_planks
     rect_h: { x: 20, y: 2.75, width: 3, height: 0.25 }
-  - material: red_rock_strata
+  - material: wood_planks
     rect_h: { x: 25, y: 4.75, width: 3, height: 0.25 }
-  - material: red_rock_strata
+  - material: wood_planks
     rect_h: { x: 20, y: 6.75, width: 3, height: 0.25 }
-  - material: red_rock_strata
+  - material: wood_planks
     rect_h: { x: 25, y: 8.75, width: 3, height: 0.25 }
-  - material: red_rock_strata
+  - material: wood_planks
     rect_h: { x: 20, y: 10.75, width: 3, height: 0.25 }
-  - material: red_rock_strata
+  - material: wood_planks
     rect_h: { x: 33, y: 2.75, width: 3, height: 0.25 }
-  - material: red_rock_strata
+  - material: wood_planks
     rect_h: { x: 38, y: 4.75, width: 3, height: 0.25 }
-  - material: red_rock_strata
+  - material: wood_planks
     rect_h: { x: 33, y: 6.75, width: 3, height: 0.25 }
-  - material: red_rock_strata
+  - material: wood_planks
     rect_h: { x: 38, y: 8.75, width: 3, height: 0.25 }
-  - material: red_rock_strata
+  - material: wood_planks
     rect_h: { x: 33, y: 10.75, width: 3, height: 0.25 }
 # Decorations: non-solid panels behind the terrain or in front of the bodies.
 decorations: []

@@ -275,3 +275,28 @@ materials:
   wood_crate:
     texture: terrain/textures/wood/crate.png
     footstep: wood
+
+  # Metal: drawn in Typst (art/terrain/textures/metal/).
+  metal_plates:
+    texture: terrain/textures/metal/plates.png
+    footstep: stone
+  metal_rusty_plates:
+    texture: terrain/textures/metal/rusty_plates.png
+    footstep: stone
+  metal_tread:
+    texture: terrain/textures/metal/tread.png
+    footstep: stone
+  metal_grate:
+    texture: terrain/textures/metal/grate.png
+    footstep: stone
+
+  # Carved stone: drawn in Typst (art/terrain/textures/carved/).
+  carved_ashlar:
+    texture: terrain/textures/carved/ashlar.png
+    footstep: stone
+  carved_frieze:
+    texture: terrain/textures/carved/frieze.png
+    footstep: stone
+  carved_pillar:
+    texture: terrain/textures/carved/pillar.png
+    footstep: stone

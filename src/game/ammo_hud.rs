@@ -1,5 +1,10 @@
 use super::*;
+use crate::game::ui_style::load_pixel_art;
 use bevy::text::FontSize;
+
+/// One round of the pip row: a gray image tinted by the round's state,
+/// drawn at twice its 3 x 7 px size.
+const ROUND_IMAGE: &str = "ui/round.png";
 
 const LOADED_ROUND: Color = Color::srgb(0.98, 0.8, 0.36);
 const RELOADING_ROUND: Color = Color::srgba(0.98, 0.8, 0.36, 0.45);
@@ -13,16 +18,18 @@ pub(super) struct AmmoHud;
 #[derive(Component)]
 pub(super) struct AmmoCount;
 
-/// The pip row, with the magazine size its pips were built for.
+/// The pip row, with the magazine size its pips were built for and the
+/// round image they show.
 #[derive(Component)]
 pub(super) struct AmmoPips {
     capacity: u32,
+    round: Handle<Image>,
 }
 
 #[derive(Component)]
 pub(super) struct AmmoPip(u32);
 
-pub(super) fn spawn_ammo_hud(mut commands: Commands) {
+pub(super) fn spawn_ammo_hud(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands
         .spawn((
             Node {
@@ -54,7 +61,10 @@ pub(super) fn spawn_ammo_hud(mut commands: Commands) {
                     column_gap: px(3),
                     ..default()
                 },
-                AmmoPips { capacity: 0 },
+                AmmoPips {
+                    capacity: 0,
+                    round: load_pixel_art(&asset_server, ROUND_IMAGE),
+                },
             ));
         });
 }
@@ -73,7 +83,7 @@ pub(super) fn update_ammo_hud(
     mut hud: Query<&mut Visibility, With<AmmoHud>>,
     mut count: Query<&mut Text, With<AmmoCount>>,
     mut rows: Query<(Entity, &mut AmmoPips)>,
-    mut pips: Query<(&AmmoPip, &mut BackgroundColor)>,
+    mut pips: Query<(&AmmoPip, &mut ImageNode)>,
 ) {
     let AmmoHudResources {
         screen,
@@ -121,19 +131,18 @@ pub(super) fn update_ammo_hud(
                     for index in 0..capacity {
                         parent.spawn((
                             Node {
-                                width: px(5),
+                                width: px(6),
                                 height: px(14),
-                                border_radius: BorderRadius::all(px(1)),
                                 ..default()
                             },
-                            BackgroundColor(SPENT_ROUND),
+                            ImageNode::new(pip_row.round.clone()).with_color(SPENT_ROUND),
                             AmmoPip(index),
                         ));
                     }
                 });
         }
     }
-    for (pip, mut background) in &mut pips {
-        background.0 = if pip.0 < filled { color } else { SPENT_ROUND };
+    for (pip, mut image) in &mut pips {
+        image.color = if pip.0 < filled { color } else { SPENT_ROUND };
     }
 }

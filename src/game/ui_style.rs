@@ -2,7 +2,10 @@
 //! thin border, key badges, and a large centered title.
 
 use super::*;
-use bevy::text::FontSize;
+use bevy::{
+    image::{ImageLoaderSettings, ImageSampler},
+    text::FontSize,
+};
 
 pub(super) const CARD_BACKGROUND: Color = Color::srgba(0.03, 0.035, 0.07, 0.94);
 pub(super) const CARD_HIGHLIGHT_BACKGROUND: Color = Color::srgba(0.11, 0.12, 0.19, 0.96);
@@ -68,4 +71,15 @@ pub(super) fn key_badge(size: f32) -> impl Bundle {
         BorderColor::all(ACTIVE_BORDER),
         Pickable::IGNORE,
     )
+}
+
+/// Loads a pixel-art UI image (drawn in Typst, see `art/ui/`) so it stays
+/// crisp when the UI draws it scaled up.
+pub(super) fn load_pixel_art(asset_server: &AssetServer, path: &'static str) -> Handle<Image> {
+    asset_server
+        .load_builder()
+        .with_settings(|settings: &mut ImageLoaderSettings| {
+            settings.sampler = ImageSampler::nearest();
+        })
+        .load(path)
 }

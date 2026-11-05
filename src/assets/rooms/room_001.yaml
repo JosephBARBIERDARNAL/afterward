@@ -34,16 +34,24 @@ terrain:
     rect_h: { x: 11.5, y: 5.75, width: 0.25, height: 0.25 }
 # One-way platforms: land on top, jump through from below, Down + Jump drops.
 platforms:
-  - material: stone_slab
+  - material: wood_planks
     rect_h: { x: 14, y: 2.75, width: 4, height: 0.25 }
-  - material: stone_slab
+  - material: wood_planks
     rect_h: { x: 18.5, y: 4.75, width: 3, height: 0.25 }
 # Decorations: non-solid panels behind the terrain or in front of the bodies.
 decorations:
+  - label: crypt column
+    material: carved_pillar
+    layer: background
+    rect_h: { x: 21, y: 1, width: 1, height: 5 }
   - label: crypt back wall
-    material: stone_bricks
+    material: carved_ashlar
     layer: background
     rect_h: { x: 22, y: 1, width: 8, height: 5 }
+  - label: crypt column
+    material: carved_pillar
+    layer: background
+    rect_h: { x: 30, y: 1, width: 1, height: 5 }
 enemy_spawns:
   - type_id: swordsman
     position_h: { x: 6, y: 1 }

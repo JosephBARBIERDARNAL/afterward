@@ -1,10 +1,18 @@
 use super::*;
+use crate::game::ui_style::load_pixel_art;
 use bevy::{camera::Viewport, text::FontSize, window::PrimaryWindow};
 
 /// Blur behind the bonus screen and the menus, so their cards stand out.
 const MODAL_BLUR_RADIUS_PX: f32 = 18.0;
 
-pub(super) fn spawn_interface(mut commands: Commands) {
+/// The health bar's frame, nine-sliced around the fill: its outer
+/// `HEALTH_FRAME_BORDER_PX` image pixels are the frame, drawn
+/// `HEALTH_FRAME_SCALE` times larger.
+const HEALTH_FRAME_IMAGE: &str = "ui/health_frame.png";
+const HEALTH_FRAME_BORDER_PX: f32 = 3.0;
+const HEALTH_FRAME_SCALE: f32 = 2.0;
+
+pub(super) fn spawn_interface(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn((
         Node {
             position_type: PositionType::Absolute,
@@ -112,23 +120,41 @@ pub(super) fn spawn_interface(mut commands: Commands) {
                 left: px(24),
                 top: px(56),
                 width: px(320),
-                height: px(22),
+                height: px(24),
                 ..default()
             },
-            BackgroundColor(Color::srgb(0.07, 0.08, 0.12)),
+            ImageNode::new(load_pixel_art(&asset_server, HEALTH_FRAME_IMAGE)).with_mode(
+                NodeImageMode::Sliced(TextureSlicer {
+                    border: BorderRect::all(HEALTH_FRAME_BORDER_PX),
+                    max_corner_scale: HEALTH_FRAME_SCALE,
+                    ..default()
+                }),
+            ),
             HealthBarFrame,
             Pickable::IGNORE,
         ))
         .with_children(|parent| {
-            parent.spawn((
-                Node {
-                    width: percent(100),
-                    height: percent(100),
+            // The trough inside the frame. UI images draw inside their node's
+            // padding, so the fill gets its own inset node instead.
+            let inset = px(HEALTH_FRAME_BORDER_PX * HEALTH_FRAME_SCALE);
+            parent
+                .spawn(Node {
+                    position_type: PositionType::Absolute,
+                    left: inset,
+                    right: inset,
+                    top: inset,
+                    bottom: inset,
                     ..default()
-                },
-                BackgroundColor(Color::srgb(0.77, 0.18, 0.26)),
-                HealthFill,
-            ));
+                })
+                .with_child((
+                    Node {
+                        width: percent(100),
+                        height: percent(100),
+                        ..default()
+                    },
+                    BackgroundColor(Color::srgb(0.77, 0.18, 0.26)),
+                    HealthFill,
+                ));
         });
 }
 
