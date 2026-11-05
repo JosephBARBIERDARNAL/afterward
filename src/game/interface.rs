@@ -139,29 +139,33 @@ pub(super) fn spawn_interface(mut commands: Commands, asset_server: Res<AssetSer
                     BackgroundColor(Color::srgb(0.77, 0.18, 0.26)),
                     HealthFill,
                 ));
-            // The health readout, centered over the whole bar.
-            parent.spawn((
-                Node {
-                    position_type: PositionType::Absolute,
-                    width: percent(100),
-                    height: percent(100),
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::Center,
-                    ..default()
-                },
-                Text::new(""),
-                TextFont {
-                    font_size: FontSize::Px(14.0),
-                    ..default()
-                },
-                TextLayout::justify(Justify::Center),
-                TextColor(Color::WHITE),
-                TextShadow {
-                    offset: Vec2::ONE,
-                    color: Color::srgba(0.0, 0.0, 0.0, 0.8),
-                },
-                HealthText,
-            ));
+            // The health readout, centered over the whole bar. Text draws at
+            // the top of its own node, so a full-size parent centers it.
+            parent
+                .spawn((
+                    Node {
+                        position_type: PositionType::Absolute,
+                        width: percent(100),
+                        height: percent(100),
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::Center,
+                        ..default()
+                    },
+                    Pickable::IGNORE,
+                ))
+                .with_child((
+                    Text::new(""),
+                    TextFont {
+                        font_size: FontSize::Px(14.0),
+                        ..default()
+                    },
+                    TextColor(Color::WHITE),
+                    TextShadow {
+                        offset: Vec2::ONE,
+                        color: Color::srgba(0.0, 0.0, 0.0, 0.8),
+                    },
+                    HealthText,
+                ));
         });
 }
 
