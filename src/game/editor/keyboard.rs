@@ -3,7 +3,10 @@
 
 use super::*;
 use crate::data::{EnemySpawnConfig, PlatformMaterial, SpawnPosition, TerrainBlockConfig};
-use bevy::input::{ButtonState, keyboard::KeyboardInput};
+use bevy::input::{
+    ButtonState,
+    keyboard::{Key, KeyboardInput},
+};
 use std::fs;
 
 /// Feeds typed characters into the open text field; Enter keeps the text,
@@ -87,7 +90,7 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
                             | KeyCode::ArrowRight
                     ))
         })
-        .map(|input| input.key_code)
+        .map(ShortcutKey::from)
         .collect::<Vec<_>>();
     if editor.keys_consumed || presses.is_empty() {
         return;
@@ -99,7 +102,8 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
         KeyCode::SuperRight,
     ]);
     let shift = keys.any_pressed([KeyCode::ShiftLeft, KeyCode::ShiftRight]);
-    let pressed = |key: KeyCode| presses.contains(&key);
+    let pressed = |key: KeyCode| presses.iter().any(|press| press.code == key);
+    let letter = |character: char| presses.iter().any(|press| press.letter == Some(character));
     if !pressed(KeyCode::Escape) {
         editor.leave_armed = false;
     }
@@ -107,7 +111,7 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
     let field = editor.fields().get(editor.field).copied();
     let cursor_h = editor.cursor_h.unwrap_or_default();
 
-    if command && pressed(KeyCode::KeyS) {
+    if command && letter('s') {
         if let Err(problem) = data.validate() {
             editor.status = format!("Not saved: {problem}");
             return;
@@ -130,14 +134,14 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
         } else {
             format!("Saved {}.", written.join(", "))
         };
-    } else if command && pressed(KeyCode::KeyR) {
+    } else if command && letter('r') {
         if let Err(problem) = data.validate() {
             editor.status = format!("Can't playtest: {problem}");
             return;
         }
         *start_room = StartRoom(editor.room_id);
         next_screen.set(screens::reset_run(&mut session, &data, *start_room));
-    } else if command && (pressed(KeyCode::KeyY) || shift && pressed(KeyCode::KeyZ)) {
+    } else if command && (letter('y') || shift && letter('z')) {
         let Some((room_id, room)) = editor.redo.pop() else {
             editor.status = String::from("Nothing to redo.");
             return;
@@ -149,7 +153,7 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
             editor.open_room(room_id);
         }
         editor.view_dirty = true;
-    } else if command && pressed(KeyCode::KeyZ) {
+    } else if command && letter('z') {
         let Some((room_id, room)) = editor.undo.pop() else {
             editor.status = String::from("Nothing to undo.");
             return;
@@ -161,7 +165,7 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
             editor.open_room(room_id);
         }
         editor.view_dirty = true;
-    } else if command && pressed(KeyCode::KeyD) {
+    } else if command && letter('d') {
         let Some(item) = editor.selected else {
             return;
         };
@@ -194,8 +198,8 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
             editor.selected = duplicate;
         }
     } else if command {
-    } else if pressed(KeyCode::KeyT) || pressed(KeyCode::KeyP) {
-        let one_way = pressed(KeyCode::KeyP);
+    } else if letter('t') || letter('p') {
+        let one_way = letter('p');
         let (width, height) = if one_way { (3.0, SNAP_H) } else { (2.0, 1.0) };
         let block = TerrainBlockConfig {
             label: None,
@@ -228,7 +232,7 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
         });
         editor.selected = added;
         editor.field = 0;
-    } else if pressed(KeyCode::KeyE) {
+    } else if letter('e') {
         let type_id = editor
             .enemy_type
             .clone()
@@ -342,7 +346,7 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
                     .unwrap_or_default(),
             );
         }
-    } else if pressed(KeyCode::KeyC) {
+    } else if letter('c') {
         if let Some(field) = field {
             let item = editor.selected;
             editor.edit(&mut data, |room| field.clear(room, item));
@@ -377,6 +381,30 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
             editor.status = format!(
                 "Unsaved rooms: {COMMAND_KEY}+S saves them, Esc again leaves (edits stay in memory until the game quits)."
             );
+        }
+    }
+}
+
+/// A key press as the shortcuts see it. Letter shortcuts match the character
+/// the key types on the current layout (Cmd+Z is Z on AZERTY too, where the
+/// key sits at QWERTY's W); other keys match by position.
+struct ShortcutKey {
+    code: KeyCode,
+    letter: Option<char>,
+}
+
+impl From<&KeyboardInput> for ShortcutKey {
+    fn from(input: &KeyboardInput) -> Self {
+        let letter = match &input.logical_key {
+            Key::Character(text) => text
+                .chars()
+                .next()
+                .map(|character| character.to_ascii_lowercase()),
+            _ => None,
+        };
+        Self {
+            code: input.key_code,
+            letter,
         }
     }
 }

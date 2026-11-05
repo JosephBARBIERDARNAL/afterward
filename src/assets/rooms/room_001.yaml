@@ -23,7 +23,7 @@ terrain:
     rect_h: { x: 0, y: 4, width: 1, height: 4 }
   - label: right wall above the exit doorway
     surface: stone
-    rect_h: { x: 31, y: 4, width: 1, height: 9 }
+    rect_h: { x: 31, y: 1, width: 1, height: 12 }
   - label: step
     surface: stone
     rect_h: { x: 10, y: 1, width: 2, height: 1.5 }
@@ -53,6 +53,6 @@ enemy_spawns:
   - type_id: destroyer
     position_h: { x: 10.5, y: 2.5 }
 exit:
-  x_h: 29.5
+  x_h: 30.5
   y_h: 1
 next_room_id: 2
