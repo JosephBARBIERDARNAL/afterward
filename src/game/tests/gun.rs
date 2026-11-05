@@ -1,4 +1,5 @@
 use super::super::*;
+use crate::game::combat::PlayerBullet;
 use std::{path::Path, time::Duration};
 
 use bevy::{prelude::MinimalPlugins, time::TimeUpdateStrategy};

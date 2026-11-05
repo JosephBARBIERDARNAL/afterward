@@ -23,7 +23,6 @@ Important: the following is the game specifications, focusing on the first chapt
   - Air: jump take-off then a rising loop, a falling loop, a landing crouch when touching down without horizontal input, and for walls the latch cling, the landing against the wall, the wall slide, and the wall jump. Mantling onto a ledge plays the grab.
   - Actions: dash, cover, reload (stretched over the whole reload while standing; moving keeps the movement animation), hit reaction when taking damage, and death.
   - Shooting: one shot clip per aim direction (straight, diagonal down, diagonal up), each with two variants (two-handed, one-handed) that consecutive shots alternate between. After a shot, the matching aim pose holds for `aim_hold_s` (0.4 s) and as long as Shoot is held. Firing straight while moving on the ground plays the run-shooting cycle instead, restarted on its shot frame.
-- Prototype (disabled): `src/assets/player/model.yaml` can replace the sprite sheets with a 3D glTF model (`enabled: true`). An off-screen orthographic camera renders the model into a texture drawn as the player sprite, so it looks high definition against the pixel-art world; each player clip plays a mapped glTF animation, with one-shot actions fitted to the clip's duration. The sample model is "RobotExpressive" by Tomás Laulhé (CC0).
 
 ## Player Movement and Combat
 

@@ -1,7 +1,17 @@
-mod models;
+mod backgrounds;
+mod bonuses;
+mod enemies;
+mod gameplay;
 mod player_animations;
-pub use models::*;
+mod rooms;
+
+pub use backgrounds::*;
+pub use bonuses::*;
+pub use enemies::*;
+pub use gameplay::*;
 pub use player_animations::*;
+pub use rooms::*;
+
 use std::{
     collections::BTreeMap,
     error::Error,
@@ -17,7 +27,6 @@ use serde::de::DeserializeOwned;
 pub struct GameData {
     pub gameplay: GameplayConfig,
     pub player_animations: PlayerAnimations,
-    pub player_model: PlayerModelConfig,
     pub enemies: EnemyTypes,
     pub backgrounds: BackgroundProfiles,
     pub bonuses: BonusesConfig,
@@ -28,7 +37,6 @@ impl GameData {
     pub fn load(asset_root: &Path) -> Result<Self, Box<dyn Error + Send + Sync>> {
         let gameplay = read_yaml(&asset_root.join("config/gameplay.yaml"))?;
         let player_animations = read_yaml(&asset_root.join("player/animations.yaml"))?;
-        let player_model = read_yaml(&asset_root.join("player/model.yaml"))?;
         let enemies = read_yaml(&asset_root.join("enemies/enemy_types.yaml"))?;
         let backgrounds = read_yaml(&asset_root.join("background/background_profiles.yaml"))?;
         let bonuses = read_yaml(&asset_root.join("config/bonuses.yaml"))?;
@@ -43,7 +51,6 @@ impl GameData {
         let data = Self {
             gameplay,
             player_animations,
-            player_model,
             enemies,
             backgrounds,
             bonuses,
@@ -139,34 +146,6 @@ impl GameData {
             return Err(InvalidGameData::from(
                 "each aim direction needs at least one shot clip and one aim pose per shot clip",
             ));
-        }
-        let model = &self.player_model;
-        if model.enabled {
-            if !asset_root.join(&model.scene).is_file() {
-                return Err(InvalidGameData::from(format!(
-                    "missing player model: {}",
-                    model.scene
-                )));
-            }
-            if model.render_size_px == 0
-                || [model.model_height, model.view_height, model.blend_s]
-                    .iter()
-                    .any(|value| !value.is_finite() || *value <= 0.0)
-                || !(0.0..model.view_height).contains(&model.feet_margin)
-            {
-                return Err(InvalidGameData::from(
-                    "player model sizes and blend time must be positive, \
-                     with the feet margin inside the view",
-                ));
-            }
-            if let Some((key, _)) = animations.keyed().into_iter().find(|(key, _)| {
-                key.strip_prefix("player_")
-                    .is_none_or(|name| !model.clips.contains_key(name))
-            }) {
-                return Err(InvalidGameData::from(format!(
-                    "the player model maps no animation to {key}"
-                )));
-            }
         }
         for (key, clip) in animations.keyed() {
             if clip.frames == 0 || !clip.fps.is_finite() || clip.fps <= 0.0 {

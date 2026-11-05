@@ -1,8 +1,10 @@
 use super::*;
 
 mod animation;
+mod body;
 
 use animation::{AnimationState, PlayerSprite};
+pub(super) use body::{Mantle, PlayerAction, PlayerBody, Reload};
 
 #[derive(SystemParam)]
 pub(super) struct PlayerUpdateResources<'w, 's> {

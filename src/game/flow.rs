@@ -321,3 +321,6 @@ fn draw_bonus_pair(
     }
     offers
 }
+
+#[derive(Resource)]
+pub(crate) struct PhaseTimer(pub(crate) Timer);

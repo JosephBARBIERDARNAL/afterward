@@ -173,24 +173,13 @@ pub(super) fn spawn_player(
             index: 0,
         },
     );
-    // Where the body sits in a frame: the sprite sheets' measured pixels, or the
-    // 3D model's camera framing (see `player_model::setup_player_model`).
-    let model = &data.player_model;
-    let (body_height_px, feet_row_px) = if model.enabled {
-        let px_per_unit = sheet.frame_size.y / model.view_height;
-        (
-            model.model_height * px_per_unit,
-            (model.view_height - model.feet_margin) * px_per_unit,
-        )
-    } else {
-        (animations.body_height_px, animations.feet_row_px)
-    };
     // Draw the body `body_height_h` tall with its feet on the collision box's
     // baseline; the anchor sits at the box's center, half an H above the feet.
-    sprite.custom_size =
-        Some(sheet.frame_size * animations.body_height_h * H_WORLD_UNITS / body_height_px);
-    let px_per_h = body_height_px / animations.body_height_h;
-    let body_center_from_bottom_px = sheet.frame_size.y - feet_row_px + px_per_h / 2.0;
+    sprite.custom_size = Some(
+        sheet.frame_size * animations.body_height_h * H_WORLD_UNITS / animations.body_height_px,
+    );
+    let px_per_h = animations.body_height_px / animations.body_height_h;
+    let body_center_from_bottom_px = sheet.frame_size.y - animations.feet_row_px + px_per_h / 2.0;
     commands.spawn((
         sprite,
         Anchor(Vec2::new(
@@ -394,3 +383,9 @@ pub(super) fn cleanup_room(
     }
     session.world_loaded = false;
 }
+
+#[derive(Component)]
+pub(crate) struct RoomEntity;
+
+#[derive(Component)]
+pub(crate) struct ExitDoor;

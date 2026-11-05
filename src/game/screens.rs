@@ -1,4 +1,5 @@
 use super::*;
+use crate::game::interface::ScreenLabel;
 use bevy::window::{MonitorSelection, PrimaryWindow, WindowMode};
 
 pub(super) fn update_screen_text(

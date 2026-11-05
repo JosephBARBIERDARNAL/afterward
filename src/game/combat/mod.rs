@@ -2,8 +2,10 @@ use super::*;
 
 mod bullets;
 mod cleanup;
+mod components;
 mod damage;
 mod enemy_ai;
+mod enemy_body;
 mod enemy_jumps;
 mod feedback;
 mod player_gun;
@@ -11,8 +13,15 @@ mod projectiles;
 
 pub(super) use bullets::update_player_bullets;
 pub(super) use cleanup::clear_room_combat_effects;
+pub(super) use components::{
+    CombatProjectile, DamageNumber, HealthPickup, ImpactEffect, PlayerBullet,
+};
 use damage::{set_enemy_animation, spawn_damage_number};
 pub(super) use enemy_ai::{update_enemy_ai, update_enemy_platform_physics};
+pub(super) use enemy_body::{
+    DeadEnemy, EnemyAttack, EnemyBody, EnemyHealthBar, EnemyHealthBarBackground, EnemyJump,
+    ProceduralMovementState,
+};
 use enemy_jumps::{JumpArc, JumpPlan, JumpRoute};
 use feedback::spawn_fire_burst;
 pub(super) use feedback::{

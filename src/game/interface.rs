@@ -325,3 +325,24 @@ pub(super) fn update_room_transition_overlay(
         }
     }
 }
+
+#[derive(Component)]
+pub(crate) struct ScreenLabel;
+
+#[derive(Component)]
+pub(crate) struct HudText;
+
+#[derive(Component)]
+pub(crate) struct HealthFill;
+
+#[derive(Component)]
+pub(crate) struct HealthBarFrame;
+
+#[derive(Component)]
+pub(crate) struct RoomClearOverlay;
+
+#[derive(Component)]
+pub(crate) struct BossIntroOverlay;
+
+#[derive(Component)]
+pub(crate) struct RoomTransitionOverlay;

@@ -1,5 +1,3 @@
-use std::collections::BTreeMap;
-
 use serde::Deserialize;
 
 use super::ImageSizeConfig;
@@ -165,19 +163,4 @@ impl AnimationClip {
     pub(crate) fn duration_s(&self) -> f32 {
         self.frames as f32 / self.fps
     }
-}
-
-/// Optional 3D player model rendered to a texture (see `player/model.yaml`).
-#[derive(Debug, Deserialize)]
-pub struct PlayerModelConfig {
-    pub enabled: bool,
-    pub scene: String,
-    pub render_size_px: u32,
-    pub model_height: f32,
-    pub view_height: f32,
-    pub feet_margin: f32,
-    pub facing_yaw_degrees: f32,
-    pub blend_s: f32,
-    /// glTF animation index per player clip name (`idle`, `jog`, ...).
-    pub clips: BTreeMap<String, usize>,
 }

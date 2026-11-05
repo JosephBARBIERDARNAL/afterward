@@ -68,3 +68,27 @@ pub(super) fn update_background_parallax(
         transform.translation.y = camera.translation.y;
     }
 }
+
+#[derive(Component)]
+pub(crate) struct BackgroundParallax {
+    pub(crate) base_x: f32,
+    pub(crate) factor: f32,
+}
+
+/// The room the camera is confined to, in H.
+#[derive(Component)]
+pub(crate) struct RoomCamera {
+    pub(crate) size_h: Vec2,
+}
+
+impl RoomCamera {
+    /// `center_h` moved just enough to keep the viewport inside the room.
+    pub(crate) fn clamp_center_h(
+        &self,
+        center_h: Vec2,
+        gameplay: &crate::data::GameplayConfig,
+    ) -> Vec2 {
+        let half_view_h = Vec2::new(gameplay.viewport_width_h(), gameplay.viewport.height_h) / 2.0;
+        center_h.clamp(half_view_h, (self.size_h - half_view_h).max(half_view_h))
+    }
+}
