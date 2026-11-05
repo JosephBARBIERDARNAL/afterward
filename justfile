@@ -25,6 +25,10 @@ check:
     cargo test --locked
     cargo build --locked --bin afterward
 
+# Run the end-to-end scenarios: the real game, headless, played through key events.
+e2e:
+    cargo test --locked e2e::
+
 # Run the tests, optionally filtered by name: `just test enemy_jumping`.
 test filter="":
     cargo test --locked {{filter}}

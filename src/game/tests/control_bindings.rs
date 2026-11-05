@@ -8,8 +8,9 @@ fn fullscreen_default_binding_can_be_remapped() {
     let mut app = App::new();
     app.insert_resource(data)
         .init_resource::<controls::ControlBindings>()
+        .insert_resource(PreferencesDir(None))
         .init_resource::<ButtonInput<KeyCode>>()
-        .add_systems(Startup, controls::initialize_default_control_bindings);
+        .add_systems(Startup, controls::initialize_control_bindings);
     app.update();
 
     let default_label = app

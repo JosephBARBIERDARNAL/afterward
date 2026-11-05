@@ -57,8 +57,9 @@ fn the_gun_fires_alternating_shots_aims_and_reloads_its_magazine() {
         .insert_resource(RandomState(0x636f_6d62_6f73_7764))
         .init_resource::<SoundQueue>()
         .init_resource::<ControlBindings>()
+        .insert_resource(PreferencesDir(None))
         .init_resource::<ButtonInput<KeyCode>>()
-        .add_systems(Startup, controls::initialize_default_control_bindings)
+        .add_systems(Startup, controls::initialize_control_bindings)
         .add_systems(
             Startup,
             |mut commands: Commands, data: Res<GameData>, sheets: Res<SpriteSheets>| {

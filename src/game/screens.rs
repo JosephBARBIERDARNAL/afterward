@@ -99,6 +99,7 @@ pub(super) struct ScreenInputResources<'w> {
     start_room: Res<'w, StartRoom>,
     session: ResMut<'w, RunSession>,
     settings: ResMut<'w, AudioSettings>,
+    preferences: Res<'w, PreferencesDir>,
     controls: ResMut<'w, ControlBindings>,
     sounds: ResMut<'w, SoundQueue>,
 }
@@ -117,6 +118,7 @@ pub(super) fn handle_screen_input(
         start_room,
         mut session,
         mut settings,
+        preferences,
         mut controls,
         mut sounds,
     } = resources;
@@ -186,7 +188,7 @@ pub(super) fn handle_screen_input(
                 } else {
                     volume.saturating_sub(5)
                 };
-                settings::save_settings(&settings);
+                settings::save_settings(&settings, &preferences);
                 sounds.push(SoundCue::UiMove);
             }
             if controls.just_pressed(GameAction::Interact, &keys) {
@@ -210,7 +212,7 @@ pub(super) fn handle_screen_input(
                 controls.cancel_rebinding();
                 sounds.push(SoundCue::UiCancel);
             } else if controls.capture_key(&keys) {
-                controls::save_bindings(&controls);
+                controls::save_bindings(&controls, &preferences);
                 sounds.push(SoundCue::UiConfirm);
             }
         }
@@ -231,7 +233,7 @@ pub(super) fn handle_screen_input(
                 sounds.push(SoundCue::UiConfirm);
             }
             if keys.just_pressed(KeyCode::KeyR) {
-                controls.restore_defaults();
+                controls.restore_defaults(&preferences);
                 sounds.push(SoundCue::UiConfirm);
             }
         }

@@ -37,8 +37,9 @@ fn default_inputs_move_and_defeat_a_room_enemy() {
         .insert_resource(RandomState(0x6174_7461_636b_6572))
         .init_resource::<SoundQueue>()
         .init_resource::<ControlBindings>()
+        .insert_resource(PreferencesDir(None))
         .init_resource::<ButtonInput<KeyCode>>()
-        .add_systems(Startup, controls::initialize_default_control_bindings)
+        .add_systems(Startup, controls::initialize_control_bindings)
         .add_systems(
             Startup,
             |mut commands: Commands, data: Res<GameData>, sheets: Res<SpriteSheets>| {

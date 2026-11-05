@@ -19,8 +19,9 @@ fn jump_peak_h(hold_frames: usize) -> f32 {
         .init_resource::<RunSession>()
         .init_resource::<SoundQueue>()
         .init_resource::<ControlBindings>()
+        .insert_resource(PreferencesDir(None))
         .init_resource::<ButtonInput<KeyCode>>()
-        .add_systems(Startup, controls::initialize_default_control_bindings)
+        .add_systems(Startup, controls::initialize_control_bindings)
         .add_systems(Startup, |mut commands: Commands, data: Res<GameData>| {
             let room = &data.rooms[&1];
             let width = room.width_h(&data.gameplay) * H_WORLD_UNITS;

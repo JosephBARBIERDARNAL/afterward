@@ -35,8 +35,9 @@ fn solid_terrain_stops_the_player_and_low_ledges_are_mantled() {
         .init_resource::<RunSession>()
         .init_resource::<SoundQueue>()
         .init_resource::<ControlBindings>()
+        .insert_resource(PreferencesDir(None))
         .init_resource::<ButtonInput<KeyCode>>()
-        .add_systems(Startup, controls::initialize_default_control_bindings)
+        .add_systems(Startup, controls::initialize_control_bindings)
         .add_systems(
             Startup,
             |mut commands: Commands, data: Res<GameData>, sheets: Res<SpriteSheets>| {
@@ -174,8 +175,9 @@ fn one_way_platforms_are_jumped_through_and_dropped_through() {
         .init_resource::<RunSession>()
         .init_resource::<SoundQueue>()
         .init_resource::<ControlBindings>()
+        .insert_resource(PreferencesDir(None))
         .init_resource::<ButtonInput<KeyCode>>()
-        .add_systems(Startup, controls::initialize_default_control_bindings)
+        .add_systems(Startup, controls::initialize_control_bindings)
         .add_systems(
             Startup,
             |mut commands: Commands, data: Res<GameData>, sheets: Res<SpriteSheets>| {
@@ -280,8 +282,9 @@ fn jumping_off_a_wall_kicks_the_player_away_from_it() {
         .init_resource::<RunSession>()
         .init_resource::<SoundQueue>()
         .init_resource::<ControlBindings>()
+        .insert_resource(PreferencesDir(None))
         .init_resource::<ButtonInput<KeyCode>>()
-        .add_systems(Startup, controls::initialize_default_control_bindings)
+        .add_systems(Startup, controls::initialize_control_bindings)
         .add_systems(
             Startup,
             |mut commands: Commands, data: Res<GameData>, sheets: Res<SpriteSheets>| {

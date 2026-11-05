@@ -36,8 +36,9 @@ fn behind_the_bonus_screen_the_player_lands_and_idles_without_taking_input() {
         .init_resource::<RunSession>()
         .init_resource::<SoundQueue>()
         .init_resource::<ControlBindings>()
+        .insert_resource(PreferencesDir(None))
         .init_resource::<ButtonInput<KeyCode>>()
-        .add_systems(Startup, controls::initialize_default_control_bindings)
+        .add_systems(Startup, controls::initialize_control_bindings)
         .add_systems(
             Startup,
             |mut commands: Commands, data: Res<GameData>, sheets: Res<SpriteSheets>| {

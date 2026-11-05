@@ -1,6 +1,6 @@
 use crate::{
     data::{ControlsConfig, GameData},
-    game::settings::preferences_path,
+    game::settings::PreferencesDir,
 };
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -247,10 +247,10 @@ impl ControlBindings {
         true
     }
 
-    pub fn restore_defaults(&mut self) {
+    pub fn restore_defaults(&mut self, preferences: &PreferencesDir) {
         self.bindings.clone_from(&self.defaults);
         self.waiting_for_key = false;
-        save_bindings(self);
+        save_bindings(self, preferences);
     }
 }
 
@@ -261,13 +261,14 @@ struct SavedBindings {
 
 pub(super) fn initialize_control_bindings(
     data: Res<GameData>,
+    preferences: Res<PreferencesDir>,
     mut bindings: ResMut<ControlBindings>,
 ) {
     let defaults = DefaultBindings::from(&data.gameplay.controls).0;
     bindings.defaults = defaults.clone();
     bindings.bindings = defaults;
 
-    let Some(path) = preferences_path("controls.yaml") else {
+    let Some(path) = preferences.file("controls.yaml") else {
         return;
     };
     let Ok(serialized) = fs::read_to_string(path) else {
@@ -290,18 +291,8 @@ pub(super) fn initialize_control_bindings(
     }
 }
 
-#[cfg(test)]
-pub(super) fn initialize_default_control_bindings(
-    data: Res<GameData>,
-    mut bindings: ResMut<ControlBindings>,
-) {
-    let defaults = DefaultBindings::from(&data.gameplay.controls).0;
-    bindings.defaults = defaults.clone();
-    bindings.bindings = defaults;
-}
-
-pub(super) fn save_bindings(bindings: &ControlBindings) {
-    let Some(path) = preferences_path("controls.yaml") else {
+pub(super) fn save_bindings(bindings: &ControlBindings, preferences: &PreferencesDir) {
+    let Some(path) = preferences.file("controls.yaml") else {
         return;
     };
     let Some(directory) = path.parent() else {

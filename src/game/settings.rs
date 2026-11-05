@@ -20,10 +20,14 @@ impl Default for AudioSettings {
     }
 }
 
-pub(super) fn initialize_settings(data: Res<GameData>, mut settings: ResMut<AudioSettings>) {
+pub(super) fn initialize_settings(
+    data: Res<GameData>,
+    preferences: Res<PreferencesDir>,
+    mut settings: ResMut<AudioSettings>,
+) {
     settings.music_volume_percent = data.gameplay.window.music_volume_percent;
     settings.sfx_volume_percent = data.gameplay.window.sfx_volume_percent;
-    let Some(path) = preferences_path("settings.yaml") else {
+    let Some(path) = preferences.file("settings.yaml") else {
         return;
     };
     let Ok(serialized) = fs::read_to_string(path) else {
@@ -36,8 +40,8 @@ pub(super) fn initialize_settings(data: Res<GameData>, mut settings: ResMut<Audi
     settings.sfx_volume_percent = saved.sfx_volume_percent.min(100);
 }
 
-pub(super) fn save_settings(settings: &AudioSettings) {
-    let Some(path) = preferences_path("settings.yaml") else {
+pub(super) fn save_settings(settings: &AudioSettings, preferences: &PreferencesDir) {
+    let Some(path) = preferences.file("settings.yaml") else {
         return;
     };
     let Some(parent) = path.parent() else {
@@ -51,24 +55,41 @@ pub(super) fn save_settings(settings: &AudioSettings) {
     }
 }
 
-pub(super) fn preferences_path(file_name: &str) -> Option<PathBuf> {
-    #[cfg(target_os = "windows")]
-    let directory = PathBuf::from(std::env::var_os("APPDATA")?).join("Afterward");
+/// The folder the player's settings and key bindings persist in. `None`
+/// keeps them in memory only, so tests never read or overwrite the player's.
+#[derive(Resource)]
+pub(crate) struct PreferencesDir(pub(crate) Option<PathBuf>);
 
-    #[cfg(target_os = "macos")]
-    let directory = PathBuf::from(std::env::var_os("HOME")?)
-        .join("Library")
-        .join("Application Support")
-        .join("Afterward");
+impl Default for PreferencesDir {
+    fn default() -> Self {
+        let directory = || -> Option<PathBuf> {
+            #[cfg(target_os = "windows")]
+            let directory = PathBuf::from(std::env::var_os("APPDATA")?).join("Afterward");
 
-    #[cfg(target_os = "linux")]
-    let directory = std::env::var_os("XDG_CONFIG_HOME")
-        .map(PathBuf::from)
-        .or_else(|| std::env::var_os("HOME").map(|home| PathBuf::from(home).join(".config")))?
-        .join("afterward");
+            #[cfg(target_os = "macos")]
+            let directory = PathBuf::from(std::env::var_os("HOME")?)
+                .join("Library")
+                .join("Application Support")
+                .join("Afterward");
 
-    #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
-    let directory = PathBuf::from(std::env::var_os("HOME")?).join(".afterward");
+            #[cfg(target_os = "linux")]
+            let directory = std::env::var_os("XDG_CONFIG_HOME")
+                .map(PathBuf::from)
+                .or_else(|| {
+                    std::env::var_os("HOME").map(|home| PathBuf::from(home).join(".config"))
+                })?
+                .join("afterward");
 
-    Some(directory.join(file_name))
+            #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
+            let directory = PathBuf::from(std::env::var_os("HOME")?).join(".afterward");
+            Some(directory)
+        };
+        Self(directory())
+    }
+}
+
+impl PreferencesDir {
+    pub(crate) fn file(&self, file_name: &str) -> Option<PathBuf> {
+        self.0.as_ref().map(|directory| directory.join(file_name))
+    }
 }

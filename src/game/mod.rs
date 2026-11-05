@@ -44,7 +44,7 @@ use flow::PhaseTimer;
 use player::{PlayerAction, PlayerBody, Reload};
 use random::RandomState;
 use session::RunSession;
-use settings::AudioSettings;
+use settings::{AudioSettings, PreferencesDir};
 use sprites::{AnimatedSprite, SpriteSheet, SpriteSheetSpec, SpriteSheets, set_animation};
 use terrain::{PlatformSurface, Terrain};
 use world::{ExitDoor, RoomEntity};
@@ -86,10 +86,11 @@ impl Plugin for GamePlugin {
             .init_resource::<RunSession>()
             .init_resource::<StartRoom>()
             .init_resource::<AudioSettings>()
+            .init_resource::<PreferencesDir>()
             .init_resource::<ControlBindings>()
             .init_resource::<SoundQueue>()
             .init_resource::<audio::SoundBank>()
-            .insert_resource(RandomState::default())
+            .init_resource::<RandomState>()
             .insert_resource(PhaseTimer(Timer::from_seconds(0.5, TimerMode::Once)))
             .add_systems(
                 Startup,

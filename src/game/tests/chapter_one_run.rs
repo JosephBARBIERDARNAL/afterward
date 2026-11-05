@@ -53,10 +53,11 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
         .insert_resource(PhaseTimer(Timer::from_seconds(1.0, TimerMode::Once)))
         .init_resource::<SoundQueue>()
         .init_resource::<ControlBindings>()
+        .insert_resource(PreferencesDir(None))
         .init_resource::<ButtonInput<KeyCode>>()
         .add_message::<PointerOver>()
         .add_message::<PointerClick>()
-        .add_systems(Startup, controls::initialize_default_control_bindings)
+        .add_systems(Startup, controls::initialize_control_bindings)
         .add_systems(OnEnter(GameScreen::Playing), spawn_test_room)
         .add_systems(
             Update,

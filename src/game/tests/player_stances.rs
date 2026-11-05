@@ -42,8 +42,9 @@ fn crouching_slows_cover_blocks_frontal_hits_and_death_plays_out_before_the_run_
         .insert_resource(RandomState(0x7374_616e_6365_7321))
         .init_resource::<SoundQueue>()
         .init_resource::<ControlBindings>()
+        .insert_resource(PreferencesDir(None))
         .init_resource::<ButtonInput<KeyCode>>()
-        .add_systems(Startup, controls::initialize_default_control_bindings)
+        .add_systems(Startup, controls::initialize_control_bindings)
         .add_systems(
             Startup,
             |mut commands: Commands, data: Res<GameData>, sheets: Res<SpriteSheets>| {
