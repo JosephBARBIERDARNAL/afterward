@@ -154,16 +154,29 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
                         if enemy_above_player {
                             keys.press(KeyCode::KeyW);
                         }
-                        let walking = dx.abs() > H_WORLD_UNITS * combat_distance_h
+                        // Bullets fly over an enemy well below a solid ledge, and
+                        // it may never climb up: walk off the ledge toward it
+                        // (on, in the facing direction, when it is right below).
+                        let step_off_ledge = enemy_transform.translation.y
+                            < player_transform.translation.y - H_WORLD_UNITS * 1.5
+                            && player.grounded
+                            && !player.on_one_way;
+                        let walking = step_off_ledge
+                            || dx.abs() > H_WORLD_UNITS * combat_distance_h
                             || dx.signum() != player.facing;
+                        let direction = if step_off_ledge && dx.abs() < H_WORLD_UNITS * 1.5 {
+                            player.facing
+                        } else {
+                            dx.signum()
+                        };
                         if walking {
-                            keys.press(if dx >= 0.0 {
+                            keys.press(if direction >= 0.0 {
                                 KeyCode::KeyD
                             } else {
                                 KeyCode::KeyA
                             });
                         }
-                        let blocked = walking && wall_ahead(dx.signum());
+                        let blocked = walking && wall_ahead(direction);
                         // An enemy right below a plank: drop through it.
                         let enemy_below = enemy_transform.translation.y
                             < player_transform.translation.y - H_WORLD_UNITS
@@ -189,9 +202,23 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
                     } else {
                         let room = &data.rooms[&session.room_id];
                         let feet_h = player_transform.translation.y / H_WORLD_UNITS - 0.5;
-                        if room.exit.y_h < feet_h - 0.5 && player.grounded && player.on_one_way {
+                        let exit_below = room.exit.y_h < feet_h - 0.5 && player.grounded;
+                        if exit_below && player.on_one_way {
                             keys.press(KeyCode::KeyS);
                             press_jump(&mut keys);
+                        } else if exit_below {
+                            // The exit is below this solid ledge: keep walking
+                            // until falling off it, turning around at a wall.
+                            let direction = if wall_ahead(player.facing) {
+                                -player.facing
+                            } else {
+                                player.facing
+                            };
+                            keys.press(if direction >= 0.0 {
+                                KeyCode::KeyD
+                            } else {
+                                KeyCode::KeyA
+                            });
                         } else if room.exit.x_h * H_WORLD_UNITS - player_transform.translation.x
                             > H_WORLD_UNITS * 0.65
                         {
