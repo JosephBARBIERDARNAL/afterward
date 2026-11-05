@@ -15,7 +15,11 @@
   for (y, row) in rows.enumerate() {
     for (x, key) in row.clusters().enumerate() {
       if key in palette {
-        place(dx: x * 1pt, dy: y * 1pt, rect(width: 1pt, height: 1pt, fill: palette.at(key)))
+        place(dx: x * 1pt, dy: y * 1pt, rect(
+          width: 1pt,
+          height: 1pt,
+          fill: palette.at(key),
+        ))
       }
     }
   }
@@ -24,9 +28,11 @@
 // Draws a `width` x `height` image whose color at each pixel is `color-at(x, y)`
 // (a palette key, or none to leave the pixel transparent).
 #let pixels-by(width, height, palette, color-at) = pixels(
-  range(height).map(y => range(width).map(x => {
-    let key = color-at(x, y)
-    if key == none { "." } else { key }
-  }).join()),
+  range(height).map(y => range(width)
+    .map(x => {
+      let key = color-at(x, y)
+      if key == none { "." } else { key }
+    })
+    .join()),
   palette,
 )
