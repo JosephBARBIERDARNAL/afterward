@@ -7,7 +7,7 @@ use bevy::{
     prelude::*,
     window::{MonitorSelection, WindowMode},
 };
-use data::GameData;
+use data::{GameData, WindowStartMode};
 
 fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let arguments = std::env::args().collect::<Vec<_>>();
@@ -35,8 +35,18 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         )
         .into());
     }
-    let starts_fullscreen = game_data.gameplay.window.start_borderless_fullscreen;
-    let is_resizable = game_data.gameplay.window.resizable_windowed;
+    let start_mode = game_data.gameplay.window.start_mode;
+    let mut window = Window {
+        title: "Afterward".to_string(),
+        mode: if start_mode == WindowStartMode::BorderlessFullscreen {
+            WindowMode::BorderlessFullscreen(MonitorSelection::Primary)
+        } else {
+            WindowMode::Windowed
+        },
+        resizable: game_data.gameplay.window.resizable_windowed,
+        ..default()
+    };
+    window.set_maximized(start_mode == WindowStartMode::Maximized);
 
     let asset_path = asset_root.to_string_lossy().into_owned();
 
@@ -50,16 +60,7 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
                     ..default()
                 })
                 .set(WindowPlugin {
-                    primary_window: Some(Window {
-                        title: "Afterward".to_string(),
-                        mode: if starts_fullscreen {
-                            WindowMode::BorderlessFullscreen(MonitorSelection::Primary)
-                        } else {
-                            WindowMode::Windowed
-                        },
-                        resizable: is_resizable,
-                        ..default()
-                    }),
+                    primary_window: Some(window),
                     ..default()
                 }),
         )

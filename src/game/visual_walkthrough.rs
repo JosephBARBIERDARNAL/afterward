@@ -85,6 +85,7 @@ fn initialize_visual_walkthrough(
     }
     if let Ok(mut window) = windows.single_mut() {
         window.mode = WindowMode::Windowed;
+        window.set_maximized(false);
         window.resolution.set(1280.0, 720.0);
     }
 }

@@ -105,7 +105,8 @@ room_flow:
   bonus_rerolls_per_run: 3
 
 window:
-  start_borderless_fullscreen: true
+  # maximized (a window filling the screen), borderless_fullscreen, or windowed.
+  start_mode: maximized
   resizable_windowed: true
   music_volume_percent: 100
   sfx_volume_percent: 100

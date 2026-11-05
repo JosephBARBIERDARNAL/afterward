@@ -264,7 +264,7 @@ Default controls:
 
 Settings:
 
-- Start in borderless fullscreen. Settings can switch to a resizable windowed mode or back; both preserve the fixed gameplay viewport.
+- Start in a maximized window: it fills the screen but keeps its frame and the system menu bar or taskbar (`window.start_mode` in `config/gameplay.yaml`; `borderless_fullscreen` and `windowed` are the alternatives). Settings can switch to borderless fullscreen or back; both preserve the fixed gameplay viewport.
 - Music and sound-effect volume have separate sliders, each ranging from 0 to 100 and defaulting to 100.
 - Volume changes apply immediately and persist locally between sessions.
 - Every control can be remapped.

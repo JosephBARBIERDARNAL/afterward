@@ -230,10 +230,22 @@ impl RoomIntroConfig {
 
 #[derive(Debug, Deserialize)]
 pub struct WindowConfig {
-    pub start_borderless_fullscreen: bool,
+    pub start_mode: WindowStartMode,
     pub resizable_windowed: bool,
     pub music_volume_percent: u8,
     pub sfx_volume_percent: u8,
+}
+
+/// How the game window opens.
+#[derive(Debug, Clone, Copy, Deserialize, Eq, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum WindowStartMode {
+    /// A regular window filling the screen, keeping the menu bar or taskbar.
+    Maximized,
+    /// Covers the whole screen without a window frame.
+    BorderlessFullscreen,
+    /// A regular window at the platform's default size.
+    Windowed,
 }
 
 #[derive(Debug, Deserialize)]
