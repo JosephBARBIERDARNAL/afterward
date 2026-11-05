@@ -97,28 +97,12 @@ pub(super) fn spawn_interface(mut commands: Commands, asset_server: Res<AssetSer
             ));
         });
 
-    commands.spawn((
-        Node {
-            position_type: PositionType::Absolute,
-            left: px(24),
-            top: px(20),
-            ..default()
-        },
-        Text::new(""),
-        TextFont {
-            font_size: FontSize::Px(22.0),
-            ..default()
-        },
-        TextColor(Color::WHITE),
-        HudText,
-    ));
-
     commands
         .spawn((
             Node {
                 position_type: PositionType::Absolute,
                 left: px(24),
-                top: px(56),
+                top: px(20),
                 width: px(320),
                 height: px(24),
                 ..default()
@@ -155,6 +139,29 @@ pub(super) fn spawn_interface(mut commands: Commands, asset_server: Res<AssetSer
                     BackgroundColor(Color::srgb(0.77, 0.18, 0.26)),
                     HealthFill,
                 ));
+            // The health readout, centered over the whole bar.
+            parent.spawn((
+                Node {
+                    position_type: PositionType::Absolute,
+                    width: percent(100),
+                    height: percent(100),
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::Center,
+                    ..default()
+                },
+                Text::new(""),
+                TextFont {
+                    font_size: FontSize::Px(14.0),
+                    ..default()
+                },
+                TextLayout::justify(Justify::Center),
+                TextColor(Color::WHITE),
+                TextShadow {
+                    offset: Vec2::ONE,
+                    color: Color::srgba(0.0, 0.0, 0.0, 0.8),
+                },
+                HealthText,
+            ));
         });
 }
 
@@ -230,20 +237,12 @@ pub(super) fn update_letterbox(
 pub(super) fn update_hud(
     screen: Res<State<GameScreen>>,
     session: Res<RunSession>,
-    mut text_query: Query<&mut Text, With<HudText>>,
+    mut text_query: Query<&mut Text, With<HealthText>>,
     mut fill_query: Query<&mut Node, With<HealthFill>>,
     mut bar_visibility: Query<&mut Visibility, With<HealthBarFrame>>,
 ) {
-    let text_value = if matches!(screen.get(), GameScreen::RoomIntro | GameScreen::Playing) {
-        format!(
-            "ROOM {:02}    HP {:03.0}/{:03.0}",
-            session.room_id, session.health, session.max_health
-        )
-    } else {
-        String::new()
-    };
     for mut text in &mut text_query {
-        text.0 = text_value.clone();
+        text.0 = format!("{:.0}/{:.0}", session.health, session.max_health);
     }
     let health_fraction = if session.max_health > 0.0 {
         session.health / session.max_health
@@ -321,7 +320,7 @@ pub(super) fn update_room_transition_overlay(
 pub(crate) struct ScreenLabel;
 
 #[derive(Component)]
-pub(crate) struct HudText;
+pub(crate) struct HealthText;
 
 #[derive(Component)]
 pub(crate) struct HealthFill;

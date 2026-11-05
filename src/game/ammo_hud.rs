@@ -10,7 +10,10 @@ const LOADED_ROUND: Color = Color::srgb(0.98, 0.8, 0.36);
 const RELOADING_ROUND: Color = Color::srgba(0.98, 0.8, 0.36, 0.45);
 const SPENT_ROUND: Color = Color::srgba(0.32, 0.28, 0.22, 0.75);
 
-/// Bottom-right ammo readout: the rounds left over the magazine size, and one
+/// Backing panel, so the readout stays legible over any background.
+const PANEL_BACKGROUND: Color = Color::srgba(0.02, 0.025, 0.05, 0.5);
+
+/// Ammo readout under the health bar: the rounds left over the magazine size, and one
 /// pip per round that empties as the player fires and refills while reloading.
 #[derive(Component)]
 pub(super) struct AmmoHud;
@@ -33,14 +36,18 @@ pub(super) fn spawn_ammo_hud(mut commands: Commands, asset_server: Res<AssetServ
     commands
         .spawn((
             Node {
+                // Left-aligned with the health bar (interface.rs), 6 px below it.
                 position_type: PositionType::Absolute,
-                right: px(24),
-                bottom: px(20),
+                left: px(24),
+                top: px(50),
                 flex_direction: FlexDirection::Column,
-                align_items: AlignItems::FlexEnd,
+                align_items: AlignItems::FlexStart,
                 row_gap: px(4),
+                padding: UiRect::axes(px(8), px(6)),
+                border_radius: BorderRadius::all(px(4)),
                 ..default()
             },
+            BackgroundColor(PANEL_BACKGROUND),
             Visibility::Hidden,
             AmmoHud,
             Pickable::IGNORE,

@@ -77,7 +77,7 @@ The gun is the player's only weapon. Holding Shoot (J) fires a bullet every `PLA
 - Bullets are visible projectiles that leave the gun's muzzle (per-aim offsets in `player.gun.muzzle_offset_h`), fly straight at `PLAYER_BULLET_SPEED`, and stop at the first enemy they touch, at solid terrain, at the room's edges, or after `PLAYER_BULLET_RANGE`. They fly through one-way platforms. A bullet hits only one enemy. An enemy pressed against the player is still hit point-blank.
 - Every shot bursts into a small fiery explosion at the muzzle, and every bullet hitting an enemy bursts into a larger one at the impact: a hot core that swells and cools from yellow to red while embers fly outward, then fades (`muzzle_flash` and `impact_burst` in `player.gun`). A bullet hitting terrain makes a small burst.
 - The magazine holds `PLAYER_GUN_MAGAZINE_SIZE` rounds and starts full in every room. Emptying it reloads automatically; Reload (R) refills a partial magazine early. Reloading takes `PLAYER_GUN_RELOAD_DURATION`, during which the gun cannot fire. Reserve ammunition is unlimited.
-- Ammo HUD: the bottom-right corner shows the rounds left over the magazine size (for example `7 / 10`) above one small round icon per round (a pixel-art bullet, tinted gold when loaded). Spent rounds are dimmed; while reloading the text reads `RELOADING` and the pips refill one by one with the reload's progress.
+- Ammo HUD: just below the health bar, on a semi-transparent dark panel that keeps it legible over any background, the HUD shows the rounds left over the magazine size (for example `7 / 10`) above one small round icon per round (a pixel-art bullet, tinted gold when loaded). Spent rounds are dimmed; while reloading the text reads `RELOADING` and the pips refill one by one with the reload's progress.
 - Cover (L, held on the ground): the player raises a guard and can neither move, jump, dash, shoot, nor start a reload. Damage from enemies in front of the player is multiplied by `PLAYER_COVER_DAMAGE_MULTIPLIER`; hits from behind are not reduced.
 
 | Constant                                 | Value | Unit or notes                                         |
@@ -108,7 +108,7 @@ The gun is the player's only weapon. Holding Shoot (J) fires a bullet every `PLA
 ## Health
 
 - Health persists between rooms during a run.
-- The player's health appears as a horizontal bar in the top-left corner, starting at 100/100: a red fill in a riveted steel pixel-art frame.
+- The player's health appears as a horizontal bar in the top-left corner, starting at 100/100: a red fill in a riveted steel pixel-art frame, with the current and maximum health (`92/100`) centered on the bar. The HUD does not show the room number.
 - Enemy health appears above its head as a red bar with a black remainder and disappears when the enemy dies.
 - Healing is scarce, so taking damage matters.
 - Each enemy has a 4% base chance to drop a 10 HP health pickup.
