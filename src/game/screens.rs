@@ -2,26 +2,13 @@ use super::*;
 use crate::game::interface::ScreenLabel;
 use bevy::window::{MonitorSelection, PrimaryWindow, WindowMode};
 
-/// Menu line for the debug room editor, shown in debug builds only.
-const EDITOR_MENU_LINE: &str = if cfg!(debug_assertions) {
-    "\nD  Debug editor"
-} else {
-    ""
-};
-
 pub(super) fn update_screen_text(
     screen: Res<State<GameScreen>>,
     session: Res<RunSession>,
     data: Res<GameData>,
-    settings: Res<AudioSettings>,
-    controls: Res<ControlBindings>,
     mut labels: Query<&mut Text, With<ScreenLabel>>,
 ) {
     let message = match screen.get() {
-        GameScreen::MainMenu => format!("AFTERWARD\n\nENTER  Begin run{EDITOR_MENU_LINE}"),
-        GameScreen::Paused => format!(
-            "PAUSED\n\nENTER  Continue\nS  Settings\nR  Restart\nM  Main menu{EDITOR_MENU_LINE}"
-        ),
         GameScreen::RoomClear => String::from("ROOM CLEARED"),
         GameScreen::BossIntro => String::from("CHAPTER ONE\n\nTHE EVIL WIZARD"),
         GameScreen::Transitioning => data
@@ -40,48 +27,16 @@ pub(super) fn update_screen_text(
                 || String::from("CHAPTER ONE COMPLETE"),
                 |_| format!("ROOM {:02}", session.room_id),
             ),
-        GameScreen::Settings => format!(
-            "SETTINGS\n\n{} MUSIC  {}%\n{} SOUND  {}%\n\nMENU UP/DOWN  Select\nMOVE LEFT/RIGHT  Adjust\nINTERACT  Controls\n{} FULLSCREEN\nPAUSE  Back",
-            if settings.selected_slider == 0 {
-                ">"
-            } else {
-                " "
-            },
-            settings.music_volume_percent,
-            if settings.selected_slider == 1 {
-                ">"
-            } else {
-                " "
-            },
-            settings.sfx_volume_percent,
-            controls.binding_label(GameAction::ToggleFullscreen),
-        ),
-        GameScreen::Controls => {
-            let mut message = String::from("CONTROLS\n\n");
-            for (index, action) in GameAction::ALL.iter().enumerate() {
-                let marker = if controls.selected_action_index == index {
-                    "> "
-                } else {
-                    "  "
-                };
-                message.push_str(&format!(
-                    "{marker}{}  {}\n",
-                    action.label(),
-                    controls.binding_label(*action)
-                ));
-            }
-            if controls.waiting_for_key {
-                message.push_str("\nPRESS A KEY TO BIND  (ESC cancels)");
-            } else {
-                message.push_str(
-                    "\nMENU UP/DOWN  Select   INTERACT  Remap\nR  Restore defaults   PAUSE  Back",
-                );
-            }
-            message
-        }
-        GameScreen::Dead => String::from("RUN ENDED\n\nENTER  Return to menu"),
-        GameScreen::Complete => String::from("CHAPTER ONE CLEARED\n\nENTER  Return to menu"),
-        GameScreen::RoomIntro | GameScreen::Playing | GameScreen::Bonus => String::new(),
+        // Menus are drawn as cards by `menus::update_menu`.
+        GameScreen::MainMenu
+        | GameScreen::Paused
+        | GameScreen::Settings
+        | GameScreen::Controls
+        | GameScreen::Dead
+        | GameScreen::Complete
+        | GameScreen::RoomIntro
+        | GameScreen::Playing
+        | GameScreen::Bonus => String::new(),
         #[cfg(debug_assertions)]
         GameScreen::Editor => String::new(),
     };

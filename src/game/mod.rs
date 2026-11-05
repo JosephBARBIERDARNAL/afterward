@@ -17,6 +17,7 @@ mod controls;
 mod editor;
 mod flow;
 mod interface;
+mod menus;
 mod pause_blur;
 mod player;
 mod random;
@@ -26,6 +27,7 @@ mod session;
 mod settings;
 mod sprites;
 mod terrain;
+mod ui_style;
 mod visual_walkthrough;
 mod world;
 
@@ -99,6 +101,7 @@ impl Plugin for GamePlugin {
                     interface::spawn_interface,
                     ammo_hud::spawn_ammo_hud,
                     bonus_screen::spawn_bonus_screen,
+                    menus::spawn_menu,
                     assets::load_sprites,
                     settings::initialize_settings,
                     controls::initialize_control_bindings,
@@ -152,6 +155,7 @@ impl Plugin for GamePlugin {
                     interface::update_room_transition_overlay,
                     interface::update_menu_modal,
                     bonus_screen::update_bonus_screen,
+                    menus::update_menu,
                     camera::update_background_parallax,
                     interface::update_hud,
                     ammo_hud::update_ammo_hud,

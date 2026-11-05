@@ -131,7 +131,7 @@ fn drive_visual_walkthrough(resources: VisualWalkthroughResources) {
         GameScreen::MainMenu => 0.5,
         GameScreen::Playing if scene.door_open => 0.35,
         GameScreen::Playing => 0.75,
-        GameScreen::Paused => 0.35,
+        GameScreen::Paused | GameScreen::Settings | GameScreen::Controls => 0.35,
         GameScreen::RoomClear => 0.2,
         GameScreen::Bonus => 0.5,
         GameScreen::BossIntro => 0.35,
@@ -147,6 +147,8 @@ fn drive_visual_walkthrough(resources: VisualWalkthroughResources) {
             }
             GameScreen::Playing => format!("room_{:03}_combat", scene.room_id),
             GameScreen::Paused => String::from("paused-overlay"),
+            GameScreen::Settings => String::from("settings"),
+            GameScreen::Controls => String::from("controls"),
             GameScreen::RoomClear => format!("room_{:03}_clear", scene.room_id),
             GameScreen::Bonus => format!("room_{:03}_bonus", scene.room_id),
             GameScreen::BossIntro => format!("room_{:03}_boss-intro", scene.room_id),
@@ -199,7 +201,9 @@ fn drive_visual_walkthrough(resources: VisualWalkthroughResources) {
             walkthrough.pause_shown = true;
             next_screen.set(GameScreen::Paused);
         }
-        GameScreen::Paused => next_screen.set(GameScreen::Playing),
+        GameScreen::Paused => next_screen.set(GameScreen::Settings),
+        GameScreen::Settings => next_screen.set(GameScreen::Controls),
+        GameScreen::Controls => next_screen.set(GameScreen::Playing),
         GameScreen::Playing => {
             for entity in &enemies {
                 commands.entity(entity).despawn();

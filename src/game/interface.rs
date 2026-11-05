@@ -1,8 +1,8 @@
 use super::*;
 use bevy::{camera::Viewport, text::FontSize, window::PrimaryWindow};
 
-const MENU_BLUR_RADIUS_PX: f32 = 1.8;
-const BONUS_BLUR_RADIUS_PX: f32 = 18.0;
+/// Blur behind the bonus screen and the menus, so their cards stand out.
+const MODAL_BLUR_RADIUS_PX: f32 = 18.0;
 
 pub(super) fn spawn_interface(mut commands: Commands) {
     commands.spawn((
@@ -77,33 +77,16 @@ pub(super) fn spawn_interface(mut commands: Commands) {
             Pickable::IGNORE,
         ))
         .with_children(|parent| {
-            let mut panel = parent.spawn((
-                Node {
-                    width: percent(78),
-                    max_width: px(760),
-                    padding: UiRect::all(px(28)),
-                    flex_direction: FlexDirection::Column,
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::Center,
-                    border_radius: BorderRadius::all(px(8)),
+            parent.spawn((
+                Text::new(""),
+                TextFont {
+                    font_size: FontSize::Px(32.0),
                     ..default()
                 },
-                BackgroundColor(Color::srgba(0.015, 0.02, 0.04, 0.0)),
-                MenuPanel,
-                Pickable::IGNORE,
+                TextLayout::justify(Justify::Center),
+                TextColor(Color::WHITE),
+                ScreenLabel,
             ));
-            panel.with_children(|parent| {
-                parent.spawn((
-                    Text::new("AFTERWARD"),
-                    TextFont {
-                        font_size: FontSize::Px(32.0),
-                        ..default()
-                    },
-                    TextLayout::justify(Justify::Center),
-                    TextColor(Color::WHITE),
-                    ScreenLabel,
-                ));
-            });
         });
 
     commands.spawn((
@@ -152,20 +135,9 @@ pub(super) fn spawn_interface(mut commands: Commands) {
 #[derive(Component)]
 pub(super) struct MenuBackdrop;
 
-#[derive(Component)]
-pub(super) struct MenuPanel;
-
-type MenuBackdropQuery<'w, 's> = Query<
-    'w,
-    's,
-    (&'static mut BackgroundColor, &'static mut Visibility),
-    (With<MenuBackdrop>, Without<MenuPanel>),
->;
-
 pub(super) fn update_menu_modal(
     screen: Res<State<GameScreen>>,
-    mut backdrop: MenuBackdropQuery,
-    mut panel: Query<&mut BackgroundColor, With<MenuPanel>>,
+    mut backdrop: Query<(&mut BackgroundColor, &mut Visibility), With<MenuBackdrop>>,
     mut camera_blur: Query<&mut pause_blur::PauseBlur, With<Camera2d>>,
 ) {
     let is_modal = matches!(
@@ -187,18 +159,11 @@ pub(super) fn update_menu_modal(
             *visibility = Visibility::Hidden;
         }
     }
-    for mut color in &mut panel {
-        color.0 = if is_modal {
-            Color::srgba(0.015, 0.02, 0.04, 0.94)
-        } else {
-            Color::srgba(0.015, 0.02, 0.04, 0.0)
-        };
-    }
     for mut blur in &mut camera_blur {
-        blur.radius_pixels = match screen.get() {
-            GameScreen::Bonus => BONUS_BLUR_RADIUS_PX,
-            _ if is_modal => MENU_BLUR_RADIUS_PX,
-            _ => 0.0,
+        blur.radius_pixels = if is_blurred {
+            MODAL_BLUR_RADIUS_PX
+        } else {
+            0.0
         };
     }
 }

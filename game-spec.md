@@ -260,6 +260,7 @@ Default controls:
 - 1 / 2: choose the first / second bonus. R: reroll the bonus offers. Up/Down + Enter, or a mouse click, also work on the bonus screen.
 - Death: the death animation plays and holds for `PLAYER_DEATH_HOLD` with every control ignored before the run-ended screen appears.
 - Escape: open or close the pause menu. The menu offers Continue, Restart, Settings, and Leave. Leave returns to the main menu shown before a run.
+- Every menu (main, pause, settings, controls, run ended, chapter cleared) shares the bonus screen's look over the blurred game: a centered title, then one dark bordered card per option with its key in a badge. Settings show each volume as a bar; the controls list fills two columns, and the selected row is highlighted.
 
 Settings:
 

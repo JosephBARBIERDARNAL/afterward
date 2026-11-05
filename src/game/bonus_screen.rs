@@ -1,12 +1,9 @@
 use super::*;
+use crate::game::ui_style::{
+    ACTIVE_BORDER, CARD_BACKGROUND, CARD_HIGHLIGHT_BACKGROUND, DESCRIPTION_COLOR, MUTED, key_badge,
+    overlay_root, title,
+};
 use bevy::text::FontSize;
-
-const CARD_BACKGROUND: Color = Color::srgba(0.03, 0.035, 0.07, 0.94);
-const CARD_HIGHLIGHT_BACKGROUND: Color = Color::srgba(0.11, 0.12, 0.19, 0.96);
-const KEY_BACKGROUND: Color = Color::srgba(1.0, 1.0, 1.0, 0.1);
-const ACTIVE_BORDER: Color = Color::srgba(0.92, 0.94, 1.0, 0.85);
-const MUTED: Color = Color::srgba(0.6, 0.62, 0.7, 0.55);
-const DESCRIPTION_COLOR: Color = Color::srgb(0.84, 0.86, 0.92);
 
 #[derive(Component)]
 pub(super) struct BonusScreenRoot;
@@ -55,42 +52,8 @@ enum BonusSpanKind {
 }
 
 pub(super) fn spawn_bonus_screen(mut commands: Commands) {
-    let key_badge = |size: f32| {
-        (
-            Node {
-                width: px(size),
-                height: px(size),
-                flex_shrink: 0.0,
-                border: UiRect::all(px(2)),
-                border_radius: BorderRadius::all(px(6)),
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
-                ..default()
-            },
-            BackgroundColor(KEY_BACKGROUND),
-            BorderColor::all(ACTIVE_BORDER),
-            Pickable::IGNORE,
-        )
-    };
-
     commands
-        .spawn((
-            Node {
-                position_type: PositionType::Absolute,
-                left: px(0),
-                right: px(0),
-                top: px(0),
-                bottom: px(0),
-                flex_direction: FlexDirection::Column,
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
-                ..default()
-            },
-            GlobalZIndex(1),
-            Visibility::Hidden,
-            BonusScreenRoot,
-            Pickable::IGNORE,
-        ))
+        .spawn((overlay_root(), BonusScreenRoot))
         .with_children(|parent| {
             parent
                 .spawn(Node {
@@ -102,19 +65,7 @@ pub(super) fn spawn_bonus_screen(mut commands: Commands) {
                     ..default()
                 })
                 .with_children(|parent| {
-                    parent.spawn((
-                        Text::new("CHOOSE A BONUS"),
-                        TextFont {
-                            font_size: FontSize::Px(32.0),
-                            ..default()
-                        },
-                        TextLayout::justify(Justify::Center),
-                        TextColor(Color::WHITE),
-                        Node {
-                            margin: UiRect::bottom(px(8)),
-                            ..default()
-                        },
-                    ));
+                    parent.spawn(title("CHOOSE A BONUS"));
                     for (index, action) in
                         [GameAction::ChooseFirstBonus, GameAction::ChooseSecondBonus]
                             .into_iter()
