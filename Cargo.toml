@@ -62,7 +62,7 @@ allow_attributes_without_reason = "warn"
 unsafe_code = "forbid"
 
 [dependencies]
-bevy = { version = "0.20", features = ["wav"] }
+bevy = { version = "0.20.1", features = ["wav"] }
 serde = { version = "1.0", features = ["derive"] }
 yaml_serde = "0.10.7"
 
