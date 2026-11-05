@@ -179,10 +179,11 @@ pub(super) fn spawn_enemies(
         let profile = &data.enemies.types[&spawn.type_id];
         let key = spawn.type_id.idle_sheet();
         let sheet = &sheets.0[key];
-        let scale = if spawn.type_id == "evil_wizard" {
-            1.2
-        } else {
-            ENEMY_SPRITE_SCALE
+        let scale = match &*spawn.type_id {
+            "evil_wizard" => 1.2,
+            // A 32 px character, drawn larger to stand as tall as the others.
+            "dark_ninja" => 1.1,
+            _ => ENEMY_SPRITE_SCALE,
         };
         // Source pixels: empty rows above and below the figure, and the height
         // of the entity origin above the feet. Combat and AI measure from that
@@ -195,6 +196,7 @@ pub(super) fn spawn_enemies(
                     (51.0, 0.0, sheet.frame_size.y / 2.0)
                 }
                 "evil_wizard" => (63.0, 83.0, 26.0),
+                "dark_ninja" => (15.0, 8.0, 24.0),
                 _ => (0.0, 0.0, sheet.frame_size.y / 2.0),
             };
         let mut attacks = if profile.attacks.is_empty() {

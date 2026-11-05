@@ -69,6 +69,7 @@ impl EnemyTypeId {
             "gorgon_1" => "enemy_gorgon_1_idle",
             "gorgon_2" => "enemy_gorgon_2_idle",
             "gorgon_3" => "enemy_gorgon_3_idle",
+            "dark_ninja" => "enemy_dark_ninja_idle",
             "evil_wizard" => "boss_idle",
             _ => "enemy_swordsman_idle",
         }

@@ -57,7 +57,7 @@ platforms:
 # Decorations: non-solid panels behind the terrain or in front of the bodies.
 decorations: []
 enemy_spawns:
-  - type_id: swordsman
+  - type_id: dark_ninja
     position_h: { x: 4, y: 5 }
   - type_id: gorgon_1
     position_h: { x: 8.5, y: 3 }

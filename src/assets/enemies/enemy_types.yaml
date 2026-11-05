@@ -82,6 +82,17 @@ types:
       reach_h: 1.6
       cooldown_s: 1.8
       windup_s: 0.55
+  # Fast, fragile melee: dashes in and slashes before others can react.
+  dark_ninja:
+    health: 26
+    movement_speed_h_s: 4
+    behavior: melee_pursuit
+    attack:
+      kind: lunge
+      damage: 9
+      reach_h: 1.2
+      cooldown_s: 1.3
+      windup_s: 0.25
   evil_wizard:
     health: 300
     movement_speed_h_s: 3

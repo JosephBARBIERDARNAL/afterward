@@ -85,7 +85,7 @@ enemy_spawns:
     position_h: { x: 13.5, y: 9 }
   - type_id: gorgon_2
     position_h: { x: 21.5, y: 11 }
-  - type_id: swordsman
+  - type_id: dark_ninja
     position_h: { x: 27, y: 1 }
   - type_id: destroyer
     position_h: { x: 26.5, y: 9 }

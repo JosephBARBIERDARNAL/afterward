@@ -182,7 +182,7 @@ next_room_id: null # null only for room 100
 - Each non-boss room contains 5 to 15 enemies and at least two different enemy types.
 - `ENEMY_DETECTION_RANGE` defaults to 10 H horizontally. Enemies stay idle until the player enters this range, then retain the player as their target for the rest of the room—even if the player leaves detection range. They stay engaged until defeated or the room is cleared. Taking damage from the player also triggers combat immediately. Store this shared setting alongside the enemy profiles.
 - In combat, melee enemies pursue the player and attack when in range; ranged enemies reposition to keep their preferred distance, then fire after a readable wind-up. Attacks deal damage only through their hitbox or projectile (no contact damage), and taking a hit interrupts the current action.
-- Behaviors follow the existing animations: the Swordsman and Gorgon 1/3 close in for melee attacks, the Infantryman fires regular shots, the Destroyer uses slower charged shots, and Gorgon 2 uses its special ranged attack. The Gorgon variants share a visual style but vary in speed and attack weight.
+- Behaviors follow the existing animations: the Swordsman and Gorgon 1/3 close in for melee attacks, the Infantryman fires regular shots, the Destroyer uses slower charged shots, Gorgon 2 uses its special ranged attack, and the Dark Ninja dashes in for quick slashes and vanishes in purple flame when defeated (its Teleport animation). The Gorgon variants share a visual style but vary in speed and attack weight.
 
 | Type ID       |  HP | Attack                                                                    | Movement / behavior            |
 | ------------- | --: | ------------------------------------------------------------------------- | ------------------------------ |
@@ -192,6 +192,7 @@ next_room_id: null # null only for room 100
 | `gorgon_1`    |  28 | 8 damage; lunge, 1.3 H reach, 1.4 s cooldown, 0.3 s wind-up               | 3.5 H/s; fast pursuer          |
 | `gorgon_2`    |  36 | 10 damage; special projectile at 7 H/s, 2 s cooldown, 0.5 s wind-up       | 2.3 H/s; keeps 5–8 H distance  |
 | `gorgon_3`    |  46 | 12 damage; heavy melee sweep, 1.6 H reach, 1.8 s cooldown, 0.55 s wind-up | 2.2 H/s; slow pursuer          |
+| `dark_ninja`  |  26 | 9 damage; lunge, 1.2 H reach, 1.3 s cooldown, 0.25 s wind-up              | 4 H/s; fastest pursuer         |
 
 - Chapter 1 boss `evil_wizard`: 300 HP; moves at 3 H/s; jumps 2.75 H high. Its three attacks are a two-hit melee combo (10 damage per hit, Attack 1 animation), a telegraphed lunge (15 damage, Attack 2 animation), and a jump slam: after a crouched wind-up it leaps toward the player and deals 18 damage within 2 H of its landing point on touchdown (Jump and Fall animations). Use 0.45–0.8 s wind-ups and 1.4–2.5 s cooldowns. At 50% HP, reduce cooldowns by 20%. These values are initial and tunable.
 - Every enemy has idle, movement, hit-reaction, and death animations.

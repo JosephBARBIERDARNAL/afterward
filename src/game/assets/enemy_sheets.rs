@@ -263,5 +263,52 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             fps: 7.0,
             first_cell: UVec2::ZERO,
         },
+        // Dark Ninja: 128 x 64 cells packed from source/frames/ (attack
+        // frames keep the body in place and extend right for the slash).
+        SpriteSheetSpec {
+            key: "enemy_dark_ninja_idle".into(),
+            path: "enemies/dark_ninja/Idle.png".into(),
+            frame_width: 128,
+            frame_height: 64,
+            frames: 8,
+            fps: 1e+01,
+            first_cell: UVec2::ZERO,
+        },
+        SpriteSheetSpec {
+            key: "enemy_dark_ninja_walk".into(),
+            path: "enemies/dark_ninja/Move.png".into(),
+            frame_width: 128,
+            frame_height: 64,
+            frames: 8,
+            fps: 1e+01,
+            first_cell: UVec2::ZERO,
+        },
+        SpriteSheetSpec {
+            key: "enemy_dark_ninja_attack".into(),
+            path: "enemies/dark_ninja/Attack_1.png".into(),
+            frame_width: 128,
+            frame_height: 64,
+            frames: 6,
+            fps: 1e+01,
+            first_cell: UVec2::ZERO,
+        },
+        SpriteSheetSpec {
+            key: "enemy_dark_ninja_hurt".into(),
+            path: "enemies/dark_ninja/Hurt.png".into(),
+            frame_width: 128,
+            frame_height: 64,
+            frames: 3,
+            fps: 1e+01,
+            first_cell: UVec2::ZERO,
+        },
+        SpriteSheetSpec {
+            key: "enemy_dark_ninja_dead".into(),
+            path: "enemies/dark_ninja/Dead.png".into(),
+            frame_width: 128,
+            frame_height: 64,
+            frames: 16,
+            fps: 2e+01,
+            first_cell: UVec2::ZERO,
+        },
     ]
 }
