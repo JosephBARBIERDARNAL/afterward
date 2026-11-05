@@ -3,6 +3,7 @@
 #
 # Textures are seamless 16 px squares from the "Textures16x16" pack by Androx
 # (terrain/textures/README.txt; terrain/textures/overview.png shows them all).
+# The wood family is drawn in Typst instead (art/, `just art`).
 # They tile in world space, so neighboring blocks of one material line up.
 
 texture_px: 16
@@ -263,3 +264,14 @@ materials:
   brick_mossy_block:
     texture: terrain/textures/brick/mossy_block.png
     footstep: stone
+
+  # Wood: drawn in Typst (art/terrain/textures/wood/, rendered by `just art`).
+  wood_planks:
+    texture: terrain/textures/wood/planks.png
+    footstep: wood
+  wood_dark_planks:
+    texture: terrain/textures/wood/dark_planks.png
+    footstep: wood
+  wood_crate:
+    texture: terrain/textures/wood/crate.png
+    footstep: wood

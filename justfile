@@ -32,3 +32,16 @@ e2e:
 # Run the tests, optionally filtered by name: `just test enemy_jumping`.
 test filter="":
     cargo test --locked {{filter}}
+
+# Render the Typst pixel art in art/ to PNGs at the same path under src/assets/
+# (art/terrain/textures/wood/planks.typ -> src/assets/terrain/textures/wood/planks.png).
+# Files starting with `_` are shared libraries, not images.
+art:
+    #!/usr/bin/env sh
+    set -eu
+    find art -name '*.typ' ! -name '_*' | while read -r src; do
+        out="src/assets/${src#art/}"
+        mkdir -p "$(dirname "$out")"
+        typst compile --root art --format png --ppi 72 "$src" "${out%.typ}.png"
+        echo "$src -> ${out%.typ}.png"
+    done

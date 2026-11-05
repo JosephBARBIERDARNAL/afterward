@@ -77,6 +77,15 @@ Debug builds (`cargo run`, `just run`) add `D  Debug editor` to the main menu (o
 - The material palette (top right) shows every material of `terrain/materials.yaml`: clicking a swatch paints the selected blocks and decorations and becomes the material new ones use. Clicks over a panel never reach the room.
 - The key that opens the editor from a menu (D) is ignored on the frame it opens, so it doesn't also add a decoration.
 
+### Typst pixel art
+
+Some assets are drawn in code with [Typst](https://typst.app) instead of a paint program: geometric, grid-aligned art such as the `wood` terrain textures. Sources live in `art/`, mirroring their output path under `src/assets/` (`art/terrain/textures/wood/planks.typ` renders `src/assets/terrain/textures/wood/planks.png`).
+
+- `just art` renders every source (needs `typst` installed). The PNGs are committed, so building and CI never need Typst; rerun `just art` and commit both after editing a source.
+- `art/_pixel.typ` makes a page exactly the image's size and draws 1 pt squares, rendered at 72 ppi: one square per pixel, no anti-aliasing. `pixels` draws text art (one character per pixel, looked up in a palette); `pixels-by` computes each pixel from a function.
+- Files starting with `_` are shared libraries (palettes, patterns), not images. A palette swap is a second three-line source reusing the same pattern (`dark_planks.typ`).
+- Keep to axis-aligned squares on whole points: curves, diagonal strokes, and text come out anti-aliased.
+
 ### Code layout
 
 - `src/data.rs` loads and validates every YAML file under `src/assets/` into the `GameData` resource. `src/data/` holds one module per YAML source: `gameplay.rs` (`config/gameplay.yaml`), `enemies.rs`, `backgrounds.rs`, `bonuses.rs`, `rooms.rs`, `terrain.rs` (`terrain/materials.yaml`), `player_animations.rs`.
