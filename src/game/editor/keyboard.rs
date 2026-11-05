@@ -51,6 +51,7 @@ pub(super) fn type_text(
 #[derive(SystemParam)]
 pub(super) struct EditorKeyResources<'w, 's> {
     keys: Res<'w, ButtonInput<KeyCode>>,
+    typed: MessageReader<'w, 's, KeyboardInput>,
     editor: ResMut<'w, RoomEditor>,
     data: ResMut<'w, GameData>,
     session: ResMut<'w, RunSession>,
@@ -62,6 +63,7 @@ pub(super) struct EditorKeyResources<'w, 's> {
 pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
     let EditorKeyResources {
         keys,
+        mut typed,
         mut editor,
         mut data,
         mut session,
@@ -69,7 +71,25 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
         mut next_screen,
         mut camera,
     } = resources;
-    if editor.keys_consumed || keys.get_just_pressed().next().is_none() {
+    // Presses come from the key events rather than `ButtonInput`: macOS sends
+    // no key-up for a key released while Cmd is held, so a second Cmd+Z would
+    // never count as "just pressed". Only the arrows repeat while held.
+    let presses = typed
+        .read()
+        .filter(|input| {
+            input.state == ButtonState::Pressed
+                && (!input.repeat
+                    || matches!(
+                        input.key_code,
+                        KeyCode::ArrowUp
+                            | KeyCode::ArrowDown
+                            | KeyCode::ArrowLeft
+                            | KeyCode::ArrowRight
+                    ))
+        })
+        .map(|input| input.key_code)
+        .collect::<Vec<_>>();
+    if editor.keys_consumed || presses.is_empty() {
         return;
     }
     let command = keys.any_pressed([
@@ -79,7 +99,7 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
         KeyCode::SuperRight,
     ]);
     let shift = keys.any_pressed([KeyCode::ShiftLeft, KeyCode::ShiftRight]);
-    let pressed = |key: KeyCode| keys.just_pressed(key);
+    let pressed = |key: KeyCode| presses.contains(&key);
     if !pressed(KeyCode::Escape) {
         editor.leave_armed = false;
     }
@@ -354,8 +374,8 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
             next_screen.set(GameScreen::MainMenu);
         } else {
             editor.leave_armed = true;
-            editor.status = String::from(
-                "Unsaved rooms: Ctrl+S saves them, Esc again leaves (edits stay in memory until the game quits).",
+            editor.status = format!(
+                "Unsaved rooms: {COMMAND_KEY}+S saves them, Esc again leaves (edits stay in memory until the game quits)."
             );
         }
     }

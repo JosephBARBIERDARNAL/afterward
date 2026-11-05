@@ -1,9 +1,13 @@
 //! Mouse editing: click to select, drag to move, drag a selected block's edge
-//! to resize, right- or middle-drag to pan, and the wheel to zoom.
+//! to resize, two-finger scroll or right/middle-drag to pan, and pinch or the
+//! mouse wheel to zoom.
 
 use super::*;
 use bevy::{
-    input::mouse::{AccumulatedMouseScroll, MouseScrollUnit},
+    input::{
+        gestures::PinchGesture,
+        mouse::{AccumulatedMouseScroll, MouseScrollUnit},
+    },
     window::PrimaryWindow,
 };
 
@@ -11,14 +15,15 @@ use bevy::{
 const EDGE_GRAB_H: f32 = 0.2;
 /// Zoom change per wheel line.
 const ZOOM_PER_LINE: f32 = 1.12;
-/// Scroll pixels counted as one wheel line (trackpads report pixels).
-const PIXELS_PER_LINE: f32 = 40.0;
+/// Wheel lines of zoom per unit of pinch (its magnification change).
+const PINCH_TO_LINES: f32 = 8.0;
 
 #[derive(SystemParam)]
 pub(super) struct EditorPointerResources<'w, 's> {
     mouse: Res<'w, ButtonInput<MouseButton>>,
     keys: Res<'w, ButtonInput<KeyCode>>,
     scroll: Res<'w, AccumulatedMouseScroll>,
+    pinches: MessageReader<'w, 's, PinchGesture>,
     editor: ResMut<'w, RoomEditor>,
     data: ResMut<'w, GameData>,
     windows: Query<'w, 's, &'static Window, With<PrimaryWindow>>,
@@ -40,6 +45,7 @@ pub(super) fn handle_pointer(resources: EditorPointerResources) {
         mouse,
         keys,
         scroll,
+        mut pinches,
         mut editor,
         mut data,
         windows,
@@ -55,27 +61,41 @@ pub(super) fn handle_pointer(resources: EditorPointerResources) {
         .and_then(|position| camera.viewport_to_world_2d(camera_transform, position).ok())
         .map(|world| world / H_WORLD_UNITS);
     editor.cursor_h = cursor_h;
-    let Some(cursor_h) = cursor_h else {
-        return;
-    };
     let Projection::Orthographic(orthographic) = &mut *projection else {
         return;
     };
 
-    let lines = match scroll.unit {
-        MouseScrollUnit::Line => scroll.delta.y,
-        MouseScrollUnit::Pixel => scroll.delta.y / PIXELS_PER_LINE,
-    };
-    if lines.abs() > f32::EPSILON {
+    // A trackpad scrolls in pixels and pans, with the content following the
+    // fingers; a mouse wheel scrolls in lines and zooms, as does a pinch.
+    let mut zoom_lines = pinches
+        .read()
+        .map(|pinch| pinch.0 * PINCH_TO_LINES)
+        .sum::<f32>();
+    match scroll.unit {
+        MouseScrollUnit::Line => zoom_lines += scroll.delta.y,
+        MouseScrollUnit::Pixel => {
+            let world_per_pixel = camera.logical_viewport_size().map_or(0.0, |size| {
+                data.gameplay.viewport.height_h * H_WORLD_UNITS * orthographic.scale / size.y
+            });
+            transform.translation.x -= scroll.delta.x * world_per_pixel;
+            transform.translation.y += scroll.delta.y * world_per_pixel;
+        }
+    }
+    if zoom_lines.abs() > f32::EPSILON {
         let old_scale = orthographic.scale;
-        orthographic.scale = (old_scale * ZOOM_PER_LINE.powf(-lines)).clamp(MIN_ZOOM, MAX_ZOOM);
-        // Keep the point under the cursor in place.
+        orthographic.scale =
+            (old_scale * ZOOM_PER_LINE.powf(-zoom_lines)).clamp(MIN_ZOOM, MAX_ZOOM);
+        // Keep the point under the cursor (or the view's center) in place.
         let camera_h = transform.translation.truncate() / H_WORLD_UNITS;
-        let camera_h = cursor_h + (camera_h - cursor_h) * orthographic.scale / old_scale;
+        let anchor_h = cursor_h.unwrap_or(camera_h);
+        let camera_h = anchor_h + (camera_h - anchor_h) * orthographic.scale / old_scale;
         transform.translation.x = camera_h.x * H_WORLD_UNITS;
         transform.translation.y = camera_h.y * H_WORLD_UNITS;
     }
 
+    let Some(cursor_h) = cursor_h else {
+        return;
+    };
     if mouse.any_just_pressed([MouseButton::Right, MouseButton::Middle]) {
         editor.drag = Some(Drag::Pan { anchor: cursor_h });
     }

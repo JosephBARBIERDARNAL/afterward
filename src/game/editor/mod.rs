@@ -17,6 +17,12 @@ const SNAP_H: f32 = 0.25;
 /// Snap step while Shift is held, for fine placement.
 const FINE_SNAP_H: f32 = 0.05;
 const MIN_ZOOM: f32 = 0.4;
+/// The modifier shortcuts are shown with; Ctrl and Cmd both work everywhere.
+const COMMAND_KEY: &str = if cfg!(target_os = "macos") {
+    "Cmd"
+} else {
+    "Ctrl"
+};
 const MAX_ZOOM: f32 = 4.0;
 
 pub(super) struct EditorPlugin;
@@ -331,7 +337,8 @@ fn snap(value: f32, fine: bool) -> f32 {
     } else {
         1.0 / SNAP_H
     };
-    (value * steps_per_h).round() / steps_per_h
+    // Adding 0.0 turns -0.0 into 0.0, which the room files would show as `-0`.
+    (value * steps_per_h).round() / steps_per_h + 0.0
 }
 
 /// The inspector panel, rewritten every frame.
@@ -350,7 +357,8 @@ fn enter_editor(
     mut camera: Query<&mut Transform, With<Camera2d>>,
 ) {
     editor.open_room(session.room_id);
-    editor.status = String::from("Editing a copy in memory: Ctrl+S writes it to the YAML file.");
+    editor.status =
+        format!("Editing a copy in memory: {COMMAND_KEY}+S writes it to the YAML file.");
     if let (Ok(mut transform), Some(room)) = (camera.single_mut(), data.rooms.get(&session.room_id))
     {
         transform.translation.x = room.player_spawn.x_h * H_WORLD_UNITS;
@@ -386,14 +394,15 @@ fn enter_editor(
     ));
     commands.spawn((
         panel_node(None, Some(px(12)), None, Some(px(12))),
-        Text::new(
+        Text::new(format!(
             "Click select | drag move (Shift: fine grid) | drag a selected block's edge to resize\n\
-             Right/middle drag pan | wheel zoom | Home fit room\n\
-             At cursor: T terrain | P platform | E enemy    Del delete | Ctrl+D duplicate\n\
+             Two-finger scroll or right/middle drag pan | pinch or wheel zoom | Home fit room\n\
+             At cursor: T terrain | P platform | E enemy    Del delete | {COMMAND_KEY}+D duplicate\n\
              Up/Down field | Left/Right change (Shift x4) | Enter type text | C clear\n\
-             PgUp/PgDn room | Ctrl+Z undo | Ctrl+Y redo | Ctrl+S save | Ctrl+R playtest\n\
+             PgUp/PgDn room | {COMMAND_KEY}+Z undo | {COMMAND_KEY}+Shift+Z or {COMMAND_KEY}+Y redo | \
+             {COMMAND_KEY}+S save | {COMMAND_KEY}+R playtest\n\
              Esc deselect, then back to the menu",
-        ),
+        )),
         font,
         TextColor(Color::srgb(0.78, 0.8, 0.86)),
         BackgroundColor(Color::srgba(0.02, 0.025, 0.05, 0.82)),
@@ -452,6 +461,7 @@ mod tests {
         assert_eq!(floor_under(room, 20.0, 5.0), Some(1.0));
         assert_eq!(snap(2.37, false), 2.25);
         assert_eq!(snap(2.37, true), 2.35);
+        assert!(snap(-0.1, false).is_sign_positive());
     }
 
     #[test]

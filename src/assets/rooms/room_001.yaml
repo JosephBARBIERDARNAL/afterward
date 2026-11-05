@@ -7,21 +7,20 @@ description: "Crypt entrance: a low hall with a step and a raised gallery reache
 size:
   width_viewports: 2
   height_h: 14
-background_profile: chapter_01_forest
+background_profile: chapter_01_hills
 player_spawn:
-  x_h: 2.5
+  x_h: 2.75
   y_h: 1
 # Solid blocks: they stop bodies and projectiles from every side.
 terrain:
   - label: floor
     surface: soil
     rect_h: { x: 0, y: 0, width: 32, height: 1 }
-  - label: ceiling
-    surface: stone
-    rect_h: { x: 0, y: 13, width: 32, height: 1 }
+  - surface: stone
+    rect_h: { x: -0, y: 8, width: 32, height: 6 }
   - label: left wall above the entrance doorway
     surface: stone
-    rect_h: { x: 0, y: 4, width: 1, height: 9 }
+    rect_h: { x: 0, y: 4, width: 1, height: 4 }
   - label: right wall above the exit doorway
     surface: stone
     rect_h: { x: 31, y: 4, width: 1, height: 9 }
@@ -49,6 +48,10 @@ enemy_spawns:
     position_h: { x: 27, y: 7 }
   - type_id: swordsman
     position_h: { x: 28, y: 1 }
+  - type_id: destroyer
+    position_h: { x: 4, y: 1 }
+  - type_id: destroyer
+    position_h: { x: 10.5, y: 2.5 }
 exit:
   x_h: 29.5
   y_h: 1

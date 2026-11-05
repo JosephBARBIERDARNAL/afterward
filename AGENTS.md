@@ -59,10 +59,11 @@ Without `just`, pass the flag directly: `cargo run -- --room 7`.
 
 Debug builds (`cargo run`, `just run`) add `D  Debug editor` to the main menu (opens the start room) and the pause menu (opens the room being played). The editor lives in `src/game/editor/` and is compiled out of release builds (`#[cfg(debug_assertions)]`).
 
-- It edits the rooms in `GameData` in place: Ctrl+R playtests the edited room immediately (and makes it the start room, so pause-menu restarts replay it), and the edits stay in memory until the game quits.
-- Ctrl+S validates all game data with `GameData::validate` (the same checks as at startup) and writes each changed room back to `src/assets/rooms/room_NNN.yaml` through the `Display` impl in `src/data/room_yaml.rs`. Saving is refused while the data is invalid; the inspector shows the problem as soon as an edit causes it.
+- Shortcuts take Cmd on macOS and Ctrl elsewhere (both work everywhere; the help shows the platform's). They read `KeyboardInput` events rather than `ButtonInput`, because macOS sends no key-up for keys released while Cmd is held.
+- It edits the rooms in `GameData` in place: Cmd+R playtests the edited room immediately (and makes it the start room, so pause-menu restarts replay it), and the edits stay in memory until the game quits.
+- Cmd+S validates all game data with `GameData::validate` (the same checks as at startup) and writes each changed room back to `src/assets/rooms/room_NNN.yaml` through the `Display` impl in `src/data/room_yaml.rs`. Saving is refused while the data is invalid; the inspector shows the problem as soon as an edit causes it.
 - Saved files use one canonical layout. Keep notes about blocks and enemies in `label:` fields and the room's idea in `description:`; per-entry YAML comments would be lost on the next save. When a room field is added, update `room_yaml.rs` too (its round-trip test catches fields it drops).
-- The on-screen help lists every control: click to select, drag to move, drag a selected block's edge to resize, right/middle drag to pan, wheel to zoom, T/P/E to add terrain/platform/enemy at the cursor, arrows for the inspector (room size, background, surface, enemy type, stat overrides, labels).
+- The on-screen help lists every control: click to select, drag to move, drag a selected block's edge to resize, two-finger trackpad scroll or right/middle drag to pan, pinch or mouse wheel to zoom, T/P/E to add terrain/platform/enemy at the cursor, arrows for the inspector (room size, background, surface, enemy type, stat overrides, labels).
 
 ### Code layout
 
