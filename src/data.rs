@@ -444,6 +444,16 @@ impl GameData {
             }
         }
 
+        let recorded = &self.gameplay.audio.recorded_effects;
+        for effect in [&recorded.gun_shot, &recorded.reload, &recorded.door_open] {
+            if !asset_root.join(&effect.asset).is_file() {
+                return Err(InvalidGameData::from(format!(
+                    "missing sound effect asset: {}",
+                    effect.asset
+                )));
+            }
+        }
+
         Ok(())
     }
 }

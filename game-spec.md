@@ -285,6 +285,7 @@ Settings:
 ### Gameplay Sound Effects
 
 - Player actions have sound effects synchronized with their animations. Include movement and surface-specific footsteps, jumping, landing, gunshots and bullet hits (with a distinct, heavier hit for the Last Round bullet), reloading, cover blocking a hit, enemy projectiles striking the environment, dashing, taking damage, healing pickups, and death. Idle sounds may be subtle and should not become repetitive or distracting.
+- Gunshots, reloading, and the exit door opening use recorded effects from `src/assets/audio/sfx/` (`gun-shot.wav`, `reload.wav`, `door-open.wav`), configured with their gain under `audio.recorded_effects` in `config/gameplay.yaml`. The other effects are still synthesized placeholder tones.
 - A bullet hitting an enemy must sound different from one hitting terrain. Damage and healing sounds must be easy to recognize.
 - Each enemy type has a recognizable sound identity, with sounds for idle, movement, attack execution, taking damage, and death. Include attack-preparation cues where applicable. Enemy hit sounds clearly confirm a successful hit, dangerous attacks have clear warning cues, and death sounds are short enough to avoid clutter when several enemies die together.
 - Stronger attacks have more powerful impact sounds.

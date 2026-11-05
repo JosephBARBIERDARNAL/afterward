@@ -35,6 +35,23 @@ pub struct AudioConfig {
     pub room_clear_music_volume_multiplier: f32,
     pub chapter_one_music_gain: f32,
     pub chapter_one_ambience_gain: f32,
+    pub recorded_effects: RecordedEffects,
+}
+
+/// Recorded sound files that replace the synthesized tone of their cue.
+#[derive(Debug, Deserialize)]
+pub struct RecordedEffects {
+    pub gun_shot: RecordedEffect,
+    pub reload: RecordedEffect,
+    pub door_open: RecordedEffect,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct RecordedEffect {
+    /// Path under `src/assets/`.
+    pub asset: String,
+    /// Multiplies the sound-effects volume setting.
+    pub gain: f32,
 }
 
 #[derive(Debug, Deserialize)]

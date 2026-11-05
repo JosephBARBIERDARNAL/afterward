@@ -48,8 +48,8 @@ impl HeadlessGame {
         Self::with_data_root(asset_root, None)
     }
 
-    /// The game reading a temporary copy of the YAML data (and the art the
-    /// data validation checks), so editor saves never touch `src/assets`.
+    /// The game reading a temporary copy of the YAML data (and the art and
+    /// sounds the data validation checks), so editor saves never touch `src/assets`.
     fn with_copied_data() -> Self {
         let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
         let nanos = SystemTime::now()
@@ -58,7 +58,7 @@ impl HeadlessGame {
         let copy =
             std::env::temp_dir().join(format!("afterward-e2e-{}-{nanos}", std::process::id()));
         let mut pending = vec![PathBuf::from("config"), PathBuf::from("rooms")];
-        pending.extend([PathBuf::from("player"), PathBuf::from("background")]);
+        pending.extend(["player", "background", "audio"].map(PathBuf::from));
         while let Some(relative) = pending.pop() {
             fs::create_dir_all(copy.join(&relative)).expect("the temp folder is writable");
             let entries = fs::read_dir(asset_root.join(&relative)).expect("assets are readable");

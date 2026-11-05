@@ -116,6 +116,12 @@ audio:
   room_clear_music_volume_multiplier: 0.55
   chapter_one_music_gain: 0.2
   chapter_one_ambience_gain: 0.1
+  # Recorded effects replace the synthesized tone of their cue. Paths are under
+  # src/assets/; gain multiplies the sound-effects volume setting.
+  recorded_effects:
+    gun_shot: { asset: audio/sfx/gun-shot.wav, gain: 0.5 }
+    reload: { asset: audio/sfx/reload.wav, gain: 0.45 }
+    door_open: { asset: audio/sfx/door-open.wav, gain: 0.3 }
 
 controls:
   move_left: [KeyA, KeyQ, ArrowLeft]

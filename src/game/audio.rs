@@ -157,6 +157,8 @@ pub(super) struct ManagedAudio {
 pub(super) fn initialize_sound_bank(
     mut bank: ResMut<SoundBank>,
     mut audio_sources: ResMut<Assets<AudioSource>>,
+    asset_server: Res<AssetServer>,
+    data: Res<GameData>,
 ) {
     for (cue, start_hz, end_hz, seconds, gain) in cue_specs() {
         let source = audio_sources.add(AudioSource::from(ToneSpec {
@@ -166,6 +168,15 @@ pub(super) fn initialize_sound_bank(
             amplitude: 0.8,
         }));
         bank.cues.insert(cue, (source, gain));
+    }
+    let recorded = &data.gameplay.audio.recorded_effects;
+    for (cue, effect) in [
+        (SoundCue::GunShot, &recorded.gun_shot),
+        (SoundCue::Reload, &recorded.reload),
+        (SoundCue::DoorOpen, &recorded.door_open),
+    ] {
+        bank.cues
+            .insert(cue, (asset_server.load(effect.asset.clone()), effect.gain));
     }
     bank.chapter_one_music = Some(audio_sources.add(AudioSource::from(ChapterOneForestLoop)));
     bank.chapter_one_calm_music =
