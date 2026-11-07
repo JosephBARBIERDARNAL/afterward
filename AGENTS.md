@@ -3,6 +3,7 @@
 Afterward is a single-player, offline, 2D action roguelike pixel-art platformer. The core design:
 
 - A run is 100 hand-authored rooms played in fixed order, split into 10 chapters of 10 rooms. Each chapter has its own environment and music, and ends with a boss in its tenth room; room 100 holds the final boss. Rooms are not procedurally generated.
+- A run opens in room 0, before the chapter proper: one flat viewport with no enemies and nothing to collect, whose door stands open from the start, so the player just walks in and runs out to the right. It is the default start room (`just run` opens it, `just run 1` skips it). Any room authored without enemies behaves that way: its door is unlocked on arrival, and there is no room-clear flash and no bonus, since nothing was cleared.
 - Rooms are enclosed, multi-level arenas (Dead Cells style): solid terrain, one-way platforms, ledges at several heights, reachable by the player and by enemies. The player walks in from the left; the exit is on the right.
 - Clearing a room offers a choice of two random bonuses (never one already owned, with a few rerolls per run). Bonuses build a temporary run build. Death ends the run and nothing carries over: no currency, unlocks, or meta-progression.
 - Health persists between rooms and healing is scarce, so taking damage matters.

@@ -16,7 +16,10 @@ fn jump_peak_h(hold_frames: usize) -> f32 {
         .insert_resource(TimeUpdateStrategy::ManualDuration(Duration::from_micros(
             1_000_000 / 240,
         )))
-        .init_resource::<RunSession>()
+        .insert_resource(RunSession {
+            room_id: 1,
+            ..default()
+        })
         .init_resource::<SoundQueue>()
         .init_resource::<ControlBindings>()
         .insert_resource(PreferencesDir(None))

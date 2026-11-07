@@ -21,6 +21,9 @@ fn the_editor_edits_undoes_with_cmd_z_on_azerty_saves_and_playtests() {
     let mut game = HeadlessGame::with_copied_data();
     game.tap(KeyCode::KeyD);
     assert_eq!(game.screen(), GameScreen::Editor);
+    // The editor opens the start room, the empty room 0; Page Down moves on
+    // to room 1, which this scenario edits.
+    game.tap(KeyCode::PageDown);
     let width = |game: &HeadlessGame| game.data().rooms[&1].size.width_viewports;
     let original = width(&game);
     let (step, edited) = (KeyCode::ArrowRight, original + 1);
@@ -63,6 +66,8 @@ fn the_editor_selects_all_copies_into_another_room_adds_and_paints_a_decoration(
     let mut game = HeadlessGame::with_copied_data();
     game.tap(KeyCode::KeyD);
     assert_eq!(game.screen(), GameScreen::Editor);
+    // Page Down leaves the start room 0 for room 1, the room copied below.
+    game.tap(KeyCode::PageDown);
     let room = |game: &HeadlessGame, room_id: u16| game.data().rooms[&room_id].clone();
     let first = room(&game, 1);
     let second = room(&game, 2);

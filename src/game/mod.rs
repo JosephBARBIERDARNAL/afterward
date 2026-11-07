@@ -66,16 +66,11 @@ const MOVING_SPEED_THRESHOLD: f32 = 20.0;
 
 pub struct GamePlugin;
 
-/// Room a new run starts in. Defaults to room 1; `--room <id>` overrides it
-/// for debugging, and restarts from the pause menu return to the same room.
-#[derive(Resource, Clone, Copy, Debug, PartialEq, Eq)]
+/// Room a new run starts in. Defaults to the empty opening room 0; `--room
+/// <id>` overrides it for debugging, and restarts from the pause menu return
+/// to the same room.
+#[derive(Resource, Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct StartRoom(pub u16);
-
-impl Default for StartRoom {
-    fn default() -> Self {
-        Self(1)
-    }
-}
 
 impl std::str::FromStr for StartRoom {
     type Err = String;

@@ -39,7 +39,10 @@ fn default_controls_move_jump_and_dash_the_player() {
         .insert_resource(TimeUpdateStrategy::ManualDuration(Duration::from_millis(
             50,
         )))
-        .init_resource::<RunSession>()
+        .insert_resource(RunSession {
+            room_id: 1,
+            ..default()
+        })
         .insert_resource(RandomState(0x616e_696d_6174_696f))
         .init_resource::<SoundQueue>()
         .init_resource::<ControlBindings>()

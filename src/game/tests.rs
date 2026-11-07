@@ -58,5 +58,5 @@ fn projectiles_collide_with_solid_terrain_along_their_travel_path() {
 fn start_room_parses_room_ids_and_rejects_anything_else() {
     assert_eq!("7".parse::<StartRoom>(), Ok(StartRoom(7)));
     assert!("boss".parse::<StartRoom>().is_err());
-    assert_eq!(StartRoom::default(), StartRoom(1));
+    assert_eq!(StartRoom::default(), StartRoom(0));
 }

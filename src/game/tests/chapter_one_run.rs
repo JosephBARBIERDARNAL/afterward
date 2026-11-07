@@ -29,9 +29,11 @@ type TestPilotEnemies<'w, 's> =
 fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
     let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
     let data = GameData::load(&asset_root).expect("Chapter 1 data should load");
+    // Room 0 is empty: it is crossed, never cleared.
     let expected_rosters = data
         .rooms
         .iter()
+        .filter(|(_, room)| !room.enemy_spawns.is_empty())
         .map(|(room_id, room)| (*room_id, room.enemy_spawns.len()))
         .collect::<BTreeMap<_, _>>();
     let placeholder_sheet = SpriteSheet {
@@ -497,7 +499,7 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
     assert!(saw_boss_intro, "the run should show the room 10 boss intro");
     assert_eq!(
         intro_rooms,
-        (1..=10).collect(),
+        (0..=10).collect(),
         "every room should open on its entrance animation"
     );
     assert_eq!(bonus_rooms, (1..=10).collect());

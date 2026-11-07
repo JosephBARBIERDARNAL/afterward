@@ -16,6 +16,12 @@ pub(super) fn room_clear_check(
     if enemies.iter().any(|enemy| enemy.health > 0.0) {
         return;
     }
+    // A room authored without enemies (the opening room 0) has nothing to
+    // clear and no bonus to offer: the player just walks out of its open door.
+    if data.rooms[&session.room_id].enemy_spawns.is_empty() {
+        session.door_open = true;
+        return;
+    }
     session.door_open = false;
     session.offered_bonuses.clear();
     timer.0 = Timer::from_seconds(data.gameplay.room_flow.clear_animation_s, TimerMode::Once);

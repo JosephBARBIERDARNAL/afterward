@@ -45,7 +45,10 @@ next_room_id: 2
             50,
         )))
         .init_state::<GameScreen>()
-        .init_resource::<RunSession>()
+        .insert_resource(RunSession {
+            room_id: 1,
+            ..default()
+        })
         .init_resource::<SoundQueue>()
         .add_systems(
             Startup,

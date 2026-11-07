@@ -37,7 +37,10 @@ fn solid_terrain_stops_the_player_and_low_ledges_are_mantled() {
         .insert_resource(TimeUpdateStrategy::ManualDuration(Duration::from_micros(
             16_667,
         )))
-        .init_resource::<RunSession>()
+        .insert_resource(RunSession {
+            room_id: 1,
+            ..default()
+        })
         .init_resource::<SoundQueue>()
         .init_resource::<ControlBindings>()
         .insert_resource(PreferencesDir(None))
@@ -183,7 +186,10 @@ fn one_way_platforms_are_jumped_through_and_dropped_through() {
         .insert_resource(TimeUpdateStrategy::ManualDuration(Duration::from_micros(
             16_667,
         )))
-        .init_resource::<RunSession>()
+        .insert_resource(RunSession {
+            room_id: 1,
+            ..default()
+        })
         .init_resource::<SoundQueue>()
         .init_resource::<ControlBindings>()
         .insert_resource(PreferencesDir(None))
@@ -296,7 +302,10 @@ fn jumping_off_a_wall_kicks_the_player_away_from_it() {
         .insert_resource(TimeUpdateStrategy::ManualDuration(Duration::from_micros(
             16_667,
         )))
-        .init_resource::<RunSession>()
+        .insert_resource(RunSession {
+            room_id: 1,
+            ..default()
+        })
         .init_resource::<SoundQueue>()
         .init_resource::<ControlBindings>()
         .insert_resource(PreferencesDir(None))

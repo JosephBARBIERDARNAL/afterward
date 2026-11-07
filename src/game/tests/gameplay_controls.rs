@@ -46,7 +46,10 @@ next_room_id: 2
         )))
         .init_state::<GameScreen>()
         .insert_state(GameScreen::Playing)
-        .init_resource::<RunSession>()
+        .insert_resource(RunSession {
+            room_id: 1,
+            ..default()
+        })
         .insert_resource(RandomState(0x6174_7461_636b_6572))
         .init_resource::<SoundQueue>()
         .init_resource::<ControlBindings>()

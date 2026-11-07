@@ -120,7 +120,9 @@ pub(super) fn spawn_room_platforms(commands: &mut Commands, room: &RoomConfig, d
     }
 }
 
-/// The locked exit door, standing on the room's `exit`.
+/// The exit door, standing on the room's `exit`. It is locked until the room
+/// is cleared and a bonus picked, except in a room with no enemies (the
+/// opening room 0), where it stands unlocked from the start.
 pub(super) fn spawn_exit_door(
     commands: &mut Commands,
     room: &RoomConfig,
@@ -133,7 +135,11 @@ pub(super) fn spawn_exit_door(
         sheet.image.clone(),
         TextureAtlas {
             layout: sheet.layout.clone(),
-            index: 0,
+            index: if room.enemy_spawns.is_empty() {
+                ExitDoor::UNLOCKED_FRAME
+            } else {
+                0
+            },
         },
     );
     sprite.custom_size = Some(Vec2::new(

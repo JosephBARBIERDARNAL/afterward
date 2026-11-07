@@ -35,10 +35,7 @@ fn a_run_goes_from_the_menu_through_combat_the_bonus_and_the_door_to_room_two() 
     assert_eq!(door_frame(&mut game), Some(1), "and unlocks its sprite");
     let health = game.session().health;
 
-    game.step_toward_exit();
-    game.key(KeyCode::KeyD, ButtonState::Pressed);
-    game.wait_for_screen(GameScreen::Transitioning, 3.0);
-    game.key(KeyCode::KeyD, ButtonState::Released);
+    game.leave_through_the_door();
     game.run_seconds(0.2);
     assert!(
         door_frame(&mut game) >= Some(2),

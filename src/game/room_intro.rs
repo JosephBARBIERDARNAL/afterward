@@ -20,11 +20,20 @@ const ENEMY_APPEAR_STRETCH_X: f32 = 0.5;
 /// Overshoot of the enemy's rise ("back out" easing; 1.70158 is the classic ~10%).
 const ENEMY_APPEAR_OVERSHOOT: f32 = 1.70158;
 
-pub(super) fn start_room_intro(data: Res<GameData>, mut timer: ResMut<PhaseTimer>) {
-    timer.0 = Timer::from_seconds(
-        data.gameplay.room_flow.room_intro.duration_s(),
-        TimerMode::Once,
-    );
+pub(super) fn start_room_intro(
+    data: Res<GameData>,
+    session: Res<RunSession>,
+    mut timer: ResMut<PhaseTimer>,
+) {
+    let intro = &data.gameplay.room_flow.room_intro;
+    // Nobody materializes in a room without enemies: it opens as soon as the
+    // player has walked in.
+    let duration_s = if data.rooms[&session.room_id].enemy_spawns.is_empty() {
+        intro.enemies_start_s()
+    } else {
+        intro.duration_s()
+    };
+    timer.0 = Timer::from_seconds(duration_s, TimerMode::Once);
 }
 
 pub(super) fn update_room_intro(
@@ -36,9 +45,10 @@ pub(super) fn update_room_intro(
     mut sounds: ResMut<SoundQueue>,
 ) {
     let enemies_start_s = data.gameplay.room_flow.room_intro.enemies_start_s();
+    let has_enemies = !data.rooms[&session.room_id].enemy_spawns.is_empty();
     let before_s = timer.0.elapsed_secs();
     timer.0.tick(time.delta());
-    if before_s < enemies_start_s && timer.0.elapsed_secs() >= enemies_start_s {
+    if has_enemies && before_s < enemies_start_s && timer.0.elapsed_secs() >= enemies_start_s {
         sounds.push(SoundCue::EnemiesAppear);
     }
     if timer.0.is_finished() {

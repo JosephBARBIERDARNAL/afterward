@@ -75,7 +75,10 @@ next_room_id: 2
         .insert_resource(TimeUpdateStrategy::ManualDuration(Duration::from_millis(
             50,
         )))
-        .init_resource::<RunSession>()
+        .insert_resource(RunSession {
+            room_id: 1,
+            ..default()
+        })
         .insert_resource(RandomState(0x7368_6965_6c64_2121))
         .init_resource::<SoundQueue>()
         .init_resource::<ControlBindings>()

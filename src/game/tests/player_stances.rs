@@ -44,7 +44,10 @@ fn crouching_slows_cover_blocks_frontal_hits_and_death_plays_out_before_the_run_
             50,
         )))
         .insert_state(GameScreen::Playing)
-        .init_resource::<RunSession>()
+        .insert_resource(RunSession {
+            room_id: 1,
+            ..default()
+        })
         .insert_resource(RandomState(0x7374_616e_6365_7321))
         .init_resource::<SoundQueue>()
         .init_resource::<ControlBindings>()

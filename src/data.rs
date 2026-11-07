@@ -49,7 +49,8 @@ impl GameData {
         let terrain = read_yaml(&asset_root.join("terrain/materials.yaml"))?;
         let mut rooms = BTreeMap::new();
 
-        for room_id in 1..=10 {
+        // Room 0 is the run's empty opening room; the chapter proper is 1..=10.
+        for room_id in 0..=10 {
             let room: RoomConfig = read_yaml(&RoomConfig::file_path(asset_root, room_id))?;
             rooms.insert(room.room_id, room);
         }
@@ -315,9 +316,9 @@ impl GameData {
             }
         }
 
-        if self.rooms.len() != 10 {
+        if self.rooms.len() != 11 {
             return Err(InvalidGameData::from(
-                "the Chapter 1 data must contain rooms 1 through 10",
+                "the Chapter 1 data must contain the opening room 0 and rooms 1 through 10",
             ));
         }
 
@@ -560,7 +561,11 @@ mod tests {
         let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
         let data = GameData::load(&asset_root).expect("Chapter 1 YAML should be valid");
 
-        assert_eq!(data.rooms.len(), 10);
+        assert_eq!(data.rooms.len(), 11);
+        assert!(
+            data.rooms[&0].enemy_spawns.is_empty(),
+            "the opening room holds no enemies"
+        );
         assert_eq!(data.bonuses.bonuses.len(), 21);
         assert_eq!(data.rooms[&10].enemy_spawns[0].type_id, "evil_wizard");
         assert!(

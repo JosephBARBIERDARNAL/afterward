@@ -30,6 +30,7 @@ mod bonus;
 mod death;
 mod editor;
 mod hitboxes;
+mod opening_room;
 mod pause;
 mod run;
 
@@ -182,11 +183,24 @@ impl HeadlessGame {
         self.app.update();
     }
 
-    /// From the main menu, starts a run and plays through the room entrance.
+    /// From the main menu, starts a run and plays it to room 1, where the
+    /// first fight waits: a run opens in the empty room 0, which is crossed
+    /// through its already open door.
     fn start_run(&mut self) {
         assert_eq!(self.screen(), GameScreen::MainMenu);
         self.tap(KeyCode::Enter);
         self.wait_for_screen(GameScreen::Playing, 10.0);
+        assert_eq!(self.session().room_id, 0);
+        self.leave_through_the_door();
+        self.wait_for_screen(GameScreen::Playing, 10.0);
+    }
+
+    /// Walks the player into the room's open door and waits for the next room.
+    fn leave_through_the_door(&mut self) {
+        self.step_toward_exit();
+        self.key(KeyCode::KeyD, ButtonState::Pressed);
+        self.wait_for_screen(GameScreen::Transitioning, 3.0);
+        self.key(KeyCode::KeyD, ButtonState::Released);
     }
 
     fn enemies(&mut self) -> Vec<(f32, f32)> {

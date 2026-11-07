@@ -34,7 +34,7 @@ fn the_pause_menu_adjusts_settings_resumes_restarts_and_leaves() {
     game.tap(KeyCode::Escape);
     game.tap(KeyCode::KeyR);
     game.wait_for_screen(GameScreen::Playing, 10.0);
-    assert_eq!(game.session().room_id, 1);
+    assert_eq!(game.session().room_id, 0, "back in the opening room");
     assert_eq!(game.session().health, max_health);
 
     game.tap(KeyCode::Escape);

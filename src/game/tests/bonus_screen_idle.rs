@@ -39,7 +39,10 @@ fn behind_the_bonus_screen_the_player_lands_and_idles_without_taking_input() {
         .insert_resource(TimeUpdateStrategy::ManualDuration(Duration::from_millis(
             20,
         )))
-        .init_resource::<RunSession>()
+        .insert_resource(RunSession {
+            room_id: 1,
+            ..default()
+        })
         .init_resource::<SoundQueue>()
         .init_resource::<ControlBindings>()
         .insert_resource(PreferencesDir(None))

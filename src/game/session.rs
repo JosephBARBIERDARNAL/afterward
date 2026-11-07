@@ -46,7 +46,7 @@ impl RunSession {
 impl Default for RunSession {
     fn default() -> Self {
         Self {
-            room_id: 1,
+            room_id: 0,
             health: 100.0,
             max_health: 100.0,
             rerolls: 3,
