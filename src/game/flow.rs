@@ -125,7 +125,7 @@ pub(super) fn handle_bonus_input(
             return;
         }
         session.rerolls -= 1;
-        sounds.push(SoundCue::BonusSelected);
+        sounds.push(SoundCue::BonusRerolled);
         session.offered_bonuses =
             draw_bonus_pair(&data, &session, &mut random, &session.previous_offers);
         session.previous_offers.clear();

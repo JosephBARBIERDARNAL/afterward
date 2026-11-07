@@ -32,8 +32,6 @@ pub struct AudioConfig {
     pub footstep_interval_s: f32,
     pub paused_music_volume_multiplier: f32,
     pub room_clear_music_volume_multiplier: f32,
-    pub chapter_one_music_gain: f32,
-    pub chapter_one_ambience_gain: f32,
     /// How muffled the music sounds while paused: 0 leaves it untouched, 1 cuts
     /// the highs hardest.
     pub paused_music_muffle: f32,
@@ -55,6 +53,10 @@ pub struct RecordedEffects {
     pub damage_metal: AudioAsset,
     /// The hit that breaks a metal enemy's shield.
     pub damage_metal_armor: AudioAsset,
+    /// Taking one of the two bonuses on offer.
+    pub bonus_chosen: AudioAsset,
+    /// Spending a reroll on the bonus screen.
+    pub bonus_reroll: AudioAsset,
 }
 
 /// A sound file and how loud it plays relative to its volume setting.

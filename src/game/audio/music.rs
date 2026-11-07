@@ -154,25 +154,42 @@ impl Source for MuffledLoop {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{data::GameData, game::audio::synthesis::wav_header_and_data};
+    use crate::data::GameData;
     use std::path::Path;
 
     const TONE_SAMPLE_RATE: u32 = 22_050;
     /// The length of the tones below: 0.05 s, short enough to loop quickly.
     const TONE_SAMPLES: usize = (TONE_SAMPLE_RATE as f32 * 0.05) as usize;
 
-    /// A test signal of `hz`, as the mono 16-bit WAV a decoder expects. It
-    /// stands in for a music file; the game itself synthesizes no effects.
+    /// A test signal of `hz`, as the mono 16-bit WAV a decoder expects: the
+    /// one thing these tests need that no recording gives them, a tone of a
+    /// known frequency to hold the filter against. The game plays no
+    /// generated audio.
     fn tone(hz: f32) -> AudioSource {
-        let mut data = Vec::with_capacity(TONE_SAMPLES * 2);
+        let mut samples = Vec::with_capacity(TONE_SAMPLES * 2);
         for index in 0..TONE_SAMPLES {
             let seconds = index as f32 / TONE_SAMPLE_RATE as f32;
             let value =
                 ((std::f32::consts::TAU * hz * seconds).sin() * 0.8 * f32::from(i16::MAX)) as i16;
-            data.extend_from_slice(&value.to_le_bytes());
+            samples.extend_from_slice(&value.to_le_bytes());
         }
+        let data_len = samples.len() as u32;
+        let mut wav = Vec::with_capacity(44 + samples.len());
+        wav.extend_from_slice(b"RIFF");
+        wav.extend_from_slice(&(36 + data_len).to_le_bytes());
+        wav.extend_from_slice(b"WAVEfmt ");
+        wav.extend_from_slice(&16_u32.to_le_bytes());
+        wav.extend_from_slice(&1_u16.to_le_bytes()); // PCM
+        wav.extend_from_slice(&1_u16.to_le_bytes()); // mono
+        wav.extend_from_slice(&TONE_SAMPLE_RATE.to_le_bytes());
+        wav.extend_from_slice(&(TONE_SAMPLE_RATE * 2).to_le_bytes()); // byte rate
+        wav.extend_from_slice(&2_u16.to_le_bytes()); // block align
+        wav.extend_from_slice(&16_u16.to_le_bytes()); // bits per sample
+        wav.extend_from_slice(b"data");
+        wav.extend_from_slice(&data_len.to_le_bytes());
+        wav.extend_from_slice(&samples);
         AudioSource {
-            bytes: Arc::from(wav_header_and_data(TONE_SAMPLE_RATE, 1, 16, &data)),
+            bytes: Arc::from(wav),
         }
     }
 

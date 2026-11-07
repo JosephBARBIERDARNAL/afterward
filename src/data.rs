@@ -214,8 +214,7 @@ impl GameData {
         if audio.footstep_interval_s <= 0.0
             || !(0.0..=1.0).contains(&audio.paused_music_volume_multiplier)
             || !(0.0..=1.0).contains(&audio.room_clear_music_volume_multiplier)
-            || !(0.0..=1.0).contains(&audio.chapter_one_music_gain)
-            || !(0.0..=1.0).contains(&audio.chapter_one_ambience_gain)
+            || !(0.0..=1.0).contains(&audio.paused_music_muffle)
         {
             return Err(InvalidGameData::from(
                 "audio tuning values are out of range",
@@ -505,6 +504,8 @@ impl GameData {
             &recorded.damage_neutral,
             &recorded.damage_metal,
             &recorded.damage_metal_armor,
+            &recorded.bonus_chosen,
+            &recorded.bonus_reroll,
         ]
         .into_iter()
         .chain(&self.gameplay.audio.music_tracks);

@@ -97,10 +97,10 @@ Every hit area is data, in H: the player's hurtbox in `config/gameplay.yaml` (`p
 
 ### Audio
 
-`src/game/audio.rs` plays everything through `ManagedAudio`, whose class decides which volume setting applies (music or sound effects) and how `audio/mixing.rs` fades it per screen. Every sound effect is a real recording: a `SoundCue` plays the file `config/gameplay.yaml` lists for it under `audio.recorded_effects`, and a cue with no file there stays silent. Most cues have no sound yet; don't synthesize one to fill the gap, leave it silent until a recording exists. Only the chapter's music and ambience are still generated (`audio/synthesis.rs`), beside the recorded tracks.
+Nothing is generated: every sound in the game is a real recording. A `SoundCue` plays the file `config/gameplay.yaml` lists for it under `audio.recorded_effects` and stays silent when there is none, and the music is one of the tracks in `audio.music_tracks`. Most cues have no sound yet; leave them silent until a recording exists rather than synthesizing a placeholder. `src/game/audio.rs` plays it all through `ManagedAudio`, whose class decides which volume setting applies (music or sound effects) and how `audio/mixing.rs` fades it per screen.
 
-- Four layers play for a whole run: the synthesized combat loop, calm loop and forest ambience, plus one recorded background track picked at random from `audio.music_tracks` when the first room of the run is entered. It keeps playing until the run ends.
-- All four are `MusicStream`s (`audio/music.rs`): they loop themselves and run through a low-pass filter the mixer opens and closes, so the music sounds muffled, as if played in another room, while the game is paused (`audio.paused_music_muffle`). They must play with `PlaybackSettings::ONCE` — Bevy's own looping buffers the decoded source, which would freeze the filter after the first play-through.
+- One track, picked at random when the run enters its first room, plays until the run ends. It is a `MusicStream` (`audio/music.rs`): it loops itself and runs through a low-pass filter the mixer opens and closes, so the music sounds muffled, as if played in another room, while the game is paused (`audio.paused_music_muffle`). It must play with `PlaybackSettings::ONCE` — Bevy's own looping buffers the decoded source, which would freeze the filter after the first play-through.
+- Recordings are cropped to what is audible, faded at both ends and peak-normalized, and stored as mono WAV in `audio/sfx/` so a cue sounds the frame it fires rather than after an MP3 decoder's padding.
 
 ### Enemy material and shields
 
