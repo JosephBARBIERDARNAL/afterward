@@ -1,4 +1,5 @@
 use super::super::*;
+use crate::data::RoomConfig;
 use std::{path::Path, time::Duration};
 
 use bevy::{prelude::MinimalPlugins, state::app::StatesPlugin, time::TimeUpdateStrategy};
@@ -6,7 +7,31 @@ use bevy::{prelude::MinimalPlugins, state::app::StatesPlugin, time::TimeUpdateSt
 #[test]
 fn ground_enemy_climbs_the_staircase_to_a_player_on_a_higher_platform() {
     let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
-    let data = GameData::load(&asset_root).expect("Chapter 1 data should load");
+    let mut data = GameData::load(&asset_root).expect("Chapter 1 data should load");
+    // A fixed layout, independent of the authored rooms: a floor, two plank
+    // steps, and a walkway whose top is 7 H up, with one ground Gorgon.
+    let room = data.rooms.get_mut(&3).expect("room 3 should exist");
+    let layout: RoomConfig = yaml_serde::from_str(
+        "
+room_id: 3
+chapter_id: 1
+size: { width_viewports: 2, height_h: 27 }
+background_profile: clouds_bright_blue
+player_spawn: { x_h: 2.5, y_h: 1 }
+terrain:
+  - { material: stone_cobble, rect_h: { x: 0, y: 0, width: 48, height: 1 } }
+  - { material: stone_cobble, rect_h: { x: 13, y: 6, width: 14, height: 1 } }
+platforms:
+  - { material: stone_slab, rect_h: { x: 6, y: 2.75, width: 3, height: 0.25 } }
+  - { material: stone_slab, rect_h: { x: 10, y: 4.75, width: 3, height: 0.25 } }
+enemy_spawns:
+  - { type_id: gorgon_1, position_h: { x: 8, y: 1 } }
+exit: { x_h: 45, y_h: 1 }
+next_room_id: 4
+",
+    )
+    .expect("the test layout should parse");
+    *room = layout;
     let placeholder_sheet = SpriteSheet {
         image: Handle::default(),
         layout: Handle::default(),
@@ -57,24 +82,11 @@ fn ground_enemy_climbs_the_staircase_to_a_player_on_a_higher_platform() {
         );
     app.update();
 
-    // Room 3 has a high walkway reached through plank steps. Keep only the
-    // ground Gorgon at x = 8 and stand the player on the walkway, at x = 18.
-    let mut enemies = app.world_mut().query::<(Entity, &EnemyBody, &Transform)>();
-    let (climber, others) = enemies.iter(app.world()).fold(
-        (None, Vec::new()),
-        |(climber, mut others), (entity, enemy, transform)| {
-            if enemy.type_id == "gorgon_1" && transform.translation.x == 8.0 * H_WORLD_UNITS {
-                (Some(entity), others)
-            } else {
-                others.push(entity);
-                (climber, others)
-            }
-        },
-    );
-    let climber = climber.expect("room 3 should spawn a ground Gorgon at x = 8 H");
-    for entity in others {
-        app.world_mut().despawn(entity);
-    }
+    // Stand the player on the walkway, at x = 18.
+    let mut enemies = app.world_mut().query_filtered::<Entity, With<EnemyBody>>();
+    let climber = enemies
+        .single(app.world())
+        .expect("the layout should spawn one Gorgon");
     let player_feet_y = 7.0 * H_WORLD_UNITS;
     let mut players = app
         .world_mut()
@@ -113,7 +125,26 @@ fn ground_enemy_climbs_the_staircase_to_a_player_on_a_higher_platform() {
 #[test]
 fn evil_wizard_jump_slam_damages_the_player_on_landing() {
     let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
-    let data = GameData::load(&asset_root).expect("Chapter 1 data should load");
+    let mut data = GameData::load(&asset_root).expect("Chapter 1 data should load");
+    // A flat hall, independent of the authored boss room.
+    let room = data.rooms.get_mut(&10).expect("room 10 should exist");
+    let layout: RoomConfig = yaml_serde::from_str(
+        "
+room_id: 10
+chapter_id: 1
+size: { width_viewports: 2, height_h: 22.5 }
+background_profile: clouds_thunderstorm
+player_spawn: { x_h: 2.5, y_h: 1 }
+terrain:
+  - { material: stone_tiles, rect_h: { x: 0, y: 0, width: 48, height: 1 } }
+enemy_spawns:
+  - { type_id: evil_wizard, position_h: { x: 18, y: 1 } }
+exit: { x_h: 46, y_h: 1 }
+next_room_id: 11
+",
+    )
+    .expect("the test layout should parse");
+    *room = layout;
     let slam_index = data.enemies.types["evil_wizard"]
         .attacks
         .iter()

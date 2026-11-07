@@ -3,94 +3,554 @@
 # values mark the feet baseline on a block top.
 room_id: 8
 chapter_id: 1
-description: "Scattered stones: small stone islands at every height, two high ledges to mantle onto."
+description: "Frostbitten Grotto: a honeycomb of ice chambers joined by tunnels, ice bridges and frozen falls; low, middle and high roads loop to a final hall."
 size:
   width_viewports: 3
-  height_h: 20
-background_profile: clouds_dusk_mauve
+  height_h: 27
+background_profile: clouds_full_moon
 player_spawn:
   x_h: 2.5
-  y_h: 1
+  y_h: 3
 # Solid blocks: they stop bodies and projectiles from every side.
 terrain:
-  - label: floor
-    material: grassy_cobble
-    rect_h: { x: 0, y: 0, width: 48, height: 1 }
-  - label: ceiling
-    material: stone_dark_cobble
-    rect_h: { x: 0, y: 19, width: 48, height: 1 }
-  - label: left wall above the entrance doorway
-    material: stone_cobble
-    rect_h: { x: 0, y: 4, width: 1, height: 15 }
-  - label: right wall above the exit doorway
-    material: stone_cobble
-    rect_h: { x: 47, y: 4, width: 1, height: 15 }
-  - label: island
-    material: mossy_cobble
-    rect_h: { x: 6, y: 2, width: 3, height: 1 }
-  - label: island
-    material: mossy_cobble
-    rect_h: { x: 10, y: 4, width: 3, height: 1 }
-  - label: island
-    material: mossy_cobble
-    rect_h: { x: 14, y: 6, width: 2, height: 1 }
-  - label: island
-    material: mossy_cobble
-    rect_h: { x: 18, y: 2, width: 3, height: 1 }
-  - label: island
-    material: mossy_cobble
-    rect_h: { x: 22, y: 4, width: 3, height: 1 }
-  - label: island
-    material: mossy_cobble
-    rect_h: { x: 26, y: 6, width: 3, height: 1 }
-  - label: island
-    material: mossy_cobble
-    rect_h: { x: 31, y: 2, width: 3, height: 1 }
-  - label: island
-    material: mossy_cobble
-    rect_h: { x: 35, y: 4, width: 3, height: 1 }
-  - label: island
-    material: mossy_cobble
-    rect_h: { x: 39, y: 6, width: 3, height: 1 }
-  - label: high ledge
-    material: mossy_bricks
-    rect_h: { x: 16, y: 10, width: 4, height: 1 }
-  - label: high ledge
-    material: mossy_bricks
-    rect_h: { x: 30, y: 10, width: 4, height: 1 }
-  - label: hanging rock
-    material: stone_dark_cobble
-    rect_h: { x: 22, y: 13, width: 4, height: 6 }
+  - material: stone_dark_cobble
+    rect_h: { x: 0, y: 0, width: 72, height: 1 }
+  - material: stone_dark_cobble
+    rect_h: { x: 0, y: 1, width: 18.5, height: 0.5 }
+  - material: ice_snow_cobble
+    rect_h: { x: 18.5, y: 1, width: 2.5, height: 1.5 }
+  - material: ice_snow_stones
+    rect_h: { x: 21, y: 1, width: 7.5, height: 1.5 }
+  - material: stone_dark_cobble
+    rect_h: { x: 28.5, y: 1, width: 43.5, height: 0.5 }
+  - material: ice_snow_cobble
+    rect_h: { x: 0, y: 1.5, width: 18.5, height: 1.5 }
+  - material: ice_snow_stones
+    rect_h: { x: 28.5, y: 1.5, width: 3.5, height: 1.5 }
+  - material: stone_dark_cobble
+    rect_h: { x: 32, y: 1.5, width: 5.5, height: 0.5 }
+  - material: ice_snow_stones
+    rect_h: { x: 37.5, y: 1.5, width: 6.5, height: 1.5 }
+  - material: ice_snow_rocks
+    rect_h: { x: 44, y: 1.5, width: 7, height: 1.5 }
+  - material: stone_dark_cobble
+    rect_h: { x: 51, y: 1.5, width: 21, height: 1 }
+  - material: ice_snow_stones
+    rect_h: { x: 32, y: 2, width: 5.5, height: 1.5 }
+  - material: ice_snow_cobble
+    rect_h: { x: 18.5, y: 2.5, width: 1.5, height: 0.5 }
+  - material: ice_snow_stones
+    rect_h: { x: 27, y: 2.5, width: 1.5, height: 0.5 }
+  - material: ice_snow_rocks
+    rect_h: { x: 51, y: 2.5, width: 5.5, height: 1.5 }
+  - material: stone_dark_cobble
+    rect_h: { x: 56.5, y: 2.5, width: 15.5, height: 1 }
+  - material: ice_snow_cobble
+    rect_h: { x: 5.5, y: 3, width: 2.5, height: 0.5 }
+  - material: ice_snow_stones
+    rect_h: { x: 30.5, y: 3, width: 1.5, height: 0.5 }
+  - material: ice_snow_stones
+    rect_h: { x: 37.5, y: 3, width: 1.5, height: 0.5 }
+  - material: ice_snow_rocks
+    rect_h: { x: 44.5, y: 3, width: 2, height: 0.5 }
+  - material: ice_snow_rocks
+    rect_h: { x: 49.5, y: 3, width: 1.5, height: 1 }
+  - material: ice_snow_rocks
+    rect_h: { x: 56.5, y: 3.5, width: 10, height: 1.5 }
+  - material: stone_dark_cobble
+    rect_h: { x: 66.5, y: 3.5, width: 5.5, height: 8.5 }
+  - material: ice_snow_rocks
+    rect_h: { x: 55, y: 4, width: 1.5, height: 2 }
+  - material: ice_snow_rocks
+    rect_h: { x: 54, y: 5, width: 1, height: 1 }
+  - material: ice_snow_rocks
+    rect_h: { x: 56.5, y: 5, width: 1.5, height: 1 }
+  - material: ice_snow_rocks
+    rect_h: { x: 65, y: 5, width: 1.5, height: 8.5 }
+  - material: ice_snow_cobble
+    rect_h: { x: 13.5, y: 5.5, width: 2.5, height: 4.5 }
+  - material: ice_snow_stones
+    rect_h: { x: 33.5, y: 6, width: 2.5, height: 5 }
+  - material: ice_snow_cobble
+    rect_h: { x: 0, y: 6.5, width: 1.5, height: 3.5 }
+  - material: ice_snow_cobble
+    rect_h: { x: 1.5, y: 8.5, width: 2.5, height: 1.5 }
+  - material: ice_snow_cobble
+    rect_h: { x: 8.5, y: 8.5, width: 1, height: 3.5 }
+  - material: ice_snow_cobble
+    rect_h: { x: 16, y: 8.5, width: 3.5, height: 1.5 }
+  - material: ice_snow_stones
+    rect_h: { x: 26.5, y: 8.5, width: 2, height: 2.5 }
+  - material: ice_snow_stones
+    rect_h: { x: 31, y: 8.5, width: 2.5, height: 2.5 }
+  - material: ice_snow_rocks
+    rect_h: { x: 52, y: 8.5, width: 2, height: 7.5 }
+  - material: ice_snow_stones
+    rect_h: { x: 36, y: 9, width: 3.5, height: 2 }
+  - material: ice_snow_stones
+    rect_h: { x: 43, y: 9, width: 1, height: 2 }
+  - material: ice_snow_rocks
+    rect_h: { x: 47, y: 9, width: 5, height: 1 }
+  - material: ice_snow_cobble
+    rect_h: { x: 4, y: 9.5, width: 4.5, height: 1.5 }
+  - material: ice_snow_cobble
+    rect_h: { x: 13, y: 9.5, width: 0.5, height: 2.5 }
+  - material: ice_snow_cobble
+    rect_h: { x: 19.5, y: 9.5, width: 1.5, height: 2.5 }
+  - material: ice_snow_stones
+    rect_h: { x: 21, y: 9.5, width: 5.5, height: 1.5 }
+  - material: ice_snow_stones
+    rect_h: { x: 39.5, y: 9.5, width: 3.5, height: 1.5 }
+  - material: stone_dark_cobble
+    rect_h: { x: 0, y: 10, width: 2.5, height: 3.5 }
+  - material: ice_snow_cobble
+    rect_h: { x: 2.5, y: 10, width: 1.5, height: 1 }
+  - material: ice_snow_cobble
+    rect_h: { x: 13.5, y: 10, width: 1.5, height: 2 }
+  - material: stone_dark_cobble
+    rect_h: { x: 15, y: 10, width: 3, height: 0.5 }
+  - material: ice_snow_cobble
+    rect_h: { x: 18, y: 10, width: 1.5, height: 2 }
+  - material: ice_snow_rocks
+    rect_h: { x: 51, y: 10, width: 1, height: 6 }
+  - material: ice_snow_cobble
+    rect_h: { x: 15, y: 10.5, width: 1.5, height: 2 }
+  - material: stone_dark_cobble
+    rect_h: { x: 16.5, y: 10.5, width: 0.5, height: 0.5 }
+  - material: ice_snow_cobble
+    rect_h: { x: 17, y: 10.5, width: 1, height: 2 }
+  - material: stone_dark_cobble
+    rect_h: { x: 2.5, y: 11, width: 2, height: 2.5 }
+  - material: ice_snow_cobble
+    rect_h: { x: 4.5, y: 11, width: 4, height: 1 }
+  - material: ice_snow_cobble
+    rect_h: { x: 16.5, y: 11, width: 0.5, height: 1.5 }
+  - material: ice_snow_stones
+    rect_h: { x: 21, y: 11, width: 5, height: 1 }
+  - material: ice_snow_stones
+    rect_h: { x: 31.5, y: 11, width: 1.5, height: 0.5 }
+  - material: ice_snow_stones
+    rect_h: { x: 36.5, y: 11, width: 3.5, height: 0.5 }
+  - material: ice_snow_cobble
+    rect_h: { x: 4.5, y: 12, width: 1.5, height: 3 }
+  - material: ice_snow_cobble
+    rect_h: { x: 18, y: 12, width: 0.5, height: 0.5 }
+  - material: ice_snow_rocks
+    rect_h: { x: 66.5, y: 12, width: 1.5, height: 2 }
+  - material: stone_dark_cobble
+    rect_h: { x: 68, y: 12, width: 4, height: 0.5 }
+  - material: ice_snow_rocks
+    rect_h: { x: 68, y: 12.5, width: 3.5, height: 1.5 }
+  - material: stone_dark_cobble
+    rect_h: { x: 71.5, y: 12.5, width: 0.5, height: 14.5 }
+  - material: stone_dark_cobble
+    rect_h: { x: 0, y: 13.5, width: 1.5, height: 3.5 }
+  - material: ice_snow_cobble
+    rect_h: { x: 1.5, y: 13.5, width: 3, height: 1.5 }
+  - material: ice_snow_rocks
+    rect_h: { x: 70, y: 14, width: 1.5, height: 8.5 }
+  - material: ice_snow_rocks
+    rect_h: { x: 44, y: 14.5, width: 7, height: 1.5 }
+  - material: ice_snow_cobble
+    rect_h: { x: 1.5, y: 15, width: 1.5, height: 3.5 }
+  - material: ice_snow_stones
+    rect_h: { x: 21, y: 15, width: 1, height: 7.5 }
+  - material: ice_snow_stones
+    rect_h: { x: 40, y: 15, width: 4, height: 1.5 }
+  - material: ice_snow_rocks
+    rect_h: { x: 44, y: 16, width: 1.5, height: 0.5 }
+  - material: stone_dark_cobble
+    rect_h: { x: 45.5, y: 16, width: 7, height: 1.5 }
+  - material: ice_snow_rocks
+    rect_h: { x: 52.5, y: 16, width: 1.5, height: 3 }
+  - material: ice_snow_stones
+    rect_h: { x: 40, y: 16.5, width: 1.5, height: 2.5 }
+  - material: stone_dark_cobble
+    rect_h: { x: 41.5, y: 16.5, width: 4, height: 1 }
+  - material: stone_dark_cobble
+    rect_h: { x: 0, y: 17, width: 0.5, height: 10 }
+  - material: ice_snow_cobble
+    rect_h: { x: 0.5, y: 17, width: 1, height: 7 }
+  - material: ice_snow_cobble
+    rect_h: { x: 6, y: 17, width: 1.5, height: 1.5 }
+  - material: ice_snow_cobble
+    rect_h: { x: 13, y: 17, width: 2, height: 2 }
+  - material: ice_snow_cobble
+    rect_h: { x: 18.5, y: 17, width: 2.5, height: 1.5 }
+  - material: ice_snow_cobble
+    rect_h: { x: 15, y: 17.5, width: 3.5, height: 1.5 }
+  - material: ice_snow_stones
+    rect_h: { x: 41.5, y: 17.5, width: 2.5, height: 1.5 }
+  - material: ice_snow_rocks
+    rect_h: { x: 44, y: 17.5, width: 8.5, height: 1.5 }
+  - material: ice_snow_cobble
+    rect_h: { x: 7.5, y: 18, width: 5.5, height: 0.5 }
+  - material: ice_snow_cobble
+    rect_h: { x: 1.5, y: 18.5, width: 0.5, height: 5.5 }
+  - material: ice_snow_cobble
+    rect_h: { x: 9.5, y: 18.5, width: 3.5, height: 0.5 }
+  - material: ice_snow_cobble
+    rect_h: { x: 18.5, y: 18.5, width: 1.5, height: 0.5 }
+  - material: stone_dark_cobble
+    rect_h: { x: 20, y: 18.5, width: 0.5, height: 8.5 }
+  - material: ice_snow_cobble
+    rect_h: { x: 20.5, y: 18.5, width: 0.5, height: 4 }
+  - material: ice_snow_cobble
+    rect_h: { x: 11.5, y: 19, width: 3, height: 0.5 }
+  - material: stone_dark_cobble
+    rect_h: { x: 14.5, y: 19, width: 5.5, height: 8 }
+  - material: ice_snow_stones
+    rect_h: { x: 25, y: 19, width: 2.5, height: 2 }
+  - material: ice_snow_rocks
+    rect_h: { x: 44.5, y: 19, width: 2, height: 0.5 }
+  - material: ice_snow_cobble
+    rect_h: { x: 11.5, y: 19.5, width: 1.5, height: 4.5 }
+  - material: stone_dark_cobble
+    rect_h: { x: 13, y: 19.5, width: 1.5, height: 7.5 }
+  - material: ice_snow_stones
+    rect_h: { x: 22, y: 21, width: 4.5, height: 1.5 }
+  - material: ice_snow_stones
+    rect_h: { x: 33, y: 21, width: 1, height: 3.5 }
+  - material: ice_snow_rocks
+    rect_h: { x: 56, y: 21, width: 1, height: 4 }
+  - material: ice_snow_rocks
+    rect_h: { x: 66, y: 21, width: 4, height: 1.5 }
+  - material: ice_snow_stones
+    rect_h: { x: 41.5, y: 22, width: 1.5, height: 4 }
+  - material: ice_snow_cobble
+    rect_h: { x: 2, y: 22.5, width: 2, height: 1.5 }
+  - material: ice_snow_cobble
+    rect_h: { x: 9, y: 22.5, width: 2.5, height: 1.5 }
+  - material: stone_dark_cobble
+    rect_h: { x: 20.5, y: 22.5, width: 4.5, height: 4.5 }
+  - material: ice_snow_stones
+    rect_h: { x: 25, y: 22.5, width: 8, height: 1.5 }
+  - material: ice_snow_rocks
+    rect_h: { x: 57, y: 22.5, width: 10.5, height: 1.5 }
+  - material: stone_dark_cobble
+    rect_h: { x: 67.5, y: 22.5, width: 4, height: 4.5 }
+  - material: ice_snow_stones
+    rect_h: { x: 34, y: 23, width: 6, height: 1.5 }
+  - material: ice_snow_cobble
+    rect_h: { x: 4, y: 23.5, width: 2, height: 1.5 }
+  - material: ice_snow_cobble
+    rect_h: { x: 8, y: 23.5, width: 1, height: 3.5 }
+  - material: ice_snow_stones
+    rect_h: { x: 40, y: 23.5, width: 1.5, height: 1.5 }
+  - material: ice_snow_rocks
+    rect_h: { x: 47.5, y: 23.5, width: 0.5, height: 3.5 }
+  - material: ice_snow_rocks
+    rect_h: { x: 50, y: 23.5, width: 6, height: 1.5 }
+  - material: stone_dark_cobble
+    rect_h: { x: 0.5, y: 24, width: 2, height: 3 }
+  - material: ice_snow_cobble
+    rect_h: { x: 2.5, y: 24, width: 1.5, height: 1 }
+  - material: ice_snow_cobble
+    rect_h: { x: 9, y: 24, width: 1.5, height: 1 }
+  - material: stone_dark_cobble
+    rect_h: { x: 10.5, y: 24, width: 2.5, height: 3 }
+  - material: stone_dark_cobble
+    rect_h: { x: 25, y: 24, width: 7.5, height: 3 }
+  - material: ice_snow_stones
+    rect_h: { x: 32.5, y: 24, width: 0.5, height: 0.5 }
+  - material: ice_snow_rocks
+    rect_h: { x: 57, y: 24, width: 0.5, height: 1 }
+  - material: stone_dark_cobble
+    rect_h: { x: 57.5, y: 24, width: 10, height: 3 }
+  - material: stone_dark_cobble
+    rect_h: { x: 32.5, y: 24.5, width: 6, height: 2.5 }
+  - material: ice_snow_stones
+    rect_h: { x: 38.5, y: 24.5, width: 1.5, height: 0.5 }
+  - material: ice_snow_stones
+    rect_h: { x: 43, y: 24.5, width: 1, height: 1.5 }
+  - material: ice_snow_rocks
+    rect_h: { x: 44, y: 24.5, width: 3.5, height: 1.5 }
+  - material: stone_dark_cobble
+    rect_h: { x: 2.5, y: 25, width: 2, height: 2 }
+  - material: ice_snow_cobble
+    rect_h: { x: 4.5, y: 25, width: 1.5, height: 2 }
+  - material: ice_snow_cobble
+    rect_h: { x: 9, y: 25, width: 0.5, height: 2 }
+  - material: stone_dark_cobble
+    rect_h: { x: 9.5, y: 25, width: 1, height: 2 }
+  - material: stone_dark_cobble
+    rect_h: { x: 38.5, y: 25, width: 3, height: 2 }
+  - material: ice_snow_rocks
+    rect_h: { x: 50, y: 25, width: 1.5, height: 2 }
+  - material: stone_dark_cobble
+    rect_h: { x: 51.5, y: 25, width: 6, height: 2 }
+  - material: stone_dark_cobble
+    rect_h: { x: 41.5, y: 26, width: 5, height: 1 }
+  - material: ice_snow_rocks
+    rect_h: { x: 46.5, y: 26, width: 1, height: 1 }
+  - label: stalactite
+    material: ice_glass
+    rect_h: { x: 3, y: 7, width: 0.5, height: 1.5 }
+  - label: stalactite
+    material: ice_frost
+    rect_h: { x: 9, y: 7.5, width: 0.5, height: 1 }
+  - label: stalactite
+    material: ice_glass
+    rect_h: { x: 6, y: 7.5, width: 0.5, height: 2 }
+  - label: stalactite
+    material: ice_floe
+    rect_h: { x: 13.5, y: 7.5, width: 0.5, height: 1 }
+  - label: stalactite
+    material: ice_glass
+    rect_h: { x: 9, y: 16, width: 0.5, height: 2 }
+  - label: stalactite
+    material: ice_frost
+    rect_h: { x: 11.5, y: 16.5, width: 0.5, height: 1.5 }
+  - label: stalactite
+    material: ice_floe
+    rect_h: { x: 16, y: 16.5, width: 0.5, height: 1 }
+  - label: stalactite
+    material: ice_glass
+    rect_h: { x: 19, y: 15.5, width: 0.5, height: 1.5 }
+  - label: stalactite
+    material: ice_frost
+    rect_h: { x: 3, y: 21.5, width: 0.5, height: 1 }
+  - label: stalactite
+    material: ice_glass
+    rect_h: { x: 10, y: 21, width: 0.5, height: 1.5 }
+  - label: stalactite
+    material: ice_glass
+    rect_h: { x: 22.5, y: 18.5, width: 0.5, height: 2.5 }
+  - label: stalactite
+    material: ice_frost
+    rect_h: { x: 24.5, y: 19.5, width: 0.5, height: 1.5 }
+  - label: stalactite
+    material: ice_glass
+    rect_h: { x: 28, y: 19.5, width: 0.5, height: 3 }
+  - label: stalactite
+    material: ice_floe
+    rect_h: { x: 30.5, y: 21, width: 0.5, height: 1.5 }
+  - label: stalactite
+    material: ice_glass
+    rect_h: { x: 32, y: 20.5, width: 0.5, height: 2 }
+  - label: stalactite
+    material: ice_frost
+    rect_h: { x: 18, y: 7, width: 0.5, height: 1.5 }
+  - label: stalactite
+    material: ice_glass
+    rect_h: { x: 22, y: 7.5, width: 0.5, height: 2 }
+  - label: stalactite
+    material: ice_floe
+    rect_h: { x: 25, y: 8, width: 0.5, height: 1.5 }
+  - label: stalactite
+    material: ice_glass
+    rect_h: { x: 27.5, y: 7.5, width: 0.5, height: 1 }
+  - label: stalactite
+    material: ice_glass
+    rect_h: { x: 38, y: 7.5, width: 0.5, height: 1.5 }
+  - label: stalactite
+    material: ice_frost
+    rect_h: { x: 41, y: 7.5, width: 0.5, height: 2 }
+  - label: stalactite
+    material: ice_glass
+    rect_h: { x: 48, y: 7.5, width: 0.5, height: 1.5 }
+  - label: stalactite
+    material: ice_frost
+    rect_h: { x: 42, y: 13.5, width: 0.5, height: 1.5 }
+  - label: stalactite
+    material: ice_glass
+    rect_h: { x: 46, y: 13, width: 0.5, height: 1.5 }
+  - label: stalactite
+    material: ice_glass
+    rect_h: { x: 52, y: 21.5, width: 0.5, height: 1.5 }
+  - label: stalactite
+    material: ice_frost
+    rect_h: { x: 41, y: 22, width: 0.5, height: 1 }
+  - label: stalactite
+    material: ice_glass
+    rect_h: { x: 46, y: 23, width: 0.5, height: 1.5 }
+  - label: stalactite
+    material: ice_glass
+    rect_h: { x: 58, y: 18, width: 0.5, height: 3 }
+  - label: stalactite
+    material: ice_frost
+    rect_h: { x: 60, y: 20.5, width: 0.5, height: 2 }
+  - label: stalactite
+    material: ice_glass
+    rect_h: { x: 62.5, y: 19, width: 0.5, height: 3.5 }
+  - label: stalactite
+    material: ice_floe
+    rect_h: { x: 64.5, y: 20.5, width: 0.5, height: 2 }
+  - label: stalactite
+    material: ice_glass
+    rect_h: { x: 67.5, y: 18.5, width: 0.5, height: 2.5 }
+  - label: stalactite
+    material: ice_frost
+    rect_h: { x: 55, y: 19.5, width: 0.5, height: 1.5 }
+  - label: stalagmite
+    material: ice_floe
+    rect_h: { x: 1.5, y: 18.5, width: 1, height: 1.5 }
+  - label: stalagmite
+    material: ice_frost
+    rect_h: { x: 18, y: 3, width: 0.5, height: 0.75 }
+  - label: stalagmite
+    material: ice_glass
+    rect_h: { x: 50.5, y: 4, width: 0.5, height: 0.5 }
+  - label: stalagmite
+    material: ice_floe
+    rect_h: { x: 66.5, y: 14, width: 0.5, height: 1 }
+  - label: stalagmite
+    material: ice_glass
+    rect_h: { x: 40.5, y: 11, width: 0.5, height: 0.75 }
+  - label: stalagmite
+    material: ice_frost
+    rect_h: { x: 53, y: 19, width: 0.5, height: 1 }
+  - label: frozen pool surface
+    material: ice_glass
+    rect_h: { x: 20, y: 1.5, width: 7, height: 1 }
 # One-way platforms: land on top, jump through from below, Down + Jump drops.
-platforms: []
+platforms:
+  - label: A shaft ice shelf
+    material: ice_glass
+    rect_h: { x: 9.5, y: 5.25, width: 3.5, height: 0.25 }
+  - label: A shaft ice shelf
+    material: ice_glass
+    rect_h: { x: 10, y: 7.75, width: 3, height: 0.25 }
+  - label: A shaft ice shelf
+    material: ice_glass
+    rect_h: { x: 9.5, y: 10.25, width: 3.5, height: 0.25 }
+  - label: B ice ledge
+    material: ice_floe
+    rect_h: { x: 27.5, y: 5.25, width: 4, height: 0.5 }
+  - label: B ice ledge
+    material: ice_floe
+    rect_h: { x: 28.5, y: 7.75, width: 2.5, height: 0.5 }
+  - label: E ice bridge over the B shaft
+    material: ice_glass
+    rect_h: { x: 28.5, y: 10.75, width: 2.5, height: 0.25 }
+  - label: E ice bridge
+    material: ice_glass
+    rect_h: { x: 26, y: 13.25, width: 6, height: 0.25 }
+  - label: E ice bridge
+    material: ice_glass
+    rect_h: { x: 32, y: 15.75, width: 4, height: 0.25 }
+  - label: E ice bridge
+    material: ice_glass
+    rect_h: { x: 36, y: 18.25, width: 4, height: 0.25 }
+  - label: F ice shelf
+    material: ice_floe
+    rect_h: { x: 43, y: 5.25, width: 4, height: 0.5 }
+  - label: F ice shelf
+    material: ice_floe
+    rect_h: { x: 44, y: 7.75, width: 3, height: 0.25 }
+  - label: H ice shelf
+    material: ice_glass
+    rect_h: { x: 58.5, y: 7.25, width: 4, height: 0.25 }
+  - label: H ice shelf
+    material: ice_glass
+    rect_h: { x: 61.5, y: 9.75, width: 3.5, height: 0.25 }
+  - label: H high shelf
+    material: ice_floe
+    rect_h: { x: 57, y: 12, width: 4, height: 0.5 }
+  - label: H high shelf
+    material: ice_floe
+    rect_h: { x: 59.5, y: 14.5, width: 4, height: 0.5 }
+  - label: H high shelf
+    material: ice_floe
+    rect_h: { x: 54.5, y: 16.75, width: 3.5, height: 0.5 }
 # Decorations: non-solid panels behind the terrain or in front of the bodies.
-decorations: []
+decorations:
+  - label: A back wall
+    material: ice_stripes
+    layer: background
+    rect_h: { x: 1.5, y: 3, width: 12, height: 5.5 }
+  - label: C back wall
+    material: ice_stripes
+    layer: background
+    rect_h: { x: 6, y: 12.5, width: 13, height: 5 }
+  - label: frozen waterfall
+    material: ice_glass
+    layer: background
+    rect_h: { x: 7, y: 18.5, width: 1, height: 5 }
+  - label: B frozen pool water
+    material: water_deep
+    layer: background
+    rect_h: { x: 19.5, y: 2.5, width: 8, height: 1.5 }
+  - label: B back wall
+    material: ice_stripes
+    layer: background
+    rect_h: { x: 16.5, y: 4, width: 3, height: 4.5 }
+  - label: B back wall
+    material: ice_stripes
+    layer: background
+    rect_h: { x: 27.5, y: 3, width: 5.5, height: 2 }
+  - label: E frozen waterfall
+    material: ice_glass
+    layer: background
+    rect_h: { x: 34.5, y: 11.5, width: 2, height: 9.5 }
+  - label: E waterfall pool
+    material: water_deep
+    layer: background
+    rect_h: { x: 33.5, y: 11, width: 4, height: 1 }
+  - label: E back wall
+    material: ice_stripes
+    layer: background
+    rect_h: { x: 23, y: 15, width: 5, height: 6 }
+  - label: F back wall
+    material: ice_stripes
+    layer: background
+    rect_h: { x: 39, y: 3.5, width: 4, height: 5.5 }
+  - label: F frozen seep
+    material: ice_frost
+    layer: background
+    rect_h: { x: 48, y: 4, width: 1.5, height: 5 }
+  - label: G back wall
+    material: ice_stripes
+    layer: background
+    rect_h: { x: 51, y: 19, width: 4, height: 4 }
+  - label: H frozen waterfall
+    material: ice_glass
+    layer: background
+    rect_h: { x: 62, y: 13, width: 2.5, height: 8 }
+  - label: H frozen pool
+    material: water_deep
+    layer: background
+    rect_h: { x: 60, y: 5, width: 5, height: 1.5 }
+  - label: H back wall
+    material: ice_stripes
+    layer: background
+    rect_h: { x: 55, y: 6, width: 3, height: 6 }
+  - label: hanging icicles
+    material: ice_frost
+    layer: foreground
+    rect_h: { x: 1.5, y: 7.5, width: 1.5, height: 1 }
+  - label: hanging icicles
+    material: ice_frost
+    layer: foreground
+    rect_h: { x: 68, y: 19.5, width: 2, height: 1.5 }
 enemy_spawns:
-  - type_id: gorgon_1
-    position_h: { x: 4, y: 1 }
   - type_id: swordsman
-    position_h: { x: 7.5, y: 3 }
+    position_h: { x: 23.5, y: 2.5 }
   - type_id: infantryman
-    position_h: { x: 11.5, y: 5 }
-  - type_id: gorgon_2
-    position_h: { x: 15, y: 7 }
+    position_h: { x: 29.5, y: 5.75 }
+  - type_id: gorgon_3
+    position_h: { x: 16.5, y: 12.5 }
+  - type_id: destroyer
+    position_h: { x: 8.5, y: 18.5 }
   - type_id: dark_ninja
-    position_h: { x: 20, y: 1 }
-  - type_id: destroyer
-    position_h: { x: 18, y: 11 }
-  - type_id: gorgon_3
-    position_h: { x: 23.5, y: 5 }
-  - type_id: swordsman
-    position_h: { x: 27.5, y: 7 }
-  - type_id: infantryman
-    position_h: { x: 32.5, y: 3 }
+    position_h: { x: 34, y: 11 }
   - type_id: gorgon_2
-    position_h: { x: 36.5, y: 5 }
-  - type_id: destroyer
-    position_h: { x: 32, y: 11 }
+    position_h: { x: 38.5, y: 18.5 }
+  - type_id: swordsman
+    position_h: { x: 48.5, y: 10 }
   - type_id: gorgon_3
-    position_h: { x: 40.5, y: 7 }
+    position_h: { x: 41, y: 3 }
+  - type_id: gorgon_2
+    position_h: { x: 51, y: 19 }
+  - type_id: destroyer
+    position_h: { x: 61.5, y: 15 }
+  - type_id: infantryman
+    position_h: { x: 63, y: 10 }
+  - type_id: gorgon_1
+    position_h: { x: 56, y: 6 }
+  - type_id: swordsman
+    position_h: { x: 62, y: 5 }
 exit:
-  x_h: 45.5
-  y_h: 1
+  x_h: 68.5
+  y_h: 14
 next_room_id: 9

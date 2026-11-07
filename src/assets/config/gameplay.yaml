@@ -1,6 +1,8 @@
 viewport:
   aspect_ratio: { width: 16, height: 9 }
-  height_h: 9
+  # The player is 1 H tall, so a taller view shows them (and the enemies)
+  # smaller. 13.5 H keeps the viewport a whole 24 H wide.
+  height_h: 13.5
 
 # Rooms are enclosed, multi-level spaces larger than the viewport.
 room_size_limits:

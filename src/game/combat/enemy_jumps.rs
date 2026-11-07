@@ -101,9 +101,14 @@ impl JumpRoute {
                     if let Some(arc) = reachable(self.feet, landing) {
                         return Some((score, JumpPlan::Leap(arc)));
                     }
-                    let takeoff_x = landing
-                        .x
-                        .clamp(standing.left + inset, standing.right - inset);
+                    // A block narrower than a body has room for one take-off spot only.
+                    let takeoff_x = if standing.right - standing.left > 2.0 * inset {
+                        landing
+                            .x
+                            .clamp(standing.left + inset, standing.right - inset)
+                    } else {
+                        (standing.left + standing.right) / 2.0
+                    };
                     reachable(Vec2::new(takeoff_x, self.feet.y), landing)
                         .map(|_| (score, JumpPlan::WalkTo(takeoff_x)))
                 } else {
@@ -144,5 +149,40 @@ impl JumpRoute {
                 .clamp(-self.air_speed, self.air_speed),
             ..arc
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn an_enemy_on_a_block_narrower_than_its_body_plans_a_jump_without_panicking() {
+        let h = H_WORLD_UNITS;
+        let block = |left: f32, right: f32, top: f32| PlatformSurface {
+            left: left * h,
+            right: right * h,
+            bottom: (top - 0.5) * h,
+            top: top * h,
+            footstep: FootstepSound::Stone,
+            one_way: false,
+        };
+        // A 0.5 H wide stalagmite, and a ledge 2 H up and 3 H away.
+        let standing = block(10.0, 10.5, 1.0);
+        let ledge = block(13.0, 17.0, 3.0);
+        let terrain = Terrain(vec![&standing, &ledge]);
+        let route = JumpRoute {
+            feet: Vec2::new(10.25 * h, h),
+            target_feet: Vec2::new(15.0 * h, 3.0 * h),
+            direction: 1.0,
+            jump_height: 2.25 * h,
+            air_speed: 2.0 * h,
+            gravity: 32.0 * h,
+            level_change_threshold: h,
+        };
+        assert!(matches!(
+            route.plan(&standing, &terrain),
+            Some(JumpPlan::WalkTo(_)) | None
+        ));
     }
 }

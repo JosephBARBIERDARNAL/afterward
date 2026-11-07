@@ -8,7 +8,7 @@ Afterward is a single-player, offline, 2D action roguelike pixel-art platformer.
 - Health persists between rooms and healing is scarce, so taking damage matters.
 - Combat is fast, mobile, and skill-based. The player's only weapon is a gun (magazine and reload); movement includes dash, wall slide and wall jump, ledge mantle, crouch, and cover. The player never receives knockback; only bosses do.
 - Enemies stay idle until the player is detected, then chase across levels (jumping, dropping, mantling). They deal damage only through attack hitboxes or projectiles, never by contact, and attacks are telegraphed by a readable wind-up.
-- `H`, the height of the player's collision box, is the unit for every distance and speed. The visible world is a fixed 16:9 viewport, 9 H tall, scaled to fit any window without revealing more of the room.
+- `H`, the height of the player's collision box, is the unit for every distance and speed. The visible world is a fixed 16:9 viewport, 13.5 H tall (24 H wide), scaled to fit any window without revealing more of the room.
 - Every player action has a dedicated animation. Audio is placeholder for now: missing audio must never prevent the game from running.
 
 The details (tuning values, rooms, enemies, bonuses, materials, backgrounds, animations, controls) live in the YAML files under `src/assets/` and in the code, which are the reference. Don't duplicate them here.

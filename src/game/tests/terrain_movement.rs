@@ -1,4 +1,5 @@
 use super::super::*;
+use crate::data::SpawnPosition;
 use std::{path::Path, time::Duration};
 
 use bevy::{prelude::MinimalPlugins, state::app::StatesPlugin, time::TimeUpdateStrategy};
@@ -6,7 +7,11 @@ use bevy::{prelude::MinimalPlugins, state::app::StatesPlugin, time::TimeUpdateSt
 #[test]
 fn solid_terrain_stops_the_player_and_low_ledges_are_mantled() {
     let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
-    let data = GameData::load(&asset_root).expect("Chapter 1 data should load");
+    let mut data = GameData::load(&asset_root).expect("Chapter 1 data should load");
+    data.rooms
+        .get_mut(&1)
+        .expect("room 1 should be authored")
+        .player_spawn = SpawnPosition { x_h: 2.5, y_h: 1.0 };
     let sheets = data
         .player_animations
         .keyed()

@@ -6,7 +6,7 @@ profiles:
   chapter_01_forest:
     backdrop: background/forest/PNG/Background layers/Layer_0011_0.png
     source_size_px: { width: 928, height: 793 }
-    tile_h: 9
+    tile_h: 13.5
     repeat_horizontal: true
     filtering: nearest
     layers:
@@ -35,7 +35,7 @@ profiles:
   chapter_01_hills:
     backdrop: background/forest-desert/PNG/Hills Layer 01.png
     source_size_px: { width: 512, height: 256 }
-    tile_h: 9
+    tile_h: 13.5
     repeat_horizontal: true
     filtering: nearest
     layers:
@@ -52,7 +52,7 @@ profiles:
   chapter_01_autumn_canopy:
     backdrop: background/autumn-forest/PNG/tree-wall.png
     source_size_px: { width: 272, height: 160 }
-    tile_h: 10
+    tile_h: 15
     repeat_horizontal: true
     filtering: nearest
     layers:
@@ -65,7 +65,7 @@ profiles:
   chapter_01_autumn_sunbeams:
     backdrop: background/autumn-forest/PNG/sun-sky.png
     source_size_px: { width: 272, height: 160 }
-    tile_h: 10
+    tile_h: 15
     repeat_horizontal: true
     filtering: nearest
     layers:
@@ -81,7 +81,7 @@ profiles:
   clouds_bright_blue:
     backdrop: background/clouds/bright-blue/layer-1.png
     source_size_px: { width: 576, height: 324 }
-    tile_h: 9
+    tile_h: 13.5
     repeat_horizontal: true
     filtering: nearest
     layers:
@@ -94,7 +94,7 @@ profiles:
   clouds_pastel_tower:
     backdrop: background/clouds/pastel-tower/layer-1.png
     source_size_px: { width: 576, height: 324 }
-    tile_h: 9
+    tile_h: 13.5
     repeat_horizontal: true
     filtering: nearest
     layers:
@@ -107,7 +107,7 @@ profiles:
   clouds_night_blue:
     backdrop: background/clouds/night-blue/layer-1.png
     source_size_px: { width: 576, height: 324 }
-    tile_h: 9
+    tile_h: 13.5
     repeat_horizontal: true
     filtering: nearest
     layers:
@@ -120,7 +120,7 @@ profiles:
   clouds_dreamy_streaks:
     backdrop: background/clouds/dreamy-streaks/layer-1.png
     source_size_px: { width: 576, height: 324 }
-    tile_h: 9
+    tile_h: 13.5
     repeat_horizontal: true
     filtering: nearest
     layers:
@@ -133,7 +133,7 @@ profiles:
   clouds_pale_blue:
     backdrop: background/clouds/pale-blue/layer-1.png
     source_size_px: { width: 576, height: 324 }
-    tile_h: 9
+    tile_h: 13.5
     repeat_horizontal: true
     filtering: nearest
     layers:
@@ -148,7 +148,7 @@ profiles:
   clouds_amber_overcast:
     backdrop: background/clouds/amber-overcast/layer-1.png
     source_size_px: { width: 576, height: 324 }
-    tile_h: 9
+    tile_h: 13.5
     repeat_horizontal: true
     filtering: nearest
     layers:
@@ -165,7 +165,7 @@ profiles:
   clouds_dusk_mauve:
     backdrop: background/clouds/dusk-mauve/layer-1.png
     source_size_px: { width: 576, height: 324 }
-    tile_h: 9
+    tile_h: 13.5
     repeat_horizontal: true
     filtering: nearest
     layers:
@@ -178,7 +178,7 @@ profiles:
   clouds_violet:
     backdrop: background/clouds/violet/layer-1.png
     source_size_px: { width: 576, height: 324 }
-    tile_h: 9
+    tile_h: 13.5
     repeat_horizontal: true
     filtering: nearest
     layers:
@@ -195,7 +195,7 @@ profiles:
   clouds_midnight_crescent:
     backdrop: background/clouds/midnight-crescent/layer-1.png
     source_size_px: { width: 576, height: 324 }
-    tile_h: 9
+    tile_h: 13.5
     repeat_horizontal: true
     filtering: nearest
     layers:
@@ -208,7 +208,7 @@ profiles:
   clouds_pink_candy:
     backdrop: background/clouds/pink-candy/layer-1.png
     source_size_px: { width: 576, height: 324 }
-    tile_h: 9
+    tile_h: 13.5
     repeat_horizontal: true
     filtering: nearest
     layers:
@@ -223,7 +223,7 @@ profiles:
   clouds_purple_haze:
     backdrop: background/clouds/purple-haze/layer-1.png
     source_size_px: { width: 576, height: 324 }
-    tile_h: 9
+    tile_h: 13.5
     repeat_horizontal: true
     filtering: nearest
     layers:
@@ -236,7 +236,7 @@ profiles:
   clouds_golden_tower:
     backdrop: background/clouds/golden-tower/layer-1.png
     source_size_px: { width: 576, height: 324 }
-    tile_h: 9
+    tile_h: 13.5
     repeat_horizontal: true
     filtering: nearest
     layers:
@@ -249,7 +249,7 @@ profiles:
   clouds_periwinkle:
     backdrop: background/clouds/periwinkle/layer-1.png
     source_size_px: { width: 576, height: 324 }
-    tile_h: 9
+    tile_h: 13.5
     repeat_horizontal: true
     filtering: nearest
     layers:
@@ -262,7 +262,7 @@ profiles:
   clouds_sunset_fire:
     backdrop: background/clouds/sunset-fire/layer-1.png
     source_size_px: { width: 576, height: 324 }
-    tile_h: 9
+    tile_h: 13.5
     repeat_horizontal: true
     filtering: nearest
     layers:
@@ -277,7 +277,7 @@ profiles:
   clouds_mint:
     backdrop: background/clouds/mint/layer-1.png
     source_size_px: { width: 576, height: 324 }
-    tile_h: 9
+    tile_h: 13.5
     repeat_horizontal: true
     filtering: nearest
     layers:
@@ -290,7 +290,7 @@ profiles:
   clouds_grey_storm_front:
     backdrop: background/clouds/grey-storm-front/layer-1.png
     source_size_px: { width: 576, height: 324 }
-    tile_h: 9
+    tile_h: 13.5
     repeat_horizontal: true
     filtering: nearest
     layers:
@@ -301,7 +301,7 @@ profiles:
   clouds_white_grey:
     backdrop: background/clouds/white-grey/layer-1.png
     source_size_px: { width: 576, height: 324 }
-    tile_h: 9
+    tile_h: 13.5
     repeat_horizontal: true
     filtering: nearest
     layers:
@@ -314,7 +314,7 @@ profiles:
   clouds_magenta_tower:
     backdrop: background/clouds/magenta-tower/layer-1.png
     source_size_px: { width: 576, height: 324 }
-    tile_h: 9
+    tile_h: 13.5
     repeat_horizontal: true
     filtering: nearest
     layers:
@@ -325,7 +325,7 @@ profiles:
   clouds_deep_blue_wisps:
     backdrop: background/clouds/deep-blue-wisps/layer-1.png
     source_size_px: { width: 576, height: 324 }
-    tile_h: 9
+    tile_h: 13.5
     repeat_horizontal: true
     filtering: nearest
     layers:
@@ -340,7 +340,7 @@ profiles:
   clouds_thunderstorm:
     backdrop: background/clouds/thunderstorm/layer-1.png
     source_size_px: { width: 576, height: 324 }
-    tile_h: 9
+    tile_h: 13.5
     repeat_horizontal: true
     filtering: nearest
     layers:
@@ -353,7 +353,7 @@ profiles:
   clouds_cream_sea:
     backdrop: background/clouds/cream-sea/layer-1.png
     source_size_px: { width: 576, height: 324 }
-    tile_h: 9
+    tile_h: 13.5
     repeat_horizontal: true
     filtering: nearest
     layers:
@@ -368,7 +368,7 @@ profiles:
   clouds_lilac_dusk:
     backdrop: background/clouds/lilac-dusk/layer-1.png
     source_size_px: { width: 576, height: 324 }
-    tile_h: 9
+    tile_h: 13.5
     repeat_horizontal: true
     filtering: nearest
     layers:
@@ -383,7 +383,7 @@ profiles:
   clouds_lavender_tower:
     backdrop: background/clouds/lavender-tower/layer-1.png
     source_size_px: { width: 576, height: 324 }
-    tile_h: 9
+    tile_h: 13.5
     repeat_horizontal: true
     filtering: nearest
     layers:
@@ -396,7 +396,7 @@ profiles:
   clouds_ivory_bank:
     backdrop: background/clouds/ivory-bank/layer-1.png
     source_size_px: { width: 576, height: 324 }
-    tile_h: 9
+    tile_h: 13.5
     repeat_horizontal: true
     filtering: nearest
     layers:
@@ -409,7 +409,7 @@ profiles:
   clouds_noon_sun:
     backdrop: background/clouds/noon-sun/layer-1.png
     source_size_px: { width: 576, height: 324 }
-    tile_h: 9
+    tile_h: 13.5
     repeat_horizontal: true
     filtering: nearest
     layers:
@@ -426,7 +426,7 @@ profiles:
   clouds_pink_sunrise:
     backdrop: background/clouds/pink-sunrise/layer-1.png
     source_size_px: { width: 576, height: 324 }
-    tile_h: 9
+    tile_h: 13.5
     repeat_horizontal: true
     filtering: nearest
     layers:
@@ -439,7 +439,7 @@ profiles:
   clouds_sky_blue_tower:
     backdrop: background/clouds/sky-blue-tower/layer-1.png
     source_size_px: { width: 576, height: 324 }
-    tile_h: 9
+    tile_h: 13.5
     repeat_horizontal: true
     filtering: nearest
     layers:
@@ -452,7 +452,7 @@ profiles:
   clouds_full_moon:
     backdrop: background/clouds/full-moon/layer-1.png
     source_size_px: { width: 576, height: 324 }
-    tile_h: 9
+    tile_h: 13.5
     repeat_horizontal: true
     filtering: nearest
     layers:
@@ -466,7 +466,7 @@ profiles:
   city_night_stars:
     backdrop: background/city/night-stars/layer-1.png
     source_size_px: { width: 576, height: 324 }
-    tile_h: 9
+    tile_h: 13.5
     repeat_horizontal: true
     filtering: nearest
     layers:
@@ -481,7 +481,7 @@ profiles:
   city_pink_dusk:
     backdrop: background/city/pink-dusk/layer-1.png
     source_size_px: { width: 576, height: 324 }
-    tile_h: 9
+    tile_h: 13.5
     repeat_horizontal: true
     filtering: nearest
     layers:
@@ -498,7 +498,7 @@ profiles:
   city_blue_morning:
     backdrop: background/city/blue-morning/layer-1.png
     source_size_px: { width: 576, height: 324 }
-    tile_h: 9
+    tile_h: 13.5
     repeat_horizontal: true
     filtering: nearest
     layers:
@@ -513,7 +513,7 @@ profiles:
   city_peach_sunset:
     backdrop: background/city/peach-sunset/layer-1.png
     source_size_px: { width: 576, height: 324 }
-    tile_h: 9
+    tile_h: 13.5
     repeat_horizontal: true
     filtering: nearest
     layers:
@@ -530,7 +530,7 @@ profiles:
   city_blue_day:
     backdrop: background/city/blue-day/layer-1.png
     source_size_px: { width: 576, height: 324 }
-    tile_h: 9
+    tile_h: 13.5
     repeat_horizontal: true
     filtering: nearest
     layers:
@@ -545,7 +545,7 @@ profiles:
   city_neon_pink:
     backdrop: background/city/neon-pink/layer-1.png
     source_size_px: { width: 576, height: 324 }
-    tile_h: 9
+    tile_h: 13.5
     repeat_horizontal: true
     filtering: nearest
     layers:
@@ -562,7 +562,7 @@ profiles:
   city_plum_dusk:
     backdrop: background/city/plum-dusk/layer-1.png
     source_size_px: { width: 576, height: 324 }
-    tile_h: 9
+    tile_h: 13.5
     repeat_horizontal: true
     filtering: nearest
     layers:
@@ -577,7 +577,7 @@ profiles:
   city_teal_evening:
     backdrop: background/city/teal-evening/layer-1.png
     source_size_px: { width: 576, height: 324 }
-    tile_h: 9
+    tile_h: 13.5
     repeat_horizontal: true
     filtering: nearest
     layers:

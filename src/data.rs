@@ -83,12 +83,12 @@ impl GameData {
     /// re-runs it before saving or playtesting an edited room.
     pub(crate) fn validate(&self) -> Result<(), InvalidGameData> {
         let asset_root = &self.asset_root;
-        if self.gameplay.viewport.height_h != 9.0
+        if !(self.gameplay.viewport.height_h.is_finite() && self.gameplay.viewport.height_h > 0.0)
             || self.gameplay.viewport.aspect_ratio.width != 16
             || self.gameplay.viewport.aspect_ratio.height != 9
         {
             return Err(InvalidGameData::from(
-                "the gameplay viewport must be fixed at 16:9 and 9 H",
+                "the gameplay viewport must be fixed at 16:9 with a positive height",
             ));
         }
         let player = &self.gameplay.player;

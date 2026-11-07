@@ -571,13 +571,29 @@ mod tests {
 
     #[test]
     fn clicks_pick_spawns_first_then_the_smallest_block_under_the_cursor() {
-        let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
-        let data = GameData::load(&asset_root).expect("Chapter 1 YAML should be valid");
-        let room = &data.rooms[&3];
+        // A fixed layout, independent of the authored rooms.
+        let room: RoomConfig = yaml_serde::from_str(
+            "
+room_id: 3
+chapter_id: 1
+size: { width_viewports: 2, height_h: 27 }
+background_profile: clouds_bright_blue
+player_spawn: { x_h: 2.5, y_h: 1 }
+terrain:
+  - { label: floor, material: stone_cobble, rect_h: { x: 0, y: 0, width: 48, height: 1 } }
+  - { label: walkway, material: stone_cobble, rect_h: { x: 13, y: 6, width: 14, height: 1 } }
+  - { label: step, material: stone_cobble, rect_h: { x: 28, y: 1, width: 2, height: 1.5 } }
+enemy_spawns: []
+exit: { x_h: 45, y_h: 1 }
+next_room_id: 4
+",
+        )
+        .expect("the test layout should parse");
+        let room = &room;
 
         let feet = Vec2::new(room.player_spawn.x_h, room.player_spawn.y_h + 0.5);
         assert_eq!(EditorItem::at(room, feet), Some(EditorItem::PlayerSpawn));
-        // Room 3's step (x 28..30) sits on the floor (x 0..48): both cover
+        // The step (x 28..30) sits on the floor (x 0..48): both cover
         // this point, and the step is the smaller block.
         let step = room
             .terrain
@@ -590,11 +606,27 @@ mod tests {
 
     #[test]
     fn dragged_spawns_land_on_the_highest_block_top_below_them() {
-        let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
-        let data = GameData::load(&asset_root).expect("Chapter 1 YAML should be valid");
-        let room = &data.rooms[&3];
+        // A fixed layout, independent of the authored rooms.
+        let room: RoomConfig = yaml_serde::from_str(
+            "
+room_id: 3
+chapter_id: 1
+size: { width_viewports: 2, height_h: 27 }
+background_profile: clouds_bright_blue
+player_spawn: { x_h: 2.5, y_h: 1 }
+terrain:
+  - { label: floor, material: stone_cobble, rect_h: { x: 0, y: 0, width: 48, height: 1 } }
+  - { label: walkway, material: stone_cobble, rect_h: { x: 13, y: 6, width: 14, height: 1 } }
+  - { label: step, material: stone_cobble, rect_h: { x: 28, y: 1, width: 2, height: 1.5 } }
+enemy_spawns: []
+exit: { x_h: 45, y_h: 1 }
+next_room_id: 4
+",
+        )
+        .expect("the test layout should parse");
+        let room = &room;
 
-        // Above room 3's west walkway (x 13..27, top 7) and the floor (top 1).
+        // Above the walkway (x 13..27, top 7) and the floor (top 1).
         assert_eq!(floor_under(room, 20.0, 9.0), Some(7.0));
         assert_eq!(floor_under(room, 20.0, 5.0), Some(1.0));
         assert_eq!(snap(2.37, false), 2.25);

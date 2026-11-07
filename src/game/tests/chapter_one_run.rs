@@ -320,10 +320,66 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
     let mut saw_boss_intro = false;
     let mut intro_rooms = BTreeSet::new();
     let mut enemy_bodies = app.world_mut().query::<&EnemyBody>();
+    let mut targets = app.world_mut().query::<(&EnemyBody, &Transform)>();
+    let mut player_bodies = app.world_mut().query::<(&mut Transform, &mut PlayerBody)>();
+    let mut last_progress = None;
+    let mut frames_without_progress = 0;
     for _ in 0..10_000 {
         app.update();
         let screen = *app.world().resource::<State<GameScreen>>().get();
         let room_id = app.world().resource::<RunSession>().room_id;
+        // Shortcut: the pilot fights through inputs but cannot find its way
+        // through a room's layout. When nothing progresses for a while, it
+        // travels next to the nearest living enemy, or to the open exit.
+        let door_open = app.world().resource::<RunSession>().door_open;
+        let enemy_health = enemy_bodies
+            .iter(app.world())
+            .map(|enemy| enemy.health.max(0.0))
+            .sum::<f32>();
+        let progress = (screen, room_id, door_open, enemy_health.to_bits());
+        if last_progress == Some(progress) {
+            frames_without_progress += 1;
+        } else {
+            last_progress = Some(progress);
+            frames_without_progress = 0;
+        }
+        if screen == GameScreen::Playing && frames_without_progress >= 120 {
+            frames_without_progress = 0;
+            let data = app.world().resource::<GameData>();
+            let room = &data.rooms[&room_id];
+            let player_x = player_bodies
+                .iter(app.world())
+                .next()
+                .map_or(0.0, |(transform, _)| transform.translation.x);
+            let feet_h = if door_open {
+                Some(Vec2::new(room.exit.x_h - 2.0, room.exit.y_h))
+            } else {
+                targets
+                    .iter(app.world())
+                    .filter(|(enemy, _)| enemy.health > 0.0 && enemy.grounded)
+                    .min_by(|(_, first), (_, second)| {
+                        (first.translation.x - player_x)
+                            .abs()
+                            .total_cmp(&(second.translation.x - player_x).abs())
+                    })
+                    .map(|(enemy, transform)| {
+                        let x_h = transform.translation.x / H_WORLD_UNITS;
+                        let y_h = (transform.translation.y - enemy.feet_offset) / H_WORLD_UNITS;
+                        [-2.5, 2.5, -1.5, 1.5]
+                            .into_iter()
+                            .map(|offset| x_h + offset)
+                            .find(|x_h| room.has_footing_at(*x_h, y_h))
+                            .map_or(Vec2::new(x_h, y_h), |x_h| Vec2::new(x_h, y_h))
+                    })
+            };
+            if let Some(feet_h) = feet_h {
+                for (mut transform, mut body) in player_bodies.iter_mut(app.world_mut()) {
+                    transform.translation.x = feet_h.x * H_WORLD_UNITS;
+                    transform.translation.y = (feet_h.y + 0.5) * H_WORLD_UNITS;
+                    body.velocity = Vec2::ZERO;
+                }
+            }
+        }
         if screen == GameScreen::RoomClear && !cleared_rosters.contains_key(&room_id) {
             let (enemy_count, living_enemies) = {
                 let enemies = enemy_bodies.iter(app.world());
