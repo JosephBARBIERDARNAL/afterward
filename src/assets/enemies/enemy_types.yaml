@@ -107,7 +107,7 @@ types:
     attack:
       kind: lunge
       damage: 9
-      hitbox_h: { x: 0, y: 0, width: 0.9, height: 1.5 }
+      hitbox_h: { x: -0.1, y: 0, width: 0.6, height: 0.95 }
       cooldown_s: 1.3
       windup_s: 0.25
   evil_wizard:

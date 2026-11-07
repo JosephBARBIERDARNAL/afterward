@@ -14,7 +14,7 @@ player:
   max_health: 100
   # Where enemy strikes and projectiles hit the player: centered on the body,
   # from the feet up. F3 in debug builds draws every hitbox.
-  hurtbox_h: { width: 0.6, height: 1 }
+  hurtbox_h: { width: 0.4, height: 0.75 }
   max_speed_h_s: 6
   air_max_speed_h_s: 6
   acceleration_h_s2: 36
