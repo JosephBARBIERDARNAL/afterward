@@ -2,6 +2,7 @@
 //! editable item over it, and the inspector and help panels.
 
 use super::*;
+use bevy::input::keyboard::Key;
 
 const ROOM_BOUNDS_COLOR: Color = Color::srgb(0.95, 0.3, 0.3);
 const GRID_COLOR: Color = Color::srgba(1.0, 1.0, 1.0, 0.06);
@@ -14,6 +15,10 @@ const EXIT_COLOR: Color = Color::srgb(0.35, 0.8, 1.0);
 const ENEMY_COLOR: Color = Color::srgb(1.0, 0.35, 0.45);
 const HOVER_COLOR: Color = Color::WHITE;
 const SELECTED_COLOR: Color = Color::srgb(1.0, 0.9, 0.2);
+// The selected body's hitboxes, colored as in the F3 overlay.
+const PLAYER_HURTBOX_COLOR: Color = Color::srgb(0.3, 1.0, 0.45);
+const ENEMY_HURTBOX_COLOR: Color = Color::srgb(1.0, 0.9, 0.2);
+const STRIKE_COLOR: Color = Color::srgb(1.0, 0.2, 0.3);
 
 /// Redraws the edited room after a change, as the game draws it, and
 /// re-validates the data so the panel can flag a broken room right away.
@@ -91,6 +96,62 @@ pub(super) fn draw_overlay(mut gizmos: Gizmos, editor: Res<RoomEditor>, data: Re
         );
     }
 
+    // The selected body's hitboxes, drawn by the code combat uses. An enemy
+    // strikes toward the player spawn, the way it faces in play.
+    let mut world_outline = |rect: Rect, color: Color| {
+        let min = rect.min / H_WORLD_UNITS;
+        let size = rect.size() / H_WORLD_UNITS;
+        outline(
+            RectH {
+                x: min.x,
+                y: min.y,
+                width: size.x,
+                height: size.y,
+            },
+            color,
+        );
+    };
+    match editor.selected.as_slice() {
+        [EditorItem::PlayerSpawn] => {
+            let feet = Vec2::new(room.player_spawn.x_h, room.player_spawn.y_h) * H_WORLD_UNITS;
+            world_outline(
+                crate::game::combat::player_hurtbox(
+                    (feet + Vec2::Y * H_WORLD_UNITS / 2.0).extend(0.0),
+                    &data,
+                ),
+                PLAYER_HURTBOX_COLOR,
+            );
+        }
+        [EditorItem::Enemy(index)] => {
+            let enemy = room
+                .enemy_spawns
+                .get(*index)
+                .and_then(|spawn| Some((spawn, data.enemies.types.get(&spawn.type_id)?)));
+            if let Some((spawn, enemy)) = enemy {
+                let feet = Vec2::new(spawn.position_h.x_h, spawn.position_h.y_h) * H_WORLD_UNITS;
+                let hurtbox = Vec2::new(enemy.hurtbox_h.width, enemy.hurtbox_h.height);
+                world_outline(
+                    Rect::from_corners(
+                        feet - Vec2::new(hurtbox.x / 2.0, 0.0) * H_WORLD_UNITS,
+                        feet + Vec2::new(hurtbox.x / 2.0, hurtbox.y) * H_WORLD_UNITS,
+                    ),
+                    ENEMY_HURTBOX_COLOR,
+                );
+                let facing = room.player_spawn.x_h - spawn.position_h.x_h;
+                let strike = enemy
+                    .attack
+                    .iter()
+                    .chain(&enemy.attacks)
+                    .nth(editor.attack)
+                    .and_then(|attack| EnemyAttack::from(attack).hitbox_at(feet, facing));
+                if let Some(strike) = strike {
+                    world_outline(strike, STRIKE_COLOR);
+                }
+            }
+        }
+        _ => {}
+    }
+
     for item in EditorItem::all(room) {
         let selected = editor.selected.contains(&item);
         let Some(rect) = item.bounds(room) else {
@@ -144,14 +205,23 @@ pub(super) fn update_panels(
             "ROOM EDITOR  -  room {:02}  (chapter {})",
             room.room_id, room.chapter_id
         ),
-        if unsaved.is_empty() {
-            String::from("All changes saved.")
-        } else {
-            let rooms = unsaved
-                .iter()
-                .map(|room_id| format!("{room_id:02}"))
-                .collect::<Vec<_>>();
-            format!("UNSAVED: room {}", rooms.join(", "))
+        {
+            let mut parts = Vec::new();
+            if !unsaved.is_empty() {
+                let rooms = unsaved
+                    .iter()
+                    .map(|room_id| format!("{room_id:02}"))
+                    .collect::<Vec<_>>();
+                parts.push(format!("room {}", rooms.join(", ")));
+            }
+            if editor.unsaved_hitboxes(&data) {
+                parts.push(String::from("hitboxes"));
+            }
+            if parts.is_empty() {
+                String::from("All changes saved.")
+            } else {
+                format!("UNSAVED: {}", parts.join(" | "))
+            }
         },
     ];
     if let Some(problem) = &editor.problem {
@@ -167,7 +237,7 @@ pub(super) fn update_panels(
         let is_current = index == editor.field;
         let value = match &editor.text_entry {
             Some(text) if is_current => format!("{text}_"),
-            _ => field.value(room, &editor.selected, &data),
+            _ => field.value(room, &editor.selected, &data, editor.attack),
         };
         lines.push(format!(
             "{} {:<18} {value}",
@@ -177,6 +247,16 @@ pub(super) fn update_panels(
     }
     if editor.text_entry.is_some() {
         lines.push(String::from("Typing: Enter keeps, Esc cancels"));
+    }
+    if editor
+        .fields()
+        .get(editor.field)
+        .is_some_and(|field| field.is_hitbox())
+    {
+        lines.push(match editor.selected_enemy_type(&data) {
+            Some(type_id) => format!("Hitboxes are shared by every {type_id} (enemy_types.yaml)"),
+            None => String::from("The player's hurtbox (gameplay.yaml)"),
+        });
     }
     if let Some(hovered) = editor
         .hovered
@@ -190,11 +270,30 @@ pub(super) fn update_panels(
             cursor_h.x, cursor_h.y
         ));
     }
+    lines.push(String::from("Hold H: shortcuts"));
     if !editor.status.is_empty() {
         lines.push(String::new());
         lines.push(editor.status.clone());
     }
     for mut text in &mut panel {
         text.0 = lines.join("\n");
+    }
+}
+
+/// Shows the shortcuts panel while H is held (by the character it types, so
+/// on any layout), unless a label is being typed.
+pub(super) fn show_help_while_h_is_held(
+    keys: Res<ButtonInput<Key>>,
+    editor: Res<RoomEditor>,
+    mut help: Query<&mut Visibility, With<EditorHelp>>,
+) {
+    let held = keys.any_pressed([Key::Character("h".into()), Key::Character("H".into())])
+        && editor.text_entry.is_none();
+    for mut visibility in &mut help {
+        visibility.set_if_neq(if held {
+            Visibility::Inherited
+        } else {
+            Visibility::Hidden
+        });
     }
 }

@@ -171,7 +171,7 @@ pub struct PointH {
     pub y: f32,
 }
 
-#[derive(Debug, Clone, Copy, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Deserialize)]
 pub struct SizeH {
     pub width: f32,
     pub height: f32,

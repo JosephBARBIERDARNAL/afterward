@@ -24,6 +24,14 @@ pub(super) enum Field {
     Health,
     Speed,
     Damage,
+    // Hitboxes, shared by every enemy of a type or by the player (hitboxes.rs).
+    HurtboxWidth,
+    HurtboxHeight,
+    Attack,
+    HitboxX,
+    HitboxY,
+    HitboxWidth,
+    HitboxHeight,
 }
 
 impl Field {
@@ -75,8 +83,18 @@ impl Field {
                 Self::Health,
                 Self::Speed,
                 Self::Damage,
+                Self::HurtboxWidth,
+                Self::HurtboxHeight,
+                Self::Attack,
+                Self::HitboxX,
+                Self::HitboxY,
+                Self::HitboxWidth,
+                Self::HitboxHeight,
             ],
-            Some(EditorItem::PlayerSpawn | EditorItem::Exit) => &[Self::X, Self::Y],
+            Some(EditorItem::PlayerSpawn) => {
+                &[Self::X, Self::Y, Self::HurtboxWidth, Self::HurtboxHeight]
+            }
+            Some(EditorItem::Exit) => &[Self::X, Self::Y],
         }
     }
 
@@ -98,6 +116,13 @@ impl Field {
             Self::Health => "Health",
             Self::Speed => "Speed (H/s)",
             Self::Damage => "Attack damage",
+            Self::HurtboxWidth => "Hurtbox width (H)",
+            Self::HurtboxHeight => "Hurtbox height (H)",
+            Self::Attack => "Attack",
+            Self::HitboxX => "Hitbox x (H)",
+            Self::HitboxY => "Hitbox y (H)",
+            Self::HitboxWidth => "Hitbox width (H)",
+            Self::HitboxHeight => "Hitbox height (H)",
         }
     }
 
@@ -163,6 +188,7 @@ impl Field {
         room: &RoomConfig,
         selection: &[EditorItem],
         data: &GameData,
+        attack: usize,
     ) -> String {
         if selection.len() > 1 {
             return match self {
@@ -228,6 +254,13 @@ impl Field {
                 overrides.and_then(|overrides| overrides.attack_damage),
                 defaults.and_then(EnemyTypeConfig::attack_damage),
             ),
+            Self::HurtboxWidth
+            | Self::HurtboxHeight
+            | Self::Attack
+            | Self::HitboxX
+            | Self::HitboxY
+            | Self::HitboxWidth
+            | Self::HitboxHeight => self.hitbox_value(data, defaults, attack),
         }
     }
 
@@ -366,7 +399,17 @@ impl Field {
                 let current = value.or(default).unwrap_or(0.0);
                 *value = Some((current + steps * step).max(min));
             }
-            Self::Room | Self::Description | Self::Label => {}
+            // Hitboxes live outside the room: see `Field::adjust_hitbox`.
+            Self::Room
+            | Self::Description
+            | Self::Label
+            | Self::HurtboxWidth
+            | Self::HurtboxHeight
+            | Self::Attack
+            | Self::HitboxX
+            | Self::HitboxY
+            | Self::HitboxWidth
+            | Self::HitboxHeight => {}
         }
     }
 

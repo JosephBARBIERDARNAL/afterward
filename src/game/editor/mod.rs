@@ -7,12 +7,14 @@ use crate::data::{MaterialId, RectH, RoomConfig};
 
 mod clipboard;
 mod draw;
+mod hitboxes;
 mod inspector;
 mod keyboard;
 mod palette;
 mod pointer;
 
 use clipboard::Clipboard;
+use hitboxes::Hitboxes;
 use inspector::Field;
 
 /// Grid step, in H, that dragged and nudged positions snap to.
@@ -54,6 +56,7 @@ impl Plugin for EditorPlugin {
                     camera::update_background_parallax,
                     draw::draw_overlay,
                     draw::update_panels,
+                    draw::show_help_while_h_is_held,
                     palette::highlight_swatches,
                 )
                     .chain()
@@ -342,10 +345,14 @@ struct RoomEditor {
     keys_consumed: bool,
     /// The mouse position in the room, in H.
     cursor_h: Option<Vec2>,
-    undo: Vec<(u16, RoomConfig)>,
-    redo: Vec<(u16, RoomConfig)>,
+    undo: Vec<Snapshot>,
+    redo: Vec<Snapshot>,
     /// Each edited room as it is on disk, to tell which rooms are unsaved.
     saved: BTreeMap<u16, RoomConfig>,
+    /// The hitboxes as they are on disk, once one was edited.
+    saved_hitboxes: Option<Hitboxes>,
+    /// Which of the selected enemy's attacks the hitbox fields show.
+    attack: usize,
     /// Enemy type the next added enemy uses: the last one placed or picked.
     enemy_type: Option<EnemyTypeId>,
     /// Material new blocks and decorations use: the last one picked.
@@ -379,6 +386,8 @@ impl Default for RoomEditor {
             undo: Vec::new(),
             redo: Vec::new(),
             saved: BTreeMap::new(),
+            saved_hitboxes: None,
+            attack: 0,
             enemy_type: None,
             material: None,
             clipboard: None,
@@ -410,10 +419,41 @@ impl RoomEditor {
         self.saved
             .entry(self.room_id)
             .or_insert_with(|| before.clone());
-        self.undo.push((self.room_id, before));
+        self.undo.push(Snapshot::Room(self.room_id, before));
         self.redo.clear();
         self.view_dirty = true;
         self.leave_armed = false;
+    }
+
+    /// Applies `change` to the hitboxes in `data` as one undoable step.
+    fn edit_hitboxes(&mut self, data: &mut GameData, change: impl FnOnce(&mut GameData)) {
+        let before = Hitboxes::of(data);
+        change(data);
+        if Hitboxes::of(data) != before {
+            self.saved_hitboxes.get_or_insert_with(|| before.clone());
+            self.undo.push(Snapshot::Hitboxes(before));
+            self.redo.clear();
+            self.view_dirty = true;
+            self.leave_armed = false;
+        }
+    }
+
+    /// The type of the enemy the inspector describes, if it is one.
+    fn selected_enemy_type(&self, data: &GameData) -> Option<EnemyTypeId> {
+        let Some(EditorItem::Enemy(index)) = self.primary() else {
+            return None;
+        };
+        data.rooms
+            .get(&self.room_id)
+            .and_then(|room| room.enemy_spawns.get(index))
+            .map(|spawn| spawn.type_id.clone())
+            .filter(|type_id| data.enemies.types.contains_key(type_id))
+    }
+
+    fn unsaved_hitboxes(&self, data: &GameData) -> bool {
+        self.saved_hitboxes
+            .as_ref()
+            .is_some_and(|saved| *saved != Hitboxes::of(data))
     }
 
     fn unsaved_rooms(&self, data: &GameData) -> Vec<u16> {
@@ -451,6 +491,30 @@ impl RoomEditor {
             self.field = 0;
         }
         self.selected = item.into_iter().collect();
+        self.attack = 0;
+    }
+}
+
+/// One undo or redo step: a room, or the hitboxes, as they were.
+enum Snapshot {
+    Room(u16, RoomConfig),
+    Hitboxes(Hitboxes),
+}
+
+impl Snapshot {
+    /// Puts this state back into `data`, returning the state it replaced.
+    fn restore(self, data: &mut GameData) -> Option<Self> {
+        match self {
+            Self::Room(room_id, room) => data
+                .rooms
+                .insert(room_id, room)
+                .map(|current| Self::Room(room_id, current)),
+            Self::Hitboxes(hitboxes) => {
+                let current = Hitboxes::of(data);
+                hitboxes.apply(data);
+                Some(Self::Hitboxes(current))
+            }
+        }
     }
 }
 
@@ -468,6 +532,10 @@ fn snap(value: f32, fine: bool) -> f32 {
 /// The inspector panel, rewritten every frame.
 #[derive(Component)]
 struct EditorPanel;
+
+/// The shortcuts panel, shown while H is held.
+#[derive(Component)]
+struct EditorHelp;
 
 /// Every editor panel, despawned when the editor closes.
 #[derive(Component)]
@@ -520,22 +588,36 @@ fn enter_editor(
     ));
     commands.spawn((
         panel_node(None, Some(px(12)), None, Some(px(12))),
-        Text::new(format!(
-            "Click select | Shift+click add/remove | drag empty space to box-select (Shift: add)\n\
-             Drag moves the selection (Alt: fine grid) | drag a selected block's edge to resize\n\
-             Two-finger scroll or right/middle drag pan | pinch or wheel zoom | Home fit room\n\
-             At cursor: T terrain | P platform | D decoration | E enemy | click a material to paint\n\
-             Del delete | {COMMAND_KEY}+D duplicate | {COMMAND_KEY}+C copy | {COMMAND_KEY}+X cut | \
-             {COMMAND_KEY}+V paste at cursor | {COMMAND_KEY}+A select all\n\
-             Up/Down field | Left/Right change (Shift x4) | Enter type text | C clear\n\
-             PgUp/PgDn room | {COMMAND_KEY}+Z undo | {COMMAND_KEY}+Shift+Z or {COMMAND_KEY}+Y redo | \
-             {COMMAND_KEY}+S save | {COMMAND_KEY}+R playtest\n\
-             Esc deselect, then back to the menu",
-        )),
+        Text::new(
+            [
+                String::from("Drag empty space: box-select (Shift adds)"),
+                String::from("Drag the selection: move (Alt: fine grid)"),
+                String::from("Drag a selected block's edge: resize"),
+                String::from("Two-finger scroll, right or middle drag: pan"),
+                String::from("Pinch or wheel: zoom"),
+                String::from("Home: fit the room"),
+                String::from("T / P / D / E: add terrain / platform / decoration / enemy"),
+                String::from("Click a material: paint the selection"),
+                String::from("Del: delete"),
+                format!("{COMMAND_KEY}+D: duplicate"),
+                String::from("Up / Down: inspector field"),
+                String::from("Left / Right: change it (Shift: x4)"),
+                String::from("Enter: type a label or description"),
+                String::from("C: clear the field"),
+                String::from("PgUp / PgDn: previous / next room"),
+                format!("{COMMAND_KEY}+Shift+Z or {COMMAND_KEY}+Y: redo"),
+                format!("{COMMAND_KEY}+R: playtest"),
+                String::from("F3 (in play): hitbox overlay"),
+                String::from("Esc: deselect, then back to the menu"),
+            ]
+            .join("\n"),
+        ),
         font,
         TextColor(Color::srgb(0.78, 0.8, 0.86)),
         BackgroundColor(Color::srgba(0.02, 0.025, 0.05, 0.82)),
+        Visibility::Hidden,
         Pickable::IGNORE,
+        EditorHelp,
         EditorUi,
     ));
     palette::spawn_palette(&mut commands, &data, &asset_server);

@@ -136,6 +136,15 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
             editor.saved.insert(room_id, room.clone());
             written.push(format!("room_{room_id:03}.yaml"));
         }
+        if editor.unsaved_hitboxes(&data) {
+            let hitboxes = Hitboxes::of(&data);
+            if let Err(error) = hitboxes.save(&data.asset_root) {
+                editor.status = format!("Hitboxes not saved: {error}");
+                return;
+            }
+            editor.saved_hitboxes = Some(hitboxes);
+            written.push(String::from("hitboxes (gameplay.yaml, enemy_types.yaml)"));
+        }
         editor.status = if written.is_empty() {
             String::from("Nothing to save.")
         } else {
@@ -149,26 +158,34 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
         *start_room = StartRoom(editor.room_id);
         next_screen.set(screens::reset_run(&mut session, &data, *start_room));
     } else if command && (letter('y') || shift && letter('z')) {
-        let Some((room_id, room)) = editor.redo.pop() else {
+        let Some(step) = editor.redo.pop() else {
             editor.status = String::from("Nothing to redo.");
             return;
         };
-        if let Some(current) = data.rooms.insert(room_id, room) {
-            editor.undo.push((room_id, current));
+        let room_id = match &step {
+            Snapshot::Room(room_id, _) => Some(*room_id),
+            Snapshot::Hitboxes(_) => None,
+        };
+        if let Some(current) = step.restore(&mut data) {
+            editor.undo.push(current);
         }
-        if room_id != editor.room_id {
+        if let Some(room_id) = room_id.filter(|room_id| *room_id != editor.room_id) {
             editor.open_room(room_id);
         }
         editor.view_dirty = true;
     } else if command && letter('z') {
-        let Some((room_id, room)) = editor.undo.pop() else {
+        let Some(step) = editor.undo.pop() else {
             editor.status = String::from("Nothing to undo.");
             return;
         };
-        if let Some(current) = data.rooms.insert(room_id, room) {
-            editor.redo.push((room_id, current));
+        let room_id = match &step {
+            Snapshot::Room(room_id, _) => Some(*room_id),
+            Snapshot::Hitboxes(_) => None,
+        };
+        if let Some(current) = step.restore(&mut data) {
+            editor.redo.push(current);
         }
-        if room_id != editor.room_id {
+        if let Some(room_id) = room_id.filter(|room_id| *room_id != editor.room_id) {
             editor.open_room(room_id);
         }
         editor.view_dirty = true;
@@ -351,6 +368,21 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
                     editor.open_room(room_id);
                 }
             }
+            Some(Field::Attack) => {
+                let count = editor.selected_enemy_type(&data).map_or(0, |type_id| {
+                    let enemy = &data.enemies.types[&type_id];
+                    usize::from(enemy.attack.is_some()) + enemy.attacks.len()
+                });
+                editor.attack = (editor.attack as isize + direction as isize)
+                    .rem_euclid(count.max(1) as isize) as usize;
+            }
+            Some(field) if field.is_hitbox() => {
+                let type_id = editor.selected_enemy_type(&data);
+                let attack = editor.attack;
+                editor.edit_hitboxes(&mut data, |data| {
+                    field.adjust_hitbox(data, type_id.as_ref(), attack, steps);
+                });
+            }
             Some(field) => {
                 let snapshot = &*data;
                 let mut room = snapshot.rooms.get(&editor.room_id).cloned();
@@ -426,15 +458,15 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
         transform.translation.x = room_size_h.x / 2.0 * H_WORLD_UNITS;
         transform.translation.y = room_size_h.y / 2.0 * H_WORLD_UNITS;
     } else if pressed(KeyCode::Escape) {
-        let unsaved = editor.unsaved_rooms(&data);
+        let unsaved = !editor.unsaved_rooms(&data).is_empty() || editor.unsaved_hitboxes(&data);
         if !editor.selected.is_empty() {
             editor.select(None);
-        } else if unsaved.is_empty() || editor.leave_armed {
+        } else if !unsaved || editor.leave_armed {
             next_screen.set(GameScreen::MainMenu);
         } else {
             editor.leave_armed = true;
             editor.status = format!(
-                "Unsaved rooms: {COMMAND_KEY}+S saves them, Esc again leaves (edits stay in memory until the game quits)."
+                "Unsaved edits: {COMMAND_KEY}+S saves them, Esc again leaves (edits stay in memory until the game quits)."
             );
         }
     }

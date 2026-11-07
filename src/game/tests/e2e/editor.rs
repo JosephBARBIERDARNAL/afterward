@@ -141,3 +141,29 @@ fn the_editor_redraws_an_edited_room_with_its_background_in_place() {
         "background layers at {backgrounds:?}, camera at {camera_y}"
     );
 }
+
+#[test]
+fn the_editor_shows_its_shortcuts_only_while_h_is_held() {
+    let mut game = HeadlessGame::with_copied_data();
+    game.tap(KeyCode::KeyD);
+    assert_eq!(game.screen(), GameScreen::Editor);
+    let help_visible = |game: &mut HeadlessGame| {
+        let world = game.app.world_mut();
+        world
+            .query::<(&Text, &Visibility)>()
+            .iter(world)
+            .find(|(text, _)| text.0.contains("box-select"))
+            .map(|(_, visibility)| *visibility != Visibility::Hidden)
+    };
+    assert_eq!(help_visible(&mut game), Some(false), "hidden by default");
+    game.key(KeyCode::KeyH, ButtonState::Pressed);
+    game.app.update();
+    assert_eq!(help_visible(&mut game), Some(true), "shown while H is held");
+    game.key(KeyCode::KeyH, ButtonState::Released);
+    game.app.update();
+    assert_eq!(
+        help_visible(&mut game),
+        Some(false),
+        "hidden again on release"
+    );
+}

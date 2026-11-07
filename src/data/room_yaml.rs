@@ -5,7 +5,7 @@ use std::fmt::{self, Display, Formatter};
 
 use super::{
     DecorationConfig, DecorationLayer, EnemySpawnConfig, EnemyStatOverrides, RectH, RoomConfig,
-    TerrainBlockConfig,
+    SizeH, TerrainBlockConfig,
 };
 
 const HEADER: &str = "\
@@ -171,6 +171,17 @@ impl Display for RectH {
             formatter,
             "{{ x: {}, y: {}, width: {}, height: {} }}",
             self.x, self.y, self.width, self.height
+        )
+    }
+}
+
+/// Also written by the debug editor into `gameplay.yaml` and `enemy_types.yaml`.
+impl Display for SizeH {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
+        write!(
+            formatter,
+            "{{ width: {}, height: {} }}",
+            self.width, self.height
         )
     }
 }
