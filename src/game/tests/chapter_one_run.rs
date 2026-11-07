@@ -372,7 +372,8 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
                                 // On a block top, with no solid terrain in the body.
                                 let blocks = room.terrain.iter().chain(&room.platforms);
                                 blocks.map(|block| block.rect_h).any(|rect| {
-                                    rect.covers_x(*x_h) && (rect.top() - y_h).abs() <= 0.01
+                                    (rect.x..=rect.right()).contains(x_h)
+                                        && (rect.top() - y_h).abs() <= 0.01
                                 }) && !room.terrain.iter().any(|block| {
                                     let rect = block.rect_h;
                                     rect.x < x_h + PLAYER_COLLISION_WIDTH_H / 2.0

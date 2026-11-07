@@ -220,8 +220,8 @@ impl EditorItem {
             .chain([Self::PlayerSpawn, Self::Exit])
     }
 
-    /// Spawns stand on block tops; blocks move freely.
-    fn stands_on_surface(self) -> bool {
+    /// Spawns are a body's size; only blocks and decorations resize.
+    fn is_body(self) -> bool {
         matches!(self, Self::PlayerSpawn | Self::Exit | Self::Enemy(_))
     }
 
@@ -454,17 +454,6 @@ impl RoomEditor {
     }
 }
 
-/// The highest block top under `x_h` at or below `y_h` (with half an H of
-/// slack), where a dragged or added spawn's feet land.
-fn floor_under(room: &RoomConfig, x_h: f32, y_h: f32) -> Option<f32> {
-    room.terrain
-        .iter()
-        .chain(&room.platforms)
-        .filter(|block| block.rect_h.covers_x(x_h) && block.rect_h.top() <= y_h + 0.5)
-        .map(|block| block.rect_h.top())
-        .max_by(f32::total_cmp)
-}
-
 /// `value` rounded to the editor grid (finer while Shift is held).
 fn snap(value: f32, fine: bool) -> f32 {
     let steps_per_h = if fine {
@@ -608,30 +597,7 @@ next_room_id: 4
     }
 
     #[test]
-    fn dragged_spawns_land_on_the_highest_block_top_below_them() {
-        // A fixed layout, independent of the authored rooms.
-        let room: RoomConfig = yaml_serde::from_str(
-            "
-room_id: 3
-chapter_id: 1
-size: { width_viewports: 2, height_h: 27 }
-background_profile: clouds_bright_blue
-player_spawn: { x_h: 2.5, y_h: 1 }
-terrain:
-  - { label: floor, material: stone_cobble, rect_h: { x: 0, y: 0, width: 48, height: 1 } }
-  - { label: walkway, material: stone_cobble, rect_h: { x: 13, y: 6, width: 14, height: 1 } }
-  - { label: step, material: stone_cobble, rect_h: { x: 28, y: 1, width: 2, height: 1.5 } }
-enemy_spawns: []
-exit: { x_h: 45, y_h: 1 }
-next_room_id: 4
-",
-        )
-        .expect("the test layout should parse");
-        let room = &room;
-
-        // Above the walkway (x 13..27, top 7) and the floor (top 1).
-        assert_eq!(floor_under(room, 20.0, 9.0), Some(7.0));
-        assert_eq!(floor_under(room, 20.0, 5.0), Some(1.0));
+    fn positions_snap_to_the_grid_or_the_fine_grid() {
         assert_eq!(snap(2.37, false), 2.25);
         assert_eq!(snap(2.37, true), 2.35);
         assert!(snap(-0.1, false).is_sign_positive());

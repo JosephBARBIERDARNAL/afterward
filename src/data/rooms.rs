@@ -83,10 +83,6 @@ impl RectH {
     pub(crate) fn top(&self) -> f32 {
         self.y + self.height
     }
-
-    pub(crate) fn covers_x(&self, x: f32) -> bool {
-        (self.x..=self.right()).contains(&x)
-    }
 }
 
 /// A non-solid panel tiled with a terrain material, such as a ruined back

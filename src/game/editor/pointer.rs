@@ -124,7 +124,7 @@ pub(super) fn handle_pointer(resources: EditorPointerResources) {
     {
         let grab_h = EDGE_GRAB_H * orthographic.scale;
         let only = match editor.selected.as_slice() {
-            [item] if !shift && !item.stands_on_surface() => Some(*item),
+            [item] if !shift && !item.is_body() => Some(*item),
             _ => None,
         };
         let resize = only
@@ -210,15 +210,7 @@ pub(super) fn handle_pointer(resources: EditorPointerResources) {
                 item, grab, starts, ..
             }) => {
                 let target = cursor_h - *grab;
-                let dragged = if starts.len() == 1 && item.stands_on_surface() {
-                    let x_h = snap(target.x, fine);
-                    // Feet land on the highest block top under the dragged body.
-                    let y_h = floor_under(room, x_h, target.y + 0.5)
-                        .unwrap_or_else(|| snap(target.y, fine));
-                    Vec2::new(x_h, y_h)
-                } else {
-                    Vec2::new(snap(target.x, fine), snap(target.y, fine))
-                };
+                let dragged = Vec2::new(snap(target.x, fine), snap(target.y, fine));
                 // The rest of the selection keeps its offset from the dragged item.
                 let offset = starts
                     .iter()

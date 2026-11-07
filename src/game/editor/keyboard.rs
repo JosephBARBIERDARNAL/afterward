@@ -301,7 +301,7 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
         let mut added = None;
         editor.edit(&mut data, |room| {
             let x_h = snap(cursor_h.x, false);
-            let y_h = floor_under(room, x_h, cursor_h.y).unwrap_or(snap(cursor_h.y, false));
+            let y_h = snap(cursor_h.y, false);
             room.enemy_spawns.push(EnemySpawnConfig {
                 label: None,
                 type_id,
