@@ -27,6 +27,8 @@ Once you finish making a change (fixing a bug or adding a feature), make sure al
 - `cargo test --locked` — run Rust tests.
 - `cargo build --locked --bin afterward` — compile the native game.
 
+Git hooks are managed by [prek](https://prek.j178.dev) from `prek.toml`: file hygiene, YAML/TOML syntax, `cargo fmt`, Clippy, and typstyle on commit, `cargo test` on push. Install them once with `prek install --install-hooks`; `prek run --all-files` runs them on the whole repo. Fixers (trailing whitespace, final newline) edit files in place: re-add and commit again.
+
 ## Rules
 
 - When something is unclear, needs decision, is inconsistent or contradictory with something else, ask explicitly what should be done.
