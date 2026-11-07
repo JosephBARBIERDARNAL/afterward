@@ -77,8 +77,10 @@ player:
       up: { x: 0.3, y: 0.3 }
     # Fiery bursts drawn at the muzzle on every shot and where a bullet hits
     # an enemy: a hot core that swells and fades while embers fly outward.
-    muzzle_flash: { radius_h: 0.18, duration_s: 0.12, embers: 4, ember_speed_h_s: 3 }
-    impact_burst: { radius_h: 0.32, duration_s: 0.24, embers: 7, ember_speed_h_s: 4.5 }
+    muzzle_flash:
+      { radius_h: 0.18, duration_s: 0.12, embers: 4, ember_speed_h_s: 3 }
+    impact_burst:
+      { radius_h: 0.32, duration_s: 0.24, embers: 7, ember_speed_h_s: 4.5 }
 
 health_pickup:
   healing: 10
@@ -86,7 +88,7 @@ health_pickup:
 
 room_flow:
   clear_animation_s: 0.5
-  bonus_reroll_animation_s: 0.25
+  bonus_reroll_animation_s: 0.8
   boss_intro_duration_s: 0.9
   room_transition_duration_s: 0.8
   # Room entrance, played every time a room opens: the player walks in from
