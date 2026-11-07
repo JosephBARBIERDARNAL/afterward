@@ -32,6 +32,6 @@ enemy_spawns:
   - type_id: dark_ninja
     position_h: { x: 8.5, y: 12.25 }
 exit:
-  x_h: 10.5
-  y_h: 10
+  x_h: 43
+  y_h: 2
 next_room_id: 2

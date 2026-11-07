@@ -498,11 +498,14 @@ impl GameData {
         }
 
         let recorded = &self.gameplay.audio.recorded_effects;
-        for effect in [&recorded.gun_shot, &recorded.reload, &recorded.door_open] {
-            if !asset_root.join(&effect.asset).is_file() {
+        let sounds = [&recorded.gun_shot, &recorded.reload, &recorded.door_open]
+            .into_iter()
+            .chain(&self.gameplay.audio.music_tracks);
+        for sound in sounds {
+            if !asset_root.join(&sound.asset).is_file() {
                 return Err(InvalidGameData::from(format!(
-                    "missing sound effect asset: {}",
-                    effect.asset
+                    "missing sound asset: {}",
+                    sound.asset
                 )));
             }
         }

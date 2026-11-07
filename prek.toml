@@ -10,7 +10,7 @@ hooks = [
   { id = "end-of-file-fixer", exclude = "^src/assets/.*\\.txt$" },
   { id = "mixed-line-ending", args = ["--fix=lf"], exclude = "^src/assets/.*\\.txt$" },
   { id = "check-merge-conflict" },
-  { id = "check-added-large-files", args = ["--maxkb=1024"] },
+  { id = "check-added-large-files", args = ["--maxkb=2500"] },
   { id = "check-case-conflict" },
   { id = "check-illegal-windows-names" },
   { id = "check-yaml" },

@@ -1,6 +1,10 @@
 use std::collections::{BTreeMap, BTreeSet};
 
-use bevy::{ecs::system::SystemParam, prelude::*};
+use bevy::{
+    audio::{AddAudioSource, AudioPlugin},
+    ecs::system::SystemParam,
+    prelude::*,
+};
 
 use crate::data::{
     Aim, EnemyAttackConfig, EnemyTypeId, FootstepSound, GameData, PLAYER_COLLISION_WIDTH_H,
@@ -95,7 +99,15 @@ impl Plugin for GamePlugin {
                 )
                     .chain(),
             );
+        // The playback systems `add_audio_source` registers need the audio
+        // output of `AudioPlugin`; headless tests run without it.
+        if app.is_plugin_added::<AudioPlugin>() {
+            app.add_audio_source::<audio::MusicStream>();
+        } else {
+            app.init_asset::<audio::MusicStream>();
+        }
         app.add_plugins(pause_blur::PauseBlurPlugin)
+            .register_asset_loader(audio::MusicStreamLoader)
             .init_state::<GameScreen>()
             .init_resource::<RunSession>()
             .init_resource::<StartRoom>()

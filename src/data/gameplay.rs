@@ -34,22 +34,28 @@ pub struct AudioConfig {
     pub room_clear_music_volume_multiplier: f32,
     pub chapter_one_music_gain: f32,
     pub chapter_one_ambience_gain: f32,
+    /// How muffled the music sounds while paused: 0 leaves it untouched, 1 cuts
+    /// the highs hardest.
+    pub paused_music_muffle: f32,
+    /// Background music; one is picked at random when a run starts.
+    pub music_tracks: Vec<AudioAsset>,
     pub recorded_effects: RecordedEffects,
 }
 
 /// Recorded sound files that replace the synthesized tone of their cue.
 #[derive(Debug, Deserialize)]
 pub struct RecordedEffects {
-    pub gun_shot: RecordedEffect,
-    pub reload: RecordedEffect,
-    pub door_open: RecordedEffect,
+    pub gun_shot: AudioAsset,
+    pub reload: AudioAsset,
+    pub door_open: AudioAsset,
 }
 
+/// A sound file and how loud it plays relative to its volume setting.
 #[derive(Debug, Deserialize)]
-pub struct RecordedEffect {
+pub struct AudioAsset {
     /// Path under `src/assets/`.
     pub asset: String,
-    /// Multiplies the sound-effects volume setting.
+    /// Multiplies the volume setting of the channel the sound plays on.
     pub gain: f32,
 }
 

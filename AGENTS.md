@@ -95,6 +95,13 @@ Debug builds (`cargo run`, `just run`) add `D  Debug editor` to the main menu (o
 
 Every hit area is data, in H: the player's hurtbox in `config/gameplay.yaml` (`player.hurtbox_h`), and each enemy type's hurtbox, attack hitboxes, and projectile sizes in `enemies/enemy_types.yaml` (its header explains the coordinates). `src/game/combat/hitboxes.rs` turns them into world rectangles for combat. The debug editor edits them too: select an enemy (its type's hurtbox, and the hitbox of the attack the Attack field picks) or the player spawn (the player's hurtbox); edits apply to every enemy of that type, undo with Cmd+Z, and Cmd+S rewrites only their lines in the two YAML files, keeping the comments. In debug builds, F3 toggles an overlay (`src/game/hitbox_overlay.rs`) that draws them with that same code: green player hurtbox, yellow enemy hurtboxes, red strikes (faint for an enemy's next attack), orange projectiles, cyan bullets.
 
+### Audio
+
+`src/game/audio.rs` plays everything through `ManagedAudio`, whose class decides which volume setting applies (music or sound effects) and how `audio/mixing.rs` fades it per screen. Sound effects are synthesized tones (`audio/synthesis.rs`) unless `config/gameplay.yaml` lists a recorded file for the cue.
+
+- Four layers play for a whole run: the synthesized combat loop, calm loop and forest ambience, plus one recorded background track picked at random from `audio.music_tracks` when the first room of the run is entered. It keeps playing until the run ends.
+- All four are `MusicStream`s (`audio/music.rs`): they loop themselves and run through a low-pass filter the mixer opens and closes, so the music sounds muffled, as if played in another room, while the game is paused (`audio.paused_music_muffle`). They must play with `PlaybackSettings::ONCE` — Bevy's own looping buffers the decoded source, which would freeze the filter after the first play-through.
+
 ### Typst pixel art
 
 Some assets are drawn in code with [Typst](https://typst.app) instead of a paint program: geometric, grid-aligned art such as the `wood`, `metal`, and `carved` terrain textures and the HUD pieces in `src/assets/ui/`. Sources live in `art/`, mirroring their output path under `src/assets/` (`art/terrain/textures/wood/planks.typ` renders `src/assets/terrain/textures/wood/planks.png`).

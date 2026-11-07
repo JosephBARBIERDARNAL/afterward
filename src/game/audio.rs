@@ -5,9 +5,11 @@ use bevy::audio::{
 };
 
 mod mixing;
+mod music;
 mod synthesis;
 
 pub(super) use mixing::update_audio_volume;
+pub(super) use music::{MusicStream, MusicStreamLoader};
 
 use synthesis::{
     ChapterOneForestAmbience, ChapterOneForestCalmLoop, ChapterOneForestLoop, ToneSpec, cue_specs,
@@ -133,9 +135,11 @@ impl SoundCue {
 #[derive(Resource, Default)]
 pub(super) struct SoundBank {
     cues: BTreeMap<SoundCue, (Handle<AudioSource>, f32)>,
-    chapter_one_music: Option<Handle<AudioSource>>,
-    chapter_one_calm_music: Option<Handle<AudioSource>>,
-    chapter_one_ambience: Option<Handle<AudioSource>>,
+    /// The background tracks a run picks from, with their gains.
+    music_tracks: Vec<(Handle<MusicStream>, f32)>,
+    chapter_one_music: Option<Handle<MusicStream>>,
+    chapter_one_calm_music: Option<Handle<MusicStream>>,
+    chapter_one_ambience: Option<Handle<MusicStream>>,
 }
 
 #[derive(Component, Clone, Copy, Eq, PartialEq)]
@@ -143,9 +147,21 @@ enum AudioClass {
     Music,
     CalmMusic,
     Ambience,
+    /// The recorded background track picked for the run.
+    Track,
     GameplayEffect,
     InterfaceEffect,
     TerminalEffect,
+}
+
+impl AudioClass {
+    /// Whether the class is one of the layers that play for a whole run.
+    fn is_music(self) -> bool {
+        matches!(
+            self,
+            Self::Music | Self::CalmMusic | Self::Ambience | Self::Track
+        )
+    }
 }
 
 #[derive(Component)]
@@ -157,6 +173,7 @@ pub(super) struct ManagedAudio {
 pub(super) fn initialize_sound_bank(
     mut bank: ResMut<SoundBank>,
     mut audio_sources: ResMut<Assets<AudioSource>>,
+    mut music_streams: ResMut<Assets<MusicStream>>,
     asset_server: Res<AssetServer>,
     data: Res<GameData>,
 ) {
@@ -178,11 +195,21 @@ pub(super) fn initialize_sound_bank(
         bank.cues
             .insert(cue, (asset_server.load(effect.asset.clone()), effect.gain));
     }
-    bank.chapter_one_music = Some(audio_sources.add(AudioSource::from(ChapterOneForestLoop)));
-    bank.chapter_one_calm_music =
-        Some(audio_sources.add(AudioSource::from(ChapterOneForestCalmLoop)));
-    bank.chapter_one_ambience =
-        Some(audio_sources.add(AudioSource::from(ChapterOneForestAmbience)));
+    bank.music_tracks = data
+        .gameplay
+        .audio
+        .music_tracks
+        .iter()
+        .map(|track| (asset_server.load(track.asset.clone()), track.gain))
+        .collect();
+    bank.chapter_one_music =
+        Some(music_streams.add(MusicStream::from(AudioSource::from(ChapterOneForestLoop))));
+    bank.chapter_one_calm_music = Some(music_streams.add(MusicStream::from(AudioSource::from(
+        ChapterOneForestCalmLoop,
+    ))));
+    bank.chapter_one_ambience = Some(music_streams.add(MusicStream::from(AudioSource::from(
+        ChapterOneForestAmbience,
+    ))));
 }
 
 pub(super) fn queue_victory_cue(mut queue: ResMut<SoundQueue>) {
@@ -193,20 +220,36 @@ pub(super) fn queue_boss_intro(mut queue: ResMut<SoundQueue>) {
     queue.push(SoundCue::BossIntro);
 }
 
+/// Starts the music of a run, on the first room it enters. Later rooms find it
+/// already playing and leave it alone, so one background track plays from the
+/// first room to the end of the run.
 pub(super) fn start_chapter_music(
     mut commands: Commands,
     bank: Res<SoundBank>,
     settings: Res<AudioSettings>,
     data: Res<GameData>,
+    mut random: ResMut<RandomState>,
     active_audio: Query<&ManagedAudio>,
 ) {
-    if active_audio.iter().any(|audio| {
-        matches!(
-            audio.class,
-            AudioClass::Music | AudioClass::CalmMusic | AudioClass::Ambience
-        )
-    }) {
+    if active_audio.iter().any(|audio| audio.class.is_music()) {
         return;
+    }
+    if !bank.music_tracks.is_empty() {
+        let index = random.index(bank.music_tracks.len());
+        if let Some((source, gain)) = bank.music_tracks.get(index) {
+            commands.spawn((
+                AudioPlayer(source.clone()),
+                // `MusicStream` loops itself, so that its filter keeps working
+                // past the first play-through.
+                PlaybackSettings::ONCE.with_volume(Volume::Linear(
+                    settings.music_volume_percent as f32 / 100.0 * gain,
+                )),
+                ManagedAudio {
+                    class: AudioClass::Track,
+                    gain: *gain,
+                },
+            ));
+        }
     }
     let (Some(combat_source), Some(calm_source), Some(ambience_source)) = (
         bank.chapter_one_music.clone(),
@@ -217,8 +260,8 @@ pub(super) fn start_chapter_music(
     };
     let gain = data.gameplay.audio.chapter_one_music_gain;
     commands.spawn((
-        AudioPlayer::new(combat_source),
-        PlaybackSettings::LOOP.with_volume(Volume::Linear(
+        AudioPlayer(combat_source),
+        PlaybackSettings::ONCE.with_volume(Volume::Linear(
             settings.music_volume_percent as f32 / 100.0 * gain,
         )),
         ManagedAudio {
@@ -227,8 +270,8 @@ pub(super) fn start_chapter_music(
         },
     ));
     commands.spawn((
-        AudioPlayer::new(calm_source),
-        PlaybackSettings::LOOP.with_volume(Volume::Linear(0.0)),
+        AudioPlayer(calm_source),
+        PlaybackSettings::ONCE.with_volume(Volume::Linear(0.0)),
         ManagedAudio {
             class: AudioClass::CalmMusic,
             gain,
@@ -236,8 +279,8 @@ pub(super) fn start_chapter_music(
     ));
     let ambience_gain = data.gameplay.audio.chapter_one_ambience_gain;
     commands.spawn((
-        AudioPlayer::new(ambience_source),
-        PlaybackSettings::LOOP.with_volume(Volume::Linear(
+        AudioPlayer(ambience_source),
+        PlaybackSettings::ONCE.with_volume(Volume::Linear(
             settings.music_volume_percent as f32 / 100.0 * ambience_gain,
         )),
         ManagedAudio {
@@ -252,10 +295,7 @@ pub(super) fn stop_chapter_music(
     active_audio: Query<(Entity, &ManagedAudio)>,
 ) {
     for (entity, audio) in &active_audio {
-        if matches!(
-            audio.class,
-            AudioClass::Music | AudioClass::CalmMusic | AudioClass::Ambience
-        ) {
+        if audio.class.is_music() {
             commands.entity(entity).despawn();
         }
     }
