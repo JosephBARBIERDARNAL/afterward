@@ -49,6 +49,9 @@ impl Plugin for EditorPlugin {
                     palette::handle_palette,
                     pointer::handle_pointer,
                     draw::refresh_room_view,
+                    // Places the redrawn background layers on the camera before
+                    // the frame renders, so an edit doesn't flash them at y = 0.
+                    camera::update_background_parallax,
                     draw::draw_overlay,
                     draw::update_panels,
                     palette::highlight_swatches,

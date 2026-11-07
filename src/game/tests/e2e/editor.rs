@@ -117,3 +117,32 @@ fn the_editor_selects_all_copies_into_another_room_adds_and_paints_a_decoration(
     assert_eq!(saved.decorations.len(), added);
     assert_eq!(saved.decorations[added - 1].material, material(&game));
 }
+
+#[test]
+fn the_editor_redraws_an_edited_room_with_its_background_in_place() {
+    let mut game = HeadlessGame::with_copied_data();
+    game.tap(KeyCode::KeyD);
+    assert_eq!(game.screen(), GameScreen::Editor);
+
+    // T adds a block and redraws the room on the frame of the press: the new
+    // background layers must already sit on the camera, not flash elsewhere.
+    game.key(KeyCode::KeyT, ButtonState::Pressed);
+    game.app.update();
+    let world = game.app.world_mut();
+    let camera_y = world
+        .query_filtered::<&Transform, With<Camera2d>>()
+        .single(world)
+        .expect("one camera")
+        .translation
+        .y;
+    let backgrounds = world
+        .query_filtered::<&Transform, With<camera::BackgroundParallax>>()
+        .iter(world)
+        .map(|transform| transform.translation.y)
+        .collect::<Vec<_>>();
+    assert!(!backgrounds.is_empty());
+    assert!(
+        backgrounds.iter().all(|&y| y == camera_y),
+        "background layers at {backgrounds:?}, camera at {camera_y}"
+    );
+}
