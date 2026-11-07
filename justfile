@@ -29,6 +29,11 @@ check:
 e2e:
     cargo test --locked e2e::
 
+# Play all of Chapter 1 with the scripted test pilot. Ignored by `cargo test`
+# while rooms are being designed, since it depends on their layouts.
+playthrough:
+    cargo test --locked chapter_one_run -- --ignored
+
 # Run the tests, optionally filtered by name: `just test enemy_jumping`.
 test filter="":
     cargo test --locked {{filter}}

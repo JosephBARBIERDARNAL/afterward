@@ -21,7 +21,11 @@ type TestPilotPlayers<'w, 's> = Query<
 type TestPilotEnemies<'w, 's> =
     Query<'w, 's, (&'static EnemyBody, &'static Transform), Without<PlayerBody>>;
 
+/// A scripted pilot plays all of Chapter 1, so this depends on every room's
+/// layout. It is ignored while the rooms are being designed: run it on demand
+/// with `just playthrough`.
 #[test]
+#[ignore = "depends on the authored room layouts; run with `just playthrough`"]
 fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
     let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
     let data = GameData::load(&asset_root).expect("Chapter 1 data should load");

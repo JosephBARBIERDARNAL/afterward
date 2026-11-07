@@ -6,7 +6,13 @@ use bevy::{prelude::MinimalPlugins, state::app::StatesPlugin, time::TimeUpdateSt
 #[test]
 fn default_controls_move_jump_and_dash_the_player() {
     let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
-    let data = GameData::load(&asset_root).expect("Chapter 1 data should load");
+    let mut data = GameData::load(&asset_root).expect("Chapter 1 data should load");
+    // The floor below is spawned by hand under this spawn point, so the test
+    // doesn't depend on room 1's layout.
+    data.rooms
+        .get_mut(&1)
+        .expect("room 1 should be authored")
+        .player_spawn = crate::data::SpawnPosition { x_h: 2.5, y_h: 1.0 };
     let sheets = data
         .player_animations
         .keyed()

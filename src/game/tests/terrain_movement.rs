@@ -151,7 +151,13 @@ fn solid_terrain_stops_the_player_and_low_ledges_are_mantled() {
 #[test]
 fn one_way_platforms_are_jumped_through_and_dropped_through() {
     let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
-    let data = GameData::load(&asset_root).expect("Chapter 1 data should load");
+    let mut data = GameData::load(&asset_root).expect("Chapter 1 data should load");
+    // The terrain below is spawned by hand around this spawn point, so the
+    // test doesn't depend on room 1's layout.
+    data.rooms
+        .get_mut(&1)
+        .expect("room 1 should be authored")
+        .player_spawn = SpawnPosition { x_h: 2.5, y_h: 1.0 };
     let sheets = data
         .player_animations
         .keyed()
@@ -258,7 +264,13 @@ fn one_way_platforms_are_jumped_through_and_dropped_through() {
 #[test]
 fn jumping_off_a_wall_kicks_the_player_away_from_it() {
     let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
-    let data = GameData::load(&asset_root).expect("Chapter 1 data should load");
+    let mut data = GameData::load(&asset_root).expect("Chapter 1 data should load");
+    // The terrain below is spawned by hand around this spawn point, so the
+    // test doesn't depend on room 1's layout.
+    data.rooms
+        .get_mut(&1)
+        .expect("room 1 should be authored")
+        .player_spawn = SpawnPosition { x_h: 2.5, y_h: 1.0 };
     let sheets = data
         .player_animations
         .keyed()

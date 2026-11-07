@@ -182,14 +182,6 @@ impl HeadlessGame {
         self.app.update();
     }
 
-    /// Holds `code` for `seconds`, then releases it.
-    fn hold(&mut self, code: KeyCode, seconds: f32) {
-        self.key(code, ButtonState::Pressed);
-        self.run_seconds(seconds);
-        self.key(code, ButtonState::Released);
-        self.app.update();
-    }
-
     /// From the main menu, starts a run and plays through the room entrance.
     fn start_run(&mut self) {
         assert_eq!(self.screen(), GameScreen::MainMenu);

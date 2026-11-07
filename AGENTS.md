@@ -72,9 +72,10 @@ Without `just`, pass the flag directly: `cargo run -- --room 7`.
 
 ### End-to-end tests
 
-`src/game/tests/e2e.rs` runs the real `GamePlugin` inside Bevy's default plugins, headless (no window, no GPU, no audio device), at a fixed 60 FPS with a fixed random seed. Scenarios in `src/game/tests/e2e/` play it through keyboard events (`tap`, `hold`, `typed_key` for other layouts) and check the screen and run state. Run them with `just e2e`; CI runs them on Linux, macOS, and Windows as their own step.
+`src/game/tests/e2e.rs` runs the real `GamePlugin` inside Bevy's default plugins, headless (no window, no GPU, no audio device), at a fixed 60 FPS with a fixed random seed. Scenarios in `src/game/tests/e2e/` play it through keyboard events (`tap`, `key`, `typed_key` for other layouts) and check the screen and run state. Run them with `just e2e`; CI runs them on Linux, macOS, and Windows as their own step.
 
 - Add a scenario for every player-facing flow or input bug: menus, pause, death, the bonus screen, the editor's shortcuts.
+- Tests must survive room edits. Gameplay tests build their own small room inline (see `enemy_jumping.rs`) instead of using an authored one. The full Chapter 1 playthrough (`chapter_one_run.rs`) depends on every room's layout, so it is `#[ignore]`d while rooms are being designed: run it with `just playthrough`.
 - Scenarios must survive room edits: `defeat_enemies` and `step_toward_exit` are the only shortcuts, for steps whose real input depends on a room's layout. Don't assert on specific spawn positions.
 - `PreferencesDir(None)` keeps tests away from the player's saved settings and bindings. `HeadlessGame::with_copied_data` points the YAML data (and editor saves) at a temporary copy, so tests never write to `src/assets`.
 

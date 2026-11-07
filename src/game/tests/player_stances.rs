@@ -7,7 +7,13 @@ use bevy::{prelude::MinimalPlugins, state::app::StatesPlugin, time::TimeUpdateSt
 #[test]
 fn crouching_slows_cover_blocks_frontal_hits_and_death_plays_out_before_the_run_ends() {
     let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
-    let data = GameData::load(&asset_root).expect("Chapter 1 data should load");
+    let mut data = GameData::load(&asset_root).expect("Chapter 1 data should load");
+    // The floor below is spawned by hand under this spawn point, so the test
+    // doesn't depend on room 1's layout.
+    data.rooms
+        .get_mut(&1)
+        .expect("room 1 should be authored")
+        .player_spawn = crate::data::SpawnPosition { x_h: 2.5, y_h: 1.0 };
     let crouch_speed_h_s = data.gameplay.player.crouch_speed_h_s;
     let cover_multiplier = data.gameplay.player.cover_damage_taken_multiplier;
     let death_s =

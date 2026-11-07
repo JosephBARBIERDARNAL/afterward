@@ -8,11 +8,24 @@ use bevy::{prelude::MinimalPlugins, state::app::StatesPlugin, time::TimeUpdateSt
 fn the_gun_fires_alternating_shots_aims_and_reloads_its_magazine() {
     let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
     let mut data = GameData::load(&asset_root).expect("Chapter 1 data should load");
-    data.rooms
-        .get_mut(&1)
-        .expect("room 1 should be authored")
-        .enemy_spawns
-        .truncate(1);
+    // A fixed layout, independent of the authored rooms: a flat floor with
+    // the player on the left and one swordsman ahead.
+    *data.rooms.get_mut(&1).expect("room 1 should exist") = yaml_serde::from_str(
+        "
+room_id: 1
+chapter_id: 1
+size: { width_viewports: 2, height_h: 13.5 }
+background_profile: clouds_bright_blue
+player_spawn: { x_h: 2.5, y_h: 1 }
+terrain:
+  - { material: stone_cobble, rect_h: { x: 0, y: 0, width: 48, height: 1 } }
+enemy_spawns:
+  - { type_id: swordsman, position_h: { x: 10, y: 1 } }
+exit: { x_h: 45, y_h: 1 }
+next_room_id: 2
+",
+    )
+    .expect("the test layout should parse");
     let gun_damage = data.gameplay.player.gun.damage;
     let magazine = data.gameplay.player.gun.magazine_size;
     let mut sheets = data
