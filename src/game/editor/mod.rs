@@ -607,7 +607,7 @@ fn enter_editor(
                 String::from("PgUp / PgDn: previous / next room"),
                 format!("{COMMAND_KEY}+Shift+Z or {COMMAND_KEY}+Y: redo"),
                 format!("{COMMAND_KEY}+R: playtest"),
-                String::from("F3 (in play): hitbox overlay"),
+                String::from("B (in play): hitbox overlay"),
                 String::from("Esc: deselect, then back to the menu"),
             ]
             .join("\n"),

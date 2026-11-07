@@ -15,7 +15,7 @@ const EXIT_COLOR: Color = Color::srgb(0.35, 0.8, 1.0);
 const ENEMY_COLOR: Color = Color::srgb(1.0, 0.35, 0.45);
 const HOVER_COLOR: Color = Color::WHITE;
 const SELECTED_COLOR: Color = Color::srgb(1.0, 0.9, 0.2);
-// The selected body's hitboxes, colored as in the F3 overlay.
+// The selected body's hitboxes, colored as in the B overlay.
 const PLAYER_HURTBOX_COLOR: Color = Color::srgb(0.3, 1.0, 0.45);
 const ENEMY_HURTBOX_COLOR: Color = Color::srgb(1.0, 0.9, 0.2);
 const STRIKE_COLOR: Color = Color::srgb(1.0, 0.2, 0.3);

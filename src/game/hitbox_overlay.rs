@@ -1,4 +1,4 @@
-//! Debug hitbox overlay (debug builds only): F3 draws every hit area in play,
+//! Debug hitbox overlay (debug builds only): B draws every hit area in play,
 //! computed by the same code combat uses. Sizes live in `gameplay.yaml`
 //! (`player.hurtbox_h`) and `enemies/enemy_types.yaml`.
 
@@ -23,7 +23,7 @@ pub(super) fn toggle_hitbox_overlay(
     keys: Res<ButtonInput<KeyCode>>,
     mut overlay: ResMut<HitboxOverlay>,
 ) {
-    if keys.just_pressed(KeyCode::F3) {
+    if keys.just_pressed(KeyCode::KeyB) {
         overlay.visible = !overlay.visible;
     }
 }

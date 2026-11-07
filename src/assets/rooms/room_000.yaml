@@ -5,23 +5,27 @@ room_id: 0
 chapter_id: 1
 description: "The Threshold: the run's first steps. One viewport of bare ledge under an open sky, no enemies and nothing to fight for, with the door already standing open at the right."
 size:
-  width_viewports: 1
+  width_viewports: 2
   height_h: 13.5
-background_profile: clouds_pale_blue
+background_profile: city_pink_dusk
 player_spawn:
-  x_h: 3.5
+  x_h: 9.75
   y_h: 2
 # Solid blocks: they stop bodies and projectiles from every side.
 terrain:
   - label: the ledge the whole room stands on
-    material: stone_slab
-    rect_h: { x: 0, y: 0, width: 24, height: 2 }
+    material: carved_ashlar
+    rect_h: { x: 0, y: 0, width: 48, height: 2 }
 # One-way platforms: land on top, jump through from below, Down + Jump drops.
-platforms: []
+platforms:
+  - material: stone_slab
+    rect_h: { x: -2, y: 2, width: 3, height: 11.5 }
+  - material: stone_slab
+    rect_h: { x: 48, y: 2, width: 3, height: 11.5 }
 # Decorations: non-solid panels behind the terrain or in front of the bodies.
 decorations: []
 enemy_spawns: []
 exit:
-  x_h: 20
+  x_h: 46.75
   y_h: 2
 next_room_id: 1
