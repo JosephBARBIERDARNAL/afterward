@@ -5,8 +5,8 @@ room_id: 0
 chapter_id: 1
 description: "The Threshold: the run's first steps. One viewport of bare ledge under an open sky, no enemies and nothing to fight for, with the door already standing open at the right."
 size:
-  width_viewports: 2
-  height_h: 13.5
+  width_h: 48
+  height_h: 14
 background_profile: city_pink_dusk
 player_spawn:
   x_h: 9.75
@@ -17,12 +17,6 @@ platforms:
   - label: the ledge the whole room stands on
     material: city_pavement
     rect_h: { x: 0, y: 0, width: 48, height: 2 }
-  - label: west wall
-    material: city_plating
-    rect_h: { x: -2, y: 2, width: 3, height: 11.5 }
-  - label: east wall
-    material: city_plating
-    rect_h: { x: 48, y: 2, width: 3, height: 11.5 }
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
 enemy_spawns: []

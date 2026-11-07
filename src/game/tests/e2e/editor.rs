@@ -24,9 +24,9 @@ fn the_editor_edits_undoes_with_cmd_z_on_azerty_saves_and_playtests() {
     // The editor opens the start room, the empty room 0; Page Down moves on
     // to room 1, which this scenario edits.
     game.tap(KeyCode::PageDown);
-    let width = |game: &HeadlessGame| game.data().rooms[&1].size.width_viewports;
+    let width = |game: &HeadlessGame| game.data().rooms[&1].size.width_h;
     let original = width(&game);
-    let (step, edited) = (KeyCode::ArrowRight, original + 1);
+    let (step, edited) = (KeyCode::ArrowRight, original + 0.5);
 
     // Room fields: Down selects the width, then two edits.
     game.tap(KeyCode::ArrowDown);
@@ -52,7 +52,7 @@ fn the_editor_edits_undoes_with_cmd_z_on_azerty_saves_and_playtests() {
         &fs::read_to_string(&saved_path).expect("the editor wrote the room file"),
     )
     .expect("the saved room is valid YAML");
-    assert_eq!(saved.size.width_viewports, edited);
+    assert_eq!(saved.size.width_h, edited);
 
     // Cmd+R playtests the edited room.
     command_presses(&mut game, KeyCode::KeyR, "r", 1);

@@ -65,7 +65,7 @@ fn crouching_slows_cover_blocks_frontal_hits_and_death_plays_out_before_the_run_
                     &sheets,
                     data.gameplay.player.gun.magazine_size,
                 );
-                let width = room.width_h(&data.gameplay) * H_WORLD_UNITS;
+                let width = room.size.width_h * H_WORLD_UNITS;
                 commands.spawn(PlatformSurface {
                     left: 0.0,
                     right: width,

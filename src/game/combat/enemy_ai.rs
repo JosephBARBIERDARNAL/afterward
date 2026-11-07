@@ -346,7 +346,7 @@ pub(in crate::game) fn update_enemy_ai(
                 sprite.flip_x = direction < 0.0;
             }
             let speed = enemy.movement_speed_h_s * H_WORLD_UNITS * dt;
-            let room_width_h = data.rooms[&session.room_id].width_h(&data.gameplay);
+            let room_width_h = data.rooms[&session.room_id].size.width_h;
             transform.translation.x =
                 (feet.x + direction * speed).clamp(24.0, room_width_h * H_WORLD_UNITS - 24.0);
             let movement_speed_h_s = enemy.movement_speed_h_s;
@@ -408,7 +408,7 @@ pub(in crate::game) fn update_enemy_platform_physics(
 ) {
     let dt = time.delta_secs().min(0.05);
     let gravity = data.gameplay.player.gravity_h_s2 * H_WORLD_UNITS;
-    let room_width = data.rooms[&session.room_id].width_h(&data.gameplay) * H_WORLD_UNITS;
+    let room_width = data.rooms[&session.room_id].size.width_h * H_WORLD_UNITS;
     let surfaces = Platforms(platforms.iter().collect());
 
     for (mut enemy, mut transform) in &mut enemies {

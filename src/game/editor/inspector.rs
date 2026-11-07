@@ -6,6 +6,9 @@
 use super::*;
 use crate::data::{DecorationLayer, EnemyStatOverrides, EnemyTypeConfig};
 
+/// How far one Left/Right press grows or shrinks the room, in H.
+const ROOM_SIZE_STEP_H: f32 = 0.5;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum Field {
     Room,
@@ -98,8 +101,8 @@ impl Field {
     pub(super) fn name(self) -> &'static str {
         match self {
             Self::Room => "Room",
-            Self::RoomWidth => "Width (viewports)",
-            Self::RoomHeight => "Height (H)",
+            Self::RoomWidth => "Room width (H)",
+            Self::RoomHeight => "Room height (H)",
             Self::Background => "Background",
             Self::Description => "Description",
             Self::Label => "Label",
@@ -207,7 +210,7 @@ impl Field {
         };
         match self {
             Self::Room => format!("{:02}", room.room_id),
-            Self::RoomWidth => room.size.width_viewports.to_string(),
+            Self::RoomWidth => room.size.width_h.to_string(),
             Self::RoomHeight => room.size.height_h.to_string(),
             Self::Background => room.background_profile.clone(),
             Self::Description | Self::Label => {
@@ -270,14 +273,15 @@ impl Field {
             options.get(next as usize).cloned()
         };
         match self {
+            // Both sides keep at least one viewport, so the view never
+            // shows past the room.
             Self::RoomWidth => {
-                // At least one viewport, so the view never shows past the room.
-                let width = f32::from(room.size.width_viewports) + steps.signum();
-                room.size.width_viewports = width.clamp(1.0, f32::from(u8::MAX)) as u8;
+                room.size.width_h = (room.size.width_h + steps * ROOM_SIZE_STEP_H)
+                    .max(data.gameplay.viewport_width_h());
             }
             Self::RoomHeight => {
-                room.size.height_h =
-                    (room.size.height_h + steps * 0.5).max(data.gameplay.viewport.height_h);
+                room.size.height_h = (room.size.height_h + steps * ROOM_SIZE_STEP_H)
+                    .max(data.gameplay.viewport.height_h);
             }
             Self::Background => {
                 let profiles = data.backgrounds.profiles.keys().cloned().collect();

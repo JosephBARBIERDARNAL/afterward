@@ -374,7 +374,8 @@ impl GameData {
                     "room {room_id} has an inconsistent room_id or next_room_id"
                 )));
             }
-            if room.size.width_viewports == 0
+            if room.size.width_h.is_nan()
+                || room.size.width_h < self.gameplay.viewport_width_h()
                 || room.size.height_h.is_nan()
                 || room.size.height_h < viewport_height_h
             {

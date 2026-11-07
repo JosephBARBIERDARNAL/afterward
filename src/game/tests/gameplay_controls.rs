@@ -13,7 +13,7 @@ fn default_inputs_move_and_defeat_a_room_enemy() {
         "
 room_id: 1
 chapter_id: 1
-size: { width_viewports: 2, height_h: 13.5 }
+size: { width_h: 48, height_h: 13.5 }
 background_profile: clouds_bright_blue
 player_spawn: { x_h: 2.5, y_h: 1 }
 platforms:

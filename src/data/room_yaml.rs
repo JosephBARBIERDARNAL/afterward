@@ -23,11 +23,7 @@ impl Display for RoomConfig {
             writeln!(formatter, "description: {}", YamlText(description))?;
         }
         writeln!(formatter, "size:")?;
-        writeln!(
-            formatter,
-            "  width_viewports: {}",
-            self.size.width_viewports
-        )?;
+        writeln!(formatter, "  width_h: {}", self.size.width_h)?;
         writeln!(formatter, "  height_h: {}", self.size.height_h)?;
         writeln!(
             formatter,
@@ -256,7 +252,7 @@ mod tests {
             "
 room_id: 3
 chapter_id: 1
-size: { width_viewports: 1, height_h: 13.5 }
+size: { width_h: 24, height_h: 13.5 }
 background_profile: city_blue_day
 player_spawn: { x_h: 2, y_h: 1 }
 platforms:

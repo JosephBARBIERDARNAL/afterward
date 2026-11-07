@@ -15,7 +15,7 @@ fn ground_enemy_climbs_the_staircase_to_a_player_on_a_higher_platform() {
         "
 room_id: 3
 chapter_id: 1
-size: { width_viewports: 2, height_h: 27 }
+size: { width_h: 48, height_h: 27 }
 background_profile: clouds_bright_blue
 player_spawn: { x_h: 2.5, y_h: 1 }
 platforms:
@@ -131,7 +131,7 @@ fn evil_wizard_jump_slam_damages_the_player_on_landing() {
         "
 room_id: 10
 chapter_id: 1
-size: { width_viewports: 2, height_h: 22.5 }
+size: { width_h: 48, height_h: 22.5 }
 background_profile: clouds_thunderstorm
 player_spawn: { x_h: 2.5, y_h: 1 }
 platforms:

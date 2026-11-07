@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 
 use serde::Deserialize;
 
-use super::{EnemyTypeId, Fill, GameplayConfig};
+use super::{EnemyTypeId, Fill};
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct RoomConfig {
@@ -32,15 +32,13 @@ impl RoomConfig {
     pub(crate) fn file_path(asset_root: &Path, room_id: u16) -> PathBuf {
         asset_root.join(format!("rooms/room_{room_id:03}.yaml"))
     }
-
-    pub(crate) fn width_h(&self, gameplay: &GameplayConfig) -> f32 {
-        f32::from(self.size.width_viewports) * gameplay.viewport_width_h()
-    }
 }
 
+/// The room's extent in H. Both sides are at least one viewport, so the view
+/// never shows past the room.
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct RoomSizeConfig {
-    pub width_viewports: u8,
+    pub width_h: f32,
     pub height_h: f32,
 }
 

@@ -32,7 +32,7 @@ pub(in crate::game) fn update_projectiles(
     let Ok((player_transform, mut player)) = player_query.single_mut() else {
         return;
     };
-    let room_width_world = data.rooms[&session.room_id].width_h(&data.gameplay) * H_WORLD_UNITS;
+    let room_width_world = data.rooms[&session.room_id].size.width_h * H_WORLD_UNITS;
     for (projectile_entity, mut projectile_transform, mut projectile) in &mut projectiles {
         let start = projectile_transform.translation.truncate();
         projectile.life_s -= dt;

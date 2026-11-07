@@ -431,7 +431,7 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
         else {
             return;
         };
-        let room_size_h = Vec2::new(room.width_h(&data.gameplay), room.size.height_h);
+        let room_size_h = Vec2::new(room.size.width_h, room.size.height_h);
         let view_size_h = Vec2::new(
             data.gameplay.viewport_width_h(),
             data.gameplay.viewport.height_h,

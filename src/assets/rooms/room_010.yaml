@@ -5,7 +5,7 @@ room_id: 10
 chapter_id: 1
 description: "A bare shell waiting for a layout, with the chapter's boss alone in it."
 size:
-  width_viewports: 2
+  width_h: 48
   height_h: 22.5
 background_profile: clouds_thunderstorm
 player_spawn:

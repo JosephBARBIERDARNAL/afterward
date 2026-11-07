@@ -57,7 +57,7 @@ pub(super) fn draw_overlay(mut gizmos: Gizmos, editor: Res<RoomEditor>, data: Re
     let Some(room) = data.rooms.get(&editor.room_id) else {
         return;
     };
-    let room_size_h = Vec2::new(room.width_h(&data.gameplay), room.size.height_h);
+    let room_size_h = Vec2::new(room.size.width_h, room.size.height_h);
     let room_size = room_size_h * H_WORLD_UNITS;
     for x in 1..room_size_h.x.ceil() as u32 {
         let x = x as f32 * H_WORLD_UNITS;

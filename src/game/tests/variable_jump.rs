@@ -27,7 +27,7 @@ fn jump_peak_h(hold_frames: usize) -> f32 {
         .add_systems(Startup, controls::initialize_control_bindings)
         .add_systems(Startup, |mut commands: Commands, data: Res<GameData>| {
             let room = &data.rooms[&1];
-            let width = room.width_h(&data.gameplay) * H_WORLD_UNITS;
+            let width = room.size.width_h * H_WORLD_UNITS;
             let ground_top = room.player_spawn.y_h * H_WORLD_UNITS;
             commands.spawn((
                 Transform::from_xyz(width / 2.0, ground_top + H_WORLD_UNITS / 2.0, 0.0),

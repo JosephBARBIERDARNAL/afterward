@@ -210,7 +210,7 @@ pub(super) fn update_player(
     let dx = dash_dx * dash_step + player.velocity.x * normal_step;
     let mut x = transform.translation.x + dx;
     let room = &data.rooms[&session.room_id];
-    let room_width_world = room.width_h(&data.gameplay) * H_WORLD_UNITS;
+    let room_width_world = room.size.width_h * H_WORLD_UNITS;
     let half_width = PLAYER_COLLISION_WIDTH_H * H_WORLD_UNITS / 2.0;
     x = x.clamp(half_width, room_width_world - half_width);
     transform.translation.x = x;

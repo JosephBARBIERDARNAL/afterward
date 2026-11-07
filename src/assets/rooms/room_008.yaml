@@ -5,7 +5,7 @@ room_id: 8
 chapter_id: 1
 description: "A bare shell waiting for a layout, carrying the widest roster so far on one floor."
 size:
-  width_viewports: 3
+  width_h: 72
   height_h: 27
 background_profile: clouds_full_moon
 player_spawn:

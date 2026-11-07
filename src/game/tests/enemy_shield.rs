@@ -15,7 +15,7 @@ fn a_metal_enemys_shield_soaks_one_shot_and_shatters_before_its_health_drops() {
         "
 room_id: 1
 chapter_id: 1
-size: { width_viewports: 2, height_h: 13.5 }
+size: { width_h: 48, height_h: 13.5 }
 background_profile: clouds_bright_blue
 player_spawn: { x_h: 2.5, y_h: 1 }
 platforms:

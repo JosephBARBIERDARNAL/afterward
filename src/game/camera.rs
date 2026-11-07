@@ -18,7 +18,7 @@ pub(super) fn spawn_camera(mut commands: Commands, data: Res<GameData>) {
         },
         pause_blur::PauseBlur::default(),
         RoomCamera {
-            size_h: Vec2::new(first_room.width_h(&data.gameplay), first_room.size.height_h),
+            size_h: Vec2::new(first_room.size.width_h, first_room.size.height_h),
         },
         Transform::from_xyz(
             data.gameplay.viewport_width_h() / 2.0 * H_WORLD_UNITS,

@@ -5,12 +5,12 @@ room_id: 1
 chapter_id: 1
 description: "The first street: a long ledge under the morning skyline, one raised walkway to drop through, and a single ninja between the player and the door."
 size:
-  width_viewports: 2
+  width_h: 48
   height_h: 24
 background_profile: city_blue_morning
 player_spawn:
-  x_h: 4.75
-  y_h: 12
+  x_h: 5
+  y_h: 11.5
 # One-way platforms: land on top, pass through from every other side,
 # Down + Jump drops through. They stop shots.
 platforms:

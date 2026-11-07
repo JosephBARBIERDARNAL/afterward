@@ -73,7 +73,7 @@ pub(in crate::game) fn update_player_bullets(
     let dt = time.delta_secs().min(0.05);
     let gun = &data.gameplay.player.gun;
     let room = &data.rooms[&session.room_id];
-    let room_size = Vec2::new(room.width_h(&data.gameplay), room.size.height_h) * H_WORLD_UNITS;
+    let room_size = Vec2::new(room.size.width_h, room.size.height_h) * H_WORLD_UNITS;
     for (bullet_entity, mut transform, mut bullet) in &mut bullets {
         let Ok(direction) = Dir2::new(bullet.velocity) else {
             commands.entity(bullet_entity).despawn();

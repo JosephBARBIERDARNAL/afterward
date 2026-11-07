@@ -23,7 +23,7 @@ pub(super) fn spawn_room(
     spawn_exit_door(&mut commands, room, &data, &sheets);
 
     if let Ok((mut transform, mut rig)) = camera.single_mut() {
-        rig.size_h = Vec2::new(room.width_h(&data.gameplay), room.size.height_h);
+        rig.size_h = Vec2::new(room.size.width_h, room.size.height_h);
         let center_h = rig.clamp_center_h(
             Vec2::new(room.player_spawn.x_h, room.player_spawn.y_h + 0.5),
             &data.gameplay,
@@ -44,7 +44,7 @@ pub(super) fn draw_room(
     let tile_h = profile.tile_h;
     let tile_width_h =
         tile_h * profile.source_size_px.width as f32 / profile.source_size_px.height as f32;
-    let room_width_h = room.width_h(&data.gameplay);
+    let room_width_h = room.size.width_h;
     let first_tile = if profile.repeat_horizontal { -2 } else { 0 };
     let last_tile = if profile.repeat_horizontal {
         (room_width_h / tile_width_h).ceil() as i32 + 2
