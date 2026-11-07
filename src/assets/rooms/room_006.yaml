@@ -7,7 +7,7 @@ description: "A bare shell waiting for a layout, tall like room 4 and with a hea
 size:
   width_viewports: 2
   height_h: 36
-background_profile: chapter_01_autumn_canopy
+background_profile: city_teal_evening
 player_spawn:
   x_h: 3
   y_h: 2

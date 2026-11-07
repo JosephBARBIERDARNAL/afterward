@@ -7,7 +7,7 @@ description: "A bare shell waiting for a layout: one flat floor, its walls, and 
 size:
   width_viewports: 3
   height_h: 27
-background_profile: chapter_01_hills
+background_profile: city_blue_day
 player_spawn:
   x_h: 3
   y_h: 2
