@@ -6,142 +6,32 @@ chapter_id: 1
 description: "The Crypt Gate: from a mossy forest edge into a crypt dug in the hill; a low hall, a sunken burial pit, a wall-jump chimney to an upper gallery, and a pillared antechamber before the exit."
 size:
   width_viewports: 2
-  height_h: 22.5
+  height_h: 24
 background_profile: city_blue_morning
 player_spawn:
   x_h: 2.5
-  y_h: 6
+  y_h: 10
 # Solid blocks: they stop bodies and projectiles from every side.
-terrain:
-  - label: forest ground
-    material: grassy_dark_cobble
-    rect_h: { x: 0, y: 2.5, width: 11, height: 3.5 }
-  - label: forest bedrock
-    material: stone_dark_cobble
-    rect_h: { x: 0, y: 0, width: 11, height: 2.5 }
-  - label: left wall above the entrance doorway
-    material: stone_dark_cobble
-    rect_h: { x: 0, y: 10, width: 1.75, height: 12.5 }
-  - label: hill overhang above the entrance
-    material: stone_dark_cobble
-    rect_h: { x: 0, y: 17, width: 4.5, height: 5.5 }
-  - label: hill overhang tip
-    material: stone_dark_cobble
-    rect_h: { x: 1.75, y: 15.75, width: 1.75, height: 1.25 }
-  - label: hillside upper step
-    material: grassy_dark_cobble
-    rect_h: { x: 8.5, y: 18.5, width: 3, height: 4 }
-  - label: hillside lower step
-    material: grassy_dark_cobble
-    rect_h: { x: 9, y: 15, width: 2, height: 3.5 }
-  - label: hill above the hall
-    material: stone_dark_cobble
-    rect_h: { x: 11, y: 11.5, width: 5.5, height: 11 }
-  - label: hill crown
-    material: stone_dark_cobble
-    rect_h: { x: 11, y: 19.5, width: 37, height: 3 }
-  - label: hall floor
-    material: stone_bricks
-    rect_h: { x: 11, y: 4.5, width: 10, height: 1.5 }
-  - label: niche west wall
-    material: stone_dark_cobble
-    rect_h: { x: 11, y: 1.5, width: 4, height: 3 }
-  - label: crypt bedrock
-    material: stone_dark_cobble
-    rect_h: { x: 11, y: 0, width: 17, height: 1.5 }
-  - label: niche floor
-    material: stone_slab
-    rect_h: { x: 15, y: 1.5, width: 6, height: 0.5 }
-  - label: tomb (low cover in the hall)
-    material: stone_slab
-    rect_h: { x: 12.75, y: 6, width: 1.5, height: 1 }
-  - label: chimney east wall
-    material: stone_bricks
-    rect_h: { x: 19.5, y: 9.5, width: 1.5, height: 4 }
-  - label: ledge overlooking the pit
-    material: mossy_bricks
-    rect_h: { x: 19.5, y: 13.5, width: 4.5, height: 2 }
-  - label: pit floor
-    material: mossy_bricks
-    rect_h: { x: 21, y: 1, width: 7, height: 1 }
-  - label: pit rubble
-    material: stone_dark_cobble
-    rect_h: { x: 23, y: 2, width: 1.25, height: 0.5 }
-  - label: pit east step
-    material: stone_bricks
-    rect_h: { x: 28, y: 2, width: 2.5, height: 2 }
-  - label: antechamber bedrock
-    material: stone_dark_cobble
-    rect_h: { x: 28, y: 0, width: 20, height: 4.5 }
-  - label: antechamber floor
-    material: stone_bricks
-    rect_h: { x: 30.5, y: 4.5, width: 17.5, height: 1.5 }
-  - label: antechamber dais
-    material: stone_slab
-    rect_h: { x: 36, y: 6, width: 11, height: 1 }
-  - label: slab between antechamber and gallery
-    material: stone_dark_cobble
-    rect_h: { x: 30, y: 11, width: 12, height: 3.5 }
-  - label: east gallery floor
-    material: mossy_bricks
-    rect_h: { x: 30, y: 14.5, width: 12, height: 1 }
-  - label: east hill mass
-    material: stone_dark_cobble
-    rect_h: { x: 44.5, y: 11, width: 3.5, height: 11.5 }
-  - label: forest knoll
-    material: grassy_dark_cobble
-    rect_h: { x: 7.75, y: 6, width: 2.5, height: 0.5 }
-  - label: right wall
-    material: stone_dark_cobble
-    rect_h: { x: 47, y: 6, width: 1, height: 5 }
+terrain: []
 # One-way platforms: land on top, jump through from below, Down + Jump drops.
 platforms:
-  - label: chimney scaffold
-    material: wood_planks
-    rect_h: { x: 16.5, y: 8.25, width: 3, height: 0.25 }
-  - label: pit scaffold low
-    material: wood_planks
-    rect_h: { x: 26, y: 8, width: 3, height: 0.25 }
-  - label: pit scaffold middle
-    material: wood_planks
-    rect_h: { x: 24.25, y: 10.5, width: 2.75, height: 0.25 }
-  - label: pit scaffold high
-    material: wood_planks
-    rect_h: { x: 26.5, y: 13, width: 2.75, height: 0.25 }
-  - label: plank bridge over the pit
-    material: wood_planks
-    rect_h: { x: 25.25, y: 15.25, width: 2.75, height: 0.25 }
-  - label: drop shaft scaffold
-    material: wood_planks
-    rect_h: { x: 42, y: 9.25, width: 2.5, height: 0.25 }
+  - material: brick_block
+    rect_h: { x: 2, y: 7, width: 9, height: 3 }
+  - material: stone_slab
+    rect_h: { x: -11.75, y: -7.5, width: 71.5, height: 9.5 }
+  - label: vmzge
+    material: stone_slab
+    rect_h: { x: -11.75, y: 2, width: 13.75, height: 21 }
+  - material: stone_slab
+    rect_h: { x: -11.5, y: 23, width: 71.5, height: 8.5 }
+  - material: stone_slab
+    rect_h: { x: 46, y: 2, width: 13.75, height: 21 }
 # Decorations: non-solid panels behind the terrain or in front of the bodies.
-decorations:
-  - label: hanging moss under the overhang
-    material: moss_leaves
-    layer: foreground
-    rect_h: { x: 1.75, y: 15, width: 2, height: 0.75 }
-  - label: scaffold post
-    material: wood_dark_planks
-    layer: background
-    rect_h: { x: 27.25, y: 2, width: 0.5, height: 13.25 }
-  - label: drop shaft back wall
-    material: stone_rough_bricks
-    layer: background
-    rect_h: { x: 42, y: 11, width: 2.5, height: 4.5 }
+decorations: []
 enemy_spawns:
-  - type_id: swordsman
-    position_h: { x: 9, y: 6.5 }
-  - type_id: infantryman
-    position_h: { x: 20.25, y: 6 }
-  - type_id: swordsman
-    position_h: { x: 17, y: 2 }
-  - type_id: swordsman
-    position_h: { x: 25.5, y: 2 }
-  - type_id: infantryman
-    position_h: { x: 37, y: 15.5 }
-  - type_id: destroyer
-    position_h: { x: 40.5, y: 7 }
+  - type_id: dark_ninja
+    position_h: { x: 12, y: 12.5 }
 exit:
-  x_h: 46
-  y_h: 7
+  x_h: 9.75
+  y_h: 15.5
 next_room_id: 2
