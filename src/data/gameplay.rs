@@ -11,7 +11,6 @@ pub const PLAYER_COLLISION_WIDTH_H: f32 = 0.6;
 #[derive(Debug, Deserialize)]
 pub struct GameplayConfig {
     pub viewport: ViewportConfig,
-    pub room_size_limits: RoomSizeLimits,
     pub camera: CameraFollowConfig,
     pub player: PlayerConfig,
     pub health_pickup: HealthPickupConfig,
@@ -79,13 +78,6 @@ pub struct ControlsConfig {
 pub struct ViewportConfig {
     pub aspect_ratio: AspectRatio,
     pub height_h: f32,
-}
-
-/// Allowed room dimensions, in multiples of the gameplay viewport.
-#[derive(Debug, Deserialize)]
-pub struct RoomSizeLimits {
-    pub width_viewports: RangeConfig,
-    pub height_viewports: RangeConfig,
 }
 
 /// The camera follows the player on both axes, clamped to the room. It only

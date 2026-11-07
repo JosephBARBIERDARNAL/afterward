@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 
 use serde::Deserialize;
 
-use super::{EnemyTypeId, GameplayConfig, MaterialId, PLAYER_COLLISION_WIDTH_H};
+use super::{EnemyTypeId, GameplayConfig, MaterialId};
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct RoomConfig {
@@ -39,31 +39,6 @@ impl RoomConfig {
 
     pub(crate) fn width_h(&self, gameplay: &GameplayConfig) -> f32 {
         f32::from(self.size.width_viewports) * gameplay.viewport_width_h()
-    }
-
-    /// Whether feet at (`x_h`, `y_h`) stand on a block top with a body's
-    /// worth of room above them, free of solid terrain.
-    pub(crate) fn has_footing_at(&self, x_h: f32, y_h: f32) -> bool {
-        let stands =
-            self.terrain.iter().chain(&self.platforms).any(|block| {
-                block.rect_h.covers_x(x_h) && (block.rect_h.top() - y_h).abs() <= 0.01
-            });
-        stands && self.body_is_clear(x_h, y_h)
-    }
-
-    /// Whether a 1 H tall collision box centered on `x_h`, with its feet at
-    /// `y_h`, overlaps no solid terrain.
-    pub(crate) fn body_is_clear(&self, x_h: f32, y_h: f32) -> bool {
-        let body = RectH {
-            x: x_h - PLAYER_COLLISION_WIDTH_H / 2.0,
-            y: y_h,
-            width: PLAYER_COLLISION_WIDTH_H,
-            height: 1.0,
-        };
-        !self
-            .terrain
-            .iter()
-            .any(|block| block.rect_h.overlaps(&body))
     }
 }
 
@@ -111,15 +86,6 @@ impl RectH {
 
     pub(crate) fn covers_x(&self, x: f32) -> bool {
         (self.x..=self.right()).contains(&x)
-    }
-
-    /// Strict overlap: rectangles that only share an edge do not overlap.
-    pub(crate) fn overlaps(&self, other: &Self) -> bool {
-        const EPSILON: f32 = 0.001;
-        self.x < other.right() - EPSILON
-            && other.x < self.right() - EPSILON
-            && self.y < other.top() - EPSILON
-            && other.y < self.top() - EPSILON
     }
 }
 

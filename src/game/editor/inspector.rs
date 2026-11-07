@@ -252,15 +252,13 @@ impl Field {
         };
         match self {
             Self::RoomWidth => {
-                let limits = &data.gameplay.room_size_limits.width_viewports;
+                // At least one viewport, so the view never shows past the room.
                 let width = f32::from(room.size.width_viewports) + steps.signum();
-                room.size.width_viewports = width.clamp(limits.min, limits.max) as u8;
+                room.size.width_viewports = width.clamp(1.0, f32::from(u8::MAX)) as u8;
             }
             Self::RoomHeight => {
-                let limits = &data.gameplay.room_size_limits.height_viewports;
-                let viewport_h = data.gameplay.viewport.height_h;
-                room.size.height_h = (room.size.height_h + steps * 0.5)
-                    .clamp(limits.min * viewport_h, limits.max * viewport_h);
+                room.size.height_h =
+                    (room.size.height_h + steps * 0.5).max(data.gameplay.viewport.height_h);
             }
             Self::Background => {
                 let profiles = data.backgrounds.profiles.keys().cloned().collect();

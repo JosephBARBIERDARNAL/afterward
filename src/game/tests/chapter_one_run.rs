@@ -368,7 +368,19 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
                         [-2.5, 2.5, -1.5, 1.5]
                             .into_iter()
                             .map(|offset| x_h + offset)
-                            .find(|x_h| room.has_footing_at(*x_h, y_h))
+                            .find(|x_h| {
+                                // On a block top, with no solid terrain in the body.
+                                let blocks = room.terrain.iter().chain(&room.platforms);
+                                blocks.map(|block| block.rect_h).any(|rect| {
+                                    rect.covers_x(*x_h) && (rect.top() - y_h).abs() <= 0.01
+                                }) && !room.terrain.iter().any(|block| {
+                                    let rect = block.rect_h;
+                                    rect.x < x_h + PLAYER_COLLISION_WIDTH_H / 2.0
+                                        && x_h - PLAYER_COLLISION_WIDTH_H / 2.0 < rect.right()
+                                        && rect.y < y_h + 1.0
+                                        && y_h < rect.top()
+                                })
+                            })
                             .map_or(Vec2::new(x_h, y_h), |x_h| Vec2::new(x_h, y_h))
                     })
             };

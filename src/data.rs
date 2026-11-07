@@ -293,20 +293,14 @@ impl GameData {
             ));
         }
 
-        let limits = &self.gameplay.room_size_limits;
         let viewport_height_h = self.gameplay.viewport.height_h;
         let player = &self.gameplay.player;
         let walls = &player.walls;
-        if limits.width_viewports.min < 1.0
-            || limits.width_viewports.min > limits.width_viewports.max
-            || limits.height_viewports.min < 1.0
-            || limits.height_viewports.min > limits.height_viewports.max
-            || !(self.gameplay.camera.vertical_dead_zone_h >= 0.0
-                && self.gameplay.camera.vertical_dead_zone_h < viewport_height_h / 2.0)
+        if !(self.gameplay.camera.vertical_dead_zone_h >= 0.0
+            && self.gameplay.camera.vertical_dead_zone_h < viewport_height_h / 2.0)
         {
             return Err(InvalidGameData::from(
-                "room size limits must span at least one viewport, and the camera dead zone \
-                 must fit inside half the viewport",
+                "the camera dead zone must fit inside half the viewport",
             ));
         }
         if [
@@ -325,29 +319,21 @@ impl GameData {
                 "wall movement and drop-through tuning values must be finite and positive",
             ));
         }
-        let intro = &self.gameplay.room_flow.room_intro;
-        let walk_in_distance_h = intro.player_walk_in_s * intro.player_walk_in_speed_h_s;
+        // Rooms are free-form: only what the game can't run or draw without is
+        // checked (consistent IDs, known references, a room at least one
+        // viewport in size, blocks with a positive size).
         for (room_id, room) in &self.rooms {
-            let room_width_h = room.width_h(&self.gameplay);
-            let room_height_h = room.size.height_h;
-            if room.room_id != *room_id || room.chapter_id != 1 {
+            if room.room_id != *room_id || room.next_room_id != room.room_id + 1 {
                 return Err(InvalidGameData::from(format!(
-                    "room {room_id} has an inconsistent ID"
+                    "room {room_id} has an inconsistent room_id or next_room_id"
                 )));
             }
-            let width_viewports = f32::from(room.size.width_viewports);
-            let height_viewports = room_height_h / viewport_height_h;
-            if !(limits.width_viewports.min..=limits.width_viewports.max).contains(&width_viewports)
-                || !(limits.height_viewports.min..=limits.height_viewports.max)
-                    .contains(&height_viewports)
+            if room.size.width_viewports == 0
+                || room.size.height_h.is_nan()
+                || room.size.height_h < viewport_height_h
             {
                 return Err(InvalidGameData::from(format!(
-                    "room {room_id} has invalid dimensions"
-                )));
-            }
-            if room.next_room_id != room.room_id + 1 {
-                return Err(InvalidGameData::from(format!(
-                    "room {room_id} has an invalid next_room_id"
+                    "room {room_id} must be at least one viewport wide and tall"
                 )));
             }
             if !self
@@ -359,25 +345,22 @@ impl GameData {
                     "room {room_id} references an unknown background profile"
                 )));
             }
-            if room.terrain.is_empty()
-                || room.terrain.iter().chain(&room.platforms).any(|block| {
-                    let rect = block.rect_h;
-                    rect.width <= 0.0
-                        || rect.height <= 0.0
-                        || rect.x < 0.0
-                        || rect.y < 0.0
-                        || rect.right() > room_width_h
-                        || rect.top() > room_height_h
-                })
-                || room
-                    .platforms
-                    .iter()
-                    .any(|platform| platform.rect_h.height > 0.5)
-            {
-                return Err(InvalidGameData::from(format!(
-                    "room {room_id} needs solid terrain, with every block inside the room and \
-                     one-way platforms at most 0.5 H thick"
-                )));
+            let rects = room
+                .terrain
+                .iter()
+                .chain(&room.platforms)
+                .map(|block| block.rect_h)
+                .chain(room.decorations.iter().map(|decoration| decoration.rect_h));
+            for rect in rects {
+                if rect.width.is_nan()
+                    || rect.height.is_nan()
+                    || rect.width <= 0.0
+                    || rect.height <= 0.0
+                {
+                    return Err(InvalidGameData::from(format!(
+                        "room {room_id} blocks and decorations need a positive size"
+                    )));
+                }
             }
             let materials = room
                 .terrain
@@ -396,68 +379,11 @@ impl GameData {
                     )));
                 }
             }
-            if room
-                .decorations
-                .iter()
-                .any(|decoration| decoration.rect_h.width <= 0.0 || decoration.rect_h.height <= 0.0)
-            {
-                return Err(InvalidGameData::from(format!(
-                    "room {room_id} decorations need a positive size"
-                )));
-            }
-            if !room.has_footing_at(room.player_spawn.x_h, room.player_spawn.y_h)
-                || !room.has_footing_at(room.exit.x_h, room.exit.y_h)
-            {
-                return Err(InvalidGameData::from(format!(
-                    "room {room_id} player spawn and exit must stand on a block top, clear of \
-                     solid terrain"
-                )));
-            }
-            // The entrance walk-in crosses this stretch, so it must be a doorway.
-            let walk_in_start_h = room.player_spawn.x_h - walk_in_distance_h;
-            if (0..=20).any(|step| {
-                let x_h = walk_in_start_h + walk_in_distance_h * step as f32 / 20.0;
-                !room.body_is_clear(x_h, room.player_spawn.y_h)
-            }) {
-                return Err(InvalidGameData::from(format!(
-                    "room {room_id} needs a doorway clear of solid terrain where the player \
-                     walks in"
-                )));
-            }
-
-            if room_id < &10 {
-                let unique_types = room
-                    .enemy_spawns
-                    .iter()
-                    .map(|spawn| &*spawn.type_id)
-                    .collect::<std::collections::BTreeSet<_>>();
-                if !(5..=15).contains(&room.enemy_spawns.len()) || unique_types.len() < 2 {
-                    return Err(InvalidGameData::from(format!(
-                        "room {room_id} must have 5–15 spawns across at least two enemy types"
-                    )));
-                }
-            } else if !room
-                .enemy_spawns
-                .iter()
-                .any(|spawn| spawn.type_id == "evil_wizard")
-            {
-                return Err(InvalidGameData::from(
-                    "room 10 must include the Evil Wizard boss",
-                ));
-            }
-
             for spawn in &room.enemy_spawns {
                 if !self.enemies.types.contains_key(&spawn.type_id) {
                     return Err(InvalidGameData::from(format!(
                         "room {room_id} references unknown enemy type {}",
                         spawn.type_id
-                    )));
-                }
-                if !room.has_footing_at(spawn.position_h.x_h, spawn.position_h.y_h) {
-                    return Err(InvalidGameData::from(format!(
-                        "room {room_id} enemy spawn at x = {} H must stand on a block top, \
-                         clear of solid terrain",
-                        spawn.position_h.x_h
                     )));
                 }
             }

@@ -23,12 +23,7 @@ fn the_editor_edits_undoes_with_cmd_z_on_azerty_saves_and_playtests() {
     assert_eq!(game.screen(), GameScreen::Editor);
     let width = |game: &HeadlessGame| game.data().rooms[&1].size.width_viewports;
     let original = width(&game);
-    let limits = &game.data().gameplay.room_size_limits.width_viewports;
-    let (step, edited) = if f32::from(original) < limits.max {
-        (KeyCode::ArrowRight, original + 1)
-    } else {
-        (KeyCode::ArrowLeft, original - 1)
-    };
+    let (step, edited) = (KeyCode::ArrowRight, original + 1);
 
     // Room fields: Down selects the width, then two edits.
     game.tap(KeyCode::ArrowDown);
