@@ -20,6 +20,7 @@ pub(super) fn spawn_room(
     let ammo = session.magazine_capacity(&data);
     spawn_player(&mut commands, room, &data, &sheets, ammo);
     spawn_enemies(&mut commands, room, &data, &sheets);
+    spawn_exit_door(&mut commands, room, &data, &sheets);
 
     if let Ok((mut transform, mut rig)) = camera.single_mut() {
         rig.size_h = Vec2::new(room.width_h(&data.gameplay), room.size.height_h);
@@ -117,6 +118,38 @@ pub(super) fn spawn_room_platforms(commands: &mut Commands, room: &RoomConfig, d
             RoomEntity,
         ));
     }
+}
+
+/// The locked exit door, standing on the room's `exit`.
+pub(super) fn spawn_exit_door(
+    commands: &mut Commands,
+    room: &RoomConfig,
+    data: &GameData,
+    sheets: &SpriteSheets,
+) {
+    let sheet = &sheets.0[ExitDoor::SHEET];
+    let height = data.gameplay.room_flow.exit_door.height_h * H_WORLD_UNITS;
+    let mut sprite = Sprite::from_atlas_image(
+        sheet.image.clone(),
+        TextureAtlas {
+            layout: sheet.layout.clone(),
+            index: 0,
+        },
+    );
+    sprite.custom_size = Some(Vec2::new(
+        height * sheet.frame_size.x / sheet.frame_size.y,
+        height,
+    ));
+    commands.spawn((
+        sprite,
+        Transform::from_xyz(
+            room.exit.x_h * H_WORLD_UNITS,
+            room.exit.y_h * H_WORLD_UNITS + height / 2.0,
+            2.0,
+        ),
+        ExitDoor,
+        RoomEntity,
+    ));
 }
 
 pub(super) fn spawn_player(
@@ -352,5 +385,12 @@ pub(super) fn cleanup_room(
 #[derive(Component)]
 pub(crate) struct RoomEntity;
 
+/// The exit door; its sprite's atlas index shows its state.
 #[derive(Component)]
 pub(crate) struct ExitDoor;
+
+impl ExitDoor {
+    pub(crate) const SHEET: &str = "exit_door";
+    pub(crate) const UNLOCKED_FRAME: usize = 1;
+    pub(crate) const FIRST_OPENING_FRAME: usize = 2;
+}

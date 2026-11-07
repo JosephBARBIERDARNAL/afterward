@@ -2,7 +2,7 @@
 
 use serde::Deserialize;
 
-use super::PerAim;
+use super::{ImageSizeConfig, PerAim};
 
 /// Width of the player's (and every enemy's) collision box, in H. Its height
 /// is 1 H by definition.
@@ -190,7 +190,19 @@ pub struct RoomFlowConfig {
     pub room_transition_duration_s: f32,
     pub room_intro: RoomIntroConfig,
     pub exit_side: String,
+    pub exit_door: ExitDoorConfig,
     pub bonus_rerolls_per_run: u8,
+}
+
+/// The exit door's sprite sheet: frame 0 locked, 1 unlocked, then the
+/// opening frames.
+#[derive(Debug, Deserialize)]
+pub struct ExitDoorConfig {
+    /// Path under `src/assets/`.
+    pub sheet: String,
+    pub frame_size_px: ImageSizeConfig,
+    pub frames: usize,
+    pub height_h: f32,
 }
 
 /// Room entrance timeline: the player walks in, holds idle while the enemies

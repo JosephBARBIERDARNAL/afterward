@@ -99,6 +99,14 @@ room_flow:
     enemy_appear_spread_s: 0.45
     fight_start_delay_s: 0.2
   exit_side: right
+  # The exit door stands on the room's `exit`, locked until a bonus is picked.
+  # Sheet frames, left to right: 0 locked, 1 unlocked, then the opening, played
+  # over the first half of the room transition.
+  exit_door:
+    sheet: doors/exit_door.png
+    frame_size_px: { width: 48, height: 96 }
+    frames: 7
+    height_h: 1.5
   bonus_rerolls_per_run: 3
 
 window:

@@ -14,6 +14,7 @@ pub(super) fn load_sprites(
         .into_iter()
         .chain(enemy_sheets::sprites())
         .chain(boss_sheets::sprites())
+        .chain([exit_door_sheet(&data.gameplay.room_flow.exit_door)])
         .collect::<Vec<_>>();
 
     let mut sheets = BTreeMap::new();
@@ -38,6 +39,20 @@ pub(super) fn load_sprites(
         );
     }
     commands.insert_resource(SpriteSheets(sheets));
+}
+
+/// The exit door's frames, shown by state (locked, unlocked, opening) rather
+/// than played at a frame rate.
+fn exit_door_sheet(door: &crate::data::ExitDoorConfig) -> SpriteSheetSpec {
+    SpriteSheetSpec {
+        key: ExitDoor::SHEET.into(),
+        path: door.sheet.clone(),
+        frame_width: door.frame_size_px.width,
+        frame_height: door.frame_size_px.height,
+        frames: door.frames,
+        fps: 1.0,
+        first_cell: UVec2::ZERO,
+    }
 }
 
 pub(super) fn animate_sprites(
@@ -75,7 +90,8 @@ mod tests {
         let specs = player_sheets::sprites(&data.player_animations)
             .into_iter()
             .chain(enemy_sheets::sprites())
-            .chain(boss_sheets::sprites());
+            .chain(boss_sheets::sprites())
+            .chain([exit_door_sheet(&data.gameplay.room_flow.exit_door)]);
 
         for spec in specs {
             let path = asset_root.join(&spec.path);

@@ -56,8 +56,8 @@ pub(super) struct BonusInputResources<'w> {
 }
 
 pub(super) fn handle_bonus_input(
-    mut commands: Commands,
     resources: BonusInputResources,
+    mut doors: Query<&mut Sprite, With<ExitDoor>>,
     choices: Query<&BonusChoice>,
     mut pointer_overs: MessageReader<PointerOver>,
     mut pointer_clicks: MessageReader<PointerClick>,
@@ -158,18 +158,11 @@ pub(super) fn handle_bonus_input(
         }
     }
 
-    let room = &data.rooms[&session.room_id];
-    let door_position = Vec3::new(
-        room.exit.x_h * H_WORLD_UNITS,
-        room.exit.y_h * H_WORLD_UNITS + H_WORLD_UNITS / 2.0,
-        2.0,
-    );
-    commands.spawn((
-        Sprite::from_color(Color::srgb(0.34, 0.77, 0.87), Vec2::new(28.0, 48.0)),
-        Transform::from_translation(door_position),
-        ExitDoor,
-        RoomEntity,
-    ));
+    for mut sprite in &mut doors {
+        if let Some(atlas) = sprite.texture_atlas.as_mut() {
+            atlas.index = ExitDoor::UNLOCKED_FRAME;
+        }
+    }
     session.door_open = true;
     sounds.push(SoundCue::DoorAppear);
     next_screen.set(GameScreen::Playing);
@@ -190,11 +183,16 @@ pub(super) fn reroll_available(session: &RunSession, data: &GameData) -> bool {
 pub(super) fn handle_door_touch(
     player: Query<&Transform, (With<PlayerBody>, Without<ExitDoor>)>,
     doors: Query<&Transform, (With<ExitDoor>, Without<PlayerBody>)>,
+    session: Res<RunSession>,
     data: Res<GameData>,
     mut timer: ResMut<PhaseTimer>,
     mut next_screen: ResMut<NextState<GameScreen>>,
     mut sounds: ResMut<SoundQueue>,
 ) {
+    // The door stays locked until a bonus is picked.
+    if !session.door_open {
+        return;
+    }
     let (Ok(player), Ok(door)) = (player.single(), doors.single()) else {
         return;
     };
@@ -261,13 +259,19 @@ pub(super) fn update_room_transition(
     next_screen.set(GameScreen::RoomLoading);
 }
 
+/// Plays the door's opening frames over the first half of the transition.
 pub(super) fn animate_exit_door(
     timer: Res<PhaseTimer>,
-    mut doors: Query<&mut Transform, With<ExitDoor>>,
+    data: Res<GameData>,
+    mut doors: Query<&mut Sprite, With<ExitDoor>>,
 ) {
-    let remaining_width = (1.0 - timer.0.fraction()).max(0.08);
-    for mut transform in &mut doors {
-        transform.scale.x = remaining_width;
+    let frames = data.gameplay.room_flow.exit_door.frames;
+    let opening_frames = frames - ExitDoor::FIRST_OPENING_FRAME;
+    let step = (timer.0.fraction() * opening_frames as f32) as usize;
+    for mut sprite in &mut doors {
+        if let Some(atlas) = sprite.texture_atlas.as_mut() {
+            atlas.index = (ExitDoor::FIRST_OPENING_FRAME + step).min(frames - 1);
+        }
     }
 }
 

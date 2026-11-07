@@ -193,6 +193,23 @@ impl GameData {
                 "Chapter 1 room flow requires a positive clear animation and right-side exits",
             ));
         }
+        let door = &self.gameplay.room_flow.exit_door;
+        if door.frames < 3
+            || door.frame_size_px.width == 0
+            || door.frame_size_px.height == 0
+            || door.height_h.is_nan()
+            || door.height_h <= 0.0
+        {
+            return Err(InvalidGameData::from(
+                "the exit door needs locked, unlocked, and opening frames, and a positive size",
+            ));
+        }
+        if !asset_root.join(&door.sheet).is_file() {
+            return Err(InvalidGameData::from(format!(
+                "missing exit door sheet: {}",
+                door.sheet
+            )));
+        }
         let audio = &self.gameplay.audio;
         if audio.footstep_interval_s <= 0.0
             || !(0.0..=1.0).contains(&audio.paused_music_volume_multiplier)

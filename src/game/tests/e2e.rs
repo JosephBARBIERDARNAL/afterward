@@ -58,7 +58,7 @@ impl HeadlessGame {
         let copy =
             std::env::temp_dir().join(format!("afterward-e2e-{}-{nanos}", std::process::id()));
         let mut pending = vec![PathBuf::from("config"), PathBuf::from("rooms")];
-        pending.extend(["player", "background", "audio", "terrain"].map(PathBuf::from));
+        pending.extend(["player", "background", "audio", "terrain", "doors"].map(PathBuf::from));
         while let Some(relative) = pending.pop() {
             fs::create_dir_all(copy.join(&relative)).expect("the temp folder is writable");
             let entries = fs::read_dir(asset_root.join(&relative)).expect("assets are readable");

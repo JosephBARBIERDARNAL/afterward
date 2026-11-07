@@ -37,7 +37,10 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
         frames: 1,
         fps: 1.0,
     };
-    let mut sheets = BTreeMap::from([(String::from("player_idle"), placeholder_sheet.clone())]);
+    let mut sheets = BTreeMap::from([
+        (String::from("player_idle"), placeholder_sheet.clone()),
+        (ExitDoor::SHEET.to_string(), placeholder_sheet.clone()),
+    ]);
     for type_id in data.enemies.types.keys() {
         sheets.insert(type_id.idle_sheet().to_string(), placeholder_sheet.clone());
     }
@@ -524,5 +527,6 @@ fn spawn_test_room(
         data.gameplay.player.gun.magazine_size,
     );
     world::spawn_enemies(&mut commands, room, &data, &sheets);
+    world::spawn_exit_door(&mut commands, room, &data, &sheets);
     session.world_loaded = true;
 }
