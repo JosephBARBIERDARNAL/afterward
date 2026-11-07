@@ -3,12 +3,12 @@
 use std::{
     collections::BTreeMap,
     fmt::{self, Display, Formatter},
-    str::FromStr,
 };
 
-use bevy::prelude::Color;
-use serde::{Deserialize, Deserializer, de::Error as DeserializeError};
+use serde::Deserialize;
 use yaml_serde::Value;
+
+use super::HexColor;
 
 #[derive(Debug, Deserialize)]
 pub struct BonusesConfig {
@@ -20,42 +20,6 @@ pub struct BonusesConfig {
 pub struct BonusCategoryConfig {
     pub color: HexColor,
     pub icon: BonusCategoryIcon,
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct HexColor(Color);
-
-impl FromStr for HexColor {
-    type Err = &'static str;
-
-    fn from_str(value: &str) -> Result<Self, Self::Err> {
-        let hex = value.strip_prefix('#').unwrap_or(value);
-        if hex.len() != 6 {
-            return Err("hex colors must contain six digits");
-        }
-        let rgb = u32::from_str_radix(hex, 16).map_err(|_| "hex colors must contain six digits")?;
-        let red = f32::from(((rgb >> 16) & 0xff) as u8) / 255.0;
-        let green = f32::from(((rgb >> 8) & 0xff) as u8) / 255.0;
-        let blue = f32::from((rgb & 0xff) as u8) / 255.0;
-        Ok(Self(Color::srgb(red, green, blue)))
-    }
-}
-
-impl<'de> Deserialize<'de> for HexColor {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        String::deserialize(deserializer)?
-            .parse()
-            .map_err(D::Error::custom)
-    }
-}
-
-impl From<HexColor> for Color {
-    fn from(color: HexColor) -> Self {
-        color.0
-    }
 }
 
 #[derive(Debug, Clone, Copy, Deserialize)]

@@ -1,5 +1,5 @@
 // The exit door as a sprite sheet: 7 frames of 48 x 96 px (0.75 x 1.5 H at
-// the terrain's 64 px per H), left to right. Frame 0 is locked (magenta
+// the surfaces' 64 px per H), left to right. Frame 0 is locked (magenta
 // lights), frame 1 unlocked (cyan), and frames 2-6 slide the two panels
 // apart over a glowing doorway until it is fully open.
 #import "../_pixel.typ": pixels-by

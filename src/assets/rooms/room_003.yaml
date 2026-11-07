@@ -1,324 +1,51 @@
-# Room coordinates use H from the lower-left. Terrain and platform `rect_h`
+# Room coordinates use H from the lower-left. Platform and decoration `rect_h`
 # give each block's lower-left corner and size; player, enemy, and exit y
-# values mark the feet baseline on a block top.
+# values mark the feet baseline on a platform top.
 room_id: 3
 chapter_id: 1
-description: "Drowned aqueduct: a broken channel deck over a ravine and the flooded cisterns beneath it, crossing at a stair, a collapsed arch and a wall-jump well."
+description: "A bare shell waiting for a layout, two enemies heavier than room 2 and the same flat floor to fight it on."
 size:
   width_viewports: 3
   height_h: 24
 background_profile: clouds_bright_blue
 player_spawn:
-  x_h: 2.5
-  y_h: 6
-# Solid blocks: they stop bodies and projectiles from every side.
-terrain:
-  - label: ravine bedrock
-    material: stone_dark_cobble
-    rect_h: { x: 0, y: 0, width: 72, height: 2 }
-  - label: entrance landing
-    material: stone_bricks
-    rect_h: { x: 0, y: 2, width: 9, height: 3 }
-  - label: entrance landing cap
-    material: mossy_bricks
-    rect_h: { x: 0, y: 5, width: 9, height: 1 }
-  - label: stair pit floor
-    material: mossy_bricks
-    rect_h: { x: 9, y: 2, width: 7, height: 1.5 }
-  - label: west cistern floor
-    material: mossy_bricks
-    rect_h: { x: 19.5, y: 2, width: 5.5, height: 1.5 }
-  - label: west cistern hump
-    material: stone_bricks
-    rect_h: { x: 21, y: 3.5, width: 3, height: 1 }
-  - label: fall basin east rim
-    material: mossy_bricks
-    rect_h: { x: 30, y: 2, width: 4.5, height: 1.5 }
-  - label: ravine floor
-    material: mossy_cobble
-    rect_h: { x: 44, y: 2, width: 15, height: 1.5 }
-  - label: ravine knoll
-    material: mossy_cobble
-    rect_h: { x: 48, y: 3.5, width: 2.5, height: 0.75 }
-  - label: sewer floor
-    material: mossy_bricks
-    rect_h: { x: 52, y: 2, width: 10, height: 1.5 }
-  - label: collapsed arch rubble
-    material: stone_cracked_slab
-    rect_h: { x: 34.5, y: 2, width: 7, height: 3 }
-  - label: collapsed arch rubble crown
-    material: stone_cracked_slab
-    rect_h: { x: 36, y: 5, width: 4, height: 1.5 }
-  - label: fallen voussoir
-    material: carved_ashlar
-    rect_h: { x: 40.5, y: 5, width: 1.25, height: 1 }
-  - label: left wall above the entrance doorway
-    material: stone_rough_bricks
-    rect_h: { x: 0, y: 9.5, width: 2, height: 14.5 }
-  - label: entrance lintel
-    material: stone_rough_bricks
-    rect_h: { x: 2, y: 9.5, width: 5, height: 2.5 }
-  - label: west cliff
-    material: stone_rough_bricks
-    rect_h: { x: 0, y: 12, width: 5.5, height: 6 }
-  - label: west cliff overhang
-    material: stone_rough_bricks
-    rect_h: { x: 0, y: 17.5, width: 11, height: 6.5 }
-  - label: west cliff crown
-    material: stone_rough_bricks
-    rect_h: { x: 11, y: 19.5, width: 5, height: 4.5 }
-  - label: overhang drip
-    material: stone_rough_bricks
-    rect_h: { x: 8, y: 16.75, width: 1.5, height: 1 }
-  - label: cistern vault west
-    material: stone_bricks
-    rect_h: { x: 15.5, y: 9, width: 10.5, height: 4 }
-  - label: cistern vault east
-    material: stone_bricks
-    rect_h: { x: 29, y: 9, width: 2.5, height: 2 }
-  - label: cistern stalactite
-    material: stone_bricks
-    rect_h: { x: 18, y: 8, width: 1.5, height: 1 }
-  - label: cistern stalactite east
-    material: stone_bricks
-    rect_h: { x: 23, y: 7.75, width: 1, height: 1.25 }
-  - label: deck west
-    material: stone_slab
-    rect_h: { x: 15.5, y: 13, width: 10.5, height: 1 }
-  - label: deck middle span
-    material: carved_ashlar
-    rect_h: { x: 29, y: 11, width: 6.5, height: 2 }
-  - label: deck middle
-    material: stone_slab
-    rect_h: { x: 29, y: 13, width: 7.5, height: 1 }
-  - label: broken tower
-    material: carved_ashlar
-    rect_h: { x: 31, y: 14, width: 2.5, height: 2.5 }
-  - label: broken tower top
-    material: stone_tiles
-    rect_h: { x: 30.75, y: 16.25, width: 3, height: 0.25 }
-  - label: deck east span
-    material: carved_ashlar
-    rect_h: { x: 40.5, y: 11, width: 14.5, height: 2 }
-  - label: deck east
-    material: stone_slab
-    rect_h: { x: 40, y: 13, width: 15, height: 1 }
-  - label: arch haunch
-    material: carved_ashlar
-    rect_h: { x: 44, y: 10.25, width: 3, height: 0.75 }
-  - label: arch keystone
-    material: carved_ashlar
-    rect_h: { x: 44.75, y: 9.5, width: 1.5, height: 0.75 }
-  - label: well west wall
-    material: stone_bricks
-    rect_h: { x: 52, y: 8, width: 3, height: 3 }
-  - label: well east wall
-    material: stone_bricks
-    rect_h: { x: 58.5, y: 8, width: 3.5, height: 5 }
-  - label: deck beyond the well
-    material: stone_slab
-    rect_h: { x: 58.5, y: 13, width: 3.5, height: 1 }
-  - label: hall step low
-    material: mossy_bricks
-    rect_h: { x: 62, y: 2, width: 10, height: 3.5 }
-  - label: hall step mid
-    material: mossy_bricks
-    rect_h: { x: 64, y: 5.5, width: 8, height: 1.75 }
-  - label: exit tier
-    material: stone_tiles
-    rect_h: { x: 66.5, y: 7.25, width: 5.5, height: 1.75 }
-  - label: right wall
-    material: stone_rough_bricks
-    rect_h: { x: 71, y: 9, width: 1, height: 8 }
-  - label: east cliff
-    material: stone_rough_bricks
-    rect_h: { x: 62, y: 17, width: 10, height: 7 }
-  - label: hall stalactite
-    material: stone_rough_bricks
-    rect_h: { x: 65.5, y: 15.75, width: 1.5, height: 1.25 }
-  - label: upper arcade fragment
-    material: carved_ashlar
-    rect_h: { x: 37.5, y: 18.5, width: 6, height: 1 }
-  - label: upper arcade fragment cap
-    material: stone_slab
-    rect_h: { x: 37.25, y: 19.5, width: 6.5, height: 0.5 }
-  - label: upper arcade broken spring
-    material: carved_ashlar
-    rect_h: { x: 43, y: 17.75, width: 0.75, height: 0.75 }
-# One-way platforms: land on top, jump through from below, Down + Jump drops.
+  x_h: 3
+  y_h: 2
+# One-way platforms: land on top, pass through from every other side,
+# Down + Jump drops through. They stop shots.
 platforms:
-  - label: scaffold stair low
-    material: stone_slab
-    rect_h: { x: 7, y: 8.25, width: 3, height: 0.25 }
-  - label: scaffold stair mid
-    material: stone_slab
-    rect_h: { x: 10.5, y: 10.5, width: 3, height: 0.25 }
-  - label: scaffold stair high
-    material: stone_slab
-    rect_h: { x: 13, y: 12.5, width: 2.5, height: 0.25 }
-  - label: well rest low
-    material: stone_slab
-    rect_h: { x: 55, y: 6, width: 3.5, height: 0.25 }
-  - label: well rest middle
-    material: stone_slab
-    rect_h: { x: 56, y: 8.25, width: 2, height: 0.25 }
-  - label: well rest high
-    material: stone_slab
-    rect_h: { x: 55.5, y: 10.5, width: 2.5, height: 0.25 }
-  - label: hall ledge
-    material: stone_slab
-    rect_h: { x: 63, y: 11.25, width: 2.5, height: 0.25 }
-  - label: arcade stepping stone
-    material: stone_slab
-    rect_h: { x: 34.5, y: 18, width: 2, height: 0.25 }
-# Decorations: non-solid panels behind the terrain or in front of the bodies.
-decorations:
-  - label: entrance back wall
-    material: stone_bricks
-    layer: background
-    rect_h: { x: 2, y: 6, width: 7, height: 3.5 }
-  - label: stair shaft back wall
-    material: stone_rough_bricks
-    layer: background
-    rect_h: { x: 7, y: 3.5, width: 8.5, height: 14 }
-  - label: west cistern back wall
-    material: carved_ashlar
-    layer: background
-    rect_h: { x: 15.5, y: 2, width: 15.5, height: 7 }
-  - label: west cistern pool
-    material: water_deep
-    layer: background
-    rect_h: { x: 16, y: 2, width: 3.5, height: 1 }
-  - label: fall basin pool
-    material: water_deep_waves
-    layer: background
-    rect_h: { x: 25, y: 2, width: 5, height: 1 }
-  - label: ravine pool
-    material: water_deep
-    layer: background
-    rect_h: { x: 41.5, y: 2, width: 2.5, height: 1 }
-  - label: channel waterfall
-    material: water_foam
-    layer: background
-    rect_h: { x: 26.75, y: 2.5, width: 1.5, height: 11.5 }
-  - label: collapsed arch spill
-    material: water_crests
-    layer: background
-    rect_h: { x: 36.5, y: 6.5, width: 1, height: 6.5 }
-  - label: well spill
-    material: water_sparkle
-    layer: background
-    rect_h: { x: 55.25, y: 3.5, width: 0.75, height: 10.5 }
-  - label: hall cascade
-    material: water_waves
-    layer: background
-    rect_h: { x: 62, y: 5.5, width: 0.75, height: 8 }
-  - label: ravine pier west
-    material: carved_pillar
-    layer: background
-    rect_h: { x: 32.75, y: 3.5, width: 1.5, height: 7.5 }
-  - label: ravine pier
-    material: carved_pillar
-    layer: background
-    rect_h: { x: 45, y: 3.5, width: 1, height: 6 }
-  - label: ravine pier east
-    material: carved_pillar
-    layer: background
-    rect_h: { x: 51, y: 3.5, width: 1, height: 7.5 }
-  - label: sewer back wall
-    material: stone_bricks
-    layer: background
-    rect_h: { x: 52, y: 3.5, width: 10, height: 4.5 }
-  - label: hall back wall
-    material: mossy_bricks
-    layer: background
-    rect_h: { x: 62, y: 5.5, width: 9, height: 11.5 }
-  - label: deck column stub
-    material: carved_pillar
-    layer: background
-    rect_h: { x: 21, y: 14, width: 1, height: 2.5 }
-  - label: deck column stub east
-    material: carved_pillar
-    layer: background
-    rect_h: { x: 46, y: 14, width: 1, height: 3.5 }
-  - label: deck column stump
-    material: carved_pillar
-    layer: background
-    rect_h: { x: 53, y: 14, width: 1, height: 1.5 }
-  - label: channel water west
-    material: water_waves
-    layer: background
-    rect_h: { x: 15.5, y: 14, width: 10.5, height: 0.25 }
-  - label: hanging moss
-    material: moss_leaves
-    layer: foreground
-    rect_h: { x: 12, y: 18.5, width: 2, height: 1 }
-  - label: hall hanging moss
-    material: moss_leaves
-    layer: foreground
-    rect_h: { x: 68, y: 16.25, width: 2, height: 0.75 }
-  - label: upper arcade pier
-    material: carved_pillar
-    layer: background
-    rect_h: { x: 42, y: 14, width: 1, height: 4.5 }
-  - label: upper arcade west
-    material: carved_ashlar
-    layer: background
-    rect_h: { x: 16, y: 19, width: 9, height: 1.25 }
-  - label: upper arcade west pier
-    material: carved_pillar
-    layer: background
-    rect_h: { x: 16.5, y: 14, width: 1, height: 5 }
-  - label: upper arcade west pier 2
-    material: carved_pillar
-    layer: background
-    rect_h: { x: 23.5, y: 16, width: 1, height: 3 }
-  - label: upper arcade east
-    material: carved_ashlar
-    layer: background
-    rect_h: { x: 50, y: 18.75, width: 6.5, height: 1.25 }
-  - label: upper arcade east pier
-    material: carved_pillar
-    layer: background
-    rect_h: { x: 55.75, y: 14, width: 0.75, height: 4.75 }
-  - label: channel water middle
-    material: water_waves
-    layer: background
-    rect_h: { x: 29, y: 14, width: 7.5, height: 0.25 }
-  - label: channel water east
-    material: water_waves
-    layer: background
-    rect_h: { x: 40, y: 14, width: 15, height: 0.25 }
-  - label: ravine back scree
-    material: stone_dark_cobble
-    layer: background
-    rect_h: { x: 31, y: 3.5, width: 21, height: 1.5 }
-  - label: ravine back scree high
-    material: stone_dark_cobble
-    layer: background
-    rect_h: { x: 38, y: 5, width: 9, height: 1.5 }
-  - label: ravine back scree knoll
-    material: stone_dark_cobble
-    layer: background
-    rect_h: { x: 47, y: 5, width: 5, height: 0.75 }
+  - label: the floor the room stands on
+    material: city_pavement
+    rect_h: { x: -2, y: 0, width: 76, height: 2 }
+  - label: west wall
+    material: city_plating
+    rect_h: { x: -2, y: 2, width: 2, height: 22 }
+  - label: east wall
+    material: city_plating
+    rect_h: { x: 72, y: 2, width: 2, height: 22 }
+  - label: roofline
+    material: city_plating
+    rect_h: { x: -2, y: 24, width: 76, height: 2 }
+# Decorations: non-solid panels behind the platforms or in front of the bodies.
+decorations: []
 enemy_spawns:
   - type_id: gorgon_1
-    position_h: { x: 22.5, y: 4.5 }
+    position_h: { x: 10, y: 2 }
   - type_id: gorgon_1
-    position_h: { x: 21, y: 14 }
+    position_h: { x: 18, y: 2 }
   - type_id: infantryman
-    position_h: { x: 32.25, y: 16.5 }
+    position_h: { x: 26, y: 2 }
   - type_id: infantryman
-    position_h: { x: 38, y: 6.5 }
+    position_h: { x: 34, y: 2 }
   - type_id: gorgon_1
-    position_h: { x: 47, y: 3.5 }
+    position_h: { x: 42, y: 2 }
   - type_id: dark_ninja
-    position_h: { x: 48, y: 14 }
+    position_h: { x: 50, y: 2 }
   - type_id: swordsman
-    position_h: { x: 54, y: 3.5 }
+    position_h: { x: 58, y: 2 }
   - type_id: swordsman
-    position_h: { x: 68.5, y: 9 }
+    position_h: { x: 66, y: 2 }
 exit:
-  x_h: 70
-  y_h: 9
+  x_h: 69
+  y_h: 2
 next_room_id: 4

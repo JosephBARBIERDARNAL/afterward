@@ -462,7 +462,7 @@ profiles:
         parallax: 0.35
   # City skylines (craftpix.net). `layer-1` is the opaque sky; higher layers
   # are nearer rows of buildings. The front row stops at 0.5 because rooms
-  # draw their own terrain.
+  # draw their own ground.
   city_night_stars:
     backdrop: background/city/night-stars/layer-1.png
     source_size_px: { width: 576, height: 324 }

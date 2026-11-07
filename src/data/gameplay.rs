@@ -126,7 +126,6 @@ pub struct PlayerConfig {
     pub dash_cooldown_s: f32,
     pub damage_invulnerability_s: f32,
     pub dash_invulnerability_s: f32,
-    pub walls: WallMovementConfig,
     /// Seconds one-way platforms ignore the player after Down + Jump.
     pub drop_through_s: f32,
     pub crouch_speed_h_s: f32,
@@ -135,22 +134,6 @@ pub struct PlayerConfig {
     /// Seconds the last death frame holds before the run ends.
     pub death_hold_s: f32,
     pub gun: GunConfig,
-}
-
-/// Wall slide, wall jump, and ledge mantling.
-#[derive(Debug, Deserialize)]
-pub struct WallMovementConfig {
-    pub slide_max_fall_speed_h_s: f32,
-    pub jump_impulse_h_s: f32,
-    pub jump_kick_speed_h_s: f32,
-    /// Seconds after a wall jump during which horizontal input is ignored, so
-    /// the kick carries the player away from the wall.
-    pub jump_control_lock_s: f32,
-    /// How far above the top of the body a ledge can still be grabbed.
-    pub ledge_grab_reach_h: f32,
-    pub ledge_climb_s: f32,
-    /// Seconds a falling player pressing into a wall clings to it before sliding.
-    pub latch_s: f32,
 }
 
 /// The player's only weapon: a gun firing visible bullets from a magazine.

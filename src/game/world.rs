@@ -89,18 +89,13 @@ pub(super) fn draw_room(
     }
 
     spawn_room_platforms(commands, room, data);
-    terrain_art::draw_terrain(commands, room, data, asset_server);
+    room_art::draw(commands, room, data, asset_server);
 }
 
-/// Spawns the colliders of the room's solid blocks and one-way platforms;
-/// `terrain_art::draw_terrain` draws them.
+/// Spawns the colliders of the room's one-way platforms; `room_art::draw`
+/// draws them.
 pub(super) fn spawn_room_platforms(commands: &mut Commands, room: &RoomConfig, data: &GameData) {
-    let blocks = room
-        .terrain
-        .iter()
-        .map(|block| (block, false))
-        .chain(room.platforms.iter().map(|block| (block, true)));
-    for (block, one_way) in blocks {
+    for block in &room.platforms {
         let rect = block.rect_h;
         commands.spawn((
             PlatformSurface {
@@ -108,12 +103,7 @@ pub(super) fn spawn_room_platforms(commands: &mut Commands, room: &RoomConfig, d
                 right: rect.right() * H_WORLD_UNITS,
                 bottom: rect.y * H_WORLD_UNITS,
                 top: rect.top() * H_WORLD_UNITS,
-                footstep: data
-                    .terrain
-                    .materials
-                    .get(&block.material)
-                    .map_or(FootstepSound::Stone, |material| material.footstep),
-                one_way,
+                footstep: data.surfaces.footstep(&block.fill),
             },
             RoomEntity,
         ));

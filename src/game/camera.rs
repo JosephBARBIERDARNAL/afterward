@@ -54,7 +54,7 @@ pub(super) fn follow_camera(
 }
 
 /// Background layers scroll horizontally at their parallax rate and stay
-/// centered on the camera vertically, behind the room's drawn terrain.
+/// centered on the camera vertically, behind the room's drawn platforms.
 pub(super) fn update_background_parallax(
     camera: Query<&Transform, With<Camera2d>>,
     mut backgrounds: Query<(&mut Transform, &BackgroundParallax), Without<Camera2d>>,

@@ -175,8 +175,8 @@ pub(super) fn handle_pointer(resources: EditorPointerResources) {
                             .get(index)
                             .map(|spawn| spawn.type_id.clone());
                     }
-                    if let Some(material) = item.material(room) {
-                        editor.material = Some(material.clone());
+                    if let Some(fill) = item.fill(room) {
+                        editor.fill = Some(fill.clone());
                     }
                     let starts = editor
                         .selected

@@ -4,14 +4,14 @@
 use std::fmt::{self, Display, Formatter};
 
 use super::{
-    DecorationConfig, DecorationLayer, EnemySpawnConfig, EnemyStatOverrides, RectH, RoomConfig,
-    SizeH, TerrainBlockConfig,
+    DecorationConfig, DecorationLayer, EnemySpawnConfig, EnemyStatOverrides, Fill, PlatformConfig,
+    RectH, RoomConfig, SizeH,
 };
 
 const HEADER: &str = "\
-# Room coordinates use H from the lower-left. Terrain and platform `rect_h`
+# Room coordinates use H from the lower-left. Platform and decoration `rect_h`
 # give each block's lower-left corner and size; player, enemy, and exit y
-# values mark the feet baseline on a block top.
+# values mark the feet baseline on a platform top.
 ";
 
 impl Display for RoomConfig {
@@ -39,17 +39,13 @@ impl Display for RoomConfig {
         writeln!(formatter, "  y_h: {}", self.player_spawn.y_h)?;
         writeln!(
             formatter,
-            "# Solid blocks: they stop bodies and projectiles from every side."
-        )?;
-        write!(formatter, "{}", YamlList("terrain", &self.terrain))?;
-        writeln!(
-            formatter,
-            "# One-way platforms: land on top, jump through from below, Down + Jump drops."
+            "# One-way platforms: land on top, pass through from every other side,\n\
+             # Down + Jump drops through. They stop shots."
         )?;
         write!(formatter, "{}", YamlList("platforms", &self.platforms))?;
         writeln!(
             formatter,
-            "# Decorations: non-solid panels behind the terrain or in front of the bodies."
+            "# Decorations: non-solid panels behind the platforms or in front of the bodies."
         )?;
         write!(formatter, "{}", YamlList("decorations", &self.decorations))?;
         write!(
@@ -80,7 +76,7 @@ impl<T: Display> Display for YamlList<'_, T> {
     }
 }
 
-impl Display for TerrainBlockConfig {
+impl Display for PlatformConfig {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
         let label = self
             .label
@@ -88,7 +84,7 @@ impl Display for TerrainBlockConfig {
             .map(|label| format!("label: {}", YamlText(label)));
         let fields = label
             .chain([
-                format!("material: {}", self.material),
+                YamlFill(&self.fill).to_string(),
                 format!("rect_h: {}", self.rect_h),
             ])
             .collect();
@@ -104,7 +100,7 @@ impl Display for DecorationConfig {
             .map(|label| format!("label: {}", YamlText(label)));
         let fields = label
             .chain([
-                format!("material: {}", self.material),
+                YamlFill(&self.fill).to_string(),
                 format!("layer: {}", self.layer),
                 format!("rect_h: {}", self.rect_h),
             ])
@@ -135,6 +131,19 @@ impl Display for EnemySpawnConfig {
             .chain(overrides)
             .collect();
         write!(formatter, "{}", YamlEntry(fields))
+    }
+}
+
+/// The field a fill is written as: `material: <id>` or a quoted `color:`,
+/// since an unquoted `#RRGGBB` would read back as a comment.
+struct YamlFill<'a>(&'a Fill);
+
+impl Display for YamlFill<'_> {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
+        match self.0 {
+            Fill::Material(material) => write!(formatter, "material: {material}"),
+            Fill::Color(color) => write!(formatter, "color: \"{color}\""),
+        }
     }
 }
 
@@ -239,6 +248,33 @@ mod tests {
                 yaml_serde::from_str(&written).expect("written rooms are valid YAML");
             assert_eq!(&read_back, room, "room {} round trip", room.room_id);
         }
+    }
+
+    #[test]
+    fn a_platform_painted_a_plain_color_is_written_back_quoted() {
+        let room: RoomConfig = yaml_serde::from_str(
+            "
+room_id: 3
+chapter_id: 1
+size: { width_viewports: 1, height_h: 13.5 }
+background_profile: city_blue_day
+player_spawn: { x_h: 2, y_h: 1 }
+platforms:
+  - { color: \"#2DE2D5\", rect_h: { x: 0, y: 0, width: 24, height: 1 } }
+enemy_spawns: []
+exit: { x_h: 22, y_h: 1 }
+next_room_id: 4
+",
+        )
+        .expect("a color fill parses");
+        let written = room.to_string();
+        assert!(
+            written.contains("color: \"#2DE2D5\""),
+            "an unquoted #RRGGBB would read back as a YAML comment: {written}"
+        );
+        let read_back: RoomConfig =
+            yaml_serde::from_str(&written).expect("the written room is valid YAML");
+        assert_eq!(read_back, room);
     }
 
     #[test]

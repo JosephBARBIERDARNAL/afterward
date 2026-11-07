@@ -3,4 +3,5 @@ target
 *.zip
 *.tar.gz
 *.gif
+!art/previews/*.gif
 *.rar

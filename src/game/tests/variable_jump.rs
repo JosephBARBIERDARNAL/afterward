@@ -46,8 +46,7 @@ fn jump_peak_h(hold_frames: usize) -> f32 {
                 right: width,
                 bottom: ground_top - H_WORLD_UNITS,
                 top: ground_top,
-                footstep: FootstepSound::Soil,
-                one_way: false,
+                footstep: FootstepSound::Stone,
             });
         })
         .add_systems(Update, player::update_player);

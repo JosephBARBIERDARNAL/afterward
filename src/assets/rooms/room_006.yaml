@@ -1,322 +1,57 @@
-# Room coordinates use H from the lower-left. Terrain and platform `rect_h`
+# Room coordinates use H from the lower-left. Platform and decoration `rect_h`
 # give each block's lower-left corner and size; player, enemy, and exit y
-# values mark the feet baseline on a block top.
+# values mark the feet baseline on a platform top.
 room_id: 6
 chapter_id: 1
-description: "The Great Hollow Tree: climb the spiral inside a giant trunk, loop out along its branches, leave by a high east bough."
+description: "A bare shell waiting for a layout, tall like room 4 and with a heavier roster."
 size:
   width_viewports: 2
   height_h: 36
 background_profile: chapter_01_autumn_canopy
 player_spawn:
-  x_h: 2.5
-  y_h: 3
-# Solid blocks: they stop bodies and projectiles from every side.
-terrain:
-  - label: bedrock
-    material: moss_thicket
-    rect_h: { x: 0, y: 0, width: 48, height: 1 }
-  - label: west meadow
-    material: grassy_strata
-    rect_h: { x: 0, y: 0, width: 6, height: 3 }
-  - label: west meadow rise
-    material: grassy_strata
-    rect_h: { x: 5.75, y: 0, width: 3.5, height: 3.5 }
-  - label: root step
-    material: moss_thicket
-    rect_h: { x: 9, y: 0, width: 4, height: 4.75 }
-  - label: root step knot
-    material: moss_thicket
-    rect_h: { x: 10.5, y: 4.5, width: 2.5, height: 0.5 }
-  - label: cellar lip ledge
-    material: moss_thicket
-    rect_h: { x: 13, y: 1, width: 1.5, height: 1.75 }
-  - label: left wall above the entrance doorway
-    material: moss_thicket
-    rect_h: { x: 0, y: 7, width: 2.5, height: 26 }
-  - label: left wall bulge
-    material: moss_boulders
-    rect_h: { x: 2.5, y: 10, width: 1, height: 3.5 }
-  - label: left wall upper bulge
-    material: moss_boulders
-    rect_h: { x: 2.5, y: 27, width: 1.25, height: 4 }
-  - label: left wall doorway lintel
-    material: moss_thicket
-    rect_h: { x: 2.5, y: 7, width: 0.75, height: 1 }
-  - label: canopy ceiling west
-    material: moss_big_leaves
-    rect_h: { x: 0, y: 33, width: 17, height: 3 }
-  - label: canopy ceiling east
-    material: moss_big_leaves
-    rect_h: { x: 33, y: 33, width: 15, height: 3 }
-  - label: canopy ceiling droop west
-    material: moss_bright_leaves
-    rect_h: { x: 3, y: 31.75, width: 6, height: 1.5 }
-  - label: canopy ceiling droop east
-    material: moss_bright_leaves
-    rect_h: { x: 38, y: 32, width: 7, height: 1.25 }
-  - label: right wall below the exit
-    material: wood_dark_planks
-    rect_h: { x: 45, y: 0, width: 3, height: 21 }
-  - label: right wall above the exit
-    material: moss_big_leaves
-    rect_h: { x: 45, y: 25, width: 3, height: 8 }
-  - label: right wall upper lip
-    material: moss_bright_leaves
-    rect_h: { x: 44.25, y: 25, width: 0.75, height: 1.5 }
-  - label: cellar floor bump
-    material: moss_thicket
-    rect_h: { x: 17, y: 1, width: 2.5, height: 0.5 }
-  - label: cellar floor bump east
-    material: moss_thicket
-    rect_h: { x: 26, y: 1, width: 3, height: 0.5 }
-  - label: cellar west root roof
-    material: moss_thicket
-    rect_h: { x: 13, y: 5.5, width: 5, height: 1.5 }
-  - label: cellar hanging root
-    material: moss_thicket
-    rect_h: { x: 15.5, y: 4.5, width: 1.5, height: 1 }
-  - label: cellar mid hanging root
-    material: moss_thicket
-    rect_h: { x: 23.5, y: 4.25, width: 1.5, height: 1.25 }
-  - label: nook hanging root
-    material: moss_thicket
-    rect_h: { x: 29.5, y: 3.5, width: 1.5, height: 2 }
-  - label: cellar east root roof
-    material: moss_thicket
-    rect_h: { x: 32, y: 5.5, width: 4, height: 1.5 }
-  - label: cellar east wall
-    material: grassy_strata
-    rect_h: { x: 36, y: 0, width: 5, height: 4.75 }
-  - label: trunk floor
-    material: wood_dark_planks
-    rect_h: { x: 18, y: 5.5, width: 14, height: 1.5 }
-  - label: trunk west wall lower
-    material: wood_dark_planks
-    rect_h: { x: 18, y: 10.5, width: 2.5, height: 6.5 }
-  - label: trunk west wall upper
-    material: wood_dark_planks
-    rect_h: { x: 18, y: 20.5, width: 2.5, height: 6.5 }
-  - label: trunk east wall lower
-    material: wood_dark_planks
-    rect_h: { x: 29.5, y: 10.5, width: 2.5, height: 4 }
-  - label: trunk east wall middle
-    material: wood_dark_planks
-    rect_h: { x: 29.5, y: 18, width: 2.5, height: 6.5 }
-  - label: trunk east wall top
-    material: wood_dark_planks
-    rect_h: { x: 29.5, y: 28, width: 2.5, height: 2.5 }
-  - label: trunk west bark ridge
-    material: wood_dark_planks
-    rect_h: { x: 17.5, y: 12, width: 0.5, height: 3.5 }
-  - label: trunk west bark ridge high
-    material: wood_dark_planks
-    rect_h: { x: 17.5, y: 21.5, width: 0.5, height: 3 }
-  - label: trunk east bark ridge
-    material: wood_dark_planks
-    rect_h: { x: 32, y: 19, width: 0.5, height: 4 }
-  - label: trunk crown
-    material: wood_dark_planks
-    rect_h: { x: 17, y: 30.5, width: 16, height: 2.5 }
-  - label: crown leaves
-    material: moss_big_leaves
-    rect_h: { x: 14, y: 31.5, width: 22, height: 2 }
-  - label: crown leaf tuft west
-    material: moss_bright_leaves
-    rect_h: { x: 15, y: 30, width: 2, height: 1.5 }
-  - label: crown leaf tuft east
-    material: moss_bright_leaves
-    rect_h: { x: 33, y: 30.5, width: 2.5, height: 1.25 }
-  - label: west low branch
-    material: wood_dark_planks
-    rect_h: { x: 11, y: 11, width: 7, height: 1 }
-  - label: west low branch tip
-    material: moss_thicket
-    rect_h: { x: 10.5, y: 11.25, width: 0.75, height: 0.75 }
-  - label: west middle branch
-    material: wood_dark_planks
-    rect_h: { x: 10, y: 16, width: 8, height: 1 }
-  - label: west middle branch leaves
-    material: moss_bright_leaves
-    rect_h: { x: 10, y: 15.5, width: 2, height: 0.5 }
-  - label: west high branch
-    material: wood_dark_planks
-    rect_h: { x: 8, y: 25.5, width: 10, height: 1.5 }
-  - label: west high branch leaves
-    material: moss_bright_leaves
-    rect_h: { x: 8, y: 25, width: 3, height: 0.5 }
-  - label: east roots
-    material: moss_thicket
-    rect_h: { x: 32, y: 5.5, width: 4, height: 1.5 }
-  - label: east meadow
-    material: grassy_strata
-    rect_h: { x: 41, y: 0, width: 4, height: 3.75 }
-  - label: east low branch
-    material: wood_dark_planks
-    rect_h: { x: 32, y: 13, width: 8, height: 1.5 }
-  - label: east low branch leaves
-    material: moss_bright_leaves
-    rect_h: { x: 38, y: 12.5, width: 2, height: 0.5 }
-  - label: exit branch
-    material: wood_dark_planks
-    rect_h: { x: 38, y: 19.5, width: 7, height: 1.5 }
-  - label: exit branch leaves
-    material: moss_bright_leaves
-    rect_h: { x: 38, y: 19, width: 3, height: 0.5 }
-  - label: east high branch
-    material: wood_dark_planks
-    rect_h: { x: 32, y: 23, width: 5, height: 1.5 }
-  - label: canopy perch
-    material: moss_big_leaves
-    rect_h: { x: 39, y: 27, width: 6, height: 1 }
-  - label: canopy perch drip
-    material: moss_bright_leaves
-    rect_h: { x: 40, y: 26.5, width: 3, height: 0.5 }
-  - label: west canopy mass
-    material: moss_big_leaves
-    rect_h: { x: 3.5, y: 29.5, width: 4.5, height: 2.5 }
-  - label: east canopy mass
-    material: moss_big_leaves
-    rect_h: { x: 35, y: 30, width: 3.5, height: 3 }
-  - label: right wall bark
-    material: wood_dark_planks
-    rect_h: { x: 44.5, y: 4, width: 0.5, height: 15.5 }
-  - label: west branch underleaves
-    material: moss_leaves
-    rect_h: { x: 14, y: 15.25, width: 3.5, height: 0.75 }
-  - label: west root buttress
-    material: moss_thicket
-    rect_h: { x: 16.5, y: 7, width: 1.5, height: 1 }
-  - label: east root buttress
-    material: moss_thicket
-    rect_h: { x: 32, y: 7, width: 1, height: 0.75 }
-# One-way platforms: land on top, jump through from below, Down + Jump drops.
+  x_h: 3
+  y_h: 2
+# One-way platforms: land on top, pass through from every other side,
+# Down + Jump drops through. They stop shots.
 platforms:
-  - label: lower west canopy
-    material: moss_bright_leaves
-    rect_h: { x: 5, y: 7, width: 4, height: 0.25 }
-  - label: west canopy
-    material: moss_bright_leaves
-    rect_h: { x: 7, y: 9.25, width: 4, height: 0.25 }
-  - label: west leaf tuft
-    material: moss_bright_leaves
-    rect_h: { x: 4, y: 14.25, width: 5, height: 0.25 }
-  - label: west high tuft
-    material: moss_bright_leaves
-    rect_h: { x: 3, y: 19.25, width: 5, height: 0.25 }
-  - label: west hanging canopy
-    material: moss_bright_leaves
-    rect_h: { x: 9, y: 21.75, width: 5, height: 0.25 }
-  - label: west crown tuft
-    material: moss_bright_leaves
-    rect_h: { x: 3, y: 24.25, width: 4, height: 0.25 }
-  - label: east low canopy
-    material: moss_bright_leaves
-    rect_h: { x: 40.5, y: 7, width: 4, height: 0.25 }
-  - label: east mid canopy
-    material: moss_bright_leaves
-    rect_h: { x: 36, y: 9.5, width: 4, height: 0.25 }
-  - label: east high canopy
-    material: moss_bright_leaves
-    rect_h: { x: 40.5, y: 12, width: 4, height: 0.25 }
-  - label: spiral ledge 1
-    material: wood_planks
-    rect_h: { x: 26, y: 9.25, width: 3.5, height: 0.25 }
-  - label: spiral ledge 2
-    material: wood_planks
-    rect_h: { x: 20.5, y: 11.75, width: 3.5, height: 0.25 }
-  - label: spiral ledge 3
-    material: wood_planks
-    rect_h: { x: 25, y: 14.25, width: 4.5, height: 0.25 }
-  - label: spiral ledge 4
-    material: wood_planks
-    rect_h: { x: 20.5, y: 16.75, width: 4, height: 0.25 }
-  - label: spiral ledge 5
-    material: wood_planks
-    rect_h: { x: 25.5, y: 19.25, width: 4, height: 0.25 }
-  - label: spiral ledge 6
-    material: wood_planks
-    rect_h: { x: 20.5, y: 21.75, width: 3.5, height: 0.25 }
-  - label: spiral ledge 7
-    material: wood_planks
-    rect_h: { x: 25, y: 24.25, width: 4.5, height: 0.25 }
-  - label: spiral ledge 8
-    material: wood_planks
-    rect_h: { x: 20.5, y: 26.75, width: 6.5, height: 0.25 }
-# Decorations: non-solid panels behind the terrain or in front of the bodies.
-decorations:
-  - label: inner trunk back wall
-    material: wood_dark_planks
-    layer: background
-    rect_h: { x: 20.5, y: 7, width: 9, height: 23.5 }
-  - label: cellar earth back wall
-    material: moss_dark_scales
-    layer: background
-    rect_h: { x: 13, y: 1, width: 23, height: 4.5 }
-  - label: distant canopy west
-    material: moss_leaves
-    layer: background
-    rect_h: { x: 3, y: 26, width: 13, height: 7 }
-  - label: distant canopy east
-    material: moss_leaves
-    layer: background
-    rect_h: { x: 33, y: 26, width: 12, height: 7 }
-  - label: distant trunk west
-    material: wood_planks
-    layer: background
-    rect_h: { x: 5.5, y: 3, width: 1.5, height: 23 }
-  - label: distant trunk east
-    material: wood_planks
-    layer: background
-    rect_h: { x: 42, y: 4.75, width: 1.25, height: 14.75 }
-  - label: back roots west
-    material: moss_thicket
-    layer: background
-    rect_h: { x: 9, y: 4.75, width: 9, height: 2.25 }
-  - label: fungus shelf glow
-    material: moss_scales
-    layer: background
-    rect_h: { x: 21, y: 15, width: 2, height: 1 }
-  - label: fungus shelf glow high
-    material: moss_scales
-    layer: background
-    rect_h: { x: 27, y: 22, width: 2, height: 1 }
-  - label: hanging leaves west
-    material: moss_big_leaves
-    layer: foreground
-    rect_h: { x: 0, y: 28, width: 2.5, height: 5 }
-  - label: hanging leaves east
-    material: moss_big_leaves
-    layer: foreground
-    rect_h: { x: 45.5, y: 28, width: 2.5, height: 5 }
-  - label: grass tuft at the cellar mouth
-    material: grass_tall
-    layer: foreground
-    rect_h: { x: 9, y: 4.75, width: 1.5, height: 0.75 }
+  - label: the floor the room stands on
+    material: city_pavement
+    rect_h: { x: -2, y: 0, width: 52, height: 2 }
+  - label: west wall
+    material: city_plating
+    rect_h: { x: -2, y: 2, width: 2, height: 34 }
+  - label: east wall
+    material: city_plating
+    rect_h: { x: 48, y: 2, width: 2, height: 34 }
+  - label: roofline
+    material: city_plating
+    rect_h: { x: -2, y: 36, width: 52, height: 2 }
+# Decorations: non-solid panels behind the platforms or in front of the bodies.
+decorations: []
 enemy_spawns:
   - type_id: gorgon_3
-    position_h: { x: 25, y: 7 }
+    position_h: { x: 10, y: 2 }
   - type_id: gorgon_1
-    position_h: { x: 21.5, y: 1 }
+    position_h: { x: 13.25, y: 2 }
   - type_id: dark_ninja
-    position_h: { x: 34, y: 1 }
+    position_h: { x: 16.5, y: 2 }
   - type_id: infantryman
-    position_h: { x: 15, y: 12 }
+    position_h: { x: 19.5, y: 2 }
   - type_id: gorgon_1
-    position_h: { x: 14, y: 17 }
+    position_h: { x: 22.75, y: 2 }
   - type_id: destroyer
-    position_h: { x: 11.5, y: 27 }
+    position_h: { x: 26, y: 2 }
   - type_id: gorgon_2
-    position_h: { x: 27.5, y: 19.5 }
+    position_h: { x: 29.25, y: 2 }
   - type_id: destroyer
-    position_h: { x: 36.5, y: 14.5 }
+    position_h: { x: 32.5, y: 2 }
   - type_id: infantryman
-    position_h: { x: 38.5, y: 4.75 }
+    position_h: { x: 35.5, y: 2 }
   - type_id: swordsman
-    position_h: { x: 41.5, y: 21 }
+    position_h: { x: 38.75, y: 2 }
   - type_id: gorgon_2
-    position_h: { x: 42, y: 28 }
+    position_h: { x: 42, y: 2 }
 exit:
-  x_h: 46.5
-  y_h: 21
+  x_h: 45
+  y_h: 2
 next_room_id: 7

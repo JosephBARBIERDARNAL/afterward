@@ -1,285 +1,49 @@
-# Room coordinates use H from the lower-left. Terrain and platform `rect_h`
+# Room coordinates use H from the lower-left. Platform and decoration `rect_h`
 # give each block's lower-left corner and size; player, enemy, and exit y
-# values mark the feet baseline on a block top.
+# values mark the feet baseline on a platform top.
 room_id: 2
 chapter_id: 1
-description: "Root hollows: a switchback descent through earth terraces and giant roots, from a high doorway under the sky down to the gorgon chambers."
+description: "A bare shell waiting for a layout: one flat floor, its walls, and the room's roster strung along it. The first real fight of the chapter."
 size:
   width_viewports: 3
   height_h: 27
 background_profile: chapter_01_hills
 player_spawn:
-  x_h: 2.5
-  y_h: 19
-# Solid blocks: they stop bodies and projectiles from every side.
-terrain:
-  - label: left wall below the entrance doorway
-    material: red_rock_boulders
-    rect_h: { x: 0, y: 0, width: 3, height: 19 }
-  - label: left wall above the entrance doorway
-    material: grassy_strata
-    rect_h: { x: 0, y: 23, width: 4, height: 4 }
-  - label: doorway lintel
-    material: red_rock_strata
-    rect_h: { x: 3, y: 23.5, width: 2, height: 1 }
-  - label: right wall
-    material: red_rock_boulders
-    rect_h: { x: 70, y: 0, width: 2, height: 27 }
-  - label: surface west of the sky hole
-    material: grassy_strata
-    rect_h: { x: 4, y: 24.5, width: 5, height: 2.5 }
-  - label: sky hole west rim
-    material: grassy_strata
-    rect_h: { x: 7, y: 25.25, width: 3, height: 1.75 }
-  - label: sky hole east rim
-    material: grassy_strata
-    rect_h: { x: 18, y: 25.5, width: 3, height: 1.5 }
-  - label: surface east of the sky hole
-    material: grassy_strata
-    rect_h: { x: 20, y: 24, width: 50, height: 3 }
-  - label: overhang over the upper terrace
-    material: red_rock_strata
-    rect_h: { x: 28, y: 23, width: 9, height: 1.25 }
-  - label: upper terrace west
-    material: grassy_strata
-    rect_h: { x: 3, y: 17.5, width: 23, height: 1.5 }
-  - label: upper terrace east
-    material: grassy_strata
-    rect_h: { x: 28, y: 17.5, width: 10, height: 1.5 }
-  - label: upper terrace hummock
-    material: grassy_strata
-    rect_h: { x: 13, y: 19, width: 4, height: 0.75 }
-  - label: shooter's knoll
-    material: grassy_strata
-    rect_h: { x: 32, y: 19, width: 4, height: 1.5 }
-  - label: shooter's knoll step
-    material: grassy_strata
-    rect_h: { x: 30.5, y: 19, width: 2, height: 0.75 }
-  - label: upper terrace lip
-    material: red_rock_strata
-    rect_h: { x: 36, y: 16.5, width: 2, height: 1 }
-  - label: root mass hanging over the upper terrace
-    material: moss_thicket
-    rect_h: { x: 22, y: 22, width: 3, height: 2 }
-  - label: root mass tip
-    material: moss_thicket
-    rect_h: { x: 22.75, y: 21.25, width: 1.5, height: 1 }
-  - label: root mass over the drop
-    material: moss_thicket
-    rect_h: { x: 41, y: 21, width: 4, height: 3 }
-  - label: root mass over the drop tip
-    material: moss_leafy
-    rect_h: { x: 42, y: 19.75, width: 2, height: 1.5 }
-  - label: root knot under the upper terrace
-    material: moss_leafy
-    rect_h: { x: 30, y: 16.5, width: 3, height: 1 }
-  - label: root knot under the upper terrace
-    material: moss_leafy
-    rect_h: { x: 10, y: 16.75, width: 2.5, height: 0.75 }
-  - label: middle terrace west
-    material: grassy_red_rock
-    rect_h: { x: 6, y: 12, width: 20, height: 1.5 }
-  - label: middle terrace east
-    material: grassy_red_rock
-    rect_h: { x: 28, y: 12, width: 22, height: 1.5 }
-  - label: middle terrace shooter's mound
-    material: grassy_red_rock
-    rect_h: { x: 7, y: 13.5, width: 4, height: 1.25 }
-  - label: middle terrace bump
-    material: grassy_red_rock
-    rect_h: { x: 33, y: 13.5, width: 3, height: 0.5 }
-  - label: shortcut shaft west lip
-    material: red_rock_strata
-    rect_h: { x: 25, y: 11.5, width: 1, height: 1 }
-  - label: shortcut shaft east lip
-    material: red_rock_strata
-    rect_h: { x: 28, y: 11.5, width: 1, height: 1 }
-  - label: root mass under the middle terrace
-    material: moss_big_leaves
-    rect_h: { x: 13, y: 10.5, width: 4, height: 1.75 }
-  - label: root mass under the middle terrace tip
-    material: moss_big_leaves
-    rect_h: { x: 14, y: 10, width: 2, height: 1 }
-  - label: root mass under the middle terrace
-    material: moss_thicket
-    rect_h: { x: 40, y: 10.75, width: 3, height: 1.5 }
-  - label: lower gallery floor west
-    material: grassy_red_rock
-    rect_h: { x: 3, y: 3, width: 19, height: 5 }
-  - label: lower gallery floor middle
-    material: red_rock_strata
-    rect_h: { x: 22, y: 3, width: 14, height: 4 }
-  - label: lower gallery floor east
-    material: red_rock_cobble
-    rect_h: { x: 36, y: 3, width: 14, height: 3 }
-  - label: lower gallery hump
-    material: red_rock_strata
-    rect_h: { x: 9, y: 8, width: 3, height: 0.5 }
-  - label: lower gallery hump
-    material: red_rock_strata
-    rect_h: { x: 42, y: 6, width: 2.5, height: 0.75 }
-  - label: bedrock
-    material: red_rock_boulders
-    rect_h: { x: 0, y: 0, width: 70, height: 3 }
-  - label: slope step into the chambers
-    material: red_rock_cobble
-    rect_h: { x: 50, y: 3, width: 3, height: 1.5 }
-  - label: chamber ceiling
-    material: red_rock_cobble
-    rect_h: { x: 50, y: 10, width: 20, height: 3.5 }
-  - label: chamber ceiling drip
-    material: red_rock_cobble
-    rect_h: { x: 52, y: 9.25, width: 3, height: 1 }
-  - label: earth pillar between the chambers
-    material: red_rock_strata
-    rect_h: { x: 59, y: 6.75, width: 2, height: 3.5 }
-  - label: earth pillar root wrap
-    material: moss_leafy
-    rect_h: { x: 58.5, y: 7.75, width: 3, height: 1.25 }
-  - label: chamber floor rise
-    material: red_rock_cobble
-    rect_h: { x: 56, y: 3, width: 2, height: 0.5 }
-  - label: chamber floor rise
-    material: red_rock_cobble
-    rect_h: { x: 63, y: 3, width: 2.5, height: 0.75 }
-  - label: burrow mass west
-    material: red_rock_boulders
-    rect_h: { x: 48, y: 16.5, width: 6, height: 8 }
-  - label: burrow roof
-    material: red_rock_boulders
-    rect_h: { x: 54, y: 19, width: 16, height: 5.5 }
-  - label: burrow back wall
-    material: red_rock_boulders
-    rect_h: { x: 66, y: 13, width: 4, height: 6.5 }
-  - label: burrow root ledge
-    material: moss_thicket
-    rect_h: { x: 62, y: 13.5, width: 4, height: 1.5 }
-  - label: burrow ceiling roots
-    material: moss_big_leaves
-    rect_h: { x: 57, y: 18, width: 3, height: 1.25 }
-  - label: middle terrace stalactite
-    material: red_rock_strata
-    rect_h: { x: 24, y: 16.75, width: 1.5, height: 0.75 }
-  - label: lower gallery stalactite
-    material: red_rock_strata
-    rect_h: { x: 20.75, y: 11, width: 1.5, height: 1 }
-  - label: lower gallery stalactite
-    material: red_rock_strata
-    rect_h: { x: 34, y: 10.75, width: 1.5, height: 1.25 }
-  - label: lower gallery stalactite
-    material: red_rock_cobble
-    rect_h: { x: 47, y: 10.5, width: 2, height: 1.5 }
-  - label: lower gallery step bevel
-    material: red_rock_strata
-    rect_h: { x: 22, y: 7, width: 1, height: 0.5 }
-  - label: lower gallery step bevel
-    material: red_rock_cobble
-    rect_h: { x: 36, y: 6, width: 1, height: 0.5 }
-  - label: slope step bevel
-    material: red_rock_cobble
-    rect_h: { x: 53, y: 3, width: 1, height: 0.75 }
-  - label: chamber ceiling drip
-    material: red_rock_cobble
-    rect_h: { x: 64, y: 9.25, width: 2, height: 1 }
-  - label: chamber ceiling drip
-    material: red_rock_cobble
-    rect_h: { x: 67.5, y: 9.5, width: 2.5, height: 0.75 }
-  - label: drop shaft east lip
-    material: red_rock_boulders
-    rect_h: { x: 46.5, y: 22.5, width: 1.5, height: 1.5 }
-  - label: burrow floor bump
-    material: red_rock_strata
-    rect_h: { x: 51, y: 13.5, width: 2, height: 0.5 }
-  - label: burrow ceiling drip
-    material: red_rock_boulders
-    rect_h: { x: 60.5, y: 18.25, width: 2, height: 0.75 }
-  - label: bedrock bump at the gallery entry
-    material: red_rock_strata
-    rect_h: { x: 3, y: 8, width: 1.25, height: 1 }
-# One-way platforms: land on top, jump through from below, Down + Jump drops.
+  x_h: 3
+  y_h: 2
+# One-way platforms: land on top, pass through from every other side,
+# Down + Jump drops through. They stop shots.
 platforms:
-  - label: root step down to the middle terrace
-    material: wood_dark_planks
-    rect_h: { x: 39, y: 16, width: 4, height: 0.25 }
-  - label: root step down to the lower gallery
-    material: wood_dark_planks
-    rect_h: { x: 3, y: 10.5, width: 3, height: 0.25 }
-  - label: root perch over the lower gallery
-    material: wood_dark_planks
-    rect_h: { x: 36, y: 8.5, width: 4, height: 0.25 }
-  - label: burrow plank
-    material: wood_dark_planks
-    rect_h: { x: 56, y: 16, width: 3, height: 0.25 }
-# Decorations: non-solid panels behind the terrain or in front of the bodies.
-decorations:
-  - label: earth back wall of the upper terrace
-    material: red_rock_strata
-    layer: background
-    rect_h: { x: 21, y: 19, width: 27, height: 5 }
-  - label: earth back wall of the drop
-    material: red_rock_strata
-    layer: background
-    rect_h: { x: 38, y: 13.5, width: 10, height: 6 }
-  - label: earth back wall of the middle terrace
-    material: red_rock_cracked
-    layer: background
-    rect_h: { x: 3, y: 13.5, width: 45, height: 4 }
-  - label: earth back wall of the lower gallery
-    material: red_rock_cracked
-    layer: background
-    rect_h: { x: 3, y: 6, width: 47, height: 6 }
-  - label: back wall of the chambers
-    material: red_rock_dark_shards
-    layer: background
-    rect_h: { x: 50, y: 3, width: 20, height: 7 }
-  - label: back wall of the burrow
-    material: red_rock_dark_shards
-    layer: background
-    rect_h: { x: 48, y: 13.5, width: 18, height: 5.5 }
-  - label: root curtain
-    material: moss_dark_scales
-    layer: background
-    rect_h: { x: 17, y: 13.5, width: 2, height: 4 }
-  - label: root curtain
-    material: moss_dark_scales
-    layer: background
-    rect_h: { x: 31, y: 7, width: 1.5, height: 5 }
-  - label: root curtain
-    material: moss_dark_scales
-    layer: background
-    rect_h: { x: 46, y: 6, width: 2, height: 6 }
-  - label: root curtain
-    material: moss_dark_scales
-    layer: background
-    rect_h: { x: 63, y: 4, width: 1.5, height: 6 }
-  - label: hanging moss at the sky hole
-    material: moss_leaves
-    layer: foreground
-    rect_h: { x: 9, y: 24.25, width: 1.5, height: 1.25 }
-  - label: hanging moss in the chambers
-    material: moss_big_leaves
-    layer: foreground
-    rect_h: { x: 67, y: 8.5, width: 3, height: 1.5 }
-  - label: hanging roots at the gallery entry
-    material: moss_thicket
-    layer: foreground
-    rect_h: { x: 3, y: 9.5, width: 1, height: 2.5 }
+  - label: the floor the room stands on
+    material: city_pavement
+    rect_h: { x: -2, y: 0, width: 76, height: 2 }
+  - label: west wall
+    material: city_plating
+    rect_h: { x: -2, y: 2, width: 2, height: 25 }
+  - label: east wall
+    material: city_plating
+    rect_h: { x: 72, y: 2, width: 2, height: 25 }
+  - label: roofline
+    material: city_plating
+    rect_h: { x: -2, y: 27, width: 76, height: 2 }
+# Decorations: non-solid panels behind the platforms or in front of the bodies.
+decorations: []
 enemy_spawns:
   - type_id: infantryman
-    position_h: { x: 34, y: 20.5 }
+    position_h: { x: 10, y: 2 }
   - type_id: swordsman
-    position_h: { x: 19, y: 13.5 }
+    position_h: { x: 19.25, y: 2 }
   - type_id: infantryman
-    position_h: { x: 9, y: 14.75 }
+    position_h: { x: 28.75, y: 2 }
   - type_id: swordsman
-    position_h: { x: 31, y: 7 }
+    position_h: { x: 38, y: 2 }
   - type_id: infantryman
-    position_h: { x: 38, y: 8.75 }
+    position_h: { x: 47.25, y: 2 }
   - type_id: gorgon_1
-    position_h: { x: 55, y: 3 }
+    position_h: { x: 56.75, y: 2 }
   - type_id: gorgon_1
-    position_h: { x: 66, y: 3 }
+    position_h: { x: 66, y: 2 }
 exit:
-  x_h: 68.5
-  y_h: 3
+  x_h: 69
+  y_h: 2
 next_room_id: 3

@@ -46,7 +46,11 @@ impl JumpRoute {
     /// player that is no higher than them when the player stands higher, or
     /// across the gap at the edge the enemy walks toward when the player is not
     /// below. Dropping down needs no jump: enemies walk off the ledge instead.
-    pub(super) fn plan(&self, standing: &PlatformSurface, terrain: &Terrain) -> Option<JumpPlan> {
+    pub(super) fn plan(
+        &self,
+        standing: &PlatformSurface,
+        platforms: &Platforms,
+    ) -> Option<JumpPlan> {
         let half_width = PLAYER_COLLISION_WIDTH_H * H_WORLD_UNITS / 2.0;
         let inset = half_width + 0.1 * H_WORLD_UNITS;
         let rise_to_target = self.target_feet.y - self.feet.y;
@@ -70,7 +74,7 @@ impl JumpRoute {
             );
             (arc.horizontal_velocity.abs() <= self.air_speed).then_some(arc)
         };
-        terrain
+        platforms
             .0
             .iter()
             .filter(|platform| {
@@ -93,9 +97,6 @@ impl JumpRoute {
                             .clamp(platform.left + inset, platform.right - inset),
                         platform.top,
                     );
-                    if terrain.blocks_body(landing.x, landing.y) {
-                        return None;
-                    }
                     let score = (landing.x - self.target_feet.x).abs()
                         + (self.target_feet.y - platform.top).abs();
                     if let Some(arc) = reachable(self.feet, landing) {
@@ -121,34 +122,11 @@ impl JumpRoute {
                         return None;
                     }
                     let landing = Vec2::new(edge + self.direction * (gap + inset), platform.top);
-                    if terrain.blocks_body(landing.x, landing.y) {
-                        return None;
-                    }
                     reachable(self.feet, landing).map(|arc| (gap, JumpPlan::Leap(arc)))
                 }
             })
             .min_by(|(first, _), (second, _)| first.total_cmp(second))
             .map(|(_, plan)| plan)
-    }
-
-    /// A hop onto the wall blocking the way at `x`, when its ledge is within
-    /// jump height and there is room to land on it.
-    pub(super) fn step_up(&self, x: f32, terrain: &Terrain) -> Option<JumpArc> {
-        let reach = self.jump_height - 1.1 * H_WORLD_UNITS;
-        let ledge = terrain.ledge(x, self.feet.y, self.direction, reach)?;
-        let from = Vec2::new(x, self.feet.y);
-        let arc = JumpArc::between(
-            from,
-            ledge,
-            (ledge.y - from.y + 0.5 * H_WORLD_UNITS).min(self.jump_height),
-            self.gravity,
-        );
-        Some(JumpArc {
-            horizontal_velocity: arc
-                .horizontal_velocity
-                .clamp(-self.air_speed, self.air_speed),
-            ..arc
-        })
     }
 }
 
@@ -165,12 +143,11 @@ mod tests {
             bottom: (top - 0.5) * h,
             top: top * h,
             footstep: FootstepSound::Stone,
-            one_way: false,
         };
         // A 0.5 H wide stalagmite, and a ledge 2 H up and 3 H away.
         let standing = block(10.0, 10.5, 1.0);
         let ledge = block(13.0, 17.0, 3.0);
-        let terrain = Terrain(vec![&standing, &ledge]);
+        let platforms = Platforms(vec![&standing, &ledge]);
         let route = JumpRoute {
             feet: Vec2::new(10.25 * h, h),
             target_feet: Vec2::new(15.0 * h, 3.0 * h),
@@ -181,7 +158,7 @@ mod tests {
             level_change_threshold: h,
         };
         assert!(matches!(
-            route.plan(&standing, &terrain),
+            route.plan(&standing, &platforms),
             Some(JumpPlan::WalkTo(_)) | None
         ));
     }

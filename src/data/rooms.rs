@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 
 use serde::Deserialize;
 
-use super::{EnemyTypeId, GameplayConfig, MaterialId};
+use super::{EnemyTypeId, Fill, GameplayConfig};
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct RoomConfig {
@@ -16,14 +16,10 @@ pub struct RoomConfig {
     pub size: RoomSizeConfig,
     pub background_profile: String,
     pub player_spawn: SpawnPosition,
-    /// Solid blocks (floors, walls, ceilings, pillars): they block bodies and
-    /// projectiles from every side.
-    pub terrain: Vec<TerrainBlockConfig>,
-    /// One-way platforms: bodies land on their top, jump through them from
-    /// below, and drop through them on purpose.
-    #[serde(default)]
-    pub platforms: Vec<TerrainBlockConfig>,
-    /// Non-solid textured panels behind the terrain or in front of the bodies.
+    /// One-way platforms: bodies land on their top, pass through them from
+    /// every other side, and drop through them on purpose. They stop shots.
+    pub platforms: Vec<PlatformConfig>,
+    /// Non-solid panels behind the platforms or in front of the bodies.
     #[serde(default)]
     pub decorations: Vec<DecorationConfig>,
     pub enemy_spawns: Vec<EnemySpawnConfig>,
@@ -57,12 +53,13 @@ pub struct SpawnPosition {
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
-pub struct TerrainBlockConfig {
-    /// What the block is ("floor", "hanging rock"), shown in the debug editor.
+pub struct PlatformConfig {
+    /// What the block is ("floor", "upper walkway"), shown in the debug editor.
     #[serde(default)]
     pub label: Option<String>,
-    /// A material from `terrain/materials.yaml`: its look and footsteps.
-    pub material: MaterialId,
+    /// What it is painted with: a material or a plain color.
+    #[serde(flatten)]
+    pub fill: Fill,
     pub rect_h: RectH,
 }
 
@@ -85,19 +82,20 @@ impl RectH {
     }
 }
 
-/// A non-solid panel tiled with a terrain material, such as a ruined back
-/// wall or foliage hanging in front of the action.
+/// A non-solid panel, such as a back wall behind the action or a sign
+/// hanging in front of it.
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct DecorationConfig {
     /// What the panel is ("back wall"), shown in the debug editor.
     #[serde(default)]
     pub label: Option<String>,
-    pub material: MaterialId,
+    #[serde(flatten)]
+    pub fill: Fill,
     pub layer: DecorationLayer,
     pub rect_h: RectH,
 }
 
-/// Where a decoration panel is drawn: behind the terrain, or over the bodies.
+/// Where a decoration panel is drawn: behind the platforms, or over the bodies.
 #[derive(Debug, Clone, Copy, Deserialize, Eq, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum DecorationLayer {

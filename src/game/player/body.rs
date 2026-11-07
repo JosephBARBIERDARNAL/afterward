@@ -30,8 +30,6 @@ pub(crate) struct PlayerBody {
     pub(crate) covering: bool,
     /// Sprinter bonus: running faster since a grounded dash.
     pub(crate) sprinting: bool,
-    /// Seconds spent against the current wall while falling.
-    pub(crate) wall_contact_s: f32,
     /// Seconds spent standing idle, for the hand fidgets.
     pub(crate) idle_s: f32,
     /// The next fidget uses the right hand.
@@ -52,13 +50,7 @@ pub(crate) struct PlayerBody {
     /// `action` (re)started since the animation last showed it.
     pub(crate) action_started: bool,
     pub(crate) footstep_timer: f32,
-    /// Side (-1 left, 1 right) of the wall an airborne player is touching.
-    pub(crate) wall_side: Option<f32>,
-    pub(crate) wall_jump_lock_timer: f32,
     pub(crate) drop_through_timer: f32,
-    /// Standing on a one-way platform, which Down + Jump drops through.
-    pub(crate) on_one_way: bool,
-    pub(crate) mantle: Option<Mantle>,
 }
 
 impl Default for PlayerBody {
@@ -82,7 +74,6 @@ impl Default for PlayerBody {
             crouching: false,
             covering: false,
             sprinting: false,
-            wall_contact_s: 0.0,
             idle_s: 0.0,
             fidget_right: false,
             dying_s: None,
@@ -97,11 +88,7 @@ impl Default for PlayerBody {
             action_animation_timer: 0.0,
             action_started: false,
             footstep_timer: 0.0,
-            wall_side: None,
-            wall_jump_lock_timer: 0.0,
             drop_through_timer: 0.0,
-            on_one_way: false,
-            mantle: None,
         }
     }
 }
@@ -129,7 +116,6 @@ pub(crate) enum PlayerAction {
     Turn {
         running: bool,
     },
-    WallJump,
 }
 
 /// A magazine refill under way.
@@ -137,12 +123,4 @@ pub(crate) enum PlayerAction {
 pub(crate) struct Reload {
     pub(crate) remaining_s: f32,
     pub(crate) duration_s: f32,
-}
-
-/// An automatic climb onto a ledge, between two body-center positions.
-#[derive(Clone, Copy)]
-pub(crate) struct Mantle {
-    pub(crate) from: Vec2,
-    pub(crate) to: Vec2,
-    pub(crate) elapsed_s: f32,
 }

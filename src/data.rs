@@ -1,19 +1,21 @@
 mod backgrounds;
 mod bonuses;
+mod color;
 mod enemies;
 mod gameplay;
 mod player_animations;
 mod room_yaml;
 mod rooms;
-mod terrain;
+mod surfaces;
 
 pub use backgrounds::*;
 pub use bonuses::*;
+pub use color::*;
 pub use enemies::*;
 pub use gameplay::*;
 pub use player_animations::*;
 pub use rooms::*;
-pub use terrain::*;
+pub use surfaces::*;
 
 use std::{
     collections::BTreeMap,
@@ -35,7 +37,7 @@ pub struct GameData {
     pub enemies: EnemyTypes,
     pub backgrounds: BackgroundProfiles,
     pub bonuses: BonusesConfig,
-    pub terrain: TerrainMaterials,
+    pub surfaces: SurfaceMaterials,
     pub rooms: BTreeMap<u16, RoomConfig>,
 }
 
@@ -46,7 +48,7 @@ impl GameData {
         let enemies = read_yaml(&asset_root.join("enemies/enemy_types.yaml"))?;
         let backgrounds = read_yaml(&asset_root.join("background/background_profiles.yaml"))?;
         let bonuses = read_yaml(&asset_root.join("config/bonuses.yaml"))?;
-        let terrain = read_yaml(&asset_root.join("terrain/materials.yaml"))?;
+        let surfaces = read_yaml(&asset_root.join("surfaces/materials.yaml"))?;
         let mut rooms = BTreeMap::new();
 
         // Room 0 is the run's empty opening room; the chapter proper is 1..=10.
@@ -62,7 +64,7 @@ impl GameData {
             enemies,
             backgrounds,
             bonuses,
-            terrain,
+            surfaces,
             rooms,
         };
         data.validate()?;
@@ -102,11 +104,10 @@ impl GameData {
         .any(|speed| !speed.is_finite() || *speed <= 0.0)
             || !(0.0..=1.0).contains(&player.cover_damage_taken_multiplier)
             || !(player.death_hold_s.is_finite() && player.death_hold_s >= 0.0)
-            || !(player.walls.latch_s.is_finite() && player.walls.latch_s >= 0.0)
         {
             return Err(InvalidGameData::from(
                 "player speeds must be positive, the cover multiplier within 0..=1, \
-                 and the death hold and wall latch nonnegative",
+                 and the death hold nonnegative",
             ));
         }
         let gun = &player.gun;
@@ -352,7 +353,6 @@ impl GameData {
 
         let viewport_height_h = self.gameplay.viewport.height_h;
         let player = &self.gameplay.player;
-        let walls = &player.walls;
         if !(self.gameplay.camera.vertical_dead_zone_h >= 0.0
             && self.gameplay.camera.vertical_dead_zone_h < viewport_height_h / 2.0)
         {
@@ -360,20 +360,9 @@ impl GameData {
                 "the camera dead zone must fit inside half the viewport",
             ));
         }
-        if [
-            walls.slide_max_fall_speed_h_s,
-            walls.jump_impulse_h_s,
-            walls.jump_kick_speed_h_s,
-            walls.ledge_climb_s,
-            player.drop_through_s,
-        ]
-        .iter()
-        .any(|value| !value.is_finite() || *value <= 0.0)
-            || !(walls.jump_control_lock_s.is_finite() && walls.jump_control_lock_s >= 0.0)
-            || !(walls.ledge_grab_reach_h.is_finite() && walls.ledge_grab_reach_h >= 0.0)
-        {
+        if !player.drop_through_s.is_finite() || player.drop_through_s <= 0.0 {
             return Err(InvalidGameData::from(
-                "wall movement and drop-through tuning values must be finite and positive",
+                "the drop-through window must be finite and positive",
             ));
         }
         // Rooms are free-form: only what the game can't run or draw without is
@@ -403,9 +392,8 @@ impl GameData {
                 )));
             }
             let rects = room
-                .terrain
+                .platforms
                 .iter()
-                .chain(&room.platforms)
                 .map(|block| block.rect_h)
                 .chain(room.decorations.iter().map(|decoration| decoration.rect_h));
             for rect in rects {
@@ -415,24 +403,21 @@ impl GameData {
                     || rect.height <= 0.0
                 {
                     return Err(InvalidGameData::from(format!(
-                        "room {room_id} blocks and decorations need a positive size"
+                        "room {room_id} platforms and decorations need a positive size"
                     )));
                 }
             }
-            let materials = room
-                .terrain
+            let fills = room
+                .platforms
                 .iter()
-                .chain(&room.platforms)
-                .map(|block| &block.material)
-                .chain(
-                    room.decorations
-                        .iter()
-                        .map(|decoration| &decoration.material),
-                );
-            for material in materials {
-                if !self.terrain.materials.contains_key(material) {
+                .map(|block| &block.fill)
+                .chain(room.decorations.iter().map(|decoration| &decoration.fill));
+            for fill in fills {
+                if let Fill::Material(material) = fill
+                    && !self.surfaces.materials.contains_key(material)
+                {
                     return Err(InvalidGameData::from(format!(
-                        "room {room_id} references unknown terrain material {material}"
+                        "room {room_id} references unknown material {material}"
                     )));
                 }
             }
@@ -458,11 +443,11 @@ impl GameData {
             }
         }
 
-        let terrain = &self.terrain;
-        let edges = &terrain.edges;
-        let layers = &terrain.decoration_layers;
-        if terrain.texture_px == 0
-            || !(terrain.texture_tile_h.is_finite() && terrain.texture_tile_h > 0.0)
+        let surfaces = &self.surfaces;
+        let edges = &surfaces.edges;
+        let layers = &surfaces.decoration_layers;
+        if surfaces.texture_px == 0
+            || !(surfaces.texture_tile_h.is_finite() && surfaces.texture_tile_h > 0.0)
             || [edges.outline_px, edges.highlight_px]
                 .iter()
                 .any(|thickness| !(thickness.is_finite() && *thickness >= 0.0))
@@ -476,24 +461,16 @@ impl GameData {
             .any(|alpha| !(0.0..=1.0).contains(alpha))
         {
             return Err(InvalidGameData::from(
-                "terrain textures need a positive size, edges a nonnegative thickness, \
+                "surface textures need a positive size, edges a nonnegative thickness, \
                  and every alpha must be within 0..=1",
             ));
         }
-        for (material_id, material) in &terrain.materials {
-            let cap = material.top.as_ref();
-            if cap.is_some_and(|cap| !(cap.depth_px.is_finite() && cap.depth_px > 0.0)) {
+        for material in surfaces.materials.values() {
+            if !asset_root.join(&material.texture).is_file() {
                 return Err(InvalidGameData::from(format!(
-                    "terrain material {material_id} needs a positive top depth"
+                    "missing surface texture: {}",
+                    material.texture
                 )));
-            }
-            let textures = [Some(&material.texture), cap.map(|cap| &cap.texture)];
-            for texture in textures.into_iter().flatten() {
-                if !asset_root.join(texture).is_file() {
-                    return Err(InvalidGameData::from(format!(
-                        "missing terrain texture: {texture}"
-                    )));
-                }
             }
         }
 
@@ -568,9 +545,10 @@ mod tests {
         );
         assert_eq!(data.bonuses.bonuses.len(), 21);
         assert_eq!(data.rooms[&10].enemy_spawns[0].type_id, "evil_wizard");
-        assert!(
-            data.terrain.materials.len() >= 64,
-            "every texture of the pack is a material"
+        assert_eq!(
+            data.surfaces.materials.len(),
+            13,
+            "one material per Typst texture"
         );
         assert_eq!(
             data.gameplay.player.max_speed_h_s,

@@ -1,0 +1,84 @@
+# Surface materials: how one-way platforms and decoration panels look and
+# sound. Room files name one material per block (`material:`), or paint a
+# plain color instead (`color: "#RRGGBB"`).
+#
+# Every texture is a seamless 16 px square drawn in Typst (art/surfaces/,
+# rendered by `just art`). They tile in world space, so neighboring blocks of
+# one material line up.
+
+texture_px: 16
+# One 16 px tile spans 0.25 H (64 px per H), close to the player sprite's
+# pixel density (60 px per H), and matches the editor's 0.25 H grid.
+texture_tile_h: 0.25
+
+# Drawn along every block edge that no other block covers, so blocks read
+# clearly against the backgrounds. Thicknesses are in texture pixels.
+edges:
+  outline_color: "#10111C"
+  outline_alpha: 0.9
+  outline_px: 1
+  highlight_color: "#FFFFFF"
+  highlight_alpha: 0.22
+  highlight_px: 1
+
+# Decoration panels are non-solid. Background panels sit behind the platforms
+# and are tinted darker so they read as distant; foreground panels are drawn
+# over the bodies.
+decoration_layers:
+  background:
+    tint: "#6E7590"
+    alpha: 1
+  foreground:
+    tint: "#FFFFFF"
+    alpha: 1
+
+# The footstep a plain-color block makes, since it names no material.
+color_footstep: stone
+
+materials:
+  # City: the grounds of a lit-up skyline.
+  city_pavement:
+    texture: surfaces/textures/city/pavement.png
+    footstep: stone
+  city_neon_grid:
+    texture: surfaces/textures/city/neon_grid.png
+    footstep: stone
+  city_plating:
+    texture: surfaces/textures/city/plating.png
+    footstep: stone
+
+  # Metal.
+  metal_plates:
+    texture: surfaces/textures/metal/plates.png
+    footstep: stone
+  metal_rusty_plates:
+    texture: surfaces/textures/metal/rusty_plates.png
+    footstep: stone
+  metal_tread:
+    texture: surfaces/textures/metal/tread.png
+    footstep: stone
+  metal_grate:
+    texture: surfaces/textures/metal/grate.png
+    footstep: stone
+
+  # Carved stone.
+  carved_ashlar:
+    texture: surfaces/textures/carved/ashlar.png
+    footstep: stone
+  carved_frieze:
+    texture: surfaces/textures/carved/frieze.png
+    footstep: stone
+  carved_pillar:
+    texture: surfaces/textures/carved/pillar.png
+    footstep: stone
+
+  # Wood.
+  wood_planks:
+    texture: surfaces/textures/wood/planks.png
+    footstep: wood
+  wood_dark_planks:
+    texture: surfaces/textures/wood/dark_planks.png
+    footstep: wood
+  wood_crate:
+    texture: surfaces/textures/wood/crate.png
+    footstep: wood

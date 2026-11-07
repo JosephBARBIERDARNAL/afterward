@@ -1,7 +1,7 @@
 //! The inspector: the editable fields of the selection (or of the room when
 //! nothing is selected), changed with Left/Right, typed into, or cleared.
-//! With several items selected, Material repaints all of them and X/Y move
-//! them together.
+//! With several items selected, Fill repaints all of them and X/Y move them
+//! together.
 
 use super::*;
 use crate::data::{DecorationLayer, EnemyStatOverrides, EnemyTypeConfig};
@@ -14,7 +14,7 @@ pub(super) enum Field {
     Background,
     Description,
     Label,
-    Material,
+    Fill,
     Layer,
     EnemyType,
     X,
@@ -40,13 +40,10 @@ impl Field {
             [] => None,
             [item] => Some(*item),
             _ if selection.iter().any(|item| {
-                matches!(
-                    item,
-                    EditorItem::Terrain(_) | EditorItem::Platform(_) | EditorItem::Decoration(_)
-                )
+                matches!(item, EditorItem::Platform(_) | EditorItem::Decoration(_))
             }) =>
             {
-                return &[Self::Material, Self::X, Self::Y];
+                return &[Self::Fill, Self::X, Self::Y];
             }
             _ => return &[Self::X, Self::Y],
         };
@@ -58,9 +55,9 @@ impl Field {
                 Self::Background,
                 Self::Description,
             ],
-            Some(EditorItem::Terrain(_) | EditorItem::Platform(_)) => &[
+            Some(EditorItem::Platform(_)) => &[
                 Self::Label,
-                Self::Material,
+                Self::Fill,
                 Self::X,
                 Self::Y,
                 Self::Width,
@@ -68,7 +65,7 @@ impl Field {
             ],
             Some(EditorItem::Decoration(_)) => &[
                 Self::Label,
-                Self::Material,
+                Self::Fill,
                 Self::Layer,
                 Self::X,
                 Self::Y,
@@ -106,7 +103,7 @@ impl Field {
             Self::Background => "Background",
             Self::Description => "Description",
             Self::Label => "Label",
-            Self::Material => "Material",
+            Self::Fill => "Fill",
             Self::Layer => "Layer",
             Self::EnemyType => "Type",
             Self::X => "X (H)",
@@ -134,10 +131,6 @@ impl Field {
     pub(super) fn text(self, room: &RoomConfig, item: Option<EditorItem>) -> Option<String> {
         match (self, item) {
             (Self::Description, _) => room.description.clone(),
-            (Self::Label, Some(EditorItem::Terrain(index))) => room
-                .terrain
-                .get(index)
-                .and_then(|block| block.label.clone()),
             (Self::Label, Some(EditorItem::Platform(index))) => room
                 .platforms
                 .get(index)
@@ -159,11 +152,6 @@ impl Field {
         let text = Some(text.trim().to_string()).filter(|text| !text.is_empty());
         match (self, item) {
             (Self::Description, _) => room.description = text,
-            (Self::Label, Some(EditorItem::Terrain(index))) => {
-                if let Some(block) = room.terrain.get_mut(index) {
-                    block.label = text;
-                }
-            }
             (Self::Label, Some(EditorItem::Platform(index))) => {
                 if let Some(block) = room.platforms.get_mut(index) {
                     block.label = text;
@@ -192,13 +180,11 @@ impl Field {
     ) -> String {
         if selection.len() > 1 {
             return match self {
-                Self::Material => {
-                    let mut materials = selection.iter().filter_map(|item| item.material(room));
-                    let first = materials.next();
+                Self::Fill => {
+                    let mut fills = selection.iter().filter_map(|item| item.fill(room));
+                    let first = fills.next();
                     match first {
-                        Some(first) if materials.all(|material| material == first) => {
-                            first.to_string()
-                        }
+                        Some(first) if fills.all(|fill| fill == first) => first.to_string(),
                         _ => String::from("(mixed)"),
                     }
                 }
@@ -227,8 +213,8 @@ impl Field {
             Self::Description | Self::Label => {
                 self.text(room, item).unwrap_or_else(|| String::from("-"))
             }
-            Self::Material => item
-                .and_then(|item| item.material(room))
+            Self::Fill => item
+                .and_then(|item| item.fill(room))
                 .map_or_else(String::new, ToString::to_string),
             Self::Layer => match item {
                 Some(EditorItem::Decoration(index)) => room
@@ -299,23 +285,23 @@ impl Field {
                     room.background_profile = profile;
                 }
             }
-            Self::Material => {
+            Self::Fill => {
                 let materials = data
-                    .terrain
+                    .surfaces
                     .materials
                     .keys()
                     .map(ToString::to_string)
                     .collect();
-                let current = selection
-                    .iter()
-                    .rev()
-                    .find_map(|item| item.material(room))
-                    .map_or_else(String::new, ToString::to_string);
+                let current = match selection.iter().rev().find_map(|item| item.fill(room)) {
+                    Some(Fill::Material(material)) => material.to_string(),
+                    Some(Fill::Color(_)) | None => String::new(),
+                };
                 if let Some(material) =
                     cycle(materials, &current).and_then(|material| material.parse().ok())
                 {
+                    let fill = Fill::Material(material);
                     for item in selection {
-                        item.set_material(room, &material);
+                        item.set_fill(room, &fill);
                     }
                 }
             }

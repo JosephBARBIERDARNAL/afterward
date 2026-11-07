@@ -1,9 +1,9 @@
-# Room coordinates use H from the lower-left. Terrain and platform `rect_h`
+# Room coordinates use H from the lower-left. Platform and decoration `rect_h`
 # give each block's lower-left corner and size; player, enemy, and exit y
-# values mark the feet baseline on a block top.
+# values mark the feet baseline on a platform top.
 room_id: 1
 chapter_id: 1
-description: "The Crypt Gate: from a mossy forest edge into a crypt dug in the hill; a low hall, a sunken burial pit, a wall-jump chimney to an upper gallery, and a pillared antechamber before the exit."
+description: "The first street: a long ledge under the morning skyline, one raised walkway to drop through, and a single ninja between the player and the door."
 size:
   width_viewports: 2
   height_h: 24
@@ -11,22 +11,25 @@ background_profile: city_blue_morning
 player_spawn:
   x_h: 4.75
   y_h: 12
-# Solid blocks: they stop bodies and projectiles from every side.
-terrain: []
-# One-way platforms: land on top, jump through from below, Down + Jump drops.
+# One-way platforms: land on top, pass through from every other side,
+# Down + Jump drops through. They stop shots.
 platforms:
-  - material: brick_block
+  - label: the walkway the fight starts on
+    material: city_neon_grid
     rect_h: { x: 2, y: 7, width: 9, height: 3 }
-  - material: stone_slab
+  - label: the street the room stands on
+    material: city_pavement
     rect_h: { x: -11.75, y: -7.5, width: 71.5, height: 9.5 }
-  - label: vmzge
-    material: stone_slab
+  - label: west wall
+    material: city_plating
     rect_h: { x: -11.75, y: 2, width: 13.75, height: 21 }
-  - material: stone_slab
+  - label: roofline
+    material: city_plating
     rect_h: { x: -11.5, y: 23, width: 71.5, height: 8.5 }
-  - material: stone_slab
+  - label: east wall
+    material: city_plating
     rect_h: { x: 46, y: 2, width: 13.75, height: 21 }
-# Decorations: non-solid panels behind the terrain or in front of the bodies.
+# Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
 enemy_spawns:
   - type_id: dark_ninja

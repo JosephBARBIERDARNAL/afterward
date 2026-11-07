@@ -16,6 +16,7 @@ mod assets;
 mod audio;
 mod bonus_screen;
 mod camera;
+mod collision;
 mod combat;
 mod controls;
 #[cfg(debug_assertions)]
@@ -28,13 +29,12 @@ mod menus;
 mod pause_blur;
 mod player;
 mod random;
+mod room_art;
 mod room_intro;
 mod screens;
 mod session;
 mod settings;
 mod sprites;
-mod terrain;
-mod terrain_art;
 mod ui_style;
 mod visual_walkthrough;
 mod world;
@@ -46,6 +46,7 @@ mod tests;
 
 use audio::{DamageSound, SoundCue, SoundQueue};
 use camera::{BackgroundParallax, RoomCamera};
+use collision::{PlatformSurface, Platforms};
 use combat::{
     EnemyAttack, EnemyBody, EnemyHealthBar, EnemyHealthBarBackground, EnemyShieldIcon,
     ProceduralMovementState,
@@ -57,7 +58,6 @@ use random::RandomState;
 use session::RunSession;
 use settings::{AudioSettings, PreferencesDir};
 use sprites::{AnimatedSprite, SpriteSheet, SpriteSheetSpec, SpriteSheets, set_animation};
-use terrain::{PlatformSurface, Terrain};
 use world::{ExitDoor, RoomEntity};
 
 const H_WORLD_UNITS: f32 = 48.0;

@@ -46,13 +46,6 @@ clips:
   descend: { sheet: player/sheets/descend.png, frames: 3, fps: 8 }
   # Touching down without horizontal input.
   land: { sheet: player/sheets/land.png, frames: 4, fps: 20 }
-  # Reaching a wall: the latch cling, the landing against it, then the slide.
-  wall_latch: { sheet: player/sheets/wall_latch.png, frames: 1, fps: 1 }
-  wall_land: { sheet: player/sheets/wall_land.png, frames: 4, fps: 20 }
-  wall_slide: { sheet: player/sheets/wall_slide.png, frames: 3, fps: 8 }
-  wall_jump: { sheet: player/sheets/wall_jump.png, frames: 3, fps: 16 }
-  # Mantling onto a ledge.
-  ledge_grab: { sheet: player/sheets/ledge_grab.png, frames: 1, fps: 1 }
   # Played over the whole reload, whatever its length.
   reload: { sheet: player/sheets/reload.png, frames: 9, fps: 10 }
   # Raising the guard; holds its last frame while Cover is held.

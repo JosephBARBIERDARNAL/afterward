@@ -6,7 +6,6 @@ use bevy::input::keyboard::Key;
 
 const ROOM_BOUNDS_COLOR: Color = Color::srgb(0.95, 0.3, 0.3);
 const GRID_COLOR: Color = Color::srgba(1.0, 1.0, 1.0, 0.06);
-const TERRAIN_COLOR: Color = Color::srgb(0.7, 0.72, 0.78);
 const DECORATION_COLOR: Color = Color::srgb(0.75, 0.5, 0.95);
 const MARQUEE_COLOR: Color = Color::srgb(0.4, 0.8, 1.0);
 const PLATFORM_COLOR: Color = Color::srgb(0.95, 0.65, 0.3);
@@ -160,7 +159,6 @@ pub(super) fn draw_overlay(mut gizmos: Gizmos, editor: Res<RoomEditor>, data: Re
         let color = match item {
             _ if selected => SELECTED_COLOR,
             _ if editor.hovered == Some(item) => HOVER_COLOR,
-            EditorItem::Terrain(_) => TERRAIN_COLOR,
             EditorItem::Platform(_) => PLATFORM_COLOR,
             EditorItem::Decoration(_) => DECORATION_COLOR,
             EditorItem::Enemy(_) => ENEMY_COLOR,

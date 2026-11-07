@@ -105,10 +105,9 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
                  session: Res<RunSession>,
                  mut keys: ResMut<ButtonInput<KeyCode>>,
                  players: TestPilotPlayers<'_, '_>,
-                 enemies: TestPilotEnemies<'_, '_>,
-                 platforms: Query<&PlatformSurface>| {
-                    // Keep holding jump like a player would: re-pressing it every
-                    // frame would count as fresh presses and chain wall jumps.
+                 enemies: TestPilotEnemies<'_, '_>| {
+                    // Keep holding jump like a player would: re-pressing it
+                    // every frame would count as fresh presses.
                     let space_was_held = keys.pressed(KeyCode::Space);
                     let press_jump = |keys: &mut ButtonInput<KeyCode>| {
                         keys.press(KeyCode::Space);
@@ -123,17 +122,6 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
                     }
                     let Ok((player_transform, player)) = players.single() else {
                         return;
-                    };
-                    // A solid wall right ahead of the feet: jump (and mantle) over it.
-                    let terrain = Terrain(platforms.iter().collect());
-                    let wall_ahead = |direction: f32| {
-                        let x = player_transform.translation.x;
-                        let feet_y = player_transform.translation.y - H_WORLD_UNITS / 2.0;
-                        player.grounded
-                            && terrain
-                                .move_horizontally(x, x + direction * 2.0, feet_y)
-                                .1
-                                .is_some()
                     };
                     if let Some((_, enemy_transform)) = enemies
                         .iter()
@@ -167,13 +155,12 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
                         if enemy_above_player {
                             keys.press(KeyCode::KeyW);
                         }
-                        // Bullets fly over an enemy well below a solid ledge, and
-                        // it may never climb up: walk off the ledge toward it
-                        // (on, in the facing direction, when it is right below).
+                        // Bullets stop at the platform under an enemy well
+                        // below: walk off the ledge toward it (on, in the
+                        // facing direction, when it is right below).
                         let step_off_ledge = enemy_transform.translation.y
                             < player_transform.translation.y - H_WORLD_UNITS * 1.5
-                            && player.grounded
-                            && !player.on_one_way;
+                            && player.grounded;
                         let walking = step_off_ledge
                             || dx.abs() > H_WORLD_UNITS * combat_distance_h
                             || dx.signum() != player.facing;
@@ -189,12 +176,11 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
                                 KeyCode::KeyA
                             });
                         }
-                        let blocked = walking && wall_ahead(direction);
                         // An enemy right below a plank: drop through it.
                         let enemy_below = enemy_transform.translation.y
                             < player_transform.translation.y - H_WORLD_UNITS
                             && dx.abs() < H_WORLD_UNITS * 1.5;
-                        if enemy_below && player.grounded && player.on_one_way {
+                        if enemy_below && player.grounded {
                             keys.press(KeyCode::KeyS);
                             press_jump(&mut keys);
                         }
@@ -206,7 +192,6 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
                             <= data.gameplay.player.jump_height_h * H_WORLD_UNITS;
                         // Hold jump through the rise for a full-height jump.
                         if (enemy_above_player && enemy_within_jump_reach && player.grounded)
-                            || blocked
                             || player.jump_held
                         {
                             press_jump(&mut keys);
@@ -216,27 +201,14 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
                         let room = &data.rooms[&session.room_id];
                         let feet_h = player_transform.translation.y / H_WORLD_UNITS - 0.5;
                         let exit_below = room.exit.y_h < feet_h - 0.5 && player.grounded;
-                        if exit_below && player.on_one_way {
+                        if exit_below {
                             keys.press(KeyCode::KeyS);
                             press_jump(&mut keys);
-                        } else if exit_below {
-                            // The exit is below this solid ledge: keep walking
-                            // until falling off it, turning around at a wall.
-                            let direction = if wall_ahead(player.facing) {
-                                -player.facing
-                            } else {
-                                player.facing
-                            };
-                            keys.press(if direction >= 0.0 {
-                                KeyCode::KeyD
-                            } else {
-                                KeyCode::KeyA
-                            });
                         } else if room.exit.x_h * H_WORLD_UNITS - player_transform.translation.x
                             > H_WORLD_UNITS * 0.65
                         {
                             keys.press(KeyCode::KeyD);
-                            if wall_ahead(1.0) || player.jump_held {
+                            if player.jump_held {
                                 press_jump(&mut keys);
                             }
                         }
@@ -378,17 +350,10 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
                             .into_iter()
                             .map(|offset| x_h + offset)
                             .find(|x_h| {
-                                // On a block top, with no solid terrain in the body.
-                                let blocks = room.terrain.iter().chain(&room.platforms);
-                                blocks.map(|block| block.rect_h).any(|rect| {
+                                // On a platform top, beside the enemy.
+                                room.platforms.iter().map(|block| block.rect_h).any(|rect| {
                                     (rect.x..=rect.right()).contains(x_h)
                                         && (rect.top() - y_h).abs() <= 0.01
-                                }) && !room.terrain.iter().any(|block| {
-                                    let rect = block.rect_h;
-                                    rect.x < x_h + PLAYER_COLLISION_WIDTH_H / 2.0
-                                        && x_h - PLAYER_COLLISION_WIDTH_H / 2.0 < rect.right()
-                                        && rect.y < y_h + 1.0
-                                        && y_h < rect.top()
                                 })
                             })
                             .map_or(Vec2::new(x_h, y_h), |x_h| Vec2::new(x_h, y_h))

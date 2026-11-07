@@ -1,256 +1,37 @@
-# Room coordinates use H from the lower-left. Terrain and platform `rect_h`
+# Room coordinates use H from the lower-left. Platform and decoration `rect_h`
 # give each block's lower-left corner and size; player, enemy, and exit y
-# values mark the feet baseline on a block top.
+# values mark the feet baseline on a platform top.
 room_id: 10
 chapter_id: 1
-description: "The Wizard's Sanctum: a ruined ritual hall under a broken dome, with a central dais, tiered balconies on both sides, and the exit hidden under the east balcony."
+description: "A bare shell waiting for a layout, with the chapter's boss alone in it."
 size:
   width_viewports: 2
   height_h: 22.5
 background_profile: clouds_thunderstorm
 player_spawn:
-  x_h: 2.5
-  y_h: 3
-# Solid blocks: they stop bodies and projectiles from every side.
-terrain:
-  - label: foundation
-    material: stone_dark_cobble
-    rect_h: { x: 0, y: 0, width: 48, height: 2.5 }
-  - label: hall floor tiles
-    material: stone_tiles
-    rect_h: { x: 0, y: 2.5, width: 48, height: 0.5 }
-  - label: ritual dais
-    material: stone_cracked_slab
-    rect_h: { x: 21, y: 3, width: 8, height: 1 }
-  - label: west wall above the entrance doorway
-    material: stone_dark_cobble
-    rect_h: { x: 0, y: 6.5, width: 2, height: 16 }
-  - label: antechamber ceiling, west gallery floor
-    material: stone_rough_bricks
-    rect_h: { x: 2, y: 6.5, width: 10.5, height: 1.5 }
-  - label: antechamber arch springer
-    material: stone_rough_bricks
-    rect_h: { x: 8, y: 6, width: 1, height: 0.5 }
-  - label: west upper masonry
-    material: stone_dark_cobble
-    rect_h: { x: 0, y: 12.25, width: 10, height: 10.25 }
-  - label: west gallery lintel
-    material: stone_rough_bricks
-    rect_h: { x: 5, y: 11.75, width: 5, height: 0.5 }
-  - label: west high ledge
-    material: stone_cracked_slab
-    rect_h: { x: 10, y: 12.25, width: 4, height: 0.75 }
-  - label: west vault step
-    material: stone_dark_cobble
-    rect_h: { x: 10, y: 17, width: 4.5, height: 5.5 }
-  - label: west vault step
-    material: stone_rough_bricks
-    rect_h: { x: 14.5, y: 18.5, width: 4, height: 4 }
-  - label: west dome rib
-    material: stone_rough_bricks
-    rect_h: { x: 18.5, y: 19.25, width: 1.5, height: 3.25 }
-  - label: dome crown
-    material: stone_dark_cobble
-    rect_h: { x: 18, y: 21.25, width: 12, height: 1.25 }
-  - label: east dome rib
-    material: stone_rough_bricks
-    rect_h: { x: 28, y: 19.25, width: 1.5, height: 3.25 }
-  - label: east vault step
-    material: stone_rough_bricks
-    rect_h: { x: 29.5, y: 18.5, width: 4, height: 4 }
-  - label: east vault step
-    material: stone_dark_cobble
-    rect_h: { x: 33.5, y: 17, width: 4.5, height: 5.5 }
-  - label: east vault step
-    material: stone_dark_cobble
-    rect_h: { x: 38, y: 16.5, width: 6, height: 6 }
-  - label: east upper masonry
-    material: stone_dark_cobble
-    rect_h: { x: 44, y: 6.5, width: 4, height: 16 }
-  - label: east wall behind the exit
-    material: stone_dark_cobble
-    rect_h: { x: 47, y: 3, width: 1, height: 3.5 }
-  - label: exit arch springer
-    material: stone_rough_bricks
-    rect_h: { x: 43.5, y: 6, width: 1.5, height: 1.25 }
-  - label: east balcony
-    material: stone_cracked_slab
-    rect_h: { x: 37.5, y: 7.25, width: 6.5, height: 0.75 }
-  - label: east high ledge
-    material: stone_cracked_slab
-    rect_h: { x: 38, y: 12.25, width: 6, height: 0.75 }
-  - label: dais lower step
-    material: stone_cracked_slab
-    rect_h: { x: 20, y: 3, width: 10, height: 0.5 }
-  - label: west entry flagstones
-    material: stone_tiles
-    rect_h: { x: 9.5, y: 3, width: 3, height: 0.5 }
-  - label: east raised flagstones
-    material: stone_tiles
-    rect_h: { x: 38, y: 3, width: 5, height: 0.5 }
-  - label: west high ledge corbel
-    material: stone_rough_bricks
-    rect_h: { x: 10, y: 11.5, width: 1, height: 0.75 }
-  - label: west vault broken stone
-    material: stone_rough_bricks
-    rect_h: { x: 13.5, y: 16.25, width: 1, height: 0.75 }
-  - label: east vault broken stone
-    material: stone_rough_bricks
-    rect_h: { x: 37, y: 16, width: 1.5, height: 1 }
-  - label: east high ledge corbel
-    material: stone_rough_bricks
-    rect_h: { x: 43, y: 11.5, width: 1, height: 0.75 }
-  - label: east balcony corbel
-    material: stone_rough_bricks
-    rect_h: { x: 37.5, y: 6.75, width: 1, height: 0.5 }
-# One-way platforms: land on top, jump through from below, Down + Jump drops.
+  x_h: 3
+  y_h: 2
+# One-way platforms: land on top, pass through from every other side,
+# Down + Jump drops through. They stop shots.
 platforms:
-  - label: west low scaffold
-    material: wood_dark_planks
-    rect_h: { x: 13, y: 5.25, width: 4, height: 0.25 }
-  - label: west upper scaffold
-    material: wood_dark_planks
-    rect_h: { x: 13, y: 10.25, width: 4, height: 0.25 }
-  - label: west floating plank
-    material: wood_dark_planks
-    rect_h: { x: 18, y: 6.75, width: 3, height: 0.25 }
-  - label: dais canopy
-    material: wood_dark_planks
-    rect_h: { x: 22.5, y: 9.25, width: 5, height: 0.25 }
-  - label: dome vantage
-    material: wood_dark_planks
-    rect_h: { x: 23.5, y: 11.75, width: 3, height: 0.25 }
-  - label: east floating plank
-    material: wood_dark_planks
-    rect_h: { x: 29, y: 6.75, width: 3, height: 0.25 }
-  - label: east grate balcony
-    material: metal_grate
-    rect_h: { x: 33, y: 5.25, width: 4, height: 0.25 }
-  - label: east upper scaffold
-    material: wood_dark_planks
-    rect_h: { x: 33, y: 10.25, width: 4, height: 0.25 }
-# Decorations: non-solid panels behind the terrain or in front of the bodies.
-decorations:
-  - label: exit alcove back wall
-    material: carved_ashlar
-    layer: background
-    rect_h: { x: 44, y: 3, width: 3, height: 3.5 }
-  - label: lower hall wall
-    material: carved_ashlar
-    layer: background
-    rect_h: { x: 2, y: 3, width: 42, height: 6 }
-  - label: west gallery back wall
-    material: carved_ashlar
-    layer: background
-    rect_h: { x: 2, y: 8, width: 14, height: 9 }
-  - label: west window jamb
-    material: carved_ashlar
-    layer: background
-    rect_h: { x: 19.5, y: 9, width: 1.5, height: 10.5 }
-  - label: dais back wall
-    material: carved_ashlar
-    layer: background
-    rect_h: { x: 21, y: 9, width: 8, height: 4.5 }
-  - label: east window jamb
-    material: carved_ashlar
-    layer: background
-    rect_h: { x: 29, y: 9, width: 1.5, height: 10.5 }
-  - label: east hall upper wall
-    material: carved_ashlar
-    layer: background
-    rect_h: { x: 33.5, y: 8, width: 10.5, height: 9 }
-  - label: west window broken sill
-    material: carved_ashlar
-    layer: background
-    rect_h: { x: 16, y: 9, width: 1.5, height: 2 }
-  - label: west window broken head
-    material: carved_ashlar
-    layer: background
-    rect_h: { x: 16, y: 17, width: 2.5, height: 1.5 }
-  - label: east window broken sill
-    material: carved_ashlar
-    layer: background
-    rect_h: { x: 31.5, y: 9, width: 2, height: 1.5 }
-  - label: east window broken head
-    material: carved_ashlar
-    layer: background
-    rect_h: { x: 30.5, y: 16.5, width: 3, height: 2 }
-  - label: dome rim rubble
-    material: carved_ashlar
-    layer: background
-    rect_h: { x: 21, y: 13.5, width: 2, height: 1 }
-  - label: dome rim rubble
-    material: carved_ashlar
-    layer: background
-    rect_h: { x: 27, y: 13.5, width: 2, height: 1.5 }
-  - label: lower frieze band
-    material: carved_frieze
-    layer: background
-    rect_h: { x: 2, y: 8.5, width: 42, height: 0.75 }
-  - label: dome frieze
-    material: carved_frieze
-    layer: background
-    rect_h: { x: 19.5, y: 13.25, width: 11, height: 0.5 }
-  - label: west gallery frieze
-    material: carved_frieze
-    layer: background
-    rect_h: { x: 2, y: 11, width: 8, height: 0.5 }
-  - label: east upper frieze
-    material: carved_frieze
-    layer: background
-    rect_h: { x: 33.5, y: 15.5, width: 10.5, height: 0.5 }
-  - label: antechamber pillar
-    material: carved_pillar
-    layer: background
-    rect_h: { x: 5, y: 3, width: 1, height: 3.5 }
-  - label: colonnade pillar
-    material: carved_pillar
-    layer: background
-    rect_h: { x: 11, y: 3, width: 1, height: 5.5 }
-  - label: colonnade pillar
-    material: carved_pillar
-    layer: background
-    rect_h: { x: 17, y: 3, width: 1, height: 5.5 }
-  - label: dais pillar
-    material: carved_pillar
-    layer: background
-    rect_h: { x: 21.25, y: 4, width: 1, height: 9.25 }
-  - label: dais pillar
-    material: carved_pillar
-    layer: background
-    rect_h: { x: 27.75, y: 4, width: 1, height: 9.25 }
-  - label: colonnade pillar
-    material: carved_pillar
-    layer: background
-    rect_h: { x: 32, y: 3, width: 1, height: 5.5 }
-  - label: broken colonnade pillar
-    material: carved_pillar
-    layer: background
-    rect_h: { x: 38, y: 3, width: 1, height: 3 }
-  - label: west gallery pillar
-    material: carved_pillar
-    layer: background
-    rect_h: { x: 6, y: 8, width: 1, height: 3 }
-  - label: east upper pillar
-    material: carved_pillar
-    layer: background
-    rect_h: { x: 40.5, y: 8, width: 1, height: 4.25 }
-  - label: east high pillar
-    material: carved_pillar
-    layer: background
-    rect_h: { x: 41, y: 13, width: 1, height: 2.5 }
-  - label: fallen dome block
-    material: stone_rough_bricks
-    layer: foreground
-    rect_h: { x: 0, y: 19.5, width: 2.5, height: 1.5 }
-  - label: fallen dome block
-    material: stone_rough_bricks
-    layer: foreground
-    rect_h: { x: 45.5, y: 18.5, width: 2.5, height: 2 }
+  - label: the floor the room stands on
+    material: city_pavement
+    rect_h: { x: -2, y: 0, width: 52, height: 2 }
+  - label: west wall
+    material: city_plating
+    rect_h: { x: -2, y: 2, width: 2, height: 20.5 }
+  - label: east wall
+    material: city_plating
+    rect_h: { x: 48, y: 2, width: 2, height: 20.5 }
+  - label: roofline
+    material: city_plating
+    rect_h: { x: -2, y: 22.5, width: 52, height: 2 }
+# Decorations: non-solid panels behind the platforms or in front of the bodies.
+decorations: []
 enemy_spawns:
   - type_id: evil_wizard
-    position_h: { x: 19.5, y: 3 }
+    position_h: { x: 24, y: 2 }
 exit:
-  x_h: 45.75
-  y_h: 3
+  x_h: 45
+  y_h: 2
 next_room_id: 11

@@ -4,7 +4,7 @@
 
 use super::*;
 use crate::data::{
-    DecorationConfig, DecorationLayer, EnemySpawnConfig, SpawnPosition, TerrainBlockConfig,
+    DecorationConfig, DecorationLayer, EnemySpawnConfig, Fill, PlatformConfig, SpawnPosition,
 };
 use bevy::input::{
     ButtonState,
@@ -240,34 +240,31 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
             editor.field = 0;
         }
     } else if command {
-    } else if letter('t') || letter('p') || letter('d') {
-        let (kind, width, height) = if letter('p') {
-            (EditorItem::Platform(0), 3.0, SNAP_H)
-        } else if letter('d') {
-            (EditorItem::Decoration(0), 4.0, 3.0)
+    } else if letter('p') || letter('d') {
+        let decoration = letter('d');
+        let (width, height) = if decoration {
+            (4.0, 3.0)
         } else {
-            (EditorItem::Terrain(0), 2.0, 1.0)
+            (3.0, SNAP_H)
         };
         let Some(room) = data.rooms.get(&editor.room_id) else {
             return;
         };
-        // The material picked last, else one this room already uses for
-        // this kind of item, else the catalog's first.
-        let same_kind = match kind {
-            EditorItem::Platform(_) => room.platforms.first().map(|block| &block.material),
-            EditorItem::Decoration(_) => room
-                .decorations
-                .first()
-                .map(|decoration| &decoration.material),
-            _ => room.terrain.first().map(|block| &block.material),
+        // The fill picked last, else the one this room already paints this
+        // kind of item with, else the catalog's first material.
+        let same_kind = if decoration {
+            room.decorations.first().map(|decoration| &decoration.fill)
+        } else {
+            room.platforms.first().map(|block| &block.fill)
         };
-        let Some(material) = editor
-            .material
-            .as_ref()
-            .or(same_kind)
-            .or_else(|| data.terrain.materials.keys().next())
-            .cloned()
-        else {
+        let Some(fill) = editor.fill.as_ref().or(same_kind).cloned().or_else(|| {
+            data.surfaces
+                .materials
+                .keys()
+                .next()
+                .cloned()
+                .map(Fill::Material)
+        }) else {
             return;
         };
         let rect_h = RectH {
@@ -278,32 +275,21 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
         };
         let mut added = None;
         editor.edit(&mut data, |room| {
-            added = Some(match kind {
-                EditorItem::Platform(_) => {
-                    room.platforms.push(TerrainBlockConfig {
-                        label: None,
-                        material,
-                        rect_h,
-                    });
-                    EditorItem::Platform(room.platforms.len() - 1)
-                }
-                EditorItem::Decoration(_) => {
-                    room.decorations.push(DecorationConfig {
-                        label: None,
-                        material,
-                        layer: DecorationLayer::Background,
-                        rect_h,
-                    });
-                    EditorItem::Decoration(room.decorations.len() - 1)
-                }
-                _ => {
-                    room.terrain.push(TerrainBlockConfig {
-                        label: None,
-                        material,
-                        rect_h,
-                    });
-                    EditorItem::Terrain(room.terrain.len() - 1)
-                }
+            added = Some(if decoration {
+                room.decorations.push(DecorationConfig {
+                    label: None,
+                    fill,
+                    layer: DecorationLayer::Background,
+                    rect_h,
+                });
+                EditorItem::Decoration(room.decorations.len() - 1)
+            } else {
+                room.platforms.push(PlatformConfig {
+                    label: None,
+                    fill,
+                    rect_h,
+                });
+                EditorItem::Platform(room.platforms.len() - 1)
             });
         });
         editor.select(added);
@@ -401,11 +387,11 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
                         .and_then(|room| room.enemy_spawns.get(index))
                         .map(|spawn| spawn.type_id.clone());
                 }
-                if field == Field::Material {
-                    editor.material = data
+                if field == Field::Fill {
+                    editor.fill = data
                         .rooms
                         .get(&editor.room_id)
-                        .and_then(|room| item.and_then(|item| item.material(room)))
+                        .and_then(|room| item.and_then(|item| item.fill(room)))
                         .cloned();
                 }
             }

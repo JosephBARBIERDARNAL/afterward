@@ -43,7 +43,7 @@ art-fmt:
     typstyle -i art
 
 # Render the Typst pixel art in art/ to PNGs at the same path under src/assets/
-# (art/terrain/textures/wood/planks.typ -> src/assets/terrain/textures/wood/planks.png).
+# (art/surfaces/textures/wood/planks.typ -> src/assets/surfaces/textures/wood/planks.png).
 # Files starting with `_` are shared libraries, not images.
 art:
     #!/usr/bin/env sh

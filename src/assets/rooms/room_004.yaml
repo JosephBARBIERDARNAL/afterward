@@ -1,400 +1,53 @@
-# Room coordinates use H from the lower-left. Terrain and platform `rect_h`
+# Room coordinates use H from the lower-left. Platform and decoration `rect_h`
 # give each block's lower-left corner and size; player, enemy, and exit y
-# values mark the feet baseline on a block top.
+# values mark the feet baseline on a platform top.
 room_id: 4
 chapter_id: 1
-description: "The Old Well: a vertical climb up a ruined stone well, from the flooded bottom by scaffolds, a wall-jump chimney or a broken spiral staircase, past guardrooms and a lookout, to a sunlit doorway at the top."
+description: "A bare shell waiting for a layout, tall rather than wide: the room meant to be read from top to bottom."
 size:
   width_viewports: 2
   height_h: 40.5
 background_profile: clouds_golden_tower
 player_spawn:
-  x_h: 2.5
+  x_h: 3
   y_h: 2
-# Solid blocks: they stop bodies and projectiles from every side.
-terrain:
-  - label: well bedrock floor
-    material: stone_cobble
-    rect_h: { x: 0, y: 0, width: 48, height: 2 }
-  - label: left wall above the entrance doorway
-    material: stone_rough_bricks
-    rect_h: { x: 0, y: 5.5, width: 3, height: 35 }
-  - label: right wall
-    material: stone_rough_bricks
-    rect_h: { x: 45, y: 0, width: 3, height: 30.5 }
-  - label: well crown west
-    material: stone_rough_bricks
-    rect_h: { x: 0, y: 37, width: 23, height: 3.5 }
-  - label: well crown east
-    material: stone_rough_bricks
-    rect_h: { x: 27, y: 37, width: 10.5, height: 3.5 }
-  - label: well mouth west rim
-    material: stone_bricks
-    rect_h: { x: 21.75, y: 36.5, width: 1.25, height: 0.5 }
-  - label: well mouth east rim
-    material: stone_bricks
-    rect_h: { x: 27, y: 36.5, width: 1.25, height: 0.5 }
-  - label: doorway lintel
-    material: stone_bricks
-    rect_h: { x: 34, y: 36.25, width: 3.5, height: 0.75 }
-  - label: entrance tunnel roof
-    material: stone_bricks
-    rect_h: { x: 3, y: 5.5, width: 10, height: 9 }
-  - label: tunnel roof sag
-    material: stone_bricks
-    rect_h: { x: 6, y: 5, width: 3, height: 0.5 }
-  - label: west masonry over the well bottom
-    material: stone_bricks
-    rect_h: { x: 13, y: 10, width: 5, height: 4.5 }
-  - label: well bottom stalactite
-    material: stone_bricks
-    rect_h: { x: 15, y: 9.25, width: 2, height: 0.75 }
-  - label: well bottom stalactite stub
-    material: stone_bricks
-    rect_h: { x: 13, y: 9.5, width: 1.5, height: 0.5 }
-  - label: west guardroom back wall
-    material: stone_rough_bricks
-    rect_h: { x: 3, y: 14.5, width: 2, height: 4.5 }
-  - label: west guardroom stalactite
-    material: stone_bricks
-    rect_h: { x: 5, y: 18.25, width: 2, height: 0.75 }
-  - label: west guardroom ceiling sag
-    material: stone_bricks
-    rect_h: { x: 15.5, y: 18.5, width: 2.5, height: 0.5 }
-  - label: chimney step low
-    material: mossy_bricks
-    rect_h: { x: 9.5, y: 14.5, width: 4.5, height: 1 }
-  - label: chimney step high
-    material: mossy_bricks
-    rect_h: { x: 10, y: 15.5, width: 3.5, height: 1 }
-  - label: chimney west masonry
-    material: stone_rough_bricks
-    rect_h: { x: 3, y: 19, width: 7, height: 10 }
-  - label: chimney east masonry
-    material: stone_bricks
-    rect_h: { x: 13.5, y: 19, width: 4.5, height: 10 }
-  - label: chimney rest ledge
-    material: mossy_bricks
-    rect_h: { x: 10, y: 23.5, width: 1, height: 0.5 }
-  - label: upper hall floor west
-    material: mossy_bricks
-    rect_h: { x: 5, y: 28.5, width: 5, height: 0.5 }
-  - label: upper hall floor east
-    material: mossy_bricks
-    rect_h: { x: 13.5, y: 28.5, width: 4.5, height: 0.5 }
-  - label: upper hall back wall
-    material: stone_rough_bricks
-    rect_h: { x: 3, y: 29, width: 2, height: 4.5 }
-  - label: upper west masonry
-    material: stone_bricks
-    rect_h: { x: 3, y: 33.5, width: 15, height: 3.5 }
-  - label: upper hall ceiling sag west
-    material: stone_bricks
-    rect_h: { x: 6, y: 33, width: 3, height: 0.5 }
-  - label: upper hall ceiling sag east
-    material: stone_bricks
-    rect_h: { x: 15, y: 33, width: 3, height: 0.5 }
-  - label: shaft west wall bulge
-    material: stone_bricks
-    rect_h: { x: 18, y: 23, width: 0.75, height: 3 }
-  - label: well bottom rubble west
-    material: stone_cobble
-    rect_h: { x: 13, y: 2, width: 2, height: 0.5 }
-  - label: well bottom rubble east
-    material: stone_cobble
-    rect_h: { x: 28.5, y: 2, width: 1.5, height: 1 }
-  - label: cistern east masonry
-    material: stone_rough_bricks
-    rect_h: { x: 36, y: 2, width: 9, height: 4 }
-  - label: east landing floor
-    material: stone_cobble
-    rect_h: { x: 30, y: 6, width: 15, height: 3 }
-  - label: east landing moss lip
-    material: mossy_bricks
-    rect_h: { x: 30, y: 9, width: 6, height: 0.5 }
-  - label: east landing floor slabs
-    material: stone_bricks
-    rect_h: { x: 36, y: 9, width: 6.5, height: 0.5 }
-  - label: east landing ceiling sag
-    material: stone_bricks
-    rect_h: { x: 30, y: 13.5, width: 2.5, height: 0.5 }
-  - label: stair tower west wall low
-    material: stone_bricks
-    rect_h: { x: 30, y: 14, width: 5, height: 8 }
-  - label: lookout back jamb
-    material: stone_bricks
-    rect_h: { x: 34, y: 22, width: 1, height: 3.5 }
-  - label: stair tower west wall high
-    material: stone_bricks
-    rect_h: { x: 30, y: 25.5, width: 5, height: 7.5 }
-  - label: shaft east wall bulge low
-    material: stone_bricks
-    rect_h: { x: 29.25, y: 15, width: 0.75, height: 4 }
-  - label: shaft east wall bulge high
-    material: stone_bricks
-    rect_h: { x: 29.25, y: 27, width: 0.75, height: 3 }
-  - label: stair tower east wall
-    material: stone_rough_bricks
-    rect_h: { x: 42.5, y: 9.5, width: 2.5, height: 21 }
-  - label: stair foot
-    material: stone_cracked_slab
-    rect_h: { x: 39.5, y: 9.5, width: 3, height: 1 }
-  - label: stair foot upper step
-    material: stone_cracked_slab
-    rect_h: { x: 41, y: 10.5, width: 1.5, height: 1 }
-  - label: spiral landing 1
-    material: mossy_bricks
-    rect_h: { x: 35, y: 13.25, width: 2.5, height: 0.75 }
-  - label: spiral broken step 1
-    material: stone_cracked_slab
-    rect_h: { x: 37.5, y: 13.5, width: 0.75, height: 0.5 }
-  - label: spiral landing 2
-    material: stone_bricks
-    rect_h: { x: 40, y: 16.25, width: 2.5, height: 0.75 }
-  - label: spiral landing 3
-    material: mossy_bricks
-    rect_h: { x: 35, y: 18.75, width: 2.5, height: 0.75 }
-  - label: spiral broken step 3
-    material: stone_cracked_slab
-    rect_h: { x: 37.5, y: 19, width: 0.75, height: 0.5 }
-  - label: spiral half landing
-    material: stone_bricks
-    rect_h: { x: 39, y: 21, width: 3.5, height: 1 }
-  - label: spiral landing 5
-    material: mossy_bricks
-    rect_h: { x: 35, y: 23.75, width: 2.5, height: 0.75 }
-  - label: spiral landing 6
-    material: stone_bricks
-    rect_h: { x: 40, y: 25.75, width: 2.5, height: 0.75 }
-  - label: spiral broken step 6
-    material: stone_cracked_slab
-    rect_h: { x: 39.25, y: 26, width: 0.75, height: 0.5 }
-  - label: spiral landing 7
-    material: mossy_bricks
-    rect_h: { x: 35, y: 28.75, width: 2.5, height: 0.75 }
-  - label: gallery floor
-    material: grassy_pale_cobble
-    rect_h: { x: 30, y: 32.5, width: 5, height: 0.5 }
-  - label: sunlit ledge
-    material: grassy_pale_cobble
-    rect_h: { x: 37.5, y: 30.5, width: 10.5, height: 3.5 }
-# One-way platforms: land on top, jump through from below, Down + Jump drops.
+# One-way platforms: land on top, pass through from every other side,
+# Down + Jump drops through. They stop shots.
 platforms:
-  - label: chimney foot plank
-    material: wood_planks
-    rect_h: { x: 10.5, y: 18.75, width: 2.5, height: 0.25 }
-  - label: scaffold 1
-    material: wood_planks
-    rect_h: { x: 24, y: 4.25, width: 4, height: 0.25 }
-  - label: scaffold 2
-    material: wood_planks
-    rect_h: { x: 19.5, y: 6.75, width: 4, height: 0.25 }
-  - label: scaffold 3
-    material: wood_planks
-    rect_h: { x: 24.5, y: 9.25, width: 4, height: 0.25 }
-  - label: scaffold 4
-    material: wood_planks
-    rect_h: { x: 26, y: 11.75, width: 3.5, height: 0.25 }
-  - label: scaffold 5
-    material: wood_planks
-    rect_h: { x: 20.5, y: 14.25, width: 3.5, height: 0.25 }
-  - label: lookout scaffold 1
-    material: wood_planks
-    rect_h: { x: 25, y: 16.75, width: 3.5, height: 0.25 }
-  - label: lookout scaffold 2
-    material: wood_planks
-    rect_h: { x: 20.5, y: 19.25, width: 3.5, height: 0.25 }
-  - label: lookout scaffold 3
-    material: wood_planks
-    rect_h: { x: 25.5, y: 21.75, width: 3.5, height: 0.25 }
-  - label: top scaffold 1
-    material: wood_planks
-    rect_h: { x: 19.5, y: 30.75, width: 3.5, height: 0.25 }
-  - label: top scaffold 2
-    material: wood_planks
-    rect_h: { x: 24.5, y: 32.75, width: 4, height: 0.25 }
-# Decorations: non-solid panels behind the terrain or in front of the bodies.
-decorations:
-  - label: entrance tunnel back wall
-    material: stone_rough_bricks
-    layer: background
-    rect_h: { x: 0, y: 2, width: 13, height: 3.5 }
-  - label: well bottom back wall
-    material: stone_bricks
-    layer: background
-    rect_h: { x: 13, y: 2, width: 17, height: 8 }
-  - label: well bottom pillar
-    material: carved_pillar
-    layer: background
-    rect_h: { x: 14.75, y: 2, width: 1.25, height: 7.25 }
-  - label: old well water
-    material: water_shallow
-    layer: background
-    rect_h: { x: 15, y: 2, width: 15, height: 0.75 }
-  - label: cistern back wall
-    material: stone_cobble
-    layer: background
-    rect_h: { x: 30, y: 2, width: 6, height: 4 }
-  - label: cistern water
-    material: water_deep
-    layer: background
-    rect_h: { x: 30, y: 2, width: 6, height: 1.25 }
-  - label: drip west
-    material: water_sparkle
-    layer: background
-    rect_h: { x: 20.75, y: 2.75, width: 0.25, height: 4 }
-  - label: drip east
-    material: water_sparkle
-    layer: background
-    rect_h: { x: 27.25, y: 2.75, width: 0.25, height: 1.5 }
-  - label: cistern drip
-    material: water_sparkle
-    layer: background
-    rect_h: { x: 33, y: 3.25, width: 0.25, height: 2.75 }
-  - label: shaft back wall low
-    material: stone_rough_bricks
-    layer: background
-    rect_h: { x: 18, y: 10, width: 12, height: 14 }
-  - label: shaft back wall left of window
-    material: stone_rough_bricks
-    layer: background
-    rect_h: { x: 18, y: 24, width: 3.5, height: 4 }
-  - label: shaft back wall right of window
-    material: stone_rough_bricks
-    layer: background
-    rect_h: { x: 26.5, y: 24, width: 3.5, height: 4 }
-  - label: shaft back wall high
-    material: stone_rough_bricks
-    layer: background
-    rect_h: { x: 18, y: 28, width: 12, height: 9 }
-  - label: rotten beam stub west
-    material: wood_dark_planks
-    layer: background
-    rect_h: { x: 18, y: 26.5, width: 2.5, height: 0.5 }
-  - label: rotten beam stub east
-    material: wood_dark_planks
-    layer: background
-    rect_h: { x: 27.75, y: 25, width: 2.25, height: 0.5 }
-  - label: moss on the upper hall ceiling
-    material: moss_leafy
-    layer: background
-    rect_h: { x: 9, y: 32.5, width: 4, height: 1 }
-  - label: frieze over the well bottom
-    material: carved_frieze
-    layer: background
-    rect_h: { x: 18, y: 9.5, width: 12, height: 0.75 }
-  - label: window sill
-    material: carved_frieze
-    layer: background
-    rect_h: { x: 21, y: 23.5, width: 6, height: 0.5 }
-  - label: window lintel
-    material: carved_frieze
-    layer: background
-    rect_h: { x: 21, y: 28, width: 6, height: 0.75 }
-  - label: window pillar west
-    material: carved_pillar
-    layer: background
-    rect_h: { x: 20.5, y: 23.5, width: 1, height: 5.25 }
-  - label: window pillar east
-    material: carved_pillar
-    layer: background
-    rect_h: { x: 26.5, y: 23.5, width: 1, height: 5.25 }
-  - label: frieze below the top
-    material: carved_frieze
-    layer: background
-    rect_h: { x: 18, y: 34.5, width: 12, height: 0.75 }
-  - label: scaffold post low
-    material: wood_dark_planks
-    layer: background
-    rect_h: { x: 26.5, y: 2, width: 0.5, height: 9.75 }
-  - label: scaffold post west
-    material: wood_dark_planks
-    layer: background
-    rect_h: { x: 21.5, y: 2, width: 0.5, height: 17.25 }
-  - label: scaffold post lookout
-    material: wood_dark_planks
-    layer: background
-    rect_h: { x: 27, y: 12, width: 0.5, height: 9.75 }
-  - label: scaffold post top
-    material: wood_dark_planks
-    layer: background
-    rect_h: { x: 21, y: 28, width: 0.5, height: 2.75 }
-  - label: west guardroom back wall
-    material: stone_bricks
-    layer: background
-    rect_h: { x: 5, y: 14.5, width: 13, height: 4.5 }
-  - label: chimney back wall
-    material: stone_bricks
-    layer: background
-    rect_h: { x: 10, y: 19, width: 3.5, height: 10 }
-  - label: upper hall back wall
-    material: stone_bricks
-    layer: background
-    rect_h: { x: 5, y: 29, width: 13, height: 4.5 }
-  - label: upper hall pillar
-    material: carved_pillar
-    layer: background
-    rect_h: { x: 16.5, y: 29, width: 1, height: 4 }
-  - label: east landing back wall
-    material: stone_bricks
-    layer: background
-    rect_h: { x: 30, y: 9.5, width: 12.5, height: 4.5 }
-  - label: lookout frieze
-    material: carved_frieze
-    layer: background
-    rect_h: { x: 30, y: 22, width: 4, height: 3.5 }
-  - label: stair tower back wall
-    material: stone_bricks
-    layer: background
-    rect_h: { x: 35, y: 14, width: 7.5, height: 19 }
-  - label: stair tower newel
-    material: carved_pillar
-    layer: background
-    rect_h: { x: 38.25, y: 9.5, width: 1.25, height: 21 }
-  - label: gallery back wall
-    material: stone_bricks
-    layer: background
-    rect_h: { x: 30, y: 33, width: 7.5, height: 4 }
-  - label: gallery frieze
-    material: carved_frieze
-    layer: background
-    rect_h: { x: 30, y: 35.25, width: 4.5, height: 0.5 }
-  - label: sunlit ledge grass
-    material: grass_tall
-    layer: background
-    rect_h: { x: 39.5, y: 34, width: 4, height: 0.75 }
-  - label: hanging moss at the tunnel mouth
-    material: moss_leaves
-    layer: foreground
-    rect_h: { x: 3, y: 4.75, width: 1.5, height: 0.75 }
-  - label: hanging moss over the well bottom
-    material: moss_leaves
-    layer: foreground
-    rect_h: { x: 13, y: 9, width: 1.5, height: 0.5 }
-  - label: hanging moss on the lintel
-    material: moss_thicket
-    layer: foreground
-    rect_h: { x: 35.5, y: 35.25, width: 1.5, height: 0.75 }
+  - label: the floor the room stands on
+    material: city_pavement
+    rect_h: { x: -2, y: 0, width: 52, height: 2 }
+  - label: west wall
+    material: city_plating
+    rect_h: { x: -2, y: 2, width: 2, height: 38.5 }
+  - label: east wall
+    material: city_plating
+    rect_h: { x: 48, y: 2, width: 2, height: 38.5 }
+  - label: roofline
+    material: city_plating
+    rect_h: { x: -2, y: 40.5, width: 52, height: 2 }
+# Decorations: non-solid panels behind the platforms or in front of the bodies.
+decorations: []
 enemy_spawns:
   - type_id: swordsman
-    position_h: { x: 24, y: 2 }
+    position_h: { x: 10, y: 2 }
   - type_id: gorgon_1
-    position_h: { x: 33, y: 9.5 }
+    position_h: { x: 14, y: 2 }
   - type_id: infantryman
-    position_h: { x: 37, y: 9.5 }
+    position_h: { x: 18, y: 2 }
   - type_id: infantryman
-    position_h: { x: 16.5, y: 14.5 }
+    position_h: { x: 22, y: 2 }
   - type_id: swordsman
-    position_h: { x: 7, y: 14.5 }
+    position_h: { x: 26, y: 2 }
   - type_id: destroyer
-    position_h: { x: 32, y: 22 }
+    position_h: { x: 30, y: 2 }
   - type_id: infantryman
-    position_h: { x: 41.5, y: 22 }
+    position_h: { x: 34, y: 2 }
   - type_id: destroyer
-    position_h: { x: 7, y: 29 }
+    position_h: { x: 38, y: 2 }
   - type_id: gorgon_1
-    position_h: { x: 42, y: 34 }
+    position_h: { x: 42, y: 2 }
 exit:
-  x_h: 46.5
-  y_h: 34
+  x_h: 45
+  y_h: 2
 next_room_id: 5

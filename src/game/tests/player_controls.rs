@@ -66,8 +66,7 @@ fn default_controls_move_jump_and_dash_the_player() {
                     right: width,
                     bottom: -H_WORLD_UNITS,
                     top: room.player_spawn.y_h * H_WORLD_UNITS,
-                    footstep: FootstepSound::Soil,
-                    one_way: false,
+                    footstep: FootstepSound::Stone,
                 });
             },
         )

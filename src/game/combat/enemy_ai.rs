@@ -47,7 +47,7 @@ pub(in crate::game) fn update_enemy_ai(
     let dt = time.delta_secs().min(0.05);
     let gravity = data.gameplay.player.gravity_h_s2 * H_WORLD_UNITS;
     let jumping = &data.enemies.jumping;
-    let terrain = Terrain(platforms.iter().collect());
+    let surfaces = Platforms(platforms.iter().collect());
     let level_change_threshold = jumping.level_change_threshold_h * H_WORLD_UNITS;
     // Attacks start once the player's hurtbox edge enters their hitbox.
     let player_half_width_h = data.gameplay.player.hurtbox_h.width / 2.0;
@@ -75,14 +75,7 @@ pub(in crate::game) fn update_enemy_ai(
         enemy.hurt_timer = (enemy.hurt_timer - dt).max(0.0);
         enemy.jump_cooldown = (enemy.jump_cooldown - dt).max(0.0);
         if enemy.knockback_velocity.abs() > 0.01 {
-            let from_x = transform.translation.x;
-            transform.translation.x = terrain
-                .move_horizontally(
-                    from_x,
-                    from_x + enemy.knockback_velocity * H_WORLD_UNITS * dt,
-                    enemy.home_y - enemy.feet_offset,
-                )
-                .0;
+            transform.translation.x += enemy.knockback_velocity * H_WORLD_UNITS * dt;
             enemy.knockback_velocity = move_towards(enemy.knockback_velocity, 0.0, 14.0 * dt);
         }
         let dx = player_transform.translation.x - transform.translation.x;
@@ -279,15 +272,15 @@ pub(in crate::game) fn update_enemy_ai(
         // send enemies scrambling for platforms.
         let rise = player_feet.y - feet.y;
         let other_level = player.grounded && rise.abs() > level_change_threshold;
-        let standing = terrain
+        let standing = surfaces
             .standing_on(feet.x, feet.y, enemy.drop_through_timer > 0.0)
             .filter(|_| enemy.grounded);
-        if let Some(platform) = standing
-            && platform.one_way
+        if standing.is_some()
             && other_level
             && rise < 0.0
+            && surfaces.floor_below(feet.x, feet.y).is_some()
         {
-            // A player below: drop straight through the one-way platform.
+            // A player below, with another platform to land on: drop through.
             enemy.drop_through_timer = data.gameplay.player.drop_through_s;
             enemy.grounded = false;
             enemy.vertical_velocity = 0.0;
@@ -295,27 +288,10 @@ pub(in crate::game) fn update_enemy_ai(
         }
         let should_approach = distance_h > maximum_distance || other_level;
         let should_retreat = !other_level && distance_h < minimum_distance;
-        let mut direction = match standing {
-            // To reach a player below, head for the nearest ledge of this
-            // platform that is not walled off.
-            Some(platform)
-                if other_level
-                    && rise < 0.0
-                    && (platform.left..=platform.right).contains(&player_feet.x) =>
-            {
-                let nearest = if platform.right - feet.x < feet.x - platform.left {
-                    1.0
-                } else {
-                    -1.0
-                };
-                if terrain.edge_is_open(platform, nearest) {
-                    nearest
-                } else {
-                    -nearest
-                }
-            }
-            _ if should_approach => dx.signum(),
-            _ => -dx.signum(),
+        let mut direction = if should_approach {
+            dx.signum()
+        } else {
+            -dx.signum()
         };
         let route = JumpRoute {
             feet,
@@ -328,7 +304,7 @@ pub(in crate::game) fn update_enemy_ai(
         };
         let plan = standing
             .filter(|_| should_approach || should_retreat)
-            .and_then(|platform| route.plan(platform, &terrain));
+            .and_then(|platform| route.plan(platform, &surfaces));
         let mut waiting = false;
         match plan {
             Some(JumpPlan::Leap(arc)) if enemy.jump_cooldown == 0.0 => {
@@ -370,29 +346,9 @@ pub(in crate::game) fn update_enemy_ai(
                 sprite.flip_x = direction < 0.0;
             }
             let speed = enemy.movement_speed_h_s * H_WORLD_UNITS * dt;
-            let (next_x, wall) =
-                terrain.move_horizontally(feet.x, feet.x + direction * speed, feet.y);
             let room_width_h = data.rooms[&session.room_id].width_h(&data.gameplay);
-            transform.translation.x = next_x.clamp(24.0, room_width_h * H_WORLD_UNITS - 24.0);
-            // A wall in the way: hop onto it when it is low enough.
-            if should_approach
-                && wall.is_some()
-                && enemy.jump_cooldown == 0.0
-                && let Some(arc) = route.step_up(transform.translation.x, &terrain)
-            {
-                enemy.vertical_velocity = arc.vertical_velocity;
-                enemy.grounded = false;
-                enemy.jump_cooldown = jumping.cooldown_s;
-                enemy.jump = Some(EnemyJump {
-                    velocity_x: arc.horizontal_velocity,
-                    slam: false,
-                    landed: false,
-                });
-                transform.translation.y = enemy.home_y;
-                transform.rotation = Quat::IDENTITY;
-                set_enemy_animation(&mut sprite, &mut animation, &sheets, &enemy.type_id, "jump");
-                continue;
-            }
+            transform.translation.x =
+                (feet.x + direction * speed).clamp(24.0, room_width_h * H_WORLD_UNITS - 24.0);
             let movement_speed_h_s = enemy.movement_speed_h_s;
             let home_y = enemy.home_y;
             if let Some(movement) = &mut enemy.procedural_movement {
@@ -452,9 +408,8 @@ pub(in crate::game) fn update_enemy_platform_physics(
 ) {
     let dt = time.delta_secs().min(0.05);
     let gravity = data.gameplay.player.gravity_h_s2 * H_WORLD_UNITS;
-    let ledge_reach = data.gameplay.player.walls.ledge_grab_reach_h * H_WORLD_UNITS;
     let room_width = data.rooms[&session.room_id].width_h(&data.gameplay) * H_WORLD_UNITS;
-    let terrain = Terrain(platforms.iter().collect());
+    let surfaces = Platforms(platforms.iter().collect());
 
     for (mut enemy, mut transform) in &mut enemies {
         enemy.drop_through_timer = (enemy.drop_through_timer - dt).max(0.0);
@@ -465,31 +420,13 @@ pub(in crate::game) fn update_enemy_platform_physics(
         let gait_offset = transform.translation.y - enemy.home_y;
         let previous_foot_y = enemy.home_y - enemy.feet_offset;
         if let Some(jump) = enemy.jump.filter(|jump| !jump.landed) {
-            let from_x = transform.translation.x;
-            let (next_x, wall) =
-                terrain.move_horizontally(from_x, from_x + jump.velocity_x * dt, previous_foot_y);
-            transform.translation.x = next_x.clamp(24.0, room_width - 24.0);
-            // Leaping into a wall whose ledge is in reach climbs onto it,
-            // like the player's mantle.
-            if let Some(side) = wall
-                && let Some(ledge) =
-                    terrain.ledge(transform.translation.x, previous_foot_y, side, ledge_reach)
-            {
-                transform.translation.x = ledge.x;
-                enemy.vertical_velocity = 0.0;
-                enemy.grounded = true;
-                if let Some(jump) = &mut enemy.jump {
-                    jump.landed = true;
-                }
-                enemy.home_y = ledge.y + enemy.feet_offset;
-                transform.translation.y = enemy.home_y + gait_offset;
-                continue;
-            }
+            transform.translation.x =
+                (transform.translation.x + jump.velocity_x * dt).clamp(24.0, room_width - 24.0);
         }
         let x = transform.translation.x;
-        let through_one_way = enemy.drop_through_timer > 0.0;
-        let standing_platform = terrain
-            .standing_on(x, previous_foot_y, through_one_way)
+        let dropping_through = enemy.drop_through_timer > 0.0;
+        let standing_platform = surfaces
+            .standing_on(x, previous_foot_y, dropping_through)
             .filter(|_| enemy.vertical_velocity <= 0.0);
 
         let (next_foot_y, grounded) = if let Some(platform) = standing_platform {
@@ -503,19 +440,10 @@ pub(in crate::game) fn update_enemy_platform_physics(
                 previous_foot_y + (launch_velocity + enemy.vertical_velocity) / 2.0 * dt;
             if enemy.vertical_velocity <= 0.0
                 && let Some(platform) =
-                    terrain.landing(x, previous_foot_y, next_foot_y, through_one_way)
+                    surfaces.landing(x, previous_foot_y, next_foot_y, dropping_through)
             {
                 enemy.vertical_velocity = 0.0;
                 (platform.top, true)
-            } else if enemy.vertical_velocity > 0.0
-                && let Some(bottom) = terrain.ceiling(
-                    x,
-                    previous_foot_y + H_WORLD_UNITS,
-                    next_foot_y + H_WORLD_UNITS,
-                )
-            {
-                enemy.vertical_velocity = 0.0;
-                (bottom - H_WORLD_UNITS, false)
             } else {
                 (next_foot_y, false)
             }

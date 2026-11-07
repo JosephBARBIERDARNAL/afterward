@@ -3,7 +3,7 @@
 //! runs the edits right away, and saves them back to `rooms/room_NNN.yaml`.
 
 use super::*;
-use crate::data::{MaterialId, RectH, RoomConfig};
+use crate::data::{Fill, RectH, RoomConfig};
 
 mod clipboard;
 mod draw;
@@ -57,7 +57,7 @@ impl Plugin for EditorPlugin {
                     draw::draw_overlay,
                     draw::update_panels,
                     draw::show_help_while_h_is_held,
-                    palette::highlight_swatches,
+                    palette::refresh_palette,
                 )
                     .chain()
                     .run_if(in_state(GameScreen::Editor)),
@@ -72,7 +72,6 @@ enum EditorItem {
     Exit,
     Enemy(usize),
     Platform(usize),
-    Terrain(usize),
     Decoration(usize),
 }
 
@@ -93,7 +92,6 @@ impl EditorItem {
                 .get(index)
                 .map(|spawn| body(spawn.position_h.x_h, spawn.position_h.y_h)),
             Self::Platform(index) => room.platforms.get(index).map(|block| block.rect_h),
-            Self::Terrain(index) => room.terrain.get(index).map(|block| block.rect_h),
             Self::Decoration(index) => room
                 .decorations
                 .get(index)
@@ -110,7 +108,7 @@ impl EditorItem {
                 .enemy_spawns
                 .get(index)
                 .map(|spawn| Vec2::new(spawn.position_h.x_h, spawn.position_h.y_h)),
-            Self::Platform(_) | Self::Terrain(_) | Self::Decoration(_) => {
+            Self::Platform(_) | Self::Decoration(_) => {
                 self.bounds(room).map(|rect| Vec2::new(rect.x, rect.y))
             }
         }
@@ -125,12 +123,7 @@ impl EditorItem {
                     (spawn.position_h.x_h, spawn.position_h.y_h) = origin.into();
                 }
             }
-            Self::Platform(index) => {
-                if let Some(block) = room.platforms.get_mut(index) {
-                    (block.rect_h.x, block.rect_h.y) = origin.into();
-                }
-            }
-            Self::Terrain(_) | Self::Decoration(_) => {
+            Self::Platform(_) | Self::Decoration(_) => {
                 if let Some(rect) = self.rect_mut(room) {
                     (rect.x, rect.y) = origin.into();
                 }
@@ -141,7 +134,6 @@ impl EditorItem {
     fn rect_mut(self, room: &mut RoomConfig) -> Option<&mut RectH> {
         match self {
             Self::Platform(index) => room.platforms.get_mut(index).map(|block| &mut block.rect_h),
-            Self::Terrain(index) => room.terrain.get_mut(index).map(|block| &mut block.rect_h),
             Self::Decoration(index) => room
                 .decorations
                 .get_mut(index)
@@ -150,34 +142,29 @@ impl EditorItem {
         }
     }
 
-    /// The terrain material a block or decoration is drawn with.
-    fn material(self, room: &RoomConfig) -> Option<&MaterialId> {
+    /// What a platform or decoration is painted with.
+    fn fill(self, room: &RoomConfig) -> Option<&Fill> {
         match self {
-            Self::Platform(index) => room.platforms.get(index).map(|block| &block.material),
-            Self::Terrain(index) => room.terrain.get(index).map(|block| &block.material),
+            Self::Platform(index) => room.platforms.get(index).map(|block| &block.fill),
             Self::Decoration(index) => room
                 .decorations
                 .get(index)
-                .map(|decoration| &decoration.material),
+                .map(|decoration| &decoration.fill),
             Self::PlayerSpawn | Self::Exit | Self::Enemy(_) => None,
         }
     }
 
-    fn set_material(self, room: &mut RoomConfig, material: &MaterialId) {
+    fn set_fill(self, room: &mut RoomConfig, fill: &Fill) {
         let slot = match self {
-            Self::Platform(index) => room
-                .platforms
-                .get_mut(index)
-                .map(|block| &mut block.material),
-            Self::Terrain(index) => room.terrain.get_mut(index).map(|block| &mut block.material),
+            Self::Platform(index) => room.platforms.get_mut(index).map(|block| &mut block.fill),
             Self::Decoration(index) => room
                 .decorations
                 .get_mut(index)
-                .map(|decoration| &mut decoration.material),
+                .map(|decoration| &mut decoration.fill),
             Self::PlayerSpawn | Self::Exit | Self::Enemy(_) => None,
         };
         if let Some(slot) = slot {
-            slot.clone_from(material);
+            slot.clone_from(fill);
         }
     }
 
@@ -187,18 +174,12 @@ impl EditorItem {
         // Later indices first, so removing one keeps the others valid.
         items.sort_by_key(|item| {
             std::cmp::Reverse(match item {
-                Self::Terrain(index)
-                | Self::Platform(index)
-                | Self::Enemy(index)
-                | Self::Decoration(index) => *index,
+                Self::Platform(index) | Self::Enemy(index) | Self::Decoration(index) => *index,
                 Self::PlayerSpawn | Self::Exit => 0,
             })
         });
         for item in items {
             match item {
-                Self::Terrain(index) if index < room.terrain.len() => {
-                    room.terrain.remove(index);
-                }
                 Self::Platform(index) if index < room.platforms.len() => {
                     room.platforms.remove(index);
                 }
@@ -215,9 +196,8 @@ impl EditorItem {
 
     /// Every item of the room, blocks first.
     fn all(room: &RoomConfig) -> impl Iterator<Item = Self> {
-        (0..room.terrain.len())
-            .map(Self::Terrain)
-            .chain((0..room.platforms.len()).map(Self::Platform))
+        (0..room.platforms.len())
+            .map(Self::Platform)
             .chain((0..room.decorations.len()).map(Self::Decoration))
             .chain((0..room.enemy_spawns.len()).map(Self::Enemy))
             .chain([Self::PlayerSpawn, Self::Exit])
@@ -238,10 +218,6 @@ impl EditorItem {
                 .platforms
                 .get(index)
                 .and_then(|block| block.label.as_deref()),
-            Self::Terrain(index) => room
-                .terrain
-                .get(index)
-                .and_then(|block| block.label.as_deref()),
             Self::Decoration(index) => room
                 .decorations
                 .get(index)
@@ -258,7 +234,6 @@ impl EditorItem {
                     format!("enemy #{} {}", index + 1, spawn.type_id)
                 }),
             Self::Platform(index) => format!("platform #{}", index + 1),
-            Self::Terrain(index) => format!("terrain #{}", index + 1),
             Self::Decoration(index) => room
                 .decorations
                 .get(index)
@@ -285,7 +260,6 @@ impl EditorItem {
             .chain((0..room.enemy_spawns.len()).rev().map(Self::Enemy));
         let blocks = (0..room.platforms.len())
             .map(Self::Platform)
-            .chain((0..room.terrain.len()).map(Self::Terrain))
             .chain((0..room.decorations.len()).map(Self::Decoration));
         spawns.into_iter().find(contains).or_else(|| {
             blocks.filter(contains).min_by(|a, b| {
@@ -355,8 +329,10 @@ struct RoomEditor {
     attack: usize,
     /// Enemy type the next added enemy uses: the last one placed or picked.
     enemy_type: Option<EnemyTypeId>,
-    /// Material new blocks and decorations use: the last one picked.
-    material: Option<MaterialId>,
+    /// What new platforms and decorations are painted with: the last fill picked.
+    fill: Option<Fill>,
+    /// The hue the color picker's shades are mixed from, in degrees.
+    hue: f32,
     /// Items copied with Cmd+C or Cmd+X, ready to paste into any room.
     clipboard: Option<Clipboard>,
     /// The cursor is over an editor panel, so clicks don't reach the room.
@@ -389,7 +365,8 @@ impl Default for RoomEditor {
             saved_hitboxes: None,
             attack: 0,
             enemy_type: None,
-            material: None,
+            fill: None,
+            hue: 0.0,
             clipboard: None,
             pointer_over_panel: false,
             just_opened: false,
@@ -596,8 +573,8 @@ fn enter_editor(
                 String::from("Two-finger scroll, right or middle drag: pan"),
                 String::from("Pinch or wheel: zoom"),
                 String::from("Home: fit the room"),
-                String::from("T / P / D / E: add terrain / platform / decoration / enemy"),
-                String::from("Click a material: paint the selection"),
+                String::from("P / D / E: add platform / decoration / enemy"),
+                String::from("Click a material or a color: paint the selection"),
                 String::from("Del: delete"),
                 format!("{COMMAND_KEY}+D: duplicate"),
                 String::from("Up / Down: inspector field"),
@@ -653,10 +630,10 @@ chapter_id: 1
 size: { width_viewports: 2, height_h: 27 }
 background_profile: clouds_bright_blue
 player_spawn: { x_h: 2.5, y_h: 1 }
-terrain:
-  - { label: floor, material: stone_cobble, rect_h: { x: 0, y: 0, width: 48, height: 1 } }
-  - { label: walkway, material: stone_cobble, rect_h: { x: 13, y: 6, width: 14, height: 1 } }
-  - { label: step, material: stone_cobble, rect_h: { x: 28, y: 1, width: 2, height: 1.5 } }
+platforms:
+  - { label: floor, material: city_pavement, rect_h: { x: 0, y: 0, width: 48, height: 1 } }
+  - { label: walkway, color: \"#4C5A74\", rect_h: { x: 13, y: 6, width: 14, height: 1 } }
+  - { label: step, material: city_pavement, rect_h: { x: 28, y: 1, width: 2, height: 1.5 } }
 enemy_spawns: []
 exit: { x_h: 45, y_h: 1 }
 next_room_id: 4
@@ -670,10 +647,10 @@ next_room_id: 4
         // The step (x 28..30) sits on the floor (x 0..48): both cover
         // this point, and the step is the smaller block.
         let step = room
-            .terrain
+            .platforms
             .iter()
             .position(|block| block.label.as_deref() == Some("step"))
-            .map(EditorItem::Terrain);
+            .map(EditorItem::Platform);
         assert_eq!(EditorItem::at(room, Vec2::new(29.0, 1.0)), step);
         assert_eq!(EditorItem::at(room, Vec2::new(-5.0, -5.0)), None);
     }
@@ -711,7 +688,7 @@ next_room_id: 4
         let data = GameData::load(&asset_root).expect("Chapter 1 YAML should be valid");
         let mut room = data.rooms[&3].clone();
         let selection = [
-            EditorItem::Terrain(1),
+            EditorItem::Platform(1),
             EditorItem::Platform(0),
             EditorItem::Enemy(0),
             EditorItem::PlayerSpawn,
@@ -727,10 +704,15 @@ next_room_id: 4
             assert_eq!(moved.map(|(copy, original)| copy - original), Some(offset));
         }
 
-        Field::Material.adjust(&mut room, &pasted, &data, 1.0);
-        let painted = pasted[0].material(&room).cloned();
-        assert_ne!(painted.as_ref(), selection[0].material(&room));
-        assert_eq!(pasted[1].material(&room).cloned(), painted);
+        let before = pasted[1].fill(&room).cloned();
+        Field::Fill.adjust(&mut room, &pasted, &data, 1.0);
+        let painted = pasted[0].fill(&room).cloned();
+        assert_ne!(painted, before, "Fill cycles to another material");
+        assert_eq!(
+            pasted[1].fill(&room).cloned(),
+            painted,
+            "one step paints the whole selection"
+        );
 
         EditorItem::remove_all(&mut room, &pasted);
         assert_eq!(room, data.rooms[&3], "only the pasted items were painted");

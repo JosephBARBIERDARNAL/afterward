@@ -85,9 +85,8 @@ pub(in crate::game) fn update_player_bullets(
         let start = bullet.fired_from.take().unwrap_or(muzzle);
         let travel = (muzzle - start).length() + step;
         let half_size = bullet.half_size;
-        let terrain_hit = platforms
+        let platform_hit = platforms
             .iter()
-            .filter(|block| !block.one_way)
             .filter_map(|block| {
                 HitBox {
                     min: Vec2::new(block.left, block.bottom) - half_size,
@@ -112,9 +111,9 @@ pub(in crate::game) fn update_player_bullets(
             })
             .min_by(|a, b| a.0.total_cmp(&b.0));
 
-        match (enemy_hit, terrain_hit) {
-            (Some((distance, enemy_entity)), terrain)
-                if terrain.is_none_or(|wall| distance <= wall) =>
+        match (enemy_hit, platform_hit) {
+            (Some((distance, enemy_entity)), platform)
+                if platform.is_none_or(|blocked| distance <= blocked) =>
             {
                 let point = start + *direction * distance;
                 if let Ok((entity, mut enemy, mut enemy_transform, mut sprite, mut animation)) =

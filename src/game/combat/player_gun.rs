@@ -41,7 +41,7 @@ pub(in crate::game) fn player_gun(
     if player.rhythm_timer == 0.0 {
         player.rhythm_stacks = 0;
     }
-    if player.dying_s.is_some() || player.mantle.is_some() {
+    if player.dying_s.is_some() {
         return;
     }
 

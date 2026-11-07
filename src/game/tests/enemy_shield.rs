@@ -18,8 +18,8 @@ chapter_id: 1
 size: { width_viewports: 2, height_h: 13.5 }
 background_profile: clouds_bright_blue
 player_spawn: { x_h: 2.5, y_h: 1 }
-terrain:
-  - { material: stone_cobble, rect_h: { x: 0, y: 0, width: 48, height: 1 } }
+platforms:
+  - { material: city_pavement, rect_h: { x: 0, y: 0, width: 48, height: 1 } }
 enemy_spawns:
   - { type_id: swordsman, position_h: { x: 10, y: 1 } }
   - { type_id: gorgon_1, position_h: { x: 20, y: 1 } }

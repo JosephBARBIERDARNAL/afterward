@@ -78,7 +78,7 @@ fn the_editor_selects_all_copies_into_another_room_adds_and_paints_a_decoration(
     .expect("room 1 is valid YAML");
     assert_eq!(first, on_disk, "the D that opens the editor adds nothing");
 
-    // Cmd+A and Cmd+C copy every block, decoration, and enemy of room 1;
+    // Cmd+A and Cmd+C copy every platform, decoration, and enemy of room 1;
     // Cmd+V pastes them into room 2, and Cmd+Z takes them out again.
     command_presses(&mut game, KeyCode::KeyA, "a", 1);
     command_presses(&mut game, KeyCode::KeyC, "c", 1);
@@ -86,8 +86,8 @@ fn the_editor_selects_all_copies_into_another_room_adds_and_paints_a_decoration(
     command_presses(&mut game, KeyCode::KeyV, "v", 1);
     let pasted = room(&game, 2);
     assert_eq!(
-        pasted.terrain.len() + pasted.platforms.len(),
-        second.terrain.len() + second.platforms.len() + first.terrain.len() + first.platforms.len()
+        pasted.platforms.len(),
+        second.platforms.len() + first.platforms.len()
     );
     assert_eq!(
         pasted.enemy_spawns.len(),
@@ -97,15 +97,15 @@ fn the_editor_selects_all_copies_into_another_room_adds_and_paints_a_decoration(
     assert_eq!(room(&game, 2), second);
     assert_eq!(room(&game, 1), first, "copying leaves room 1 as it was");
 
-    // D adds a decoration; Down to its Material field and Right repaints it.
+    // D adds a decoration; Down to its Fill field and Right repaints it.
     game.tap(KeyCode::KeyD);
     let added = room(&game, 2).decorations.len();
     assert_eq!(added, second.decorations.len() + 1);
-    let material = |game: &HeadlessGame| room(game, 2).decorations[added - 1].material.clone();
-    let before = material(&game);
+    let fill = |game: &HeadlessGame| room(game, 2).decorations[added - 1].fill.clone();
+    let before = fill(&game);
     game.tap(KeyCode::ArrowDown);
     game.tap(KeyCode::ArrowRight);
-    assert_ne!(material(&game), before);
+    assert_ne!(fill(&game), before);
 
     // Cmd+S writes the decoration to room 2's file.
     command_presses(&mut game, KeyCode::KeyS, "s", 1);
@@ -115,7 +115,7 @@ fn the_editor_selects_all_copies_into_another_room_adds_and_paints_a_decoration(
     )
     .expect("the saved room is valid YAML");
     assert_eq!(saved.decorations.len(), added);
-    assert_eq!(saved.decorations[added - 1].material, material(&game));
+    assert_eq!(saved.decorations[added - 1].fill, fill(&game));
 }
 
 #[test]
@@ -124,9 +124,9 @@ fn the_editor_redraws_an_edited_room_with_its_background_in_place() {
     game.tap(KeyCode::KeyD);
     assert_eq!(game.screen(), GameScreen::Editor);
 
-    // T adds a block and redraws the room on the frame of the press: the new
-    // background layers must already sit on the camera, not flash elsewhere.
-    game.key(KeyCode::KeyT, ButtonState::Pressed);
+    // P adds a platform and redraws the room on the frame of the press: the
+    // new background layers must already sit on the camera, not flash elsewhere.
+    game.key(KeyCode::KeyP, ButtonState::Pressed);
     game.app.update();
     let world = game.app.world_mut();
     let camera_y = world

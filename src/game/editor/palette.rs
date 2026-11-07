@@ -1,13 +1,22 @@
-//! The material palette: a swatch for every terrain material. Clicking one
-//! paints the selected blocks and decorations with it and makes it the
-//! material new ones use.
+//! The fill palette: a swatch for every surface material, then a color
+//! picker (a hue strip over a grid of shades mixed from it). Clicking any of
+//! them paints the selected platforms and decorations and becomes the fill
+//! new ones use.
 
 use super::*;
+use crate::data::{HexColor, MaterialId};
 use bevy::ui::RelativeCursorPosition;
 
 const SWATCH_PX: f32 = 26.0;
 const SWATCH_GAP_PX: f32 = 4.0;
 const COLUMNS: usize = 9;
+/// The color picker's swatches, in a denser grid than the materials.
+const COLOR_SWATCH_PX: f32 = 18.0;
+const HUES: usize = 12;
+/// Saturation steps across the shade grid, left (grey) to right (pure).
+const SATURATIONS: usize = 12;
+/// Brightness of each row of shades, dark to light.
+const LIGHTNESSES: [f32; 4] = [0.16, 0.34, 0.54, 0.78];
 const SWATCH_BORDER: Color = Color::srgba(1.0, 1.0, 1.0, 0.12);
 const CURRENT_BORDER: Color = Color::srgb(1.0, 0.9, 0.2);
 const HOVER_BORDER: Color = Color::WHITE;
@@ -19,13 +28,58 @@ pub(super) struct PalettePanel;
 #[derive(Component)]
 pub(super) struct PaletteSwatch(MaterialId);
 
-/// The line naming the hovered (or current) material.
+/// A hue of the color picker, in degrees: clicking it mixes the shade grid
+/// from that hue without painting anything.
+#[derive(Component)]
+pub(super) struct HueSwatch(f32);
+
+/// Every shade swatch, with what the picked hue repaints each frame.
+type Shades<'world, 'state> = Query<
+    'world,
+    'state,
+    (
+        &'static RelativeCursorPosition,
+        &'static ShadeSwatch,
+        &'static mut BorderColor,
+        &'static mut BackgroundColor,
+    ),
+    (Without<PaletteSwatch>, Without<HueSwatch>),
+>;
+
+/// One shade of the picked hue.
+#[derive(Component)]
+pub(super) struct ShadeSwatch {
+    saturation: f32,
+    lightness: f32,
+}
+
+impl ShadeSwatch {
+    fn color(&self, hue: f32) -> Color {
+        Color::hsl(hue, self.saturation, self.lightness)
+    }
+}
+
+/// The line naming the hovered (or current) fill.
 #[derive(Component)]
 pub(super) struct PaletteCaption;
 
 pub(super) fn spawn_palette(commands: &mut Commands, data: &GameData, asset_server: &AssetServer) {
     let width = COLUMNS as f32 * (SWATCH_PX + SWATCH_GAP_PX);
-    let texture_px = data.terrain.texture_px as f32;
+    let grid = |columns: usize, swatch_px: f32| Node {
+        width: px(width),
+        max_width: px(columns as f32 * (swatch_px + SWATCH_GAP_PX)),
+        flex_direction: FlexDirection::Row,
+        flex_wrap: FlexWrap::Wrap,
+        column_gap: px(SWATCH_GAP_PX),
+        row_gap: px(SWATCH_GAP_PX),
+        ..default()
+    };
+    let cell = |swatch_px: f32| Node {
+        width: px(swatch_px),
+        height: px(swatch_px),
+        border: UiRect::all(px(2)),
+        ..default()
+    };
     commands
         .spawn((
             Node {
@@ -56,46 +110,46 @@ pub(super) fn spawn_palette(commands: &mut Commands, data: &GameData, asset_serv
                 },
                 PaletteCaption,
             ));
+            panel.spawn(grid(COLUMNS, SWATCH_PX)).with_children(|grid| {
+                for (id, material) in &data.surfaces.materials {
+                    grid.spawn((
+                        cell(SWATCH_PX),
+                        BorderColor::all(SWATCH_BORDER),
+                        ImageNode::new(room_art::load_texture(asset_server, &material.texture)),
+                        RelativeCursorPosition::default(),
+                        PaletteSwatch(id.clone()),
+                    ));
+                }
+            });
             panel
-                .spawn(Node {
-                    width: px(width),
-                    flex_direction: FlexDirection::Row,
-                    flex_wrap: FlexWrap::Wrap,
-                    column_gap: px(SWATCH_GAP_PX),
-                    row_gap: px(SWATCH_GAP_PX),
-                    ..default()
-                })
-                .with_children(|grid| {
-                    for (id, material) in &data.terrain.materials {
-                        let mut swatch = grid.spawn((
-                            Node {
-                                width: px(SWATCH_PX),
-                                height: px(SWATCH_PX),
-                                border: UiRect::all(px(2)),
-                                ..default()
-                            },
+                .spawn(grid(HUES, COLOR_SWATCH_PX))
+                .with_children(|strip| {
+                    for index in 0..HUES {
+                        let hue = index as f32 / HUES as f32 * 360.0;
+                        strip.spawn((
+                            cell(COLOR_SWATCH_PX),
                             BorderColor::all(SWATCH_BORDER),
-                            ImageNode::new(terrain_art::load_texture(
-                                asset_server,
-                                &material.texture,
-                            )),
+                            BackgroundColor(Color::hsl(hue, 0.75, 0.5)),
                             RelativeCursorPosition::default(),
-                            PaletteSwatch(id.clone()),
+                            HueSwatch(hue),
                         ));
-                        if let Some(cap) = &material.top {
-                            swatch.with_child((
-                                Node {
-                                    position_type: PositionType::Absolute,
-                                    left: px(0),
-                                    top: px(0),
-                                    width: percent(100),
-                                    height: percent(cap.depth_px / texture_px * 100.0),
-                                    ..default()
-                                },
-                                ImageNode::new(terrain_art::load_texture(
-                                    asset_server,
-                                    &cap.texture,
-                                )),
+                    }
+                });
+            panel
+                .spawn(grid(SATURATIONS, COLOR_SWATCH_PX))
+                .with_children(|shades| {
+                    for lightness in LIGHTNESSES {
+                        for column in 0..SATURATIONS {
+                            let shade = ShadeSwatch {
+                                saturation: column as f32 / (SATURATIONS - 1) as f32,
+                                lightness,
+                            };
+                            shades.spawn((
+                                cell(COLOR_SWATCH_PX),
+                                BorderColor::all(SWATCH_BORDER),
+                                BackgroundColor(shade.color(0.0)),
+                                RelativeCursorPosition::default(),
+                                shade,
                             ));
                         }
                     }
@@ -103,63 +157,103 @@ pub(super) fn spawn_palette(commands: &mut Commands, data: &GameData, asset_serv
         });
 }
 
-/// Paints the selection with a clicked swatch's material and remembers it
-/// for new blocks; notes whether the cursor is over the palette so the room
-/// ignores the click.
+/// Paints the selection with a clicked material or shade and remembers it for
+/// new blocks; a clicked hue only remixes the shades. Notes whether the cursor
+/// is over the palette so the room ignores the click.
 pub(super) fn handle_palette(
     mouse: Res<ButtonInput<MouseButton>>,
     mut editor: ResMut<RoomEditor>,
     mut data: ResMut<GameData>,
     panels: Query<&RelativeCursorPosition, With<PalettePanel>>,
-    swatches: Query<(&RelativeCursorPosition, &PaletteSwatch)>,
+    materials: Query<(&RelativeCursorPosition, &PaletteSwatch)>,
+    hues: Query<(&RelativeCursorPosition, &HueSwatch)>,
+    shades: Query<(&RelativeCursorPosition, &ShadeSwatch)>,
 ) {
     editor.pointer_over_panel = panels.iter().any(RelativeCursorPosition::cursor_over);
     if !mouse.just_pressed(MouseButton::Left) {
         return;
     }
-    let Some((_, PaletteSwatch(material))) =
-        swatches.iter().find(|(cursor, _)| cursor.cursor_over())
-    else {
+    if let Some((_, HueSwatch(hue))) = hues.iter().find(|(cursor, _)| cursor.cursor_over()) {
+        editor.hue = *hue;
+        return;
+    }
+    let picked = materials
+        .iter()
+        .find(|(cursor, _)| cursor.cursor_over())
+        .map(|(_, PaletteSwatch(material))| Fill::Material(material.clone()))
+        .or_else(|| {
+            let hue = editor.hue;
+            shades
+                .iter()
+                .find(|(cursor, _)| cursor.cursor_over())
+                .map(|(_, shade)| Fill::Color(HexColor::from(shade.color(hue))))
+        });
+    let Some(fill) = picked else {
         return;
     };
-    let material = material.clone();
     let selection = editor.selected.clone();
     editor.edit(&mut data, |room| {
         for item in &selection {
-            item.set_material(room, &material);
+            item.set_fill(room, &fill);
         }
     });
-    editor.status = format!("Material: {material}");
-    editor.material = Some(material);
+    editor.status = format!("Fill: {fill}");
+    editor.fill = Some(fill);
 }
 
-/// Outlines the current material's swatch and the hovered one, and names
-/// the hovered material (or the current one) above the grid.
-pub(super) fn highlight_swatches(
+/// Mixes the shade grid from the picked hue, outlines the current fill's
+/// swatch and the hovered one, and names the hovered fill (or the current
+/// one) above the grids.
+pub(super) fn refresh_palette(
     editor: Res<RoomEditor>,
     data: Res<GameData>,
-    mut swatches: Query<(&RelativeCursorPosition, &PaletteSwatch, &mut BorderColor)>,
+    mut materials: Query<(&RelativeCursorPosition, &PaletteSwatch, &mut BorderColor)>,
+    mut hues: Query<
+        (&RelativeCursorPosition, &HueSwatch, &mut BorderColor),
+        Without<PaletteSwatch>,
+    >,
+    mut shades: Shades,
     mut caption: Query<&mut Text, With<PaletteCaption>>,
 ) {
     let current = data
         .rooms
         .get(&editor.room_id)
-        .and_then(|room| editor.primary().and_then(|item| item.material(room)))
-        .or(editor.material.as_ref());
+        .and_then(|room| editor.primary().and_then(|item| item.fill(room)))
+        .or(editor.fill.as_ref());
     let mut hovered = None;
-    for (cursor, PaletteSwatch(material), mut border) in &mut swatches {
-        let color = if cursor.cursor_over() {
-            hovered = Some(material);
+    let border = |cursor: &RelativeCursorPosition, is_current: bool| {
+        if cursor.cursor_over() {
             HOVER_BORDER
-        } else if Some(material) == current {
+        } else if is_current {
             CURRENT_BORDER
         } else {
             SWATCH_BORDER
-        };
-        *border = BorderColor::all(color);
+        }
+    };
+    for (cursor, PaletteSwatch(material), mut outline) in &mut materials {
+        if cursor.cursor_over() {
+            hovered = Some(material.to_string());
+        }
+        let is_current = matches!(current, Some(Fill::Material(picked)) if picked == material);
+        *outline = BorderColor::all(border(cursor, is_current));
     }
-    let name = hovered.or(current).map_or("-", |material| material);
-    let line = format!("MATERIALS  {name}");
+    for (cursor, HueSwatch(hue), mut outline) in &mut hues {
+        let is_current = (*hue - editor.hue).abs() < f32::EPSILON;
+        *outline = BorderColor::all(border(cursor, is_current));
+    }
+    for (cursor, shade, mut outline, mut background) in &mut shades {
+        let color = HexColor::from(shade.color(editor.hue));
+        if cursor.cursor_over() {
+            hovered = Some(color.to_string());
+        }
+        let is_current = matches!(current, Some(Fill::Color(picked)) if *picked == color);
+        *outline = BorderColor::all(border(cursor, is_current));
+        background.0 = Color::from(color);
+    }
+    let name = hovered
+        .or_else(|| current.map(ToString::to_string))
+        .unwrap_or_else(|| String::from("-"));
+    let line = format!("FILL  {name}");
     for mut text in &mut caption {
         if text.0 != line {
             text.0.clone_from(&line);

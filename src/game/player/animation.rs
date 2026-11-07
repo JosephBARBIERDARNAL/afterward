@@ -4,9 +4,6 @@ use crate::data::PlayerAnimations;
 /// What the animation choice needs to know about the frame's movement.
 pub(super) struct AnimationState {
     pub(super) moving: bool,
-    pub(super) wall_sliding: bool,
-    /// Seconds a wall cling lasts before the slide.
-    pub(super) latch_s: f32,
     /// Horizontal speed (world units/s) from which the jog cycle replaces the walk.
     pub(super) jog_speed: f32,
     pub(super) dt: f32,
@@ -43,8 +40,8 @@ impl PlayerSprite<'_> {
     }
 
     /// Picks the clip for the player's current state. One-shot actions (shots,
-    /// hits, landings, turns, wall jumps) play over the movement clips until
-    /// they end; dying and Cover override everything.
+    /// hits, landings, turns) play over the movement clips until they end;
+    /// dying and Cover override everything.
     pub(super) fn update(
         &mut self,
         player: &mut PlayerBody,
@@ -77,7 +74,6 @@ impl PlayerSprite<'_> {
                 PlayerAction::Land => (String::from("player_land"), false, 0),
                 PlayerAction::Turn { running: true } => (String::from("player_turn_run"), false, 0),
                 PlayerAction::Turn { running: false } => (String::from("player_turn"), false, 0),
-                PlayerAction::WallJump => (String::from("player_wall_jump"), false, 0),
             };
             if restart {
                 self.restart(&key, looping, frame);
@@ -91,19 +87,7 @@ impl PlayerSprite<'_> {
             return;
         }
         if !player.grounded {
-            let key = if state.wall_sliding {
-                // The latch cling, then the landing against the wall, then the slide.
-                if player.wall_contact_s <= state.latch_s {
-                    "player_wall_latch"
-                } else if self.animation.sheet == "player_wall_latch"
-                    || (self.animation.sheet == "player_wall_land"
-                        && !self.finished("player_wall_land"))
-                {
-                    "player_wall_land"
-                } else {
-                    "player_wall_slide"
-                }
-            } else if player.velocity.y > 0.0 {
+            let key = if player.velocity.y > 0.0 {
                 // Take-off, then the rising loop.
                 if self.animation.sheet == "player_ascend" || self.finished("player_jump") {
                     "player_ascend"
@@ -113,10 +97,7 @@ impl PlayerSprite<'_> {
             } else {
                 "player_descend"
             };
-            let looping = matches!(
-                key,
-                "player_wall_slide" | "player_ascend" | "player_descend"
-            );
+            let looping = matches!(key, "player_ascend" | "player_descend");
             self.play(key, looping);
             return;
         }
