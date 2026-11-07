@@ -95,7 +95,7 @@ room_flow:
   exit_door:
     sheet: doors/exit_door.png
     frame_size_px: { width: 48, height: 96 }
-    frames: 7
+    frames: 14
     height_h: 1.5
   bonus_rerolls_per_run: 3
 

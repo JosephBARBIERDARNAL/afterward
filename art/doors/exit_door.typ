@@ -1,13 +1,14 @@
-// The exit door as a sprite sheet: 7 frames of 48 x 96 px (0.75 x 1.5 H at
+// The exit door as a sprite sheet: 14 frames of 48 x 96 px (0.75 x 1.5 H at
 // the surfaces' 64 px per H), left to right. Frame 0 is locked (magenta
-// lights), frame 1 unlocked (cyan), and frames 2-6 slide the two panels
+// lights), frame 1 unlocked (cyan), and frames 2-13 slide the two panels
 // apart over a glowing doorway until it is fully open.
 #import "../_pixel.typ": pixels-by
 
 #let frame-width = 48
 #let frame-height = 96
-// How far each panel has slid into the frame, per frame.
-#let openings = (0, 0, 3, 7, 11, 15, 18)
+// How far each panel has slid into the frame, per frame: the panels ease out
+// of rest, run at full speed, then settle against the frame.
+#let openings = (0, 0, 1, 2, 4, 6, 8, 10, 12, 14, 15, 16, 17, 18)
 
 #let palette = (
   "#": rgb("#07080f"), // outline, grooves

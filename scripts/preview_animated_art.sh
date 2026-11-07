@@ -40,8 +40,8 @@ make_preview() {
     echo "art/$source -> art/previews/$name.gif (${#frames[@]} frames)"
 }
 
-# Door states hold for a moment; the five opening frames play quickly.
-make_preview doors/exit_door.typ exit_door 48 96 80 80 14 14 14 14 80
+# Door states hold for a moment; the twelve opening frames play at 30 fps.
+make_preview doors/exit_door.typ exit_door 48 96 80 80 3 3 3 3 3 3 3 3 3 3 3 80
 
 # The shield stays intact, then plays its five-frame break at 30 fps.
 make_preview ui/enemy_shield.typ enemy_shield 21 16 100 3 3 3 3 100
