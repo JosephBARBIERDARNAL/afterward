@@ -79,7 +79,7 @@ impl GameData {
             .unwrap_or_default()
     }
 
-    /// Checks the loaded data against the spec's rules; the debug editor
+    /// Checks the loaded data against the game's rules; the debug editor
     /// re-runs it before saving or playtesting an edited room.
     pub(crate) fn validate(&self) -> Result<(), InvalidGameData> {
         let asset_root = &self.asset_root;

@@ -1,10 +1,21 @@
-## Game specifications
+## The game
 
-The entire game specification lives in `game-spec.md`. It is the reference for every behavior of the game: when the spec and the code disagree, ask which one is right; when a change alters behavior, update the spec in the same commit.
+Afterward is a single-player, offline, 2D action roguelike pixel-art platformer. The core design:
+
+- A run is 100 hand-authored rooms played in fixed order, split into 10 chapters of 10 rooms. Each chapter has its own environment and music, and ends with a boss in its tenth room; room 100 holds the final boss. Rooms are not procedurally generated.
+- Rooms are enclosed, multi-level arenas (Dead Cells style): solid terrain, one-way platforms, ledges at several heights, reachable by the player and by enemies. The player walks in from the left; the exit is on the right.
+- Clearing a room offers a choice of two random bonuses (never one already owned, with a few rerolls per run). Bonuses build a temporary run build. Death ends the run and nothing carries over: no currency, unlocks, or meta-progression.
+- Health persists between rooms and healing is scarce, so taking damage matters.
+- Combat is fast, mobile, and skill-based. The player's only weapon is a gun (magazine and reload); movement includes dash, wall slide and wall jump, ledge mantle, crouch, and cover. The player never receives knockback; only bosses do.
+- Enemies stay idle until the player is detected, then chase across levels (jumping, dropping, mantling). They deal damage only through attack hitboxes or projectiles, never by contact, and attacks are telegraphed by a readable wind-up.
+- `H`, the height of the player's collision box, is the unit for every distance and speed. The visible world is a fixed 16:9 viewport, 9 H tall, scaled to fit any window without revealing more of the room.
+- Every player action has a dedicated animation. Audio is placeholder for now: missing audio must never prevent the game from running.
+
+The details (tuning values, rooms, enemies, bonuses, materials, backgrounds, animations, controls) live in the YAML files under `src/assets/` and in the code, which are the reference. Don't duplicate them here.
 
 The game is in development, focused on Chapter 1 (rooms 1–10). Content and systems needed only for later chapters (rooms 11–100) are low priority unless explicitly requested.
 
-The project is at an early, experimental stage. Many choices (assets, room layouts and materials, tuning values, editor features, even parts of the spec) are trials that may be reworked or dropped soon. Expect them to change: prefer simple, easy-to-replace solutions over heavy abstractions or polish, don't treat the current state as a settled design, and when something looks like a placeholder or a half-made decision, ask rather than build on it as final.
+The project is at an early, experimental stage. Many choices (assets, room layouts and materials, tuning values, editor features, even parts of the core design above) are trials that may be reworked or dropped soon. Expect them to change: prefer simple, easy-to-replace solutions over heavy abstractions or polish, don't treat the current state as a settled design, and when something looks like a placeholder or a half-made decision, ask rather than build on it as final.
 
 ## Run and check
 
