@@ -90,6 +90,10 @@ Debug builds (`cargo run`, `just run`) add `D  Debug editor` to the main menu (o
 - The material palette (top right) shows every material of `terrain/materials.yaml`: clicking a swatch paints the selected blocks and decorations and becomes the material new ones use. Clicks over a panel never reach the room.
 - The key that opens the editor from a menu (D) is ignored on the frame it opens, so it doesn't also add a decoration.
 
+### Hitboxes
+
+Every hit area is data, in H: the player's hurtbox in `config/gameplay.yaml` (`player.hurtbox_h`), and each enemy type's hurtbox, attack hitboxes, and projectile sizes in `enemies/enemy_types.yaml` (its header explains the coordinates). `src/game/combat/hitboxes.rs` turns them into world rectangles for combat. In debug builds, F3 toggles an overlay (`src/game/hitbox_overlay.rs`) that draws them with that same code: green player hurtbox, yellow enemy hurtboxes, red strikes (faint for an enemy's next attack), orange projectiles, cyan bullets.
+
 ### Typst pixel art
 
 Some assets are drawn in code with [Typst](https://typst.app) instead of a paint program: geometric, grid-aligned art such as the `wood`, `metal`, and `carved` terrain textures and the HUD pieces in `src/assets/ui/`. Sources live in `art/`, mirroring their output path under `src/assets/` (`art/terrain/textures/wood/planks.typ` renders `src/assets/terrain/textures/wood/planks.png`).

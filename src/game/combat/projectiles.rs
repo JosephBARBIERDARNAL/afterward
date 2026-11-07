@@ -42,8 +42,11 @@ pub(in crate::game) fn update_projectiles(
         projectile_transform.translation.x += travel;
         let end = projectile_transform.translation.truncate();
         let mut hit = projectile.life_s <= 0.0;
-        let delta = player_transform.translation - projectile_transform.translation;
-        if delta.x.abs() <= 24.0 && delta.y.abs() <= 36.0 {
+        let hurtbox = player_hurtbox(player_transform.translation, &data);
+        if !Rect::from_center_half_size(end, projectile.half_size)
+            .intersect(hurtbox)
+            .is_empty()
+        {
             apply_player_damage(
                 PlayerDamageResources {
                     commands: &mut commands,

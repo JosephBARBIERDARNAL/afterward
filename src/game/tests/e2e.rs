@@ -29,6 +29,7 @@ use std::{
 mod bonus;
 mod death;
 mod editor;
+mod hitboxes;
 mod pause;
 mod run;
 

@@ -16,6 +16,8 @@ mod controls;
 #[cfg(debug_assertions)]
 mod editor;
 mod flow;
+#[cfg(debug_assertions)]
+mod hitbox_overlay;
 mod interface;
 mod menus;
 mod pause_blur;
@@ -83,7 +85,16 @@ impl std::str::FromStr for StartRoom {
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         #[cfg(debug_assertions)]
-        app.add_plugins(editor::EditorPlugin);
+        app.add_plugins(editor::EditorPlugin)
+            .init_resource::<hitbox_overlay::HitboxOverlay>()
+            .add_systems(
+                Update,
+                (
+                    hitbox_overlay::toggle_hitbox_overlay,
+                    hitbox_overlay::draw_hitbox_overlay,
+                )
+                    .chain(),
+            );
         app.add_plugins(pause_blur::PauseBlurPlugin)
             .init_state::<GameScreen>()
             .init_resource::<RunSession>()

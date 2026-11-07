@@ -49,6 +49,8 @@ pub(in crate::game) fn update_enemy_ai(
     let jumping = &data.enemies.jumping;
     let terrain = Terrain(platforms.iter().collect());
     let level_change_threshold = jumping.level_change_threshold_h * H_WORLD_UNITS;
+    // Attacks start once the player's hurtbox edge enters their hitbox.
+    let player_half_width_h = data.gameplay.player.hurtbox_h.width / 2.0;
     let player_feet = Vec2::new(
         player_transform.translation.x,
         player_transform.translation.y - 0.5 * H_WORLD_UNITS,
@@ -84,7 +86,6 @@ pub(in crate::game) fn update_enemy_ai(
             enemy.knockback_velocity = move_towards(enemy.knockback_velocity, 0.0, 14.0 * dt);
         }
         let dx = player_transform.translation.x - transform.translation.x;
-        let dy = player_transform.translation.y - transform.translation.y;
         let distance_h = dx.abs() / H_WORLD_UNITS;
         if !enemy.engaged && distance_h <= data.enemies.detection_range_h {
             enemy.engaged = true;
@@ -130,10 +131,11 @@ pub(in crate::game) fn update_enemy_ai(
             sounds.push(SoundCue::EnemyAttack(audio::EnemySoundStyle::from(
                 &enemy.type_id,
             )));
-            let landing = player_feet - feet;
-            if landing.x.abs() <= attack.landing_radius_h * H_WORLD_UNITS
-                && landing.y.abs() <= attack.landing_radius_h * H_WORLD_UNITS
-            {
+            if attack.hits(
+                feet,
+                dx,
+                player_hurtbox(player_transform.translation, &data),
+            ) {
                 apply_player_damage(
                     PlayerDamageResources {
                         commands: &mut commands,
@@ -201,7 +203,7 @@ pub(in crate::game) fn update_enemy_ai(
                 )));
                 if kind.contains("projectile") {
                     let direction = if dx >= 0.0 { 1.0 } else { -1.0 };
-                    let projectile_size = Vec2::new(14.0, 8.0);
+                    let projectile_size = attack.projectile_size;
                     commands.spawn((
                         Sprite::from_color(Color::srgb(0.95, 0.3, 0.24), projectile_size),
                         Transform::from_translation(
@@ -218,19 +220,19 @@ pub(in crate::game) fn update_enemy_ai(
                     ));
                 } else {
                     if (kind == "telegraphed_lunge" || kind == "lunge")
-                        && distance_h > attack.reach_h
+                        && distance_h > (attack.reach_h + player_half_width_h)
                     {
-                        transform.translation.x +=
-                            dx.signum() * (distance_h - attack.reach_h).min(1.5) * H_WORLD_UNITS;
+                        transform.translation.x += dx.signum()
+                            * (distance_h - (attack.reach_h + player_half_width_h)).min(1.5)
+                            * H_WORLD_UNITS;
                     }
-                    let strike_distance_h =
-                        (player_transform.translation.x - transform.translation.x).abs()
-                            / H_WORLD_UNITS;
-                    if (strike_distance_h <= attack.reach_h && dy.abs() <= H_WORLD_UNITS * 1.5)
-                        || (attack.landing_radius_h > 0.0
-                            && strike_distance_h <= attack.landing_radius_h
-                            && dy.abs() <= attack.landing_radius_h * H_WORLD_UNITS)
-                    {
+                    // Struck from where the enemy stands now, after any lunge.
+                    let strike_feet = Vec2::new(transform.translation.x, feet.y);
+                    if attack.hits(
+                        strike_feet,
+                        dx,
+                        player_hurtbox(player_transform.translation, &data),
+                    ) {
                         apply_player_damage(
                             PlayerDamageResources {
                                 commands: &mut commands,
@@ -267,9 +269,11 @@ pub(in crate::game) fn update_enemy_ai(
             continue;
         };
         let (minimum_distance, maximum_distance) = if enemy.behavior == "ranged_keep_distance" {
-            enemy.preferred_distance_h.unwrap_or((0.0, attack.reach_h))
+            enemy
+                .preferred_distance_h
+                .unwrap_or((0.0, (attack.reach_h + player_half_width_h)))
         } else {
-            (0.0, attack.reach_h)
+            (0.0, (attack.reach_h + player_half_width_h))
         };
         // Only a grounded player defines a level; a mid-jump player does not
         // send enemies scrambling for platforms.

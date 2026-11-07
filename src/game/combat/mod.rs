@@ -8,6 +8,7 @@ mod enemy_ai;
 mod enemy_body;
 mod enemy_jumps;
 mod feedback;
+mod hitboxes;
 mod player_gun;
 mod projectiles;
 
@@ -28,6 +29,7 @@ pub(super) use feedback::{
     update_damage_numbers, update_dead_enemies, update_health_bars, update_health_pickups,
     update_impact_effects,
 };
+pub(super) use hitboxes::player_hurtbox;
 pub(super) use player_gun::player_gun;
 pub(super) use projectiles::update_projectiles;
 

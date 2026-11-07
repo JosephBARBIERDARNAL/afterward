@@ -96,6 +96,7 @@ pub struct AspectRatio {
 #[derive(Debug, Deserialize)]
 pub struct PlayerConfig {
     pub max_health: f32,
+    pub hurtbox_h: SizeH,
     pub max_speed_h_s: f32,
     pub air_max_speed_h_s: f32,
     pub acceleration_h_s2: f32,

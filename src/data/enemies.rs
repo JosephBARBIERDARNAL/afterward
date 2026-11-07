@@ -10,7 +10,7 @@ use std::{
 
 use serde::{Deserialize, Deserializer, de::Error as DeserializeError};
 
-use super::RangeConfig;
+use super::{RangeConfig, RectH, SizeH};
 
 #[derive(Debug, Deserialize)]
 pub struct EnemyTypes {
@@ -89,6 +89,8 @@ pub struct EnemyTypeConfig {
     pub movement_speed_h_s: f32,
     pub jump_height_h: Option<f32>,
     pub behavior: String,
+    /// Where bullets hit the enemy: centered on the body, from the feet up.
+    pub hurtbox_h: SizeH,
     pub procedural_movement: Option<ProceduralMovementConfig>,
     pub preferred_distance_h: Option<RangeConfig>,
     pub attack: Option<EnemyAttackConfig>,
@@ -122,9 +124,12 @@ pub struct EnemyAttackConfig {
     pub damage: Option<f32>,
     pub damage_per_hit: Option<f32>,
     pub hits: Option<u8>,
-    pub reach_h: Option<f32>,
+    /// Where a strike (or a slam's landing) hurts the player, from the
+    /// enemy's feet: `x` points the way it faces, `y` up. The enemy starts
+    /// the attack once the player's hurtbox reaches its far edge.
+    pub hitbox_h: Option<RectH>,
     pub projectile_speed_h_s: Option<f32>,
-    pub landing_radius_h: Option<f32>,
+    pub projectile_size_h: Option<SizeH>,
     pub cooldown_s: f32,
     pub windup_s: f32,
 }

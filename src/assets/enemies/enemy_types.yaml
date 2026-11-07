@@ -14,8 +14,16 @@ jumping:
   air_speed_h_s: 5
   cooldown_s: 0.6
   level_change_threshold_h: 1
+# Hitboxes, in H (F3 in debug builds draws them all over the game):
+# - hurtbox_h: where bullets hit the enemy, centered on it, from its feet up.
+# - an attack's hitbox_h: where its strike (or a slam's landing) hurts the
+#   player, from the enemy's feet; x points the way the enemy faces (negative
+#   reaches behind it), y up. The enemy starts the attack once the player's
+#   hurtbox reaches the box's far edge.
+# - a projectile attack's projectile_size_h: the shot's size.
 types:
   swordsman:
+    hurtbox_h: { width: 0.6, height: 1 }
     health: 30
     movement_speed_h_s: 2.5
     behavior: melee_pursuit
@@ -26,10 +34,11 @@ types:
     attack:
       kind: melee
       damage: 8
-      reach_h: 1.2
+      hitbox_h: { x: 0, y: 0, width: 0.9, height: 1.5 }
       cooldown_s: 1.2
       windup_s: 0.35
   infantryman:
+    hurtbox_h: { width: 0.6, height: 1 }
     health: 24
     movement_speed_h_s: 1.5
     behavior: ranged_keep_distance
@@ -37,10 +46,12 @@ types:
     attack:
       kind: projectile
       damage: 8
+      projectile_size_h: { width: 0.3, height: 0.17 }
       projectile_speed_h_s: 8
       cooldown_s: 1.5
       windup_s: 0.4
   destroyer:
+    hurtbox_h: { width: 0.6, height: 1 }
     health: 45
     movement_speed_h_s: 0.8
     behavior: ranged_keep_distance
@@ -48,20 +59,23 @@ types:
     attack:
       kind: charged_projectile
       damage: 14
+      projectile_size_h: { width: 0.3, height: 0.17 }
       projectile_speed_h_s: 7
       cooldown_s: 2.2
       windup_s: 0.7
   gorgon_1:
+    hurtbox_h: { width: 0.6, height: 1 }
     health: 28
     movement_speed_h_s: 3.5
     behavior: melee_pursuit
     attack:
       kind: lunge
       damage: 8
-      reach_h: 1.3
+      hitbox_h: { x: 0, y: 0, width: 1, height: 1.5 }
       cooldown_s: 1.4
       windup_s: 0.3
   gorgon_2:
+    hurtbox_h: { width: 0.6, height: 1 }
     health: 36
     movement_speed_h_s: 2.3
     behavior: ranged_keep_distance
@@ -69,31 +83,35 @@ types:
     attack:
       kind: special_projectile
       damage: 10
+      projectile_size_h: { width: 0.3, height: 0.17 }
       projectile_speed_h_s: 7
       cooldown_s: 2
       windup_s: 0.5
   gorgon_3:
+    hurtbox_h: { width: 0.6, height: 1 }
     health: 46
     movement_speed_h_s: 2.2
     behavior: melee_pursuit
     attack:
       kind: heavy_melee_sweep
       damage: 12
-      reach_h: 1.6
+      hitbox_h: { x: 0, y: 0, width: 1.3, height: 1.5 }
       cooldown_s: 1.8
       windup_s: 0.55
   # Fast, fragile melee: dashes in and slashes before others can react.
   dark_ninja:
+    hurtbox_h: { width: 0.6, height: 1 }
     health: 26
     movement_speed_h_s: 4
     behavior: melee_pursuit
     attack:
       kind: lunge
       damage: 9
-      reach_h: 1.2
+      hitbox_h: { x: 0, y: 0, width: 0.9, height: 1.5 }
       cooldown_s: 1.3
       windup_s: 0.25
   evil_wizard:
+    hurtbox_h: { width: 0.6, height: 2.6 }
     health: 300
     movement_speed_h_s: 3
     jump_height_h: 2.75
@@ -102,17 +120,18 @@ types:
       - kind: two_hit_melee_combo
         hits: 2
         damage_per_hit: 10
-        reach_h: 1.5
+        hitbox_h: { x: 0, y: 0, width: 1.2, height: 1.5 }
         cooldown_s: 1.4
         windup_s: 0.45
       - kind: telegraphed_lunge
         damage: 15
+        hitbox_h: { x: 0, y: 0, width: 0.9, height: 1.5 }
         cooldown_s: 1.9
         windup_s: 0.6
       # Wind-up is the crouch before take-off; damage lands on touchdown.
       - kind: jump_slam
         damage: 18
-        landing_radius_h: 2
+        hitbox_h: { x: -2, y: -2, width: 4, height: 4 }
         cooldown_s: 2.5
         windup_s: 0.8
     phase_two:

@@ -309,6 +309,8 @@ pub(super) fn spawn_enemies(
                     home_y,
                     feet_offset,
                     visible_top_offset,
+                    hurtbox_size: Vec2::new(profile.hurtbox_h.width, profile.hurtbox_h.height)
+                        * H_WORLD_UNITS,
                     vertical_velocity: 0.0,
                     grounded: true,
                     jump_height_h: profile

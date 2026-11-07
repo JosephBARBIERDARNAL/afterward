@@ -256,6 +256,46 @@ impl GameData {
                 "enemy jumping tuning values must be finite and positive",
             ));
         }
+        let positive = |width: f32, height: f32| {
+            width.is_finite() && height.is_finite() && width > 0.0 && height > 0.0
+        };
+        let hurtbox = &self.gameplay.player.hurtbox_h;
+        if !positive(hurtbox.width, hurtbox.height) {
+            return Err(InvalidGameData::from(
+                "the player hurtbox needs a positive size",
+            ));
+        }
+        for (type_id, enemy) in &self.enemies.types {
+            if !positive(enemy.hurtbox_h.width, enemy.hurtbox_h.height) {
+                return Err(InvalidGameData::from(format!(
+                    "enemy {type_id} needs a hurtbox with a positive size"
+                )));
+            }
+            for attack in enemy.attack.iter().chain(&enemy.attacks) {
+                let sized = if attack.kind.contains("projectile") {
+                    attack
+                        .projectile_size_h
+                        .is_some_and(|size| positive(size.width, size.height))
+                } else {
+                    attack.hitbox_h.is_some_and(|hitbox| {
+                        positive(hitbox.width, hitbox.height)
+                            && hitbox.x.is_finite()
+                            && hitbox.y.is_finite()
+                    })
+                };
+                if !sized {
+                    return Err(InvalidGameData::from(format!(
+                        "enemy {type_id} attack {} needs a positive {}",
+                        attack.kind,
+                        if attack.kind.contains("projectile") {
+                            "projectile_size_h"
+                        } else {
+                            "hitbox_h"
+                        }
+                    )));
+                }
+            }
+        }
         for enemy in self.enemies.types.values() {
             let jump_height_h = enemy.jump_height_h.unwrap_or(jumping.jump_height_h);
             if !jump_height_h.is_finite() || jump_height_h <= 0.0 {
