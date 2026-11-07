@@ -11,9 +11,7 @@ mod synthesis;
 pub(super) use mixing::update_audio_volume;
 pub(super) use music::{MusicStream, MusicStreamLoader};
 
-use synthesis::{
-    ChapterOneForestAmbience, ChapterOneForestCalmLoop, ChapterOneForestLoop, ToneSpec, cue_specs,
-};
+use synthesis::{ChapterOneForestAmbience, ChapterOneForestCalmLoop, ChapterOneForestLoop};
 
 #[derive(Resource, Default)]
 pub(super) struct SoundQueue(Vec<SoundCue>);
@@ -26,6 +24,9 @@ impl SoundQueue {
     }
 }
 
+/// Something that happened and wants to be heard. A cue plays the recording
+/// `audio.recorded_effects` lists for it and is silent otherwise, so most of
+/// these wait on sound design rather than on code.
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub(super) enum SoundCue {
     UiMove,
@@ -83,6 +84,8 @@ impl DamageSound {
     }
 }
 
+/// Which enemy a cue came from, kept so enemy sounds can differ once they are
+/// recorded; no cue of a style has a recording yet.
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub(super) enum EnemySoundStyle {
     Generic,
@@ -93,32 +96,6 @@ pub(super) enum EnemySoundStyle {
     GorgonTwo,
     GorgonThree,
     EvilWizard,
-}
-
-impl EnemySoundStyle {
-    const ALL: [Self; 8] = [
-        Self::Generic,
-        Self::Swordsman,
-        Self::Infantryman,
-        Self::Destroyer,
-        Self::GorgonOne,
-        Self::GorgonTwo,
-        Self::GorgonThree,
-        Self::EvilWizard,
-    ];
-
-    fn base_frequency_hz(self) -> f32 {
-        match self {
-            Self::Generic => 170.0,
-            Self::Swordsman => 220.0,
-            Self::Infantryman => 380.0,
-            Self::Destroyer => 100.0,
-            Self::GorgonOne => 560.0,
-            Self::GorgonTwo => 300.0,
-            Self::GorgonThree => 145.0,
-            Self::EvilWizard => 72.0,
-        }
-    }
 }
 
 impl From<&EnemyTypeId> for EnemySoundStyle {
@@ -193,20 +170,10 @@ pub(super) struct ManagedAudio {
 
 pub(super) fn initialize_sound_bank(
     mut bank: ResMut<SoundBank>,
-    mut audio_sources: ResMut<Assets<AudioSource>>,
     mut music_streams: ResMut<Assets<MusicStream>>,
     asset_server: Res<AssetServer>,
     data: Res<GameData>,
 ) {
-    for (cue, start_hz, end_hz, seconds, gain) in cue_specs() {
-        let source = audio_sources.add(AudioSource::from(ToneSpec {
-            start_hz,
-            end_hz,
-            seconds,
-            amplitude: 0.8,
-        }));
-        bank.cues.insert(cue, (source, gain));
-    }
     let recorded = &data.gameplay.audio.recorded_effects;
     for (cue, effect) in [
         (SoundCue::GunShot, &recorded.gun_shot),

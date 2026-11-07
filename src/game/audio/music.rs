@@ -154,21 +154,31 @@ impl Source for MuffledLoop {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{data::GameData, game::audio::synthesis::ToneSpec};
+    use crate::{data::GameData, game::audio::synthesis::wav_header_and_data};
     use std::path::Path;
 
-    /// The number of samples in the tones these tests loop: 0.05 s of mono
-    /// audio at the 22,050 Hz the synthesizer writes.
-    const TONE_SAMPLES: usize = (22_050.0 * 0.05) as usize;
+    const TONE_SAMPLE_RATE: u32 = 22_050;
+    /// The length of the tones below: 0.05 s, short enough to loop quickly.
+    const TONE_SAMPLES: usize = (TONE_SAMPLE_RATE as f32 * 0.05) as usize;
+
+    /// A test signal of `hz`, as the mono 16-bit WAV a decoder expects. It
+    /// stands in for a music file; the game itself synthesizes no effects.
+    fn tone(hz: f32) -> AudioSource {
+        let mut data = Vec::with_capacity(TONE_SAMPLES * 2);
+        for index in 0..TONE_SAMPLES {
+            let seconds = index as f32 / TONE_SAMPLE_RATE as f32;
+            let value =
+                ((std::f32::consts::TAU * hz * seconds).sin() * 0.8 * f32::from(i16::MAX)) as i16;
+            data.extend_from_slice(&value.to_le_bytes());
+        }
+        AudioSource {
+            bytes: Arc::from(wav_header_and_data(TONE_SAMPLE_RATE, 1, 16, &data)),
+        }
+    }
 
     #[test]
     fn a_stream_starts_over_when_it_reaches_the_end_of_its_file() {
-        let stream = MusicStream::from(AudioSource::from(ToneSpec {
-            start_hz: 440.0,
-            end_hz: 440.0,
-            seconds: 0.05,
-            amplitude: 0.8,
-        }));
+        let stream = MusicStream::from(tone(440.0));
 
         let played: Vec<Sample> = stream.decoder().take(TONE_SAMPLES * 3).collect();
 
@@ -184,12 +194,6 @@ mod tests {
 
     #[test]
     fn muffling_a_stream_swallows_its_highs_while_it_keeps_playing() {
-        let tone = ToneSpec {
-            start_hz: 4000.0,
-            end_hz: 4000.0,
-            seconds: 0.05,
-            amplitude: 0.8,
-        };
         let peak = |stream: &MusicStream| {
             stream
                 .decoder()
@@ -197,7 +201,7 @@ mod tests {
                 .fold(0.0_f32, |peak, sample| peak.max(sample.abs()))
         };
 
-        let clear = MusicStream::from(AudioSource::from(tone));
+        let clear = MusicStream::from(tone(4000.0));
         let clear_peak = peak(&clear);
         clear.set_muffle(1.0);
         let muffled_peak = peak(&clear);

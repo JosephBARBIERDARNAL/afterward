@@ -42,7 +42,8 @@ pub struct AudioConfig {
     pub recorded_effects: RecordedEffects,
 }
 
-/// Recorded sound files that replace the synthesized tone of their cue.
+/// The recording each sound cue plays. Cues missing from here have no sound
+/// yet and stay silent.
 #[derive(Debug, Deserialize)]
 pub struct RecordedEffects {
     pub gun_shot: AudioAsset,

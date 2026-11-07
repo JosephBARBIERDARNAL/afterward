@@ -1,91 +1,8 @@
-use super::{EnemySoundStyle, SoundCue};
-use crate::data::FootstepSound;
+//! The chapter's placeholder music and ambience, generated as WAV bytes.
+//! Sound effects are not synthesized: a cue with no recording stays silent.
+
 use bevy::audio::AudioSource;
 use std::sync::Arc;
-
-pub(super) fn cue_specs() -> Vec<(SoundCue, f32, f32, f32, f32)> {
-    use SoundCue::*;
-
-    let mut specs = vec![
-        (UiMove, 720.0, 920.0, 0.045, 0.08),
-        (UiConfirm, 660.0, 990.0, 0.11, 0.11),
-        (UiCancel, 440.0, 300.0, 0.09, 0.10),
-        (UiInvalid, 220.0, 180.0, 0.10, 0.10),
-        (Jump, 360.0, 590.0, 0.12, 0.13),
-        (Landing, 120.0, 80.0, 0.09, 0.12),
-        (Footstep(FootstepSound::Soil), 90.0, 58.0, 0.07, 0.055),
-        (Footstep(FootstepSound::Stone), 240.0, 390.0, 0.055, 0.05),
-        (Footstep(FootstepSound::Wood), 160.0, 210.0, 0.06, 0.05),
-        (Dash, 180.0, 90.0, 0.18, 0.18),
-        (BulletHit, 920.0, 380.0, 0.12, 0.18),
-        (LastRoundHit, 1180.0, 300.0, 0.2, 0.22),
-        (CoverBlock, 300.0, 520.0, 0.1, 0.16),
-        (ProjectileEnvironmentHit, 230.0, 95.0, 0.075, 0.085),
-        (Pickup, 620.0, 1040.0, 0.20, 0.16),
-        (BossIntro, 72.0, 220.0, 0.9, 0.3),
-        (EnemiesAppear, 140.0, 460.0, 0.38, 0.13),
-        (BossPhase, 110.0, 220.0, 0.55, 0.22),
-        (RoomClear, 440.0, 880.0, 0.45, 0.19),
-        (DoorAppear, 260.0, 440.0, 0.14, 0.10),
-        (BonusSelected, 740.0, 1110.0, 0.18, 0.16),
-        (RunEnded, 310.0, 70.0, 0.75, 0.22),
-        (RunRestarted, 350.0, 780.0, 0.32, 0.20),
-        (Victory, 520.0, 1040.0, 1.1, 0.20),
-    ];
-
-    for style in EnemySoundStyle::ALL {
-        let base = style.base_frequency_hz();
-        let telegraph_gain = if style == EnemySoundStyle::EvilWizard {
-            0.30
-        } else {
-            0.14
-        };
-        specs.extend([
-            (EnemyIdle(style), base * 0.52, base * 0.68, 0.08, 0.035),
-            (EnemyMovement(style), base * 0.46, base * 0.32, 0.055, 0.04),
-            (
-                EnemyTelegraph(style),
-                base * 0.68,
-                base * 1.8,
-                0.20,
-                telegraph_gain,
-            ),
-            (EnemyAttack(style), base * 1.7, base * 0.62, 0.12, 0.18),
-            (EnemyDeath(style), base * 1.45, base * 0.28, 0.23, 0.17),
-        ]);
-    }
-
-    specs
-}
-
-pub(super) struct ToneSpec {
-    pub start_hz: f32,
-    pub end_hz: f32,
-    pub seconds: f32,
-    pub amplitude: f32,
-}
-
-impl From<ToneSpec> for AudioSource {
-    fn from(spec: ToneSpec) -> Self {
-        const SAMPLE_RATE: u32 = 22_050;
-        let sample_count = (SAMPLE_RATE as f32 * spec.seconds).max(1.0) as usize;
-        let mut samples = Vec::with_capacity(sample_count * 2);
-        let mut phase = 0.0_f32;
-        for index in 0..sample_count {
-            let progress = index as f32 / sample_count as f32;
-            let frequency = spec.start_hz + (spec.end_hz - spec.start_hz) * progress;
-            phase += std::f32::consts::TAU * frequency / SAMPLE_RATE as f32;
-            let attack = (progress / 0.08).clamp(0.0, 1.0);
-            let release = ((1.0 - progress) / 0.28).clamp(0.0, 1.0);
-            let value =
-                (phase.sin() * attack.min(release) * spec.amplitude * f32::from(i16::MAX)) as i16;
-            samples.extend_from_slice(&value.to_le_bytes());
-        }
-        Self {
-            bytes: Arc::from(wav_header_and_data(SAMPLE_RATE, 1, 16, &samples)),
-        }
-    }
-}
 
 pub(super) struct ChapterOneForestLoop;
 
@@ -216,7 +133,7 @@ impl From<ChapterOneForestAmbience> for AudioSource {
     }
 }
 
-fn wav_header_and_data(
+pub(super) fn wav_header_and_data(
     sample_rate: u32,
     channels: u16,
     bits_per_sample: u16,
@@ -246,27 +163,6 @@ fn wav_header_and_data(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::collections::BTreeSet;
-
-    #[test]
-    fn enemies_and_special_events_have_placeholder_cues() {
-        let cues = cue_specs()
-            .into_iter()
-            .map(|(cue, ..)| cue)
-            .collect::<BTreeSet<_>>();
-
-        for style in EnemySoundStyle::ALL {
-            assert!(cues.contains(&SoundCue::EnemyIdle(style)));
-            assert!(cues.contains(&SoundCue::EnemyMovement(style)));
-            assert!(cues.contains(&SoundCue::EnemyTelegraph(style)));
-            assert!(cues.contains(&SoundCue::EnemyAttack(style)));
-            assert!(cues.contains(&SoundCue::EnemyDeath(style)));
-        }
-        assert!(cues.contains(&SoundCue::Footstep(FootstepSound::Soil)));
-        assert!(cues.contains(&SoundCue::Footstep(FootstepSound::Stone)));
-        assert!(cues.contains(&SoundCue::Footstep(FootstepSound::Wood)));
-        assert!(cues.contains(&SoundCue::RunRestarted));
-    }
 
     #[test]
     fn generated_forest_ambience_is_an_eight_second_wav_loop() {

@@ -135,8 +135,9 @@ audio:
     - { asset: audio/music/track_1.mp3, gain: 0.5 }
     - { asset: audio/music/track_2.mp3, gain: 0.5 }
     - { asset: audio/music/track_3.mp3, gain: 0.5 }
-  # Recorded effects replace the synthesized tone of their cue. Paths are under
-  # src/assets/; gain multiplies the sound-effects volume setting.
+  # Every sound effect is a recording: a cue listed here plays its file, and a
+  # cue with no file here stays silent. Paths are under src/assets/; gain
+  # multiplies the sound-effects volume setting.
   recorded_effects:
     gun_shot: { asset: audio/sfx/gun-shot.wav, gain: 0.5 }
     reload: { asset: audio/sfx/reload.wav, gain: 0.45 }
