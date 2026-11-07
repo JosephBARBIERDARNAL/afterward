@@ -48,6 +48,12 @@ pub struct RecordedEffects {
     pub gun_shot: AudioAsset,
     pub reload: AudioAsset,
     pub door_open: AudioAsset,
+    /// A hit on the player, or on an enemy of flesh.
+    pub damage_neutral: AudioAsset,
+    /// A hit on a metal enemy whose shield is already gone.
+    pub damage_metal: AudioAsset,
+    /// The hit that breaks a metal enemy's shield.
+    pub damage_metal_armor: AudioAsset,
 }
 
 /// A sound file and how loud it plays relative to its volume setting.

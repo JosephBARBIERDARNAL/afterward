@@ -1,5 +1,9 @@
 use super::*;
 
+/// An enemy's health bar, and the gold it wears while its shield still holds.
+pub(in crate::game) const HEALTH_BAR: Color = Color::srgb(0.8, 0.12, 0.2);
+pub(in crate::game) const SHIELDED_HEALTH_BAR: Color = Color::srgb(0.85, 0.67, 0.13);
+
 type HealthBarEnemiesQuery<'w, 's> = Query<
     'w,
     's,
@@ -152,6 +156,11 @@ pub(in crate::game) fn update_health_bars(
             continue;
         }
         let fraction = (enemy.health / bar.max_health).clamp(0.0, 1.0);
+        sprite.color = if enemy.shielded {
+            SHIELDED_HEALTH_BAR
+        } else {
+            HEALTH_BAR
+        };
         sprite.custom_size = Some(Vec2::new(48.0 * fraction.max(0.02), 4.0));
         transform.translation.x = enemy_transform.translation.x - 24.0 * (1.0 - fraction);
         transform.translation.y = enemy_transform.translation.y + enemy.visible_top_offset + 6.0;

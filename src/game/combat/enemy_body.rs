@@ -5,6 +5,10 @@ use super::*;
 #[derive(Component)]
 pub(crate) struct EnemyBody {
     pub(crate) type_id: EnemyTypeId,
+    pub(crate) material: EnemyMaterial,
+    /// Whether the shield a metal enemy starts with is still up, soaking the
+    /// next hit. Always false for enemies of flesh.
+    pub(crate) shielded: bool,
     pub(crate) health: f32,
     pub(crate) max_health: f32,
     pub(crate) movement_speed_h_s: f32,
@@ -101,6 +105,16 @@ pub(crate) struct DeadEnemy {
 pub(crate) struct EnemyHealthBar {
     pub(crate) enemy: Entity,
     pub(crate) max_health: f32,
+}
+
+/// The shield above a metal enemy's health bar: frame 0 while it holds, then
+/// the break animation, after which it despawns.
+#[derive(Component)]
+pub(crate) struct EnemyShieldIcon {
+    pub(crate) enemy: Entity,
+    /// Runs once the enemy's shield is gone, stepping through the break
+    /// frames; the icon despawns when it finishes.
+    pub(crate) breaking: Option<Timer>,
 }
 
 #[derive(Component)]

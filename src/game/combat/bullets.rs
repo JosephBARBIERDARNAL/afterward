@@ -129,66 +129,79 @@ pub(in crate::game) fn update_player_bullets(
                     } else {
                         1.0
                     };
-                    let damage = bullet.damage * marked;
-                    enemy.health = (enemy.health - damage).max(0.0);
-                    spawn_damage_number(&mut commands, enemy_transform.translation, damage, false);
-                    if enemy.type_id == "evil_wizard" {
-                        enemy.knockback_velocity =
-                            bullet.velocity.x.signum() * gun.boss_knockback_h_s;
-                        enemy_transform.translation.y = enemy.home_y;
-                    }
                     enemy.marked_timer = data.bonus_effect("marked_prey", "mark_duration_s");
                     if data.enemies.damage_triggers_combat {
                         enemy.engaged = true;
                     }
-                    enemy.windup_remaining = 0.0;
-                    enemy.combo_hit_pending = false;
-                    let style = audio::EnemySoundStyle::from(&enemy.type_id);
-                    if enemy.health > 0.0 {
-                        sounds.push(SoundCue::EnemyHurt(style));
-                        enemy.hurt_timer = 0.24;
-                        set_enemy_animation(
-                            &mut sprite,
-                            &mut animation,
-                            &sheets,
-                            &enemy.type_id,
-                            "hurt",
-                        );
+                    if enemy.shielded {
+                        // The shield soaks the hit whole: it shatters, and
+                        // nothing else about the enemy changes. `shield.rs`
+                        // picks the break up from `shielded` going false.
+                        sounds.push(SoundCue::Damage(DamageSound::of(enemy.material, true)));
+                        enemy.shielded = false;
                     } else {
-                        sounds.push(SoundCue::EnemyDeath(style));
-                        set_enemy_animation(
-                            &mut sprite,
-                            &mut animation,
-                            &sheets,
-                            &enemy.type_id,
-                            "dead",
+                        let damage = bullet.damage * marked;
+                        enemy.health = (enemy.health - damage).max(0.0);
+                        spawn_damage_number(
+                            &mut commands,
+                            enemy_transform.translation,
+                            damage,
+                            false,
                         );
-                        commands.entity(entity).insert(DeadEnemy {
-                            timer: Timer::from_seconds(0.9, TimerMode::Once),
-                        });
-                        let drop_chance = data.gameplay.health_pickup.base_drop_chance
-                            * session.bonus_multiplier(
-                                &data,
-                                "scavenger",
-                                "health_drop_chance_multiplier",
-                            );
-                        if random.chance(drop_chance.min(1.0)) {
-                            commands.spawn((
-                                Sprite::from_color(
-                                    Color::srgb(0.28, 0.95, 0.48),
-                                    Vec2::splat(18.0),
-                                ),
-                                Transform::from_translation(
-                                    enemy_transform.translation + Vec3::new(0.0, 20.0, 0.8),
-                                ),
-                                HealthPickup {
-                                    healing: data.gameplay.health_pickup.healing,
-                                },
-                                RoomEntity,
-                            ));
+                        if enemy.type_id == "evil_wizard" {
+                            enemy.knockback_velocity =
+                                bullet.velocity.x.signum() * gun.boss_knockback_h_s;
+                            enemy_transform.translation.y = enemy.home_y;
                         }
-                        player.chain_reaction_timer =
-                            data.bonus_effect("chain_reaction", "kill_damage_duration_s");
+                        enemy.windup_remaining = 0.0;
+                        enemy.combo_hit_pending = false;
+                        let style = audio::EnemySoundStyle::from(&enemy.type_id);
+                        if enemy.health > 0.0 {
+                            sounds.push(SoundCue::Damage(DamageSound::of(enemy.material, false)));
+                            enemy.hurt_timer = 0.24;
+                            set_enemy_animation(
+                                &mut sprite,
+                                &mut animation,
+                                &sheets,
+                                &enemy.type_id,
+                                "hurt",
+                            );
+                        } else {
+                            sounds.push(SoundCue::EnemyDeath(style));
+                            set_enemy_animation(
+                                &mut sprite,
+                                &mut animation,
+                                &sheets,
+                                &enemy.type_id,
+                                "dead",
+                            );
+                            commands.entity(entity).insert(DeadEnemy {
+                                timer: Timer::from_seconds(0.9, TimerMode::Once),
+                            });
+                            let drop_chance = data.gameplay.health_pickup.base_drop_chance
+                                * session.bonus_multiplier(
+                                    &data,
+                                    "scavenger",
+                                    "health_drop_chance_multiplier",
+                                );
+                            if random.chance(drop_chance.min(1.0)) {
+                                commands.spawn((
+                                    Sprite::from_color(
+                                        Color::srgb(0.28, 0.95, 0.48),
+                                        Vec2::splat(18.0),
+                                    ),
+                                    Transform::from_translation(
+                                        enemy_transform.translation + Vec3::new(0.0, 20.0, 0.8),
+                                    ),
+                                    HealthPickup {
+                                        healing: data.gameplay.health_pickup.healing,
+                                    },
+                                    RoomEntity,
+                                ));
+                            }
+                            player.chain_reaction_timer =
+                                data.bonus_effect("chain_reaction", "kill_damage_duration_s");
+                        }
                     }
                 }
                 sounds.push(if bullet.last_round {

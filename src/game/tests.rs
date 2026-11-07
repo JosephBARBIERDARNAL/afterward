@@ -4,6 +4,7 @@ mod chapter_one_run;
 mod control_bindings;
 mod e2e;
 mod enemy_jumping;
+mod enemy_shield;
 mod gameplay_controls;
 mod gun;
 mod player_controls;

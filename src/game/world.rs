@@ -303,6 +303,8 @@ pub(super) fn spawn_enemies(
                 },
                 EnemyBody {
                     type_id: spawn.type_id.clone(),
+                    material: profile.material,
+                    shielded: profile.material.is_shielded(),
                     health,
                     max_health: health,
                     movement_speed_h_s,
@@ -361,8 +363,16 @@ pub(super) fn spawn_enemies(
             EnemyHealthBarBackground { enemy },
             RoomEntity,
         ));
+        let shielded = profile.material.is_shielded();
         commands.spawn((
-            Sprite::from_color(Color::srgb(0.8, 0.12, 0.2), Vec2::new(48.0, 4.0)),
+            Sprite::from_color(
+                if shielded {
+                    combat::SHIELDED_HEALTH_BAR
+                } else {
+                    combat::HEALTH_BAR
+                },
+                Vec2::new(48.0, 4.0),
+            ),
             Transform::from_translation(bar_position),
             EnemyHealthBar {
                 enemy,
@@ -370,6 +380,26 @@ pub(super) fn spawn_enemies(
             },
             RoomEntity,
         ));
+        if let Some(shield) = shielded
+            .then(|| sheets.0.get(combat::SHIELD_SHEET))
+            .flatten()
+        {
+            commands.spawn((
+                Sprite::from_atlas_image(
+                    shield.image.clone(),
+                    TextureAtlas {
+                        layout: shield.layout.clone(),
+                        index: 0,
+                    },
+                ),
+                Transform::from_translation(bar_position + Vec3::new(0.0, 17.0, 0.0)),
+                EnemyShieldIcon {
+                    enemy,
+                    breaking: None,
+                },
+                RoomEntity,
+            ));
+        }
     }
 }
 

@@ -1,5 +1,5 @@
 use super::*;
-use crate::data::FootstepSound;
+use crate::data::{EnemyMaterial, FootstepSound};
 use bevy::audio::{
     AudioPlayer, AudioSink, AudioSinkPlayback, AudioSource, PlaybackSettings, Volume,
 };
@@ -42,7 +42,8 @@ pub(super) enum SoundCue {
     Reload,
     CoverBlock,
     ProjectileEnvironmentHit,
-    PlayerHurt,
+    /// A hit landing, on the player or an enemy, by what it lands on.
+    Damage(DamageSound),
     Pickup,
     EnemyIdle(EnemySoundStyle),
     EnemyMovement(EnemySoundStyle),
@@ -50,7 +51,6 @@ pub(super) enum SoundCue {
     EnemyAttack(EnemySoundStyle),
     BossIntro,
     EnemiesAppear,
-    EnemyHurt(EnemySoundStyle),
     EnemyDeath(EnemySoundStyle),
     BossPhase,
     RoomClear,
@@ -60,6 +60,27 @@ pub(super) enum SoundCue {
     RunEnded,
     RunRestarted,
     Victory,
+}
+
+/// What a hit sounds like, by what it lands on.
+#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub(super) enum DamageSound {
+    /// The player, and enemies of flesh.
+    Neutral,
+    /// A metal enemy whose shield is already gone.
+    Metal,
+    /// The shield of a metal enemy, as the hit breaks it.
+    MetalArmor,
+}
+
+impl DamageSound {
+    pub(super) fn of(material: EnemyMaterial, shielded: bool) -> Self {
+        match (material, shielded) {
+            (EnemyMaterial::Metal, true) => Self::MetalArmor,
+            (EnemyMaterial::Metal, false) => Self::Metal,
+            (EnemyMaterial::Flesh, _) => Self::Neutral,
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
@@ -191,6 +212,15 @@ pub(super) fn initialize_sound_bank(
         (SoundCue::GunShot, &recorded.gun_shot),
         (SoundCue::Reload, &recorded.reload),
         (SoundCue::DoorOpen, &recorded.door_open),
+        (
+            SoundCue::Damage(DamageSound::Neutral),
+            &recorded.damage_neutral,
+        ),
+        (SoundCue::Damage(DamageSound::Metal), &recorded.damage_metal),
+        (
+            SoundCue::Damage(DamageSound::MetalArmor),
+            &recorded.damage_metal_armor,
+        ),
     ] {
         bank.cues
             .insert(cue, (asset_server.load(effect.asset.clone()), effect.gain));

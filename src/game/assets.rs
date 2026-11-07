@@ -19,7 +19,14 @@ pub(super) fn load_sprites(
 
     let mut sheets = BTreeMap::new();
     for spec in specs {
-        let image = asset_server.load(spec.path);
+        // Sheets under `ui/` are Typst pixel art drawn near 1:1, so they keep
+        // their hard pixel edges; the character sheets are scaled down and
+        // look better with the default filtering.
+        let image = if spec.path.starts_with("ui/") {
+            crate::game::ui_style::load_pixel_art(&asset_server, spec.path)
+        } else {
+            asset_server.load(spec.path)
+        };
         let layout = atlas_layouts.add(TextureAtlasLayout::from_grid(
             UVec2::new(spec.frame_width, spec.frame_height),
             spec.frames as u32,

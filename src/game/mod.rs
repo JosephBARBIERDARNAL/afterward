@@ -7,7 +7,8 @@ use bevy::{
 };
 
 use crate::data::{
-    Aim, EnemyAttackConfig, EnemyTypeId, FootstepSound, GameData, PLAYER_COLLISION_WIDTH_H,
+    Aim, EnemyAttackConfig, EnemyMaterial, EnemyTypeId, FootstepSound, GameData,
+    PLAYER_COLLISION_WIDTH_H,
 };
 
 mod ammo_hud;
@@ -43,10 +44,11 @@ pub use visual_walkthrough::VisualWalkthroughPlugin;
 #[cfg(test)]
 mod tests;
 
-use audio::{SoundCue, SoundQueue};
+use audio::{DamageSound, SoundCue, SoundQueue};
 use camera::{BackgroundParallax, RoomCamera};
 use combat::{
-    EnemyAttack, EnemyBody, EnemyHealthBar, EnemyHealthBarBackground, ProceduralMovementState,
+    EnemyAttack, EnemyBody, EnemyHealthBar, EnemyHealthBarBackground, EnemyShieldIcon,
+    ProceduralMovementState,
 };
 use controls::{ControlBindings, GameAction};
 use flow::PhaseTimer;
@@ -208,6 +210,7 @@ impl Plugin for GamePlugin {
                     combat::update_dead_enemies,
                     combat::update_impact_effects,
                     combat::update_health_bars,
+                    combat::update_enemy_shields,
                     combat::update_health_pickups,
                     combat::update_player_death,
                     flow::handle_door_touch,

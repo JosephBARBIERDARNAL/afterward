@@ -87,7 +87,11 @@ type IntroHealthBars<'w, 's> = Query<
     's,
     (
         &'static mut Sprite,
-        AnyOf<(&'static EnemyHealthBar, &'static EnemyHealthBarBackground)>,
+        AnyOf<(
+            &'static EnemyHealthBar,
+            &'static EnemyHealthBarBackground,
+            &'static EnemyShieldIcon,
+        )>,
     ),
     (Without<PlayerBody>, Without<EnemyBody>),
 >;
@@ -153,8 +157,11 @@ pub(super) fn pose_room_intro(
         sprite.color = Color::srgba(tint.x, tint.y, tint.z, appear);
         appearances.insert(entity, appear);
     }
-    for (mut sprite, (fill, background)) in &mut health_bars {
-        let enemy = fill.map_or_else(|| background.map(|bar| bar.enemy), |bar| Some(bar.enemy));
+    for (mut sprite, (fill, background, shield)) in &mut health_bars {
+        let enemy = fill
+            .map(|bar| bar.enemy)
+            .or_else(|| background.map(|bar| bar.enemy))
+            .or_else(|| shield.map(|icon| icon.enemy));
         if let Some(appear) = enemy.and_then(|enemy| appearances.get(&enemy)) {
             sprite.color = sprite.color.with_alpha(*appear);
         }

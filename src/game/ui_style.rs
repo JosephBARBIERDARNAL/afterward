@@ -3,6 +3,7 @@
 
 use super::*;
 use bevy::{
+    asset::AssetPath,
     image::{ImageLoaderSettings, ImageSampler},
     text::FontSize,
 };
@@ -73,9 +74,12 @@ pub(super) fn key_badge(size: f32) -> impl Bundle {
     )
 }
 
-/// Loads a pixel-art UI image (drawn in Typst, see `art/ui/`) so it stays
-/// crisp when the UI draws it scaled up.
-pub(super) fn load_pixel_art(asset_server: &AssetServer, path: &'static str) -> Handle<Image> {
+/// Loads a pixel-art image (drawn in Typst, see `art/ui/`) so it stays crisp
+/// at whatever size it is drawn.
+pub(super) fn load_pixel_art(
+    asset_server: &AssetServer,
+    path: impl Into<AssetPath<'static>>,
+) -> Handle<Image> {
     asset_server
         .load_builder()
         .with_settings(|settings: &mut ImageLoaderSettings| {

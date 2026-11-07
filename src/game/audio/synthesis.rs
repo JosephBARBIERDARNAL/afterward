@@ -21,7 +21,6 @@ pub(super) fn cue_specs() -> Vec<(SoundCue, f32, f32, f32, f32)> {
         (LastRoundHit, 1180.0, 300.0, 0.2, 0.22),
         (CoverBlock, 300.0, 520.0, 0.1, 0.16),
         (ProjectileEnvironmentHit, 230.0, 95.0, 0.075, 0.085),
-        (PlayerHurt, 190.0, 90.0, 0.24, 0.25),
         (Pickup, 620.0, 1040.0, 0.20, 0.16),
         (BossIntro, 72.0, 220.0, 0.9, 0.3),
         (EnemiesAppear, 140.0, 460.0, 0.38, 0.13),
@@ -52,7 +51,6 @@ pub(super) fn cue_specs() -> Vec<(SoundCue, f32, f32, f32, f32)> {
                 telegraph_gain,
             ),
             (EnemyAttack(style), base * 1.7, base * 0.62, 0.12, 0.18),
-            (EnemyHurt(style), base * 1.3, base * 0.42, 0.11, 0.14),
             (EnemyDeath(style), base * 1.45, base * 0.28, 0.23, 0.17),
         ]);
     }
@@ -262,7 +260,6 @@ mod tests {
             assert!(cues.contains(&SoundCue::EnemyMovement(style)));
             assert!(cues.contains(&SoundCue::EnemyTelegraph(style)));
             assert!(cues.contains(&SoundCue::EnemyAttack(style)));
-            assert!(cues.contains(&SoundCue::EnemyHurt(style)));
             assert!(cues.contains(&SoundCue::EnemyDeath(style)));
         }
         assert!(cues.contains(&SoundCue::Footstep(FootstepSound::Soil)));

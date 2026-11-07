@@ -97,10 +97,17 @@ Every hit area is data, in H: the player's hurtbox in `config/gameplay.yaml` (`p
 
 ### Audio
 
-`src/game/audio.rs` plays everything through `ManagedAudio`, whose class decides which volume setting applies (music or sound effects) and how `audio/mixing.rs` fades it per screen. Sound effects are synthesized tones (`audio/synthesis.rs`) unless `config/gameplay.yaml` lists a recorded file for the cue.
+`src/game/audio.rs` plays everything through `ManagedAudio`, whose class decides which volume setting applies (music or sound effects) and how `audio/mixing.rs` fades it per screen. Sound effects are synthesized tones (`audio/synthesis.rs`) unless `config/gameplay.yaml` lists a recorded file for the cue; a cue with a recorded file and no tone, like the three damage sounds, simply stays silent if its file is missing.
 
 - Four layers play for a whole run: the synthesized combat loop, calm loop and forest ambience, plus one recorded background track picked at random from `audio.music_tracks` when the first room of the run is entered. It keeps playing until the run ends.
 - All four are `MusicStream`s (`audio/music.rs`): they loop themselves and run through a low-pass filter the mixer opens and closes, so the music sounds muffled, as if played in another room, while the game is paused (`audio.paused_music_muffle`). They must play with `PlaybackSettings::ONCE` — Bevy's own looping buffers the decoded source, which would freeze the filter after the first play-through.
+
+### Enemy material and shields
+
+Each type in `enemies/enemy_types.yaml` declares a `material`, which decides the sound a hit on it makes (`audio.recorded_effects.damage_*`) and whether it carries a shield. `metal` enemies walk in shielded: their health bar is gold with a shield icon above it, and the first shot to land breaks the shield instead of wounding them — no health lost, no damage number, no flinch, though the shot still wakes them. Afterwards the bar turns red and they take damage normally.
+
+- `EnemyBody::shielded` is the whole state. `combat/shield.rs` watches it rather than being told: the frame it goes false, the icon starts its break and despawns once it has played out.
+- The icon is `art/ui/enemy_shield.typ`, a 6-frame sheet (frame 0 is the shield, 1-5 the break) whose `fps` in `assets/enemy_sheets.rs` sets how fast it shatters. Sprite sheets under `ui/` load with nearest sampling, unlike the character sheets.
 
 ### Typst pixel art
 

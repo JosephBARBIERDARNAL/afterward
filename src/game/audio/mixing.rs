@@ -182,6 +182,10 @@ mod tests {
 
     #[test]
     fn pausing_muffles_and_lowers_the_music_without_stopping_it() {
+        let sound = || AudioAsset {
+            asset: String::new(),
+            gain: 1.0,
+        };
         let audio = AudioConfig {
             footstep_interval_s: 0.42,
             paused_music_volume_multiplier: 0.35,
@@ -191,18 +195,12 @@ mod tests {
             paused_music_muffle: 0.9,
             music_tracks: Vec::new(),
             recorded_effects: RecordedEffects {
-                gun_shot: AudioAsset {
-                    asset: String::new(),
-                    gain: 1.0,
-                },
-                reload: AudioAsset {
-                    asset: String::new(),
-                    gain: 1.0,
-                },
-                door_open: AudioAsset {
-                    asset: String::new(),
-                    gain: 1.0,
-                },
+                gun_shot: sound(),
+                reload: sound(),
+                door_open: sound(),
+                damage_neutral: sound(),
+                damage_metal: sound(),
+                damage_metal_armor: sound(),
             },
         };
         let session = RunSession::default();

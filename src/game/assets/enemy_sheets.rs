@@ -2,6 +2,17 @@ use super::super::{SpriteSheetSpec, UVec2};
 
 pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
     vec![
+        // The shield above a metal enemy's health bar: frame 0 holds while it
+        // is up, frames 1-5 are the break (art/ui/enemy_shield.typ).
+        SpriteSheetSpec {
+            key: "enemy_shield".into(),
+            path: "ui/enemy_shield.png".into(),
+            frame_width: 21,
+            frame_height: 16,
+            frames: 6,
+            fps: 30.0,
+            first_cell: UVec2::ZERO,
+        },
         SpriteSheetSpec {
             key: "enemy_swordsman_idle".into(),
             path: "enemies/type1/Swordsman/Idle.png".into(),

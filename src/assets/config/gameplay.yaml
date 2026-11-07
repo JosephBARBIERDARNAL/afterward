@@ -141,6 +141,9 @@ audio:
     gun_shot: { asset: audio/sfx/gun-shot.wav, gain: 0.5 }
     reload: { asset: audio/sfx/reload.wav, gain: 0.45 }
     door_open: { asset: audio/sfx/door-open.wav, gain: 0.3 }
+    damage_neutral: { asset: audio/sfx/damage-neutral.wav, gain: 0.45 }
+    damage_metal: { asset: audio/sfx/damage-metal.wav, gain: 0.45 }
+    damage_metal_armor: { asset: audio/sfx/damage-metal-armor.wav, gain: 0.5 }
 
 controls:
   move_left: [KeyA, KeyQ, ArrowLeft]

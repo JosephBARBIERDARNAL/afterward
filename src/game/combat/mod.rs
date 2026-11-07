@@ -11,6 +11,7 @@ mod feedback;
 mod hitboxes;
 mod player_gun;
 mod projectiles;
+mod shield;
 
 pub(super) use bullets::update_player_bullets;
 pub(super) use cleanup::clear_room_combat_effects;
@@ -21,10 +22,11 @@ use damage::{set_enemy_animation, spawn_damage_number};
 pub(super) use enemy_ai::{update_enemy_ai, update_enemy_platform_physics};
 pub(super) use enemy_body::{
     DeadEnemy, EnemyAttack, EnemyBody, EnemyHealthBar, EnemyHealthBarBackground, EnemyJump,
-    ProceduralMovementState,
+    EnemyShieldIcon, ProceduralMovementState,
 };
 use enemy_jumps::{JumpArc, JumpPlan, JumpRoute};
 use feedback::spawn_fire_burst;
+pub(super) use feedback::{HEALTH_BAR, SHIELDED_HEALTH_BAR};
 pub(super) use feedback::{
     update_damage_numbers, update_dead_enemies, update_health_bars, update_health_pickups,
     update_impact_effects,
@@ -32,6 +34,7 @@ pub(super) use feedback::{
 pub(super) use hitboxes::player_hurtbox;
 pub(super) use player_gun::player_gun;
 pub(super) use projectiles::update_projectiles;
+pub(super) use shield::{SHIELD_SHEET, update_enemy_shields};
 
 struct PlayerDamageResources<'a, 'w, 's> {
     commands: &'a mut Commands<'w, 's>,
@@ -86,7 +89,7 @@ fn apply_player_damage(
     session.health = (session.health - reduced_damage).max(0.0);
     player.invulnerability_timer = tuning.damage_invulnerability_s;
     spawn_damage_number(commands, transform.translation, reduced_damage, true);
-    sounds.push(SoundCue::PlayerHurt);
+    sounds.push(SoundCue::Damage(DamageSound::Neutral));
     if session.health == 0.0 {
         // The death animation plays out before the run ends.
         player.dying_s = Some(0.0);

@@ -498,9 +498,16 @@ impl GameData {
         }
 
         let recorded = &self.gameplay.audio.recorded_effects;
-        let sounds = [&recorded.gun_shot, &recorded.reload, &recorded.door_open]
-            .into_iter()
-            .chain(&self.gameplay.audio.music_tracks);
+        let sounds = [
+            &recorded.gun_shot,
+            &recorded.reload,
+            &recorded.door_open,
+            &recorded.damage_neutral,
+            &recorded.damage_metal,
+            &recorded.damage_metal_armor,
+        ]
+        .into_iter()
+        .chain(&self.gameplay.audio.music_tracks);
         for sound in sounds {
             if !asset_root.join(&sound.asset).is_file() {
                 return Err(InvalidGameData::from(format!(

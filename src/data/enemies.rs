@@ -83,9 +83,25 @@ impl PartialEq<&str> for EnemyTypeId {
     }
 }
 
+/// What an enemy is made of: it picks the sound a hit on it makes, and metal
+/// enemies carry a shield that soaks their first hit.
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum EnemyMaterial {
+    Flesh,
+    Metal,
+}
+
+impl EnemyMaterial {
+    pub fn is_shielded(self) -> bool {
+        self == Self::Metal
+    }
+}
+
 #[derive(Debug, Deserialize)]
 pub struct EnemyTypeConfig {
     pub health: f32,
+    pub material: EnemyMaterial,
     pub movement_speed_h_s: f32,
     pub jump_height_h: Option<f32>,
     pub behavior: String,
