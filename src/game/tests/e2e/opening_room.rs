@@ -46,6 +46,7 @@ fn the_empty_opening_room_offers_its_bonus_at_once_and_runs_into_room_one() {
     game.key(KeyCode::KeyD, ButtonState::Pressed);
     game.wait_for_screen(GameScreen::Transitioning, 10.0);
     game.key(KeyCode::KeyD, ButtonState::Released);
+    game.skip_any_prologue();
     game.wait_for_screen(GameScreen::RoomIntro, 5.0);
     game.wait_for_screen(GameScreen::Playing, 10.0);
     assert_eq!(game.session().room_id, 1);

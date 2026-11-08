@@ -152,6 +152,8 @@ fn drive_visual_walkthrough(resources: VisualWalkthroughResources) {
         GameScreen::Transitioning | GameScreen::TransitioningOut => 0.15,
         // Halfway across the gap, with both rooms in frame.
         GameScreen::Panning => data.gameplay.room_flow.room_pan_s / 2.0,
+        // Partway through the words, with the water standing over the room.
+        GameScreen::Prologue => data.gameplay.prologue.veil_fade_s + 2.5,
         GameScreen::Complete => 0.3,
         _ => return,
     };
@@ -173,6 +175,7 @@ fn drive_visual_walkthrough(resources: VisualWalkthroughResources) {
             GameScreen::BossIntro => format!("room_{:03}_boss-intro", scene.room_id),
             GameScreen::Transitioning => format!("room_{:03}_transition", scene.room_id),
             GameScreen::Panning => format!("room_{:03}_pan", scene.room_id),
+            GameScreen::Prologue => String::from("prologue"),
             GameScreen::TransitioningOut => {
                 format!("room_{:03}_transition-out", scene.room_id)
             }

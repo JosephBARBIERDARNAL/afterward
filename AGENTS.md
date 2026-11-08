@@ -141,8 +141,19 @@ Shaders are plain `.wgsl`, not Bevy's own `.wesl`: a material's fragment shader 
 
 Nothing is generated: every sound in the game is a real recording. A `SoundCue` plays the file `config/gameplay.yaml` lists for it under `audio.recorded_effects` and stays silent when there is none, and the music is one of the tracks in `audio.music_tracks`. Most cues have no sound yet; leave them silent until a recording exists rather than synthesizing a placeholder. `src/game/audio.rs` plays it all through `ManagedAudio`, whose class decides which volume setting applies (music or sound effects) and how `audio/mixing.rs` fades it per screen.
 
-- One track, picked at random when the run enters its first room, plays until the run ends. It is a `MusicStream` (`audio/music.rs`): it loops itself and runs through a low-pass filter the mixer opens and closes, so the music sounds muffled, as if played in another room, while the game is paused (`audio.paused_music_muffle`). It must play with `PlaybackSettings::ONCE` — Bevy's own looping buffers the decoded source, which would freeze the filter after the first play-through.
+- The game opens on `audio.intro_music`: it plays from launch, carries the main menu and the opening room, and fades out over `audio.intro_music_fade_out_s` as the run leaves room 0 — the chapter track takes over when room 1 opens. Returning to the main menu starts it again.
+- `audio.ambience` is the city under the whole run: it rises over `audio.ambience_fade_in_s` on the first room a run enters and plays to the end. Its gain is what to turn to hear more or less of the street.
+- Those two, the chapter track and the typing under the prologue are layers rather than cues: one entity each, carrying `ManagedAudio` and, while they come or go, an `AudioFade` the mixer multiplies in and despawns the layer with.
+- One track, picked at random when the run enters its first room with a chapter, plays until the run ends. It is a `MusicStream` (`audio/music.rs`): it loops itself and runs through a low-pass filter the mixer opens and closes, so the music sounds muffled, as if played in another room, while the game is paused (`audio.paused_music_muffle`). It must play with `PlaybackSettings::ONCE` — Bevy's own looping buffers the decoded source, which would freeze the filter after the first play-through.
 - Recordings are cropped to what is audible, faded at both ends and peak-normalized, and stored as mono WAV in `audio/sfx/` so a cue sounds the frame it fires rather than after an MP3 decoder's padding.
+
+### Between rooms
+
+A door is crossed in the open rather than behind a fade (`src/game/room_pan.rs`). The player walks into the opening door and fades out of the room they are leaving; that room is then stood to the left of the next one, across a dark gap of `room_flow.room_gap_h`, and the camera slides over to where the new room opens in `room_flow.room_pan_s`, with the room behind let go the moment it lands. Rooms keep their own coordinates: only the one on its way out is displaced, with the camera moved with it so nothing stirs on screen. The last door of the chapter, which leads out of the run, still fades to black.
+
+Every room stands the door the player came in through (`EntryDoor`) where their walk in begins: `room_intro` swings it open for them, then fades it away once they are in.
+
+The door out of room 0 leads through the prologue (`src/game/prologue.rs`): the flood rises over the room the run is leaving — the same water the main menu sits on, drawn in front of the room instead of behind it — the lines of `prologue.lines` are typed out over it with `prologue.typing_sound` under them, and the water drains away over the slide into room 1. Any key hurries it along: the first finishes the typing, the next leaves for the city. The words and their timings are all in `prologue:` of `config/gameplay.yaml`.
 
 ### Enemy material and shields
 
@@ -190,7 +201,7 @@ Every surface texture is drawn in code with [Typst](https://typst.app) instead o
 ### Code layout
 
 - `src/data.rs` loads and validates every YAML file under `src/assets/` into the `GameData` resource. `src/data/` holds one module per YAML source: `gameplay.rs` (`config/gameplay.yaml`), `enemies.rs`, `backgrounds.rs`, `bonuses.rs`, `rooms.rs`, `surfaces.rs` (`surfaces/materials.yaml`), `color.rs`, `player_animations.rs`.
-- `src/game/bonus_pickup.rs` lays out a cleared room's bonus item and opens the bonus screen when the player touches it; `src/game/flow.rs` holds the rest of the room flow.
+- `src/game/bonus_pickup.rs` lays out a cleared room's bonus item and opens the bonus screen when the player touches it; `src/game/flow.rs` holds the rest of the room flow, `src/game/room_pan.rs` the slide from one room into the next, and `src/game/prologue.rs` the words the city is entered on.
 - `src/game/menus.rs` draws the menus and `src/game/menus/` holds what their buttons do (`actions.rs`) and how they are walked and pressed (`input.rs`); `src/game/ripple.rs` holds the droplet that falls on a touched button.
 - `src/game/shaders/` holds the 2D material shaders; `src/game/collision.rs` holds room collision; `src/game/room_art.rs` draws platforms and decorations (world-aligned tiled textures via a repeat sampler and `Sprite::rect`, or a plain color, and outlines of uncovered edges).
 - `src/game/mod.rs` wires the `GamePlugin` (systems and states) and holds only shared items: `GameScreen`, `StartRoom`, `H_WORLD_UNITS`, small helpers. Components and resources live in the module that owns them (`session.rs` for `RunSession`, `sprites.rs` for sprite-sheet animation, `player/body.rs` for `PlayerBody`, `combat/enemy_body.rs` and `combat/components.rs` for combat entities, and so on) and are re-imported in `mod.rs` when other modules need them.

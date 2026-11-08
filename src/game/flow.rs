@@ -283,13 +283,20 @@ pub(super) fn update_room_transition(
     // The room stays on screen: `room_pan` stands it to the left of the next
     // one and lets it go once the camera has crossed.
     pan.departing_width_h = data.rooms[&session.room_id].size.width_h;
+    // The door out of the opening room is the way into the city, and the city
+    // is spoken for before it is entered.
+    let opening_room = session.room_id == 0;
     session.world_loaded = false;
     session.door_open = false;
     session.room_cleared = false;
     session.bonus_category = None;
     session.room_ward_used = false;
     session.room_id = next_room_id;
-    next_screen.set(GameScreen::RoomLoading);
+    next_screen.set(if opening_room {
+        GameScreen::Prologue
+    } else {
+        GameScreen::RoomLoading
+    });
 }
 
 /// Plays the door's opening frames over the first half of the transition.

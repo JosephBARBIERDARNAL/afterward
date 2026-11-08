@@ -6,18 +6,21 @@
 //! settings and controls screens the main menu opens.
 
 use super::*;
-use crate::data::HexColor;
+use crate::{data::HexColor, game::prologue::Prologue};
 
 pub(super) const SHADER_PATH: &str = "shaders/flood.wgsl";
 /// Behind everything else the camera draws.
 const FLOOD_Z: f32 = -100.0;
+/// In front of it instead, for the prologue: the water stands over the room
+/// the run is leaving while its words are written.
+const VEIL_Z: f32 = 50.0;
 
 /// The quad the flood is drawn on.
 #[derive(Component)]
 pub(in crate::game) struct Flood;
 
 #[derive(Asset, TypePath, AsBindGroup, Clone)]
-pub(super) struct FloodMaterial {
+pub(in crate::game) struct FloodMaterial {
     #[uniform(0)]
     settings: FloodSettings,
 }
@@ -36,7 +39,8 @@ struct FloodSettings {
     /// How many turns a cell's point circles in a second, how fast the whole
     /// field drifts, and how far the slow wave bends it.
     flow: Vec4,
-    /// How thick the lit borders of the web and the veins inside a cell are.
+    /// How thick the lit borders of the web and the veins inside a cell are,
+    /// and how opaque the water is drawn.
     lines: Vec4,
 }
 
@@ -80,7 +84,7 @@ pub(super) fn spawn_the_flood(
                 config.wobble,
                 0.0,
             ),
-            lines: Vec4::new(config.web_width, config.vein_width, 0.0, 0.0),
+            lines: Vec4::new(config.web_width, config.vein_width, 1.0, 0.0),
         },
     });
     commands.spawn((
@@ -93,20 +97,38 @@ pub(super) fn spawn_the_flood(
 }
 
 /// Shows the flood while the main menu is up, under wherever the camera was
-/// left standing.
+/// left standing — and stands the same water in front of the room instead
+/// while the prologue writes over it.
 pub(in crate::game) fn show_the_flood(
     screen: Res<State<GameScreen>>,
     settings_return: Res<SettingsReturn>,
+    prologue: Res<Prologue>,
+    mut materials: ResMut<Assets<FloodMaterial>>,
     camera: Query<&Transform, (With<Camera2d>, Without<Flood>)>,
-    mut water: Query<(&mut Transform, &mut Visibility), With<Flood>>,
+    mut water: Query<
+        (
+            &mut Transform,
+            &mut Visibility,
+            &MeshMaterial2d<FloodMaterial>,
+        ),
+        With<Flood>,
+    >,
 ) {
     let on_the_menu = settings_return.on_the_main_menu(*screen.get());
     let Ok(camera) = camera.single() else {
         return;
     };
-    for (mut transform, mut visibility) in &mut water {
-        transform.translation = camera.translation.truncate().extend(FLOOD_Z);
-        *visibility = if on_the_menu {
+    for (mut transform, mut visibility, material) in &mut water {
+        let (depth, opacity) = if prologue.veil > 0.0 {
+            (VEIL_Z, prologue.veil)
+        } else {
+            (FLOOD_Z, 1.0)
+        };
+        transform.translation = camera.translation.truncate().extend(depth);
+        if let Some(mut water) = materials.get_mut(&material.0) {
+            water.settings.lines.z = opacity;
+        }
+        *visibility = if on_the_menu || prologue.veil > 0.0 {
             Visibility::Visible
         } else {
             Visibility::Hidden

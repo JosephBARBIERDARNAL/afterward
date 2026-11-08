@@ -46,6 +46,7 @@ mod main_menu;
 mod menus;
 mod opening_room;
 mod pause;
+mod prologue;
 mod room_pan;
 mod run;
 
@@ -300,6 +301,21 @@ impl HeadlessGame {
         self.key(KeyCode::KeyD, ButtonState::Pressed);
         self.wait_for_screen(GameScreen::Transitioning, 3.0);
         self.key(KeyCode::KeyD, ButtonState::Released);
+        self.skip_any_prologue();
+    }
+
+    /// The words the city is entered on, hurried along the way a player would:
+    /// one key finishes the typing, the next leaves for the city. Only the
+    /// door out of the opening room leads through them.
+    fn skip_any_prologue(&mut self) {
+        for _ in 0..600 {
+            match self.screen() {
+                GameScreen::Prologue => self.tap(KeyCode::Space),
+                GameScreen::Transitioning => self.app.update(),
+                _ => return,
+            }
+        }
+        panic!("the prologue should give way once it is hurried along");
     }
 
     fn enemies(&mut self) -> Vec<(f32, f32)> {

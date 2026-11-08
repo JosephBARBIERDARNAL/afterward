@@ -7,15 +7,17 @@ fn a_run_goes_from_the_menu_through_combat_the_bonus_and_the_door_to_room_two() 
     assert_eq!(game.session().room_id, 1);
     let roster = game.data().rooms[&1].enemy_spawns.len();
     assert_eq!(game.enemies().len(), roster, "every spawn materializes");
-    // The exit door's frame: 0 locked, 1 unlocked, 2 and up opening.
+    // The exit door's frame: 0 locked, 1 unlocked, 2 and up opening. While the
+    // camera crosses into the next room, both rooms have one, so this reads the
+    // one that has come furthest: the door just walked through.
     let door_frame = |game: &mut HeadlessGame| {
         let world = game.app.world_mut();
         world
             .query_filtered::<&Sprite, With<ExitDoor>>()
-            .single(world)
-            .ok()
-            .and_then(|sprite| sprite.texture_atlas.as_ref())
+            .iter(world)
+            .filter_map(|sprite| sprite.texture_atlas.as_ref())
             .map(|atlas| atlas.index)
+            .max()
     };
     assert_eq!(door_frame(&mut game), Some(0), "the door starts locked");
 

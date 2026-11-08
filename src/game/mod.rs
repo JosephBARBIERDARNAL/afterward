@@ -29,6 +29,7 @@ mod interface;
 mod menus;
 mod pause_blur;
 mod player;
+mod prologue;
 mod random;
 mod ripple;
 mod room_art;
@@ -59,6 +60,7 @@ use controls::{ControlBindings, GameAction};
 use flow::PhaseTimer;
 use menus::{MenuAction, MenuFocus, VolumeChannel};
 use player::{PlayerAction, PlayerBody, Reload};
+use prologue::Prologue;
 use random::RandomState;
 use room_pan::RoomPan;
 use session::RunSession;
@@ -116,6 +118,7 @@ impl Plugin for GamePlugin {
             .init_state::<GameScreen>()
             .init_resource::<RunSession>()
             .init_resource::<RoomPan>()
+            .init_resource::<Prologue>()
             .init_resource::<StartRoom>()
             .init_resource::<AudioSettings>()
             .init_resource::<PreferencesDir>()
@@ -135,6 +138,7 @@ impl Plugin for GamePlugin {
                     ammo_hud::spawn_ammo_hud,
                     bonus_screen::spawn_bonus_screen,
                     menus::spawn_menu,
+                    prologue::spawn_prologue_text,
                     assets::load_sprites,
                     settings::initialize_settings,
                     controls::initialize_control_bindings,
@@ -186,6 +190,15 @@ impl Plugin for GamePlugin {
             .add_systems(
                 OnEnter(GameScreen::Transitioning),
                 audio::fade_out_intro_music,
+            )
+            .add_systems(OnEnter(GameScreen::Prologue), prologue::start_prologue)
+            .add_systems(
+                Update,
+                (
+                    prologue::update_prologue.run_if(in_state(GameScreen::Prologue)),
+                    prologue::drain_the_veil.run_if(not(in_state(GameScreen::Prologue))),
+                    prologue::show_prologue_text,
+                ),
             )
             .add_systems(
                 OnEnter(GameScreen::Dead),
@@ -327,6 +340,8 @@ enum GameScreen {
     Bonus,
     BossIntro,
     Transitioning,
+    /// The words the city is entered on, written over the water.
+    Prologue,
     RoomLoading,
     /// The camera sliding out of one room and into the next.
     Panning,

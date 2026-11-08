@@ -117,6 +117,23 @@ room_flow:
     touch_radius_h: 0.7
   bonus_rerolls_per_run: 3
 
+# The words the city is entered on, typed out over the water between the
+# opening room and room 1. `characters_per_s` is how fast they are written,
+# `hold_s` how long the finished text stands before the run moves on, and
+# `veil_fade_s` how long the water takes to rise over the room and to drain
+# away again. Any key hurries it along.
+prologue:
+  characters_per_s: 26
+  hold_s: 1.8
+  veil_fade_s: 0.8
+  typing_sound: { asset: audio/sfx/typing.wav, gain: 0.5 }
+  lines:
+    - YOU ARE ABOUT TO ENTER AFTERWARD.
+    - A CITY WHERE YOU WILL ONLY FIND ENEMIES.
+    - ONE HUNDRED PLACES, EACH WORSE THAN THE LAST.
+    - ONE WAY IN. NO WAY OUT.
+    - THE ONLY EXIT IS AT THE END.
+
 # The 2D material shaders (`src/game/shaders/`). Everything here is meant to be
 # felt rather than noticed: turn a number up to see what it does, then back.
 effects:

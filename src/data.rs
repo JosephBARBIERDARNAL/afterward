@@ -214,6 +214,17 @@ impl GameData {
                 door.sheet
             )));
         }
+        let prologue = &self.gameplay.prologue;
+        if prologue.characters_per_s <= 0.0
+            || prologue.hold_s < 0.0
+            || prologue.veil_fade_s <= 0.0
+            || prologue.lines.iter().any(|line| line.trim().is_empty())
+        {
+            return Err(InvalidGameData::from(
+                "the prologue needs a positive typing speed and fade, a nonnegative hold, \
+                 and no empty lines",
+            ));
+        }
         let audio = &self.gameplay.audio;
         if audio.footstep_interval_s <= 0.0
             || !(0.0..=1.0).contains(&audio.paused_music_volume_multiplier)

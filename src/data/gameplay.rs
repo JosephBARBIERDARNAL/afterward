@@ -15,6 +15,7 @@ pub struct GameplayConfig {
     pub player: PlayerConfig,
     pub health_pickup: HealthPickupConfig,
     pub room_flow: RoomFlowConfig,
+    pub prologue: PrologueConfig,
     pub effects: EffectsConfig,
     pub window: WindowConfig,
     pub audio: AudioConfig,
@@ -210,6 +211,21 @@ pub struct RoomFlowConfig {
     pub exit_door: ExitDoorConfig,
     pub bonus_pickup: BonusPickupConfig,
     pub bonus_rerolls_per_run: u8,
+}
+
+/// The words the city is entered on, between the opening room and room 1.
+#[derive(Debug, Deserialize)]
+pub struct PrologueConfig {
+    /// How fast the text is written out.
+    pub characters_per_s: f32,
+    /// How long the finished text stands before the run moves on.
+    pub hold_s: f32,
+    /// How long the water takes to rise over the room, and to drain away.
+    pub veil_fade_s: f32,
+    /// The typing heard while the words are written.
+    pub typing_sound: AudioAsset,
+    /// The lines, drawn one blank line apart.
+    pub lines: Vec<String>,
 }
 
 /// What the shaders in `src/game/shaders/` and `src/game/ripple.rs` are tuned

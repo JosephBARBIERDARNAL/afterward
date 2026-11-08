@@ -44,6 +44,7 @@ struct Water {
     flow: vec4<f32>,
     // x: how thick the lit borders of the web are
     // y: how thick the fainter veins inside a cell are
+    // z: how opaque the water is drawn, so it can rise over a room and drain
     lines: vec4<f32>,
 }
 
@@ -186,5 +187,5 @@ fn fragment(input: VertexOutput) -> @location(0) vec4<f32> {
     if light > FOAM_LEVEL {
         color = water.foam;
     }
-    return color;
+    return vec4<f32>(color.rgb, color.a * water.lines.z);
 }

@@ -31,6 +31,7 @@ pub(super) fn update_screen_text(
         | GameScreen::Playing
         | GameScreen::RoomLoading
         | GameScreen::Panning
+        | GameScreen::Prologue
         | GameScreen::Bonus => String::new(),
         #[cfg(debug_assertions)]
         GameScreen::Editor => String::new(),

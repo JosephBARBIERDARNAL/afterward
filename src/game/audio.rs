@@ -139,6 +139,8 @@ pub(super) struct SoundBank {
     /// The music the game opens on, and the city under the whole run.
     intro_music: Option<Layer>,
     ambience: Option<Layer>,
+    /// The typing heard under the prologue's words.
+    typing: Option<(Handle<AudioSource>, f32)>,
 }
 
 /// A looping background layer: the file it plays and how loud it plays it.
@@ -194,6 +196,31 @@ pub(super) fn initialize_sound_bank(
     bank.music_tracks = audio.music_tracks.iter().map(layer).collect();
     bank.intro_music = Some(layer(&audio.intro_music));
     bank.ambience = Some(layer(&audio.ambience));
+    let typing = &data.gameplay.prologue.typing_sound;
+    bank.typing = Some((asset_server.load(typing.asset.clone()), typing.gain));
+}
+
+/// The typing heard while the prologue writes itself out.
+#[derive(Component)]
+pub(super) struct TypingSound;
+
+/// Starts that typing: a loop that runs for as long as the words take, rather
+/// than a cue fired once.
+pub(super) fn start_typing(commands: &mut Commands, bank: &SoundBank, settings: &AudioSettings) {
+    let Some((source, gain)) = bank.typing.as_ref() else {
+        return;
+    };
+    commands.spawn((
+        AudioPlayer::new(source.clone()),
+        PlaybackSettings::LOOP.with_volume(Volume::Linear(
+            settings.sfx_volume_percent as f32 / 100.0 * gain,
+        )),
+        ManagedAudio {
+            class: AudioClass::GameplayEffect,
+            gain: *gain,
+        },
+        TypingSound,
+    ));
 }
 
 /// Lays down a looping background layer. `MusicStream` loops itself, so that

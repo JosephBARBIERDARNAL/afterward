@@ -242,6 +242,7 @@ mod tests {
             GameScreen::Bonus,
             GameScreen::BossIntro,
             GameScreen::Transitioning,
+            GameScreen::Prologue,
             GameScreen::Panning,
             GameScreen::RoomLoading,
             GameScreen::TransitioningOut,
