@@ -273,19 +273,8 @@ pub(in crate::game) fn update_enemy_ai(
         let rise = player_feet.y - feet.y;
         let other_level = player.grounded && rise.abs() > level_change_threshold;
         let standing = surfaces
-            .standing_on(feet.x, feet.y, enemy.drop_through_timer > 0.0)
+            .standing_on(feet.x, feet.y)
             .filter(|_| enemy.grounded);
-        if standing.is_some()
-            && other_level
-            && rise < 0.0
-            && surfaces.floor_below(feet.x, feet.y).is_some()
-        {
-            // A player below, with another platform to land on: drop through.
-            enemy.drop_through_timer = data.gameplay.player.drop_through_s;
-            enemy.grounded = false;
-            enemy.vertical_velocity = 0.0;
-            continue;
-        }
         let should_approach = distance_h > maximum_distance || other_level;
         let should_retreat = !other_level && distance_h < minimum_distance;
         let mut direction = if should_approach {
@@ -347,8 +336,12 @@ pub(in crate::game) fn update_enemy_ai(
             }
             let speed = enemy.movement_speed_h_s * H_WORLD_UNITS * dt;
             let room_width_h = data.rooms[&session.room_id].size.width_h;
-            transform.translation.x =
-                (feet.x + direction * speed).clamp(24.0, room_width_h * H_WORLD_UNITS - 24.0);
+            let wanted_x = (feet.x + direction * speed).clamp(
+                HALF_BODY_WIDTH,
+                room_width_h * H_WORLD_UNITS - HALF_BODY_WIDTH,
+            );
+            // Platform sides stop an enemy as they stop the player.
+            transform.translation.x = surfaces.blocked_x(feet.x, wanted_x, feet.y);
             let movement_speed_h_s = enemy.movement_speed_h_s;
             let home_y = enemy.home_y;
             if let Some(movement) = &mut enemy.procedural_movement {
@@ -412,7 +405,6 @@ pub(in crate::game) fn update_enemy_platform_physics(
     let surfaces = Platforms(platforms.iter().collect());
 
     for (mut enemy, mut transform) in &mut enemies {
-        enemy.drop_through_timer = (enemy.drop_through_timer - dt).max(0.0);
         if enemy.health <= 0.0 {
             // Corpses drop straight down instead of finishing a leap.
             enemy.jump = None;
@@ -420,13 +412,17 @@ pub(in crate::game) fn update_enemy_platform_physics(
         let gait_offset = transform.translation.y - enemy.home_y;
         let previous_foot_y = enemy.home_y - enemy.feet_offset;
         if let Some(jump) = enemy.jump.filter(|jump| !jump.landed) {
+            let wanted_x = (transform.translation.x + jump.velocity_x * dt)
+                .clamp(HALF_BODY_WIDTH, room_width - HALF_BODY_WIDTH);
+            // As for the player, the frame's highest feet decide what its
+            // sides block, so a leap over a ledge is never cut short.
+            let reach_foot_y = previous_foot_y.max(previous_foot_y + enemy.vertical_velocity * dt);
             transform.translation.x =
-                (transform.translation.x + jump.velocity_x * dt).clamp(24.0, room_width - 24.0);
+                surfaces.blocked_x(transform.translation.x, wanted_x, reach_foot_y);
         }
         let x = transform.translation.x;
-        let dropping_through = enemy.drop_through_timer > 0.0;
         let standing_platform = surfaces
-            .standing_on(x, previous_foot_y, dropping_through)
+            .standing_on(x, previous_foot_y)
             .filter(|_| enemy.vertical_velocity <= 0.0);
 
         let (next_foot_y, grounded) = if let Some(platform) = standing_platform {
@@ -436,11 +432,21 @@ pub(in crate::game) fn update_enemy_platform_physics(
             // Average velocity over the frame keeps jump arcs exact at any frame rate.
             let launch_velocity = enemy.vertical_velocity;
             enemy.vertical_velocity -= gravity * dt;
-            let next_foot_y =
+            let mut next_foot_y =
                 previous_foot_y + (launch_velocity + enemy.vertical_velocity) / 2.0 * dt;
+            // A rising enemy bumps its head on a platform's underside.
+            if launch_velocity > 0.0
+                && let Some(bottom) = surfaces.ceiling(
+                    x,
+                    previous_foot_y + H_WORLD_UNITS,
+                    next_foot_y + H_WORLD_UNITS,
+                )
+            {
+                next_foot_y = bottom - H_WORLD_UNITS;
+                enemy.vertical_velocity = 0.0;
+            }
             if enemy.vertical_velocity <= 0.0
-                && let Some(platform) =
-                    surfaces.landing(x, previous_foot_y, next_foot_y, dropping_through)
+                && let Some(platform) = surfaces.landing(x, previous_foot_y, next_foot_y)
             {
                 enemy.vertical_velocity = 0.0;
                 (platform.top, true)

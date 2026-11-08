@@ -1,20 +1,30 @@
+# Each category paints the bonus screen and names the item the player picks up
+# on the ground once a room is cleared; the two bonuses offered then come from
+# that item's category.
 categories:
   combat:
     color: "#D74444"
     icon: crossed_swords
+    pickup: pickups/combat.png
   defense:
     color: "#4F8FD6"
     icon: shield
+    pickup: pickups/defense.png
   agility:
     color: "#58AD68"
     icon: wing
+    pickup: pickups/agility.png
   intelligence:
     color: "#E6D772"
     icon: light
+    pickup: pickups/intelligence.png
   combined:
     color: "#E8843F"
     icon: knot
+    pickup: pickups/combined.png
 
+# Every category holds enough bonuses that a whole chapter of pickups, rerolls
+# included, can never run it dry (`GameData::validate` checks it).
 bonuses:
   - id: hollow_points
     name: Hollow Points
@@ -121,3 +131,252 @@ bonuses:
     description: Healing pickups increase fire rate by 15% for 3 seconds.
     category: combined
     effects: { healing_pickup_fire_rate_multiplier: 1.15, healing_pickup_fire_rate_duration_s: 3 }
+
+  # Placeholders, so every category has enough bonuses to fill a chapter of
+  # pickups. They are named and described, but no code reads their effects
+  # yet: picking one changes nothing until it is wired up.
+  - id: piercing_rounds
+    name: Piercing Rounds
+    description: Bullets pass through one extra enemy.
+    category: combat
+    effects: { pierce_count: 1 }
+  - id: heavy_caliber
+    name: Heavy Caliber
+    description: Increase bullet damage by 10%.
+    category: combat
+    effects: { bullet_damage_multiplier: 1.1 }
+  - id: quick_draw
+    name: Quick Draw
+    description: The first shot after a reload deals 30% more damage.
+    category: combat
+    effects: { first_shot_damage_multiplier: 1.3 }
+  - id: steady_aim
+    name: Steady Aim
+    description: Standing still increases bullet damage by 12%.
+    category: combat
+    effects: { standing_damage_multiplier: 1.12 }
+  - id: point_blank
+    name: Point Blank
+    description: Shots that land within 3 H deal 25% more damage.
+    category: combat
+    effects: { point_blank_range_h: 3, point_blank_damage_multiplier: 1.25 }
+  - id: long_shot
+    name: Long Shot
+    description: Shots that travel more than 8 H deal 20% more damage.
+    category: combat
+    effects: { long_shot_range_h: 8, long_shot_damage_multiplier: 1.2 }
+  - id: double_tap
+    name: Double Tap
+    description: Every fifth shot fires a second bullet.
+    category: combat
+    effects: { double_tap_every: 5 }
+  - id: hot_barrel
+    name: Hot Barrel
+    description: Each shot in a magazine adds 1% damage, up to 10%.
+    category: combat
+    effects: { barrel_damage_step: 0.01, barrel_damage_max: 0.1 }
+  - id: armor_piercing
+    name: Armor Piercing
+    description: A shot that breaks a shield still wounds the enemy behind it.
+    category: combat
+    effects: { shield_pierce: 1 }
+  - id: executioner
+    name: Executioner
+    description: Deal 30% more damage to enemies below 30% health.
+    category: combat
+    effects: { execute_health_fraction: 0.3, execute_damage_multiplier: 1.3 }
+  - id: iron_guard
+    name: Iron Guard
+    description: Reduce damage taken by 8%.
+    category: defense
+    effects: { damage_taken_multiplier: 0.92 }
+  - id: second_wind
+    name: Second Wind
+    description: Restore 20 health when a room is cleared.
+    category: defense
+    effects: { room_clear_healing: 20 }
+  - id: bulwark
+    name: Bulwark
+    description: Taking cover reduces damage by a further 15%.
+    category: defense
+    effects: { cover_damage_taken_multiplier: 0.85 }
+  - id: steadfast
+    name: Steadfast
+    description: Increase maximum health by 10.
+    category: defense
+    effects: { max_health_increase: 10 }
+  - id: field_dressing
+    name: Field Dressing
+    description: Health pickups restore 50% more.
+    category: defense
+    effects: { health_pickup_multiplier: 1.5 }
+  - id: adrenaline
+    name: Adrenaline
+    description: Below 30% health, reduce damage taken by 20%.
+    category: defense
+    effects: { low_health_fraction: 0.3, low_health_damage_taken_multiplier: 0.8 }
+  - id: deflector
+    name: Deflector
+    description: Negate the first projectile that would hit you in each room.
+    category: defense
+    effects: { negate_first_projectile_each_room: 1 }
+  - id: thick_plating
+    name: Thick Plating
+    description: Reduce projectile damage by 15%.
+    category: defense
+    effects: { projectile_damage_taken_multiplier: 0.85 }
+  - id: recovery
+    name: Recovery
+    description: Restore 1 health per second while no enemy is engaged.
+    category: defense
+    effects: { idle_regeneration_per_s: 1 }
+  - id: last_stand
+    name: Last Stand
+    description: Once per run, survive an otherwise fatal hit at 1 health.
+    category: defense
+    effects: { survive_fatal_hits: 1 }
+  - id: air_control
+    name: Air Control
+    description: Increase airborne movement speed by 15%.
+    category: agility
+    effects: { air_speed_multiplier: 1.15 }
+  - id: light_step
+    name: Light Step
+    description: Reduce dash cooldown by 10%.
+    category: agility
+    effects: { dash_cooldown_multiplier: 0.9 }
+  - id: long_dash
+    name: Long Dash
+    description: Increase dash distance by 20%.
+    category: agility
+    effects: { dash_distance_multiplier: 1.2 }
+  - id: quick_crouch
+    name: Quick Crouch
+    description: Increase crouch speed by 30%.
+    category: agility
+    effects: { crouch_speed_multiplier: 1.3 }
+  - id: hang_time
+    name: Hang Time
+    description: Fall 20% slower.
+    category: agility
+    effects: { fall_gravity_multiplier: 0.8 }
+  - id: momentum
+    name: Momentum
+    description: Keep 20% more speed when landing.
+    category: agility
+    effects: { landing_speed_retention: 1.2 }
+  - id: evasive
+    name: Evasive
+    description: A dash makes you untouchable for 0.2 seconds.
+    category: agility
+    effects: { dash_invulnerability_s: 0.2 }
+  - id: nimble
+    name: Nimble
+    description: Increase movement speed by 6%.
+    category: agility
+    effects: { movement_speed_multiplier: 1.06 }
+  - id: quick_turn
+    name: Quick Turn
+    description: Turning around no longer costs speed.
+    category: agility
+    effects: { turn_speed_retention: 1 }
+  - id: cold_read
+    name: Cold Read
+    description: Enemy wind-ups last 10% longer.
+    category: intelligence
+    effects: { enemy_windup_multiplier: 1.1 }
+  - id: opening_move
+    name: Opening Move
+    description: The first enemy hit in a room takes 20% more damage.
+    category: intelligence
+    effects: { first_enemy_damage_multiplier: 1.2 }
+  - id: analysis
+    name: Analysis
+    description: A mark lasts 1 second longer.
+    category: intelligence
+    effects: { mark_duration_bonus_s: 1 }
+  - id: focus_fire
+    name: Focus Fire
+    description: After three hits on the same enemy, deal 20% more damage to it.
+    category: intelligence
+    effects: { focus_hits: 3, focus_damage_multiplier: 1.2 }
+  - id: preparation
+    name: Preparation
+    description: Start each room with a full magazine.
+    category: intelligence
+    effects: { refill_magazine_each_room: 1 }
+  - id: efficiency
+    name: Efficiency
+    description: Every third reload is instant.
+    category: intelligence
+    effects: { instant_reload_every: 3 }
+  - id: foresight
+    name: Foresight
+    description: Gain one extra reroll.
+    category: intelligence
+    effects: { extra_rerolls: 1 }
+  - id: composure
+    name: Composure
+    description: Reload 10% faster.
+    category: intelligence
+    effects: { reload_speed_multiplier: 1.1 }
+  - id: weak_point
+    name: Weak Point
+    description: Deal 10% more damage to shielded enemies.
+    category: intelligence
+    effects: { shielded_damage_multiplier: 1.1 }
+  - id: study
+    name: Study
+    description: Killing an enemy loads 2 rounds back into the magazine.
+    category: intelligence
+    effects: { kill_reload_rounds: 2 }
+  - id: momentum_shot
+    name: Momentum Shot
+    description: Deal 10% more bullet damage while moving.
+    category: combined
+    effects: { moving_bullet_damage_multiplier: 1.1 }
+  - id: bloodrush
+    name: Bloodrush
+    description: Killing an enemy increases movement speed by 15% for 2 seconds.
+    category: combined
+    effects: { kill_speed_bonus: 0.15, kill_speed_duration_s: 2 }
+  - id: survivor
+    name: Survivor
+    description: Each bonus you own adds 1 maximum health.
+    category: combined
+    effects: { max_health_per_bonus: 1 }
+  - id: opportunist
+    name: Opportunist
+    description: Deal 20% more damage to enemies that have not noticed you.
+    category: combined
+    effects: { unaware_damage_multiplier: 1.2 }
+  - id: second_magazine
+    name: Second Magazine
+    description: Increase magazine size by 2 rounds.
+    category: combined
+    effects: { extra_magazine_rounds: 2 }
+  - id: balance
+    name: Balance
+    description: Increase jump height and bullet damage by 8%.
+    category: combined
+    effects: { jump_height_multiplier: 1.08, bullet_damage_multiplier: 1.08 }
+  - id: scrapper
+    name: Scrapper
+    description: Health pickups also load 2 rounds back into the magazine.
+    category: combined
+    effects: { pickup_reload_rounds: 2 }
+  - id: resolve
+    name: Resolve
+    description: Taking damage increases fire rate by 20% for 2 seconds.
+    category: combined
+    effects: { hurt_fire_rate_multiplier: 1.2, hurt_fire_rate_duration_s: 2 }
+  - id: lucky_find
+    name: Lucky Find
+    description: Increase health pickup drop chance by 15% relative to its base chance.
+    category: combined
+    effects: { health_drop_chance_multiplier: 1.15 }
+  - id: clean_sweep
+    name: Clean Sweep
+    description: Clearing a room without taking damage restores 10 health.
+    category: combined
+    effects: { flawless_room_healing: 10 }

@@ -12,6 +12,7 @@ const PLATFORM_COLOR: Color = Color::srgb(0.95, 0.65, 0.3);
 const PLAYER_COLOR: Color = Color::srgb(0.35, 0.95, 0.5);
 const EXIT_COLOR: Color = Color::srgb(0.35, 0.8, 1.0);
 const ENEMY_COLOR: Color = Color::srgb(1.0, 0.35, 0.45);
+const BONUS_COLOR: Color = Color::srgb(1.0, 0.78, 0.3);
 const HOVER_COLOR: Color = Color::WHITE;
 const SELECTED_COLOR: Color = Color::srgb(1.0, 0.9, 0.2);
 // The selected body's hitboxes, colored as in the B overlay.
@@ -164,6 +165,7 @@ pub(super) fn draw_overlay(mut gizmos: Gizmos, editor: Res<RoomEditor>, data: Re
             EditorItem::Enemy(_) => ENEMY_COLOR,
             EditorItem::PlayerSpawn => PLAYER_COLOR,
             EditorItem::Exit => EXIT_COLOR,
+            EditorItem::Bonus => BONUS_COLOR,
         };
         outline(rect, color);
         if selected && editor.selected.len() == 1 {

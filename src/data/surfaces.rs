@@ -1,5 +1,5 @@
-//! Surface materials from `surfaces/materials.yaml`: the textures one-way
-//! platforms and decoration panels are drawn with, and the footsteps they
+//! Surface materials from `surfaces/materials.yaml`: the textures platforms
+//! and decoration panels are drawn with, and the footsteps they
 //! make. A block can also skip the catalog and be painted a plain color.
 
 use std::{

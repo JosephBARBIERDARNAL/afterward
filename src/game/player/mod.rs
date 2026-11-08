@@ -54,7 +54,6 @@ pub(super) fn update_player(
     }
     player.dash_shot_timer = (player.dash_shot_timer - dt).max(0.0);
     player.dash_cooldown = (player.dash_cooldown - dt).max(0.0);
-    player.drop_through_timer = (player.drop_through_timer - dt).max(0.0);
     let mut sprite_view = PlayerSprite {
         sprite: &mut sprite,
         animation: &mut animation,
@@ -143,16 +142,7 @@ pub(super) fn update_player(
             0
         };
         let jumps_allowed = tuning.jumps_per_takeoff + extra_jump;
-        let feet = transform.translation.y - H_WORLD_UNITS / 2.0;
-        let floor_below = platforms
-            .floor_below(transform.translation.x, feet)
-            .is_some();
-        // Down + Jump drops through the platform underfoot, but only onto
-        // another one: every floor is one-way, so this must not empty the room.
-        if player.grounded && held(GameAction::MoveDown) && floor_below {
-            player.drop_through_timer = tuning.drop_through_s;
-            player.grounded = false;
-        } else if player.grounded || player.jumps_used < jumps_allowed {
+        if player.grounded || player.jumps_used < jumps_allowed {
             let jump_factor = if player.jumps_used == 0 {
                 session
                     .bonus_multiplier(&data, "high_jump", "jump_height_multiplier")
@@ -202,23 +192,41 @@ pub(super) fn update_player(
         }
     }
 
-    // Horizontal motion first, from the frame's starting height, so a body
-    // sinking into a floor it lands on is never pushed sideways by it.
-    let previous_feet = transform.translation.y - H_WORLD_UNITS / 2.0;
-    let dash_dx =
-        player.dash_direction * tuning.dash_distance_h / tuning.dash_duration_s * H_WORLD_UNITS;
-    let dx = dash_dx * dash_step + player.velocity.x * normal_step;
-    let mut x = transform.translation.x + dx;
-    let room = &data.rooms[&session.room_id];
-    let room_width_world = room.size.width_h * H_WORLD_UNITS;
-    let half_width = PLAYER_COLLISION_WIDTH_H * H_WORLD_UNITS / 2.0;
-    x = x.clamp(half_width, room_width_world - half_width);
-    transform.translation.x = x;
-
+    // Gravity before the horizontal step, so the frame's whole vertical reach
+    // is known: a body rising over a ledge this frame also clears its side.
     if normal_step > 0.0 {
         player.velocity.y -= tuning.gravity_h_s2 * H_WORLD_UNITS * normal_step;
     }
+    let previous_feet = transform.translation.y - H_WORLD_UNITS / 2.0;
+    let previous_x = transform.translation.x;
+    let dash_dx =
+        player.dash_direction * tuning.dash_distance_h / tuning.dash_duration_s * H_WORLD_UNITS;
+    let dx = dash_dx * dash_step + player.velocity.x * normal_step;
+    let room = &data.rooms[&session.room_id];
+    let room_width_world = room.size.width_h * H_WORLD_UNITS;
+    let wanted_x = (previous_x + dx).clamp(HALF_BODY_WIDTH, room_width_world - HALF_BODY_WIDTH);
+    // Platform sides are solid: the player stops against them. The test takes
+    // the frame's highest feet, so a body sinking into the floor it lands on
+    // is never pushed sideways and a rise over a ledge is never cut short.
+    let reach_feet = previous_feet.max(previous_feet + player.velocity.y * dt);
+    let x = platforms.blocked_x(previous_x, wanted_x, reach_feet);
+    if x != wanted_x {
+        player.velocity.x = 0.0;
+    }
+    transform.translation.x = x;
+
     transform.translation.y += player.velocity.y * dt;
+    // Platform undersides are solid too: a rising player bumps their head.
+    if player.velocity.y > 0.0
+        && let Some(bottom) = platforms.ceiling(
+            x,
+            previous_feet + H_WORLD_UNITS,
+            transform.translation.y + H_WORLD_UNITS / 2.0,
+        )
+    {
+        transform.translation.y = bottom - H_WORLD_UNITS / 2.0;
+        player.velocity.y = 0.0;
+    }
     if player.velocity.y <= 0.0 {
         player.jump_held = false;
     }
@@ -228,8 +236,7 @@ pub(super) fn update_player(
     let mut grounded_footstep = None;
     let feet = transform.translation.y - H_WORLD_UNITS / 2.0;
     if player.velocity.y <= 0.0
-        && let Some(platform) =
-            platforms.landing(x, previous_feet, feet, player.drop_through_timer > 0.0)
+        && let Some(platform) = platforms.landing(x, previous_feet, feet)
     {
         transform.translation.y = platform.top + H_WORLD_UNITS / 2.0;
         player.velocity.y = 0.0;

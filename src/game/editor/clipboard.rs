@@ -15,12 +15,17 @@ pub(super) struct Clipboard {
 }
 
 impl Clipboard {
-    /// Copies `items` of `room`; the player spawn and the exit are left out.
+    /// Copies `items` of `room`; the player spawn, exit and bonus are left out.
     /// `None` when nothing copyable is selected.
     pub(super) fn copy(room: &RoomConfig, items: &[EditorItem]) -> Option<Self> {
         let anchor = items
             .iter()
-            .filter(|item| !matches!(item, EditorItem::PlayerSpawn | EditorItem::Exit))
+            .filter(|item| {
+                !matches!(
+                    item,
+                    EditorItem::PlayerSpawn | EditorItem::Exit | EditorItem::Bonus
+                )
+            })
             .filter_map(|item| item.bounds(room))
             .map(|rect| Vec2::new(rect.x, rect.y))
             .reduce(Vec2::min)?;
@@ -47,7 +52,7 @@ impl Clipboard {
                         .enemies
                         .extend(room.enemy_spawns.get(index).cloned());
                 }
-                EditorItem::PlayerSpawn | EditorItem::Exit => {}
+                EditorItem::PlayerSpawn | EditorItem::Exit | EditorItem::Bonus => {}
             }
         }
         clipboard.shift(-anchor);

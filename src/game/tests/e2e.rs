@@ -2,12 +2,13 @@
 //! headless (no window, GPU, or audio device), driven by keyboard events at a
 //! fixed frame rate with a fixed random seed.
 //!
-//! Scenarios press keys as a player would. Two steps take a shortcut so room
-//! layout edits never break them: `defeat_enemies` finishes a room's enemies
-//! and `step_toward_exit` puts the player beside the door.
+//! Scenarios press keys as a player would. Three steps take a shortcut so room
+//! layout edits never break them: `defeat_enemies` finishes a room's enemies,
+//! `take_bonus` steps onto the bonus item it leaves behind, and
+//! `step_toward_exit` puts the player beside the door.
 
 use super::super::*;
-use crate::game::combat::CombatProjectile;
+use crate::game::{bonus_pickup::BonusPickup, combat::CombatProjectile};
 use bevy::{
     audio::{AudioPlugin, AudioSource},
     input::{
@@ -60,7 +61,17 @@ impl HeadlessGame {
         let copy =
             std::env::temp_dir().join(format!("afterward-e2e-{}-{nanos}", std::process::id()));
         let mut pending = vec![PathBuf::from("config"), PathBuf::from("rooms")];
-        pending.extend(["player", "background", "audio", "surfaces", "doors"].map(PathBuf::from));
+        pending.extend(
+            [
+                "player",
+                "background",
+                "audio",
+                "surfaces",
+                "doors",
+                "pickups",
+            ]
+            .map(PathBuf::from),
+        );
         while let Some(relative) = pending.pop() {
             fs::create_dir_all(copy.join(&relative)).expect("the temp folder is writable");
             let entries = fs::read_dir(asset_root.join(&relative)).expect("assets are readable");
@@ -184,13 +195,15 @@ impl HeadlessGame {
     }
 
     /// From the main menu, starts a run and plays it to room 1, where the
-    /// first fight waits: a run opens in the empty room 0, which is crossed
-    /// through its already open door.
+    /// first fight waits: a run opens in the empty room 0, whose bonus item is
+    /// picked up to unlock its door.
     fn start_run(&mut self) {
         assert_eq!(self.screen(), GameScreen::MainMenu);
         self.tap(KeyCode::Enter);
         self.wait_for_screen(GameScreen::Playing, 10.0);
         assert_eq!(self.session().room_id, 0);
+        self.take_bonus();
+        self.tap(KeyCode::Digit1);
         self.leave_through_the_door();
         self.wait_for_screen(GameScreen::Playing, 10.0);
     }
@@ -212,6 +225,47 @@ impl HeadlessGame {
             .collect()
     }
 
+    /// Shortcut: waits for the cleared room's bonus item, steps onto it, and
+    /// waits for the bonus screen it opens. Where the item lies is the room's
+    /// business, so the scenarios never name the spot.
+    fn take_bonus(&mut self) {
+        let mut waited_s = 0.0;
+        while self
+            .app
+            .world_mut()
+            .query_filtered::<Entity, With<BonusPickup>>()
+            .iter(self.app.world())
+            .next()
+            .is_none()
+        {
+            assert!(
+                waited_s < 3.0,
+                "expected a bonus item in the cleared room, still on {:?}",
+                self.screen()
+            );
+            self.app.update();
+            waited_s += FRAME_S;
+        }
+        // Stand on the spot the item hovers over, rather than inside it: the
+        // item is smaller than a body and floats clear of the ground.
+        let room = &self.data().rooms[&self.session().room_id];
+        let position = Vec3::new(
+            room.bonus.x_h * H_WORLD_UNITS,
+            (room.bonus.y_h + 0.5) * H_WORLD_UNITS,
+            4.0,
+        );
+        let world = self.app.world_mut();
+        for (mut transform, mut body) in world
+            .query::<(&mut Transform, &mut PlayerBody)>()
+            .iter_mut(world)
+        {
+            transform.translation = position;
+            body.velocity = Vec2::ZERO;
+            body.grounded = true;
+        }
+        self.wait_for_screen(GameScreen::Bonus, 3.0);
+    }
+
     /// Shortcut: brings every enemy to 0 health, as if shot dead.
     fn defeat_enemies(&mut self) {
         let world = self.app.world_mut();
@@ -220,11 +274,11 @@ impl HeadlessGame {
         }
     }
 
-    /// Shortcut: puts the player on the floor 2 H left of the exit, facing it.
+    /// Shortcut: puts the player on the floor 1 H left of the exit, facing it.
     fn step_toward_exit(&mut self) {
         let room = &self.data().rooms[&self.session().room_id];
         let position = Vec3::new(
-            (room.exit.x_h - 2.0) * H_WORLD_UNITS,
+            (room.exit.x_h - 1.0) * H_WORLD_UNITS,
             (room.exit.y_h + 0.5) * H_WORLD_UNITS,
             4.0,
         );

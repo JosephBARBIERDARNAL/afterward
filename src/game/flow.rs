@@ -10,43 +10,35 @@ pub(super) fn room_clear_check(
     mut next_screen: ResMut<NextState<GameScreen>>,
     mut sounds: ResMut<SoundQueue>,
 ) {
-    if session.door_open || session.health <= 0.0 {
+    if session.room_cleared || session.health <= 0.0 {
         return;
     }
     if enemies.iter().any(|enemy| enemy.health > 0.0) {
         return;
     }
+    session.room_cleared = true;
+    session.offered_bonuses.clear();
     // A room authored without enemies (the opening room 0) has nothing to
-    // clear and no bonus to offer: the player just walks out of its open door.
+    // clear: its bonus item is simply there from the start, with no flash.
     if data.rooms[&session.room_id].enemy_spawns.is_empty() {
-        session.door_open = true;
         return;
     }
-    session.door_open = false;
-    session.offered_bonuses.clear();
     timer.0 = Timer::from_seconds(data.gameplay.room_flow.clear_animation_s, TimerMode::Once);
     sounds.push(SoundCue::RoomClear);
     next_screen.set(GameScreen::RoomClear);
 }
 
+/// Holds the room-clear flash, then hands the room back so the player can walk
+/// to the bonus item that `bonus_pickup::spawn_bonus_pickup` lays out.
 pub(super) fn update_room_clear(
     time: Res<Time>,
-    data: Res<GameData>,
-    mut random: ResMut<RandomState>,
-    mut session: ResMut<RunSession>,
     mut timer: ResMut<PhaseTimer>,
     mut next_screen: ResMut<NextState<GameScreen>>,
 ) {
     timer.0.tick(time.delta());
-    if !timer.0.is_finished() {
-        return;
+    if timer.0.is_finished() {
+        next_screen.set(GameScreen::Playing);
     }
-    session.offered_bonuses = draw_bonus_pair(&data, &session, &mut random, &BTreeSet::new());
-    session.previous_offers.clear();
-    let offered = session.offered_bonuses.clone();
-    session.previous_offers.extend(offered);
-    session.selected_choice = BonusChoice::Offer(0);
-    next_screen.set(GameScreen::Bonus);
 }
 
 #[derive(SystemParam)]
@@ -175,15 +167,22 @@ pub(super) fn handle_bonus_input(
 }
 
 pub(super) fn reroll_available(session: &RunSession, data: &GameData) -> bool {
-    session.rerolls > 0
-        && data
-            .bonuses
-            .bonuses
-            .iter()
-            .filter(|bonus| !session.owned_bonuses.contains(&bonus.id))
-            .filter(|bonus| !session.previous_offers.contains(&bonus.id))
-            .count()
-            >= 2
+    session.rerolls > 0 && eligible_bonuses(data, session, &session.previous_offers).count() >= 2
+}
+
+/// The bonuses of the picked-up item's category the player may still be
+/// offered: not already owned, and not in `excluded`.
+fn eligible_bonuses<'a>(
+    data: &'a GameData,
+    session: &'a RunSession,
+    excluded: &'a BTreeSet<String>,
+) -> impl Iterator<Item = &'a crate::data::BonusConfig> {
+    data.bonuses
+        .bonuses
+        .iter()
+        .filter(|bonus| session.bonus_category.as_ref() == Some(&bonus.category))
+        .filter(|bonus| !session.owned_bonuses.contains(&bonus.id))
+        .filter(|bonus| !excluded.contains(&bonus.id))
 }
 
 pub(super) fn handle_door_touch(
@@ -260,6 +259,8 @@ pub(super) fn update_room_transition(
     }
     session.world_loaded = false;
     session.door_open = false;
+    session.room_cleared = false;
+    session.bonus_category = None;
     session.room_ward_used = false;
     session.room_id = next_room_id;
     next_screen.set(GameScreen::RoomLoading);
@@ -310,18 +311,13 @@ pub(super) fn update_room_transition_fade_out(
     });
 }
 
-fn draw_bonus_pair(
+pub(super) fn draw_bonus_pair(
     data: &GameData,
     session: &RunSession,
     random: &mut RandomState,
     excluded: &BTreeSet<String>,
 ) -> Vec<String> {
-    let mut eligible = data
-        .bonuses
-        .bonuses
-        .iter()
-        .filter(|bonus| !session.owned_bonuses.contains(&bonus.id))
-        .filter(|bonus| !excluded.contains(&bonus.id))
+    let mut eligible = eligible_bonuses(data, session, excluded)
         .map(|bonus| bonus.id.clone())
         .collect::<Vec<_>>();
     let mut offers = Vec::with_capacity(2);

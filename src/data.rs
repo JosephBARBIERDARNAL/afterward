@@ -323,12 +323,6 @@ impl GameData {
             ));
         }
 
-        if self.bonuses.bonuses.len() != 21 {
-            return Err(InvalidGameData::from(
-                "the bonus pool must contain exactly 21 entries",
-            ));
-        }
-
         let mut bonus_ids = self
             .bonuses
             .bonuses
@@ -350,19 +344,50 @@ impl GameData {
                 "a bonus references an unknown category",
             ));
         }
+        // Every room lays out one bonus item, and the player owns one bonus per
+        // room already cleared. For the last room's item to still offer two
+        // bonuses of its category, and two more on a reroll, the category needs
+        // one per earlier room plus those four.
+        let needed_per_category = self.rooms.len() + 3;
+        for (name, category) in &self.bonuses.categories {
+            let count = self
+                .bonuses
+                .bonuses
+                .iter()
+                .filter(|bonus| bonus.category == *name)
+                .count();
+            if count < needed_per_category {
+                return Err(InvalidGameData::from(format!(
+                    "category {name} holds {count} bonuses, but a run of {} rooms can ask it \
+                     for {needed_per_category}",
+                    self.rooms.len()
+                )));
+            }
+            if !asset_root.join(&category.pickup).is_file() {
+                return Err(InvalidGameData::from(format!(
+                    "missing bonus pickup art: {}",
+                    category.pickup
+                )));
+            }
+        }
+        let pickup = &self.gameplay.room_flow.bonus_pickup;
+        if [pickup.size_h, pickup.bob_period_s, pickup.touch_radius_h]
+            .iter()
+            .any(|value| !value.is_finite() || *value <= 0.0)
+            || !pickup.bob_height_h.is_finite()
+            || pickup.bob_height_h < 0.0
+        {
+            return Err(InvalidGameData::from(
+                "the bonus pickup needs a positive size, bob period and touch radius",
+            ));
+        }
 
         let viewport_height_h = self.gameplay.viewport.height_h;
-        let player = &self.gameplay.player;
         if !(self.gameplay.camera.vertical_dead_zone_h >= 0.0
             && self.gameplay.camera.vertical_dead_zone_h < viewport_height_h / 2.0)
         {
             return Err(InvalidGameData::from(
                 "the camera dead zone must fit inside half the viewport",
-            ));
-        }
-        if !player.drop_through_s.is_finite() || player.drop_through_s <= 0.0 {
-            return Err(InvalidGameData::from(
-                "the drop-through window must be finite and positive",
             ));
         }
         // Rooms are free-form: only what the game can't run or draw without is
@@ -544,7 +569,19 @@ mod tests {
             data.rooms[&0].enemy_spawns.is_empty(),
             "the opening room holds no enemies"
         );
-        assert_eq!(data.bonuses.bonuses.len(), 21);
+        for name in data.bonuses.categories.keys() {
+            let count = data
+                .bonuses
+                .bonuses
+                .iter()
+                .filter(|bonus| bonus.category == *name)
+                .count();
+            assert!(
+                count >= data.rooms.len() + 3,
+                "category {name} holds only {count} bonuses for a chapter of {} rooms",
+                data.rooms.len()
+            );
+        }
         assert_eq!(data.rooms[&10].enemy_spawns[0].type_id, "evil_wizard");
         assert_eq!(
             data.surfaces.materials.len(),

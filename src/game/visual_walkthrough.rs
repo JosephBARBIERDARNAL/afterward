@@ -54,6 +54,7 @@ impl Default for VisualWalkthrough {
 struct VisualScene {
     screen: GameScreen,
     room_id: u16,
+    room_cleared: bool,
     door_open: bool,
 }
 
@@ -107,6 +108,7 @@ fn drive_visual_walkthrough(resources: VisualWalkthroughResources) {
     let scene = VisualScene {
         screen: *screen.get(),
         room_id: session.room_id,
+        room_cleared: session.room_cleared,
         door_open: session.door_open,
     };
     if walkthrough.active_scene != Some(scene) {
@@ -119,18 +121,26 @@ fn drive_visual_walkthrough(resources: VisualWalkthroughResources) {
     }
     walkthrough.elapsed_s += time.delta_secs().min(0.05);
 
+    // Stand beside whatever the shot is about, so the camera has settled on it
+    // by the time the screenshot is taken.
     if scene.screen == GameScreen::Playing
-        && scene.door_open
+        && (scene.door_open || scene.room_cleared)
         && !walkthrough.capture_completed
         && let (Some(room), Ok(mut player)) = (data.rooms.get(&scene.room_id), players.single_mut())
     {
-        player.translation.x = (room.exit.x_h - 4.0) * H_WORLD_UNITS;
-        player.translation.y = room.exit.y_h * H_WORLD_UNITS + H_WORLD_UNITS / 2.0;
+        let spot = if scene.door_open {
+            room.exit
+        } else {
+            room.bonus
+        };
+        player.translation.x = (spot.x_h - 4.0) * H_WORLD_UNITS;
+        player.translation.y = spot.y_h * H_WORLD_UNITS + H_WORLD_UNITS / 2.0;
     }
 
     let capture_delay_s = match scene.screen {
         GameScreen::MainMenu => 0.5,
         GameScreen::Playing if scene.door_open => 0.35,
+        GameScreen::Playing if scene.room_cleared => 0.35,
         GameScreen::Playing => 0.75,
         GameScreen::Paused | GameScreen::Settings | GameScreen::Controls => 0.35,
         GameScreen::RoomClear => 0.2,
@@ -145,6 +155,9 @@ fn drive_visual_walkthrough(resources: VisualWalkthroughResources) {
             GameScreen::MainMenu => String::from("main-menu"),
             GameScreen::Playing if scene.door_open => {
                 format!("room_{:03}_door", scene.room_id)
+            }
+            GameScreen::Playing if scene.room_cleared => {
+                format!("room_{:03}_bonus-item", scene.room_id)
             }
             GameScreen::Playing => format!("room_{:03}_combat", scene.room_id),
             GameScreen::Paused => String::from("paused-overlay"),
@@ -196,6 +209,15 @@ fn drive_visual_walkthrough(resources: VisualWalkthroughResources) {
             {
                 player.translation.x = room.exit.x_h * H_WORLD_UNITS;
                 player.translation.y = room.exit.y_h * H_WORLD_UNITS + H_WORLD_UNITS / 2.0;
+            }
+        }
+        // The cleared room's bonus item waits to be touched.
+        GameScreen::Playing if scene.room_cleared => {
+            if let (Some(room), Ok(mut player)) =
+                (data.rooms.get(&scene.room_id), players.single_mut())
+            {
+                player.translation.x = room.bonus.x_h * H_WORLD_UNITS;
+                player.translation.y = room.bonus.y_h * H_WORLD_UNITS + H_WORLD_UNITS / 2.0;
             }
         }
         GameScreen::Playing if !walkthrough.pause_shown => {

@@ -51,8 +51,7 @@ impl JumpRoute {
         standing: &PlatformSurface,
         platforms: &Platforms,
     ) -> Option<JumpPlan> {
-        let half_width = PLAYER_COLLISION_WIDTH_H * H_WORLD_UNITS / 2.0;
-        let inset = half_width + 0.1 * H_WORLD_UNITS;
+        let inset = HALF_BODY_WIDTH + 0.1 * H_WORLD_UNITS;
         let rise_to_target = self.target_feet.y - self.feet.y;
         let climbing = rise_to_target > self.level_change_threshold;
         let edge = if self.direction > 0.0 {
@@ -91,27 +90,47 @@ impl JumpRoute {
                     {
                         return None;
                     }
+                    // A solid block is climbed at an edge: the enemy takes off
+                    // clear of it and lands just inside the edge it comes from,
+                    // instead of rising through its underside.
+                    let from_left = self.feet.x < (platform.left + platform.right) / 2.0;
+                    let clear_of = |x: f32| {
+                        if from_left {
+                            x + HALF_BODY_WIDTH <= platform.left
+                        } else {
+                            x - HALF_BODY_WIDTH >= platform.right
+                        }
+                    };
                     let landing = Vec2::new(
-                        self.feet
-                            .x
-                            .clamp(platform.left + inset, platform.right - inset),
+                        if from_left {
+                            platform.left + inset
+                        } else {
+                            platform.right - inset
+                        },
                         platform.top,
                     );
                     let score = (landing.x - self.target_feet.x).abs()
                         + (self.target_feet.y - platform.top).abs();
-                    if let Some(arc) = reachable(self.feet, landing) {
+                    if clear_of(self.feet.x)
+                        && let Some(arc) = reachable(self.feet, landing)
+                    {
                         return Some((score, JumpPlan::Leap(arc)));
                     }
-                    // A block narrower than a body has room for one take-off spot only.
+                    // Walk out from under the block first. A block narrower
+                    // than a body has room for one take-off spot only.
                     let takeoff_x = if standing.right - standing.left > 2.0 * inset {
-                        landing
-                            .x
-                            .clamp(standing.left + inset, standing.right - inset)
+                        if from_left {
+                            platform.left - HALF_BODY_WIDTH
+                        } else {
+                            platform.right + HALF_BODY_WIDTH
+                        }
+                        .clamp(standing.left + inset, standing.right - inset)
                     } else {
                         (standing.left + standing.right) / 2.0
                     };
-                    reachable(Vec2::new(takeoff_x, self.feet.y), landing)
-                        .map(|_| (score, JumpPlan::WalkTo(takeoff_x)))
+                    (clear_of(takeoff_x)
+                        && reachable(Vec2::new(takeoff_x, self.feet.y), landing).is_some())
+                    .then_some((score, JumpPlan::WalkTo(takeoff_x)))
                 } else {
                     let gap = if self.direction > 0.0 {
                         platform.left - standing.right

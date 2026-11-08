@@ -11,8 +11,8 @@ background_profile: clouds_golden_tower
 player_spawn:
   x_h: 3
   y_h: 2
-# One-way platforms: land on top, pass through from every other side,
-# Down + Jump drops through. They stop shots.
+# Solid platforms: land on their top, stop against their sides, bump
+# your head on their underside. They stop shots too.
 platforms:
   - label: the floor the room stands on
     material: city_pavement
@@ -47,6 +47,10 @@ enemy_spawns:
     position_h: { x: 38, y: 2 }
   - type_id: gorgon_1
     position_h: { x: 42, y: 2 }
+# The bonus item, lying beside the door once every enemy is down.
+bonus:
+  x_h: 43
+  y_h: 2
 exit:
   x_h: 45
   y_h: 2

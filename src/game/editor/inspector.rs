@@ -94,7 +94,7 @@ impl Field {
             Some(EditorItem::PlayerSpawn) => {
                 &[Self::X, Self::Y, Self::HurtboxWidth, Self::HurtboxHeight]
             }
-            Some(EditorItem::Exit) => &[Self::X, Self::Y],
+            Some(EditorItem::Exit | EditorItem::Bonus) => &[Self::X, Self::Y],
         }
     }
 

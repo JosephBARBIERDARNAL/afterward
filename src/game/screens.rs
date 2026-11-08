@@ -223,11 +223,13 @@ pub(super) fn reset_run(
     session.health = session.max_health;
     session.rerolls = data.gameplay.room_flow.bonus_rerolls_per_run;
     session.owned_bonuses.clear();
+    session.bonus_category = None;
     session.offered_bonuses.clear();
     session.previous_offers.clear();
     session.selected_choice = bonus_screen::BonusChoice::Offer(0);
     session.bonus_reroll_animation_remaining_s = 0.0;
     session.room_ward_used = false;
+    session.room_cleared = false;
     session.door_open = false;
     session.world_loaded = false;
     GameScreen::RoomIntro

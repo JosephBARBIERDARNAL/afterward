@@ -31,8 +31,6 @@ player:
   dash_cooldown_s: 0.8
   damage_invulnerability_s: 0.55
   dash_invulnerability_s: 0.12
-  # Down + Jump on a one-way platform drops through it.
-  drop_through_s: 0.25
   # Holding Down on the ground crouches; the crouch walk is slower.
   crouch_speed_h_s: 3
   # Holding Cover on the ground raises a guard: the player can neither move
@@ -97,6 +95,15 @@ room_flow:
     frame_size_px: { width: 48, height: 96 }
     frames: 14
     height_h: 1.5
+  # The bonus item lying on the room's `bonus` spot once every enemy is down.
+  # Its category is drawn at random; touching it within `touch_radius_h` opens
+  # the bonus screen, which then offers two bonuses of that category. It hovers
+  # `bob_height_h` up and down over `bob_period_s`.
+  bonus_pickup:
+    size_h: 0.5
+    bob_height_h: 0.15
+    bob_period_s: 1.8
+    touch_radius_h: 0.7
   bonus_rerolls_per_run: 3
 
 window:

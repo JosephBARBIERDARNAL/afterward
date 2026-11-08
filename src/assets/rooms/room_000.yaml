@@ -5,22 +5,53 @@ room_id: 0
 chapter_id: 1
 description: "The Threshold: the run's first steps. One viewport of bare ledge under an open sky, no enemies and nothing to fight for, with the door already standing open at the right."
 size:
-  width_h: 48
-  height_h: 14
+  width_h: 36
+  height_h: 16
 background_profile: city_pink_dusk
 player_spawn:
   x_h: 9.75
   y_h: 2
-# One-way platforms: land on top, pass through from every other side,
-# Down + Jump drops through. They stop shots.
+# Solid platforms: land on their top, stop against their sides, bump
+# your head on their underside. They stop shots too.
 platforms:
   - label: the ledge the whole room stands on
-    material: city_pavement
-    rect_h: { x: 0, y: 0, width: 48, height: 2 }
+    color: "#292929"
+    rect_h: { x: 1, y: 0, width: 10, height: 2 }
+  - label: the ledge the whole room stands on
+    color: "#292929"
+    rect_h: { x: 36, y: 0, width: 1, height: 14 }
+  - label: the ledge the whole room stands on
+    color: "#292929"
+    rect_h: { x: 0, y: 0, width: 1, height: 14 }
+  - color: "#292929"
+    rect_h: { x: 17, y: 3, width: 3.5, height: 0.25 }
+  - color: "#292929"
+    rect_h: { x: 25.75, y: 3, width: 2.5, height: 0.25 }
+  - label: the ledge the whole room stands on
+    color: "#292929"
+    rect_h: { x: 13, y: 0, width: 3, height: 2 }
+  - label: the ledge the whole room stands on
+    color: "#292929"
+    rect_h: { x: 22, y: 0, width: 3, height: 2 }
+  - color: "#292929"
+    rect_h: { x: 29.75, y: 4.25, width: 2.5, height: 0.25 }
+  - label: the ledge the whole room stands on
+    color: "#292929"
+    rect_h: { x: 34, y: 0, width: 2, height: 2 }
+  - color: "#292929"
+    rect_h: { x: 11, y: -0.5, width: 2, height: 0.5 }
+  - color: "#292929"
+    rect_h: { x: 16, y: -0.5, width: 6, height: 0.5 }
+  - color: "#292929"
+    rect_h: { x: 25, y: -0.5, width: 9, height: 0.5 }
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
 enemy_spawns: []
+# The bonus item, lying beside the door once every enemy is down.
+bonus:
+  x_h: 34.5
+  y_h: 2
 exit:
-  x_h: 46.75
+  x_h: 35.5
   y_h: 2
 next_room_id: 1

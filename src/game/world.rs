@@ -92,8 +92,7 @@ pub(super) fn draw_room(
     room_art::draw(commands, room, data, asset_server);
 }
 
-/// Spawns the colliders of the room's one-way platforms; `room_art::draw`
-/// draws them.
+/// Spawns the colliders of the room's platforms; `room_art::draw` draws them.
 pub(super) fn spawn_room_platforms(commands: &mut Commands, room: &RoomConfig, data: &GameData) {
     for block in &room.platforms {
         let rect = block.rect_h;
@@ -110,9 +109,8 @@ pub(super) fn spawn_room_platforms(commands: &mut Commands, room: &RoomConfig, d
     }
 }
 
-/// The exit door, standing on the room's `exit`. It is locked until the room
-/// is cleared and a bonus picked, except in a room with no enemies (the
-/// opening room 0), where it stands unlocked from the start.
+/// The exit door, standing on the room's `exit`. It is locked until the room's
+/// bonus item has been picked up and a bonus chosen.
 pub(super) fn spawn_exit_door(
     commands: &mut Commands,
     room: &RoomConfig,
@@ -125,11 +123,7 @@ pub(super) fn spawn_exit_door(
         sheet.image.clone(),
         TextureAtlas {
             layout: sheet.layout.clone(),
-            index: if room.enemy_spawns.is_empty() {
-                ExitDoor::UNLOCKED_FRAME
-            } else {
-                0
-            },
+            index: 0,
         },
     );
     sprite.custom_size = Some(Vec2::new(
@@ -316,7 +310,6 @@ pub(super) fn spawn_enemies(
                         .unwrap_or(data.enemies.jumping.jump_height_h),
                     jump_cooldown: 0.0,
                     jump: None,
-                    drop_through_timer: 0.0,
                     behavior: profile.behavior.clone(),
                     procedural_movement: profile.procedural_movement.as_ref().map(|movement| {
                         ProceduralMovementState {

@@ -14,6 +14,7 @@ use crate::data::{
 mod ammo_hud;
 mod assets;
 mod audio;
+mod bonus_pickup;
 mod bonus_screen;
 mod camera;
 mod collision;
@@ -46,7 +47,7 @@ mod tests;
 
 use audio::{DamageSound, SoundCue, SoundQueue};
 use camera::{BackgroundParallax, RoomCamera};
-use collision::{PlatformSurface, Platforms};
+use collision::{HALF_BODY_WIDTH, PlatformSurface, Platforms};
 use combat::{
     EnemyAttack, EnemyBody, EnemyHealthBar, EnemyHealthBarBackground, EnemyShieldIcon,
     ProceduralMovementState,
@@ -208,6 +209,8 @@ impl Plugin for GamePlugin {
                     combat::update_enemy_shields,
                     combat::update_health_pickups,
                     combat::update_player_death,
+                    bonus_pickup::spawn_bonus_pickup,
+                    bonus_pickup::update_bonus_pickup,
                     flow::handle_door_touch,
                     flow::room_clear_check,
                 )

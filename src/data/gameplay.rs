@@ -126,8 +126,6 @@ pub struct PlayerConfig {
     pub dash_cooldown_s: f32,
     pub damage_invulnerability_s: f32,
     pub dash_invulnerability_s: f32,
-    /// Seconds one-way platforms ignore the player after Down + Jump.
-    pub drop_through_s: f32,
     pub crouch_speed_h_s: f32,
     /// Damage multiplier for hits from the front while Cover is held.
     pub cover_damage_taken_multiplier: f32,
@@ -190,7 +188,18 @@ pub struct RoomFlowConfig {
     pub room_intro: RoomIntroConfig,
     pub exit_side: String,
     pub exit_door: ExitDoorConfig,
+    pub bonus_pickup: BonusPickupConfig,
     pub bonus_rerolls_per_run: u8,
+}
+
+/// The bonus item lying on the room's `bonus` spot once it is cleared.
+#[derive(Debug, Deserialize)]
+pub struct BonusPickupConfig {
+    pub size_h: f32,
+    pub bob_height_h: f32,
+    pub bob_period_s: f32,
+    /// How close the player must come for the item to be picked up.
+    pub touch_radius_h: f32,
 }
 
 /// The exit door's sprite sheet: frame 0 locked, 1 unlocked, then the

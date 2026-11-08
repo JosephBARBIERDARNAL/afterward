@@ -35,8 +35,8 @@ impl Display for RoomConfig {
         writeln!(formatter, "  y_h: {}", self.player_spawn.y_h)?;
         writeln!(
             formatter,
-            "# One-way platforms: land on top, pass through from every other side,\n\
-             # Down + Jump drops through. They stop shots."
+            "# Solid platforms: land on their top, stop against their sides, bump\n\
+             # your head on their underside. They stop shots too."
         )?;
         write!(formatter, "{}", YamlList("platforms", &self.platforms))?;
         writeln!(
@@ -49,6 +49,13 @@ impl Display for RoomConfig {
             "{}",
             YamlList("enemy_spawns", &self.enemy_spawns)
         )?;
+        writeln!(
+            formatter,
+            "# The bonus item, lying beside the door once every enemy is down."
+        )?;
+        writeln!(formatter, "bonus:")?;
+        writeln!(formatter, "  x_h: {}", self.bonus.x_h)?;
+        writeln!(formatter, "  y_h: {}", self.bonus.y_h)?;
         writeln!(formatter, "exit:")?;
         writeln!(formatter, "  x_h: {}", self.exit.x_h)?;
         writeln!(formatter, "  y_h: {}", self.exit.y_h)?;
@@ -258,6 +265,7 @@ player_spawn: { x_h: 2, y_h: 1 }
 platforms:
   - { color: \"#2DE2D5\", rect_h: { x: 0, y: 0, width: 24, height: 1 } }
 enemy_spawns: []
+bonus: { x_h: 20, y_h: 1 }
 exit: { x_h: 22, y_h: 1 }
 next_room_id: 4
 ",

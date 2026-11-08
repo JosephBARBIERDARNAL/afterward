@@ -16,13 +16,15 @@ pub struct RoomConfig {
     pub size: RoomSizeConfig,
     pub background_profile: String,
     pub player_spawn: SpawnPosition,
-    /// One-way platforms: bodies land on their top, pass through them from
-    /// every other side, and drop through them on purpose. They stop shots.
+    /// Solid platforms: bodies land on their top, are stopped by their sides,
+    /// and bump their head on their underside. They stop shots too.
     pub platforms: Vec<PlatformConfig>,
     /// Non-solid panels behind the platforms or in front of the bodies.
     #[serde(default)]
     pub decorations: Vec<DecorationConfig>,
     pub enemy_spawns: Vec<EnemySpawnConfig>,
+    /// Where the room's bonus item lies once every enemy is down.
+    pub bonus: SpawnPosition,
     pub exit: SpawnPosition,
     pub next_room_id: u16,
 }

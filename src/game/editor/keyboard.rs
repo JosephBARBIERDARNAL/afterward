@@ -235,7 +235,12 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
     } else if command && letter('a') {
         if let Some(room) = data.rooms.get(&editor.room_id) {
             editor.selected = EditorItem::all(room)
-                .filter(|item| !matches!(item, EditorItem::PlayerSpawn | EditorItem::Exit))
+                .filter(|item| {
+                    !matches!(
+                        item,
+                        EditorItem::PlayerSpawn | EditorItem::Exit | EditorItem::Bonus
+                    )
+                })
                 .collect();
             editor.field = 0;
         }
@@ -320,11 +325,14 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
         }
         let selection = editor.selected.clone();
         editor.edit(&mut data, |room| EditorItem::remove_all(room, &selection));
-        if selection
-            .iter()
-            .any(|item| matches!(item, EditorItem::PlayerSpawn | EditorItem::Exit))
-        {
-            editor.status = String::from("The player spawn and the exit can only be moved.");
+        if selection.iter().any(|item| {
+            matches!(
+                item,
+                EditorItem::PlayerSpawn | EditorItem::Exit | EditorItem::Bonus
+            )
+        }) {
+            editor.status =
+                String::from("The player spawn, the exit and the bonus can only be moved.");
         }
         editor.select(None);
     } else if pressed(KeyCode::ArrowUp) || pressed(KeyCode::ArrowDown) {

@@ -94,7 +94,7 @@ impl GameAction {
         match self {
             Self::MoveLeft => "MOVE LEFT",
             Self::MoveRight => "MOVE RIGHT",
-            Self::MoveDown => "CROUCH / AIM DOWN / DROP",
+            Self::MoveDown => "CROUCH / AIM DOWN",
             Self::NavigateUp => "MENU UP",
             Self::NavigateDown => "MENU DOWN",
             Self::Jump => "JUMP",

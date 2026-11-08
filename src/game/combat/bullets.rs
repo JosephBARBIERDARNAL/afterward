@@ -48,9 +48,9 @@ pub(in crate::game) struct BulletResources<'w> {
     sounds: ResMut<'w, SoundQueue>,
 }
 
-/// Player bullets fly straight until they hit the first enemy or solid block in
-/// their path, leave the room, or run out of range. They pass through one-way
-/// platforms. A hit damages the enemy and bursts into flame.
+/// Player bullets fly straight until they hit the first enemy or platform in
+/// their path, leave the room, or run out of range. A hit damages the enemy
+/// and bursts into flame.
 pub(in crate::game) fn update_player_bullets(
     mut commands: Commands,
     resources: BulletResources,

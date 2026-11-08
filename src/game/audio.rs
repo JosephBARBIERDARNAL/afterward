@@ -52,6 +52,8 @@ pub(super) enum SoundCue {
     EnemyDeath(EnemySoundStyle),
     BossPhase,
     RoomClear,
+    /// The bonus item landing on a cleared room's bonus spot.
+    BonusAppear,
     DoorAppear,
     DoorOpen,
     BonusSelected,

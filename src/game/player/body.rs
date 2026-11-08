@@ -50,7 +50,6 @@ pub(crate) struct PlayerBody {
     /// `action` (re)started since the animation last showed it.
     pub(crate) action_started: bool,
     pub(crate) footstep_timer: f32,
-    pub(crate) drop_through_timer: f32,
 }
 
 impl Default for PlayerBody {
@@ -88,7 +87,6 @@ impl Default for PlayerBody {
             action_animation_timer: 0.0,
             action_started: false,
             footstep_timer: 0.0,
-            drop_through_timer: 0.0,
         }
     }
 }

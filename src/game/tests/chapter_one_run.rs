@@ -29,7 +29,7 @@ type TestPilotEnemies<'w, 's> =
 fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
     let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
     let data = GameData::load(&asset_root).expect("Chapter 1 data should load");
-    // Room 0 is empty: it is crossed, never cleared.
+    // Room 0 is empty: its bonus is taken, but no roster is ever cleared.
     let expected_rosters = data
         .rooms
         .iter()
@@ -199,12 +199,18 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
                         keys.press(KeyCode::KeyJ);
                     } else {
                         let room = &data.rooms[&session.room_id];
+                        // The bonus item first, then the door it unlocks.
+                        let target = if session.door_open {
+                            room.exit
+                        } else {
+                            room.bonus
+                        };
                         let feet_h = player_transform.translation.y / H_WORLD_UNITS - 0.5;
-                        let exit_below = room.exit.y_h < feet_h - 0.5 && player.grounded;
+                        let exit_below = target.y_h < feet_h - 0.5 && player.grounded;
                         if exit_below {
                             keys.press(KeyCode::KeyS);
                             press_jump(&mut keys);
-                        } else if room.exit.x_h * H_WORLD_UNITS - player_transform.translation.x
+                        } else if target.x_h * H_WORLD_UNITS - player_transform.translation.x
                             > H_WORLD_UNITS * 0.65
                         {
                             keys.press(KeyCode::KeyD);
@@ -222,6 +228,8 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
                 combat::update_projectiles,
                 combat::update_health_pickups,
                 combat::update_player_death,
+                bonus_pickup::spawn_bonus_pickup,
+                bonus_pickup::update_bonus_pickup,
                 flow::handle_door_touch,
                 flow::room_clear_check,
             )
@@ -332,8 +340,11 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
                 .iter(app.world())
                 .next()
                 .map_or(0.0, |(transform, _)| transform.translation.x);
+            let room_cleared = app.world().resource::<RunSession>().room_cleared;
             let feet_h = if door_open {
                 Some(Vec2::new(room.exit.x_h - 2.0, room.exit.y_h))
+            } else if room_cleared {
+                Some(Vec2::new(room.bonus.x_h, room.bonus.y_h))
             } else {
                 targets
                     .iter(app.world())
@@ -467,8 +478,8 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
         (0..=10).collect(),
         "every room should open on its entrance animation"
     );
-    assert_eq!(bonus_rooms, (1..=10).collect());
-    assert_eq!(session.owned_bonuses.len(), 10);
+    assert_eq!(bonus_rooms, (0..=10).collect());
+    assert_eq!(session.owned_bonuses.len(), 11);
     assert_eq!(owned_bonuses.len(), session.owned_bonuses.len());
     assert_eq!(cleared_rosters, expected_rosters);
     let evil_wizard = enemy_bodies

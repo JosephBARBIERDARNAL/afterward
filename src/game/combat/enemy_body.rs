@@ -22,7 +22,6 @@ pub(crate) struct EnemyBody {
     pub(crate) jump_height_h: f32,
     pub(crate) jump_cooldown: f32,
     pub(crate) jump: Option<EnemyJump>,
-    pub(crate) drop_through_timer: f32,
     pub(crate) behavior: String,
     pub(crate) procedural_movement: Option<ProceduralMovementState>,
     pub(crate) preferred_distance_h: Option<(f32, f32)>,

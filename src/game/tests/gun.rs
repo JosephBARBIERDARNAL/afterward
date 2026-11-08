@@ -22,6 +22,7 @@ platforms:
   - { material: city_pavement, rect_h: { x: 0, y: 0, width: 48, height: 1 } }
 enemy_spawns:
   - { type_id: gorgon_1, position_h: { x: 10, y: 1 } }
+bonus: { x_h: 43, y_h: 1 }
 exit: { x_h: 45, y_h: 1 }
 next_room_id: 2
 ",

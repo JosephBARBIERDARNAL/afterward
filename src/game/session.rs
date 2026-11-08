@@ -9,10 +9,15 @@ pub(crate) struct RunSession {
     pub(crate) max_health: f32,
     pub(crate) rerolls: u8,
     pub(crate) owned_bonuses: Vec<String>,
+    /// The category of the bonus item picked up in this room, which the offers
+    /// and the rerolls are drawn from.
+    pub(crate) bonus_category: Option<String>,
     pub(crate) offered_bonuses: Vec<String>,
     pub(crate) previous_offers: BTreeSet<String>,
     pub(crate) selected_choice: bonus_screen::BonusChoice,
     pub(crate) bonus_reroll_animation_remaining_s: f32,
+    /// Every enemy is down, so the room's bonus item may be laid out.
+    pub(crate) room_cleared: bool,
     pub(crate) door_open: bool,
     pub(crate) room_ward_used: bool,
     pub(crate) world_loaded: bool,
@@ -51,10 +56,12 @@ impl Default for RunSession {
             max_health: 100.0,
             rerolls: 3,
             owned_bonuses: Vec::new(),
+            bonus_category: None,
             offered_bonuses: Vec::new(),
             previous_offers: BTreeSet::new(),
             selected_choice: bonus_screen::BonusChoice::Offer(0),
             bonus_reroll_animation_remaining_s: 0.0,
+            room_cleared: false,
             door_open: false,
             room_ward_used: false,
             world_loaded: false,

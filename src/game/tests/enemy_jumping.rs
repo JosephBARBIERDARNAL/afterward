@@ -25,6 +25,7 @@ platforms:
   - { material: city_plating, rect_h: { x: 10, y: 4.75, width: 3, height: 0.25 } }
 enemy_spawns:
   - { type_id: gorgon_1, position_h: { x: 8, y: 1 } }
+bonus: { x_h: 43, y_h: 1 }
 exit: { x_h: 45, y_h: 1 }
 next_room_id: 4
 ",
@@ -138,6 +139,7 @@ platforms:
   - { material: city_pavement, rect_h: { x: 0, y: 0, width: 48, height: 1 } }
 enemy_spawns:
   - { type_id: evil_wizard, position_h: { x: 18, y: 1 } }
+bonus: { x_h: 44, y_h: 1 }
 exit: { x_h: 46, y_h: 1 }
 next_room_id: 11
 ",

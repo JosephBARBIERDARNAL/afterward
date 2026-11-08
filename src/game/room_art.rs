@@ -1,4 +1,4 @@
-//! Room art: one-way platforms and decoration panels, painted with their
+//! Room art: platforms and decoration panels, painted with their
 //! material's texture tiled in world space (so neighboring blocks line up) or
 //! with a plain color, and outlined and highlighted along every edge no other
 //! platform covers. Drawing only: collision lives in `collision.rs`.
