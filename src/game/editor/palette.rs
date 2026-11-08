@@ -197,7 +197,6 @@ pub(super) fn handle_palette(
             item.set_fill(room, &fill);
         }
     });
-    editor.status = format!("Fill: {fill}");
     editor.fill = Some(fill);
 }
 

@@ -119,47 +119,41 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
     let cursor_h = editor.cursor_h.unwrap_or_default();
 
     if command && letter('s') {
+        // Saving is refused while the data is invalid, and a write that fails
+        // leaves the rest unsaved: either way the panel's `!` line says why.
         if let Err(problem) = data.validate() {
-            editor.status = format!("Not saved: {problem}");
+            editor.problem = Some(problem.to_string());
             return;
         }
-        let mut written = Vec::new();
         for room_id in editor.unsaved_rooms(&data) {
             let Some(room) = data.rooms.get(&room_id) else {
                 continue;
             };
             let path = RoomConfig::file_path(&data.asset_root, room_id);
             if let Err(error) = fs::write(&path, room.to_string()) {
-                editor.status = format!("Could not write {}: {error}", path.display());
+                editor.problem = Some(format!("Could not write {}: {error}", path.display()));
                 return;
             }
             editor.saved.insert(room_id, room.clone());
-            written.push(format!("room_{room_id:03}.yaml"));
         }
         if editor.unsaved_hitboxes(&data) {
             let hitboxes = Hitboxes::of(&data);
             if let Err(error) = hitboxes.save(&data.asset_root) {
-                editor.status = format!("Hitboxes not saved: {error}");
+                editor.problem = Some(format!("Hitboxes not saved: {error}"));
                 return;
             }
             editor.saved_hitboxes = Some(hitboxes);
-            written.push(String::from("hitboxes (gameplay.yaml, enemy_types.yaml)"));
         }
-        editor.status = if written.is_empty() {
-            String::from("Nothing to save.")
-        } else {
-            format!("Saved {}.", written.join(", "))
-        };
     } else if command && letter('r') {
+        // A room that fails validation would not load; the panel says why.
         if let Err(problem) = data.validate() {
-            editor.status = format!("Can't playtest: {problem}");
+            editor.problem = Some(problem.to_string());
             return;
         }
         *start_room = StartRoom(editor.room_id);
         next_screen.set(screens::reset_run(&mut session, &data, *start_room));
     } else if command && (letter('y') || shift && letter('z')) {
         let Some(step) = editor.redo.pop() else {
-            editor.status = String::from("Nothing to redo.");
             return;
         };
         let room_id = match &step {
@@ -175,7 +169,6 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
         editor.view_dirty = true;
     } else if command && letter('z') {
         let Some(step) = editor.undo.pop() else {
-            editor.status = String::from("Nothing to undo.");
             return;
         };
         let room_id = match &step {
@@ -207,29 +200,21 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
     } else if command && (letter('c') || letter('x')) {
         let room = data.rooms.get(&editor.room_id);
         let Some(copied) = room.and_then(|room| Clipboard::copy(room, &editor.selected)) else {
-            editor.status =
-                String::from("Nothing to copy: select blocks, decorations, or enemies.");
             return;
         };
-        let count = copied.len();
         editor.clipboard = Some(copied);
         if letter('x') {
             let selection = editor.selected.clone();
             editor.edit(&mut data, |room| EditorItem::remove_all(room, &selection));
             editor.select(None);
-            editor.status = format!("Cut {count} items.");
-        } else {
-            editor.status = format!("Copied {count} items.");
         }
     } else if command && letter('v') {
         let Some(copied) = editor.clipboard.clone() else {
-            editor.status = String::from("Nothing to paste.");
             return;
         };
         let at = Vec2::new(snap(cursor_h.x, false), snap(cursor_h.y, false));
         let mut pasted = Vec::new();
         editor.edit(&mut data, |room| pasted = copied.paste(room, at));
-        editor.status = format!("Pasted {} items.", pasted.len());
         editor.selected = pasted;
         editor.field = 0;
     } else if command && letter('a') {
@@ -325,15 +310,7 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
         }
         let selection = editor.selected.clone();
         editor.edit(&mut data, |room| EditorItem::remove_all(room, &selection));
-        if selection.iter().any(|item| {
-            matches!(
-                item,
-                EditorItem::PlayerSpawn | EditorItem::Exit | EditorItem::Bonus
-            )
-        }) {
-            editor.status =
-                String::from("The player spawn, the exit and the bonus can only be moved.");
-        }
+
         editor.select(None);
     } else if pressed(KeyCode::ArrowUp) || pressed(KeyCode::ArrowDown) {
         let count = editor.fields().len().max(1);
@@ -459,9 +436,6 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
             next_screen.set(GameScreen::MainMenu);
         } else {
             editor.leave_armed = true;
-            editor.status = format!(
-                "Unsaved edits: {COMMAND_KEY}+S saves them, Esc again leaves (edits stay in memory until the game quits)."
-            );
         }
     }
 }

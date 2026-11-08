@@ -59,10 +59,6 @@ impl Clipboard {
         Some(clipboard)
     }
 
-    pub(super) fn len(&self) -> usize {
-        self.platforms.len() + self.decorations.len() + self.enemies.len()
-    }
-
     /// Adds a copy of the clipboard to `room` with its lower-left corner at
     /// `at`, and returns the pasted items.
     pub(super) fn paste(&self, room: &mut RoomConfig, at: Vec2) -> Vec<EditorItem> {

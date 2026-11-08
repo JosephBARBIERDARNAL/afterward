@@ -349,8 +349,8 @@ struct RoomEditor {
     /// The editor opened this frame: the key that opened it (D in a menu)
     /// must not also act as an editor shortcut.
     just_opened: bool,
-    status: String,
-    /// Validation result of the edited data, refreshed after each edit.
+    /// What the panel's `!` line says: the edited data failing validation,
+    /// refreshed after each edit, or the last save refusing to write.
     problem: Option<String>,
     view_dirty: bool,
     /// Escape was pressed once with unsaved rooms; a second press leaves.
@@ -379,7 +379,6 @@ impl Default for RoomEditor {
             clipboard: None,
             pointer_over_panel: false,
             just_opened: false,
-            status: String::new(),
             problem: None,
             view_dirty: true,
             leave_armed: false,
@@ -537,8 +536,6 @@ fn enter_editor(
 ) {
     editor.open_room(session.room_id);
     editor.just_opened = true;
-    editor.status =
-        format!("Editing a copy in memory: {COMMAND_KEY}+S writes it to the YAML file.");
     if let (Ok(mut transform), Some(room)) = (camera.single_mut(), data.rooms.get(&session.room_id))
     {
         transform.translation.x = room.player_spawn.x_h * H_WORLD_UNITS;
@@ -704,11 +701,10 @@ next_room_id: 4
             EditorItem::PlayerSpawn,
         ];
         let copied = Clipboard::copy(&room, &selection).expect("blocks and enemies copy");
-        assert_eq!(copied.len(), 3, "the player spawn is not copied");
 
         let offset = Vec2::new(5.0, 2.0);
         let pasted = copied.paste(&mut room, copied.origin + offset);
-        assert_eq!(pasted.len(), 3);
+        assert_eq!(pasted.len(), 3, "the player spawn is not copied");
         for (original, copy) in selection.iter().zip(&pasted) {
             let moved = copy.origin(&room).zip(original.origin(&room));
             assert_eq!(moved.map(|(copy, original)| copy - original), Some(offset));

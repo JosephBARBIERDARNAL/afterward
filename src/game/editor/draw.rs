@@ -228,6 +228,11 @@ pub(super) fn update_panels(
     if let Some(problem) = &editor.problem {
         lines.push(format!("! {problem}"));
     }
+    if editor.leave_armed {
+        lines.push(format!(
+            "Esc again leaves: {COMMAND_KEY}+S saves first, and edits stay in memory until the game quits."
+        ));
+    }
     lines.push(String::new());
     lines.push(match editor.selected.as_slice() {
         [] => String::from("Room (click an item to select it)"),
@@ -272,10 +277,6 @@ pub(super) fn update_panels(
         ));
     }
     lines.push(String::from("Hold H: shortcuts"));
-    if !editor.status.is_empty() {
-        lines.push(String::new());
-        lines.push(editor.status.clone());
-    }
     for mut text in &mut panel {
         text.0 = lines.join("\n");
     }
