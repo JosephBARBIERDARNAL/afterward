@@ -40,6 +40,9 @@ pub struct AudioConfig {
     /// How muffled the music sounds while paused: 0 leaves it untouched, 1 cuts
     /// the highs hardest.
     pub paused_music_muffle: f32,
+    /// How muffled it sounds while a door is crossed, as if heard through the
+    /// wall between two rooms.
+    pub crossing_music_muffle: f32,
     /// Background music; one is picked at random when a run starts.
     pub music_tracks: Vec<AudioAsset>,
     /// The opening music, playing from launch until a run leaves room 0.
@@ -204,8 +207,8 @@ pub struct RoomFlowConfig {
     pub room_transition_duration_s: f32,
     pub room_intro: RoomIntroConfig,
     pub exit_side: String,
-    /// How long the camera takes to slide from one room into the next.
-    pub room_pan_s: f32,
+    /// How fast the camera slides from one room into the next, in H a second.
+    pub room_pan_speed_h_s: f32,
     /// How wide the dark gap between two rooms is, in H.
     pub room_gap_h: f32,
     pub exit_door: ExitDoorConfig,
@@ -346,6 +349,8 @@ pub struct ExitDoorConfig {
 /// materialize one after another, then the fight starts.
 #[derive(Debug, Deserialize)]
 pub struct RoomIntroConfig {
+    /// How long before the camera lands the entrance begins.
+    pub early_start_s: f32,
     pub player_walk_in_s: f32,
     pub player_walk_in_speed_h_s: f32,
     pub player_fade_in_s: f32,

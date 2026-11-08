@@ -23,6 +23,7 @@ const ENEMY_APPEAR_OVERSHOOT: f32 = 1.70158;
 pub(super) fn start_room_intro(
     data: Res<GameData>,
     session: Res<RunSession>,
+    pan: Res<RoomPan>,
     mut timer: ResMut<PhaseTimer>,
 ) {
     let intro = &data.gameplay.room_flow.room_intro;
@@ -34,6 +35,27 @@ pub(super) fn start_room_intro(
         intro.duration_s()
     };
     timer.0 = Timer::from_seconds(duration_s, TimerMode::Once);
+    // A room walked into through a door has been letting the player out of it
+    // since before the camera landed; the entrance picks up where the slide
+    // left it rather than starting over.
+    if pan.came_through_a_door {
+        timer
+            .0
+            .set_elapsed(std::time::Duration::from_secs_f32(intro.early_start_s));
+    }
+}
+
+/// How far into the room's entrance we are. It begins `early_start_s` before
+/// the camera lands, so the door is already open and the player already
+/// stepping out of it while the room slides into frame.
+fn entrance_elapsed_s(screen: GameScreen, timer: &PhaseTimer, early_start_s: f32) -> f32 {
+    match screen {
+        GameScreen::RoomIntro => timer.0.elapsed_secs(),
+        GameScreen::Panning => {
+            (timer.0.elapsed_secs() - (timer.0.duration().as_secs_f32() - early_start_s)).max(0.0)
+        }
+        _ => 0.0,
+    }
 }
 
 pub(super) fn update_room_intro(
@@ -70,12 +92,8 @@ pub(super) fn open_the_entry_door(
     data: Res<GameData>,
     mut doors: Query<(Entity, &mut Sprite), With<EntryDoor>>,
 ) {
-    let elapsed_s = if *screen.get() == GameScreen::RoomIntro {
-        timer.0.elapsed_secs()
-    } else {
-        0.0
-    };
     let intro = &data.gameplay.room_flow.room_intro;
+    let elapsed_s = entrance_elapsed_s(*screen.get(), &timer, intro.early_start_s);
     let frames = data.gameplay.room_flow.exit_door.frames;
     let opening_frames = frames - ExitDoor::FIRST_OPENING_FRAME;
     // It swings open over the first half of the walk out, and fades away over
@@ -162,11 +180,7 @@ pub(super) fn pose_room_intro(
         sheets,
     } = resources;
     let intro = &data.gameplay.room_flow.room_intro;
-    let elapsed_s = if *screen.get() == GameScreen::RoomIntro {
-        timer.0.elapsed_secs()
-    } else {
-        0.0
-    };
+    let elapsed_s = entrance_elapsed_s(*screen.get(), &timer, intro.early_start_s);
 
     if let Ok((mut player, mut transform, mut sprite, mut animation)) = players.single_mut() {
         let walk = (elapsed_s / intro.player_walk_in_s).clamp(0.0, 1.0);

@@ -18,10 +18,6 @@ pub(crate) struct AudioMix {
 
 impl AudioMix {
     fn target(screen: GameScreen, audio: &AudioConfig) -> Self {
-        let paused = matches!(
-            screen,
-            GameScreen::Paused | GameScreen::Settings | GameScreen::Controls
-        );
         Self {
             music: match screen {
                 GameScreen::Paused | GameScreen::Settings | GameScreen::Controls => {
@@ -37,10 +33,16 @@ impl AudioMix {
             } else {
                 1.0
             },
-            muffle: if paused {
-                audio.paused_music_muffle
-            } else {
-                0.0
+            muffle: match screen {
+                GameScreen::Paused | GameScreen::Settings | GameScreen::Controls => {
+                    audio.paused_music_muffle
+                }
+                // A door is crossed through the wall between two rooms, and
+                // everything playing is heard through it.
+                GameScreen::Transitioning | GameScreen::RoomLoading | GameScreen::Panning => {
+                    audio.crossing_music_muffle
+                }
+                _ => 0.0,
             },
             music_speed: match screen {
                 GameScreen::RoomClear | GameScreen::Bonus | GameScreen::BossIntro => {
@@ -264,6 +266,7 @@ mod tests {
             room_clear_music_volume_multiplier: 0.55,
             room_clear_music_speed: 0.8,
             paused_music_muffle: 0.9,
+            crossing_music_muffle: 0.55,
             music_tracks: Vec::new(),
             intro_music: sound(),
             intro_music_fade_out_s: 2.5,
@@ -307,6 +310,32 @@ mod tests {
             playing.muffle < 0.0001,
             "playing leaves the music unfiltered"
         );
+    }
+
+    /// Walking through a door is walking through a wall: what is playing is
+    /// heard through it, without being turned down or slowed.
+    #[test]
+    fn crossing_between_rooms_muffles_what_is_playing() {
+        let audio = tuning();
+        let playing = AudioMix::target(GameScreen::Playing, &audio);
+
+        for screen in [
+            GameScreen::Transitioning,
+            GameScreen::RoomLoading,
+            GameScreen::Panning,
+        ] {
+            let crossing = AudioMix::target(screen, &audio);
+
+            assert!(
+                crossing.muffle > playing.muffle,
+                "{screen:?} muffles what is playing"
+            );
+            assert!(
+                crossing.muffle < AudioMix::target(GameScreen::Paused, &audio).muffle,
+                "{screen:?} less than a pause does"
+            );
+            assert_eq!(crossing.music, playing.music, "{screen:?} keeps it as loud");
+        }
     }
 
     #[test]

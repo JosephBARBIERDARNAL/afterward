@@ -317,6 +317,7 @@ impl Plugin for GamePlugin {
                     in_state(GameScreen::Playing)
                         .or_else(in_state(GameScreen::RoomIntro))
                         .or_else(in_state(GameScreen::Transitioning))
+                        .or_else(in_state(GameScreen::Panning))
                         .or_else(in_state(GameScreen::RoomClear))
                         .or_else(in_state(GameScreen::Bonus)),
                 ),
@@ -353,6 +354,22 @@ enum GameScreen {
     /// Debug room editor (debug builds only).
     #[cfg(debug_assertions)]
     Editor,
+}
+
+impl GameScreen {
+    /// The screens the player stands in the room on: playing it, walking into
+    /// it, or crossing the door out of it. Crossing a door is still being in
+    /// the run, so the HUD stays up rather than blinking off and back on.
+    pub(crate) fn shows_the_hud(self) -> bool {
+        matches!(
+            self,
+            Self::RoomIntro
+                | Self::Playing
+                | Self::Transitioning
+                | Self::RoomLoading
+                | Self::Panning
+        )
+    }
 }
 
 fn move_towards(current: f32, target: f32, max_delta: f32) -> f32 {

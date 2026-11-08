@@ -1,5 +1,5 @@
 use super::*;
-use crate::game::room_pan::DepartingRoom;
+use crate::game::{interface::HealthBarFrame, room_pan::DepartingRoom};
 
 /// A door is crossed in the open: the room being left stays on screen while
 /// the camera slides right into the next one, where the player steps out of
@@ -30,11 +30,49 @@ fn the_camera_slides_into_the_next_room_and_the_entry_door_goes_once_it_lands() 
         "so nobody is on show while the camera travels"
     );
     let started_at = game.camera_center().x;
-    game.run_seconds(game.data().gameplay.room_flow.room_pan_s / 2.0);
+    // How long the crossing takes is its own business: it runs at a steady
+    // speed, so a wide room takes longer than a narrow one.
+    let crossing_s = game
+        .app
+        .world()
+        .resource::<PhaseTimer>()
+        .0
+        .duration()
+        .as_secs_f32();
+    game.run_seconds(crossing_s / 2.0);
     let halfway = game.camera_center().x;
     assert!(
         halfway > started_at,
         "the camera travels right, from {started_at} to {halfway}"
+    );
+
+    assert_eq!(
+        game.hud_shown(),
+        Visibility::Visible,
+        "crossing a door is still being in the run, so the HUD stays up"
+    );
+
+    // The room is entered before the camera has landed: with the last of the
+    // crossing left to run, the door is already open and the player already on
+    // their way out of it.
+    let early_start_s = game.data().gameplay.room_flow.room_intro.early_start_s;
+    while game.screen() == GameScreen::Panning && game.crossing_left_s() > early_start_s / 2.0 {
+        game.app.update();
+    }
+    assert_eq!(
+        game.screen(),
+        GameScreen::Panning,
+        "the camera is still on its way"
+    );
+    assert!(
+        game.player_opacity() > 0.0,
+        "with the player stepping out of the door to meet it"
+    );
+    assert!(
+        game.entry_door_frames()
+            .first()
+            .is_some_and(|frame| *frame >= 2),
+        "which has been opening for them"
     );
 
     game.wait_for_screen(GameScreen::RoomIntro, 3.0);
@@ -45,7 +83,7 @@ fn the_camera_slides_into_the_next_room_and_the_entry_door_goes_once_it_lands() 
         "the room behind is let go the moment the camera lands"
     );
     assert_eq!(
-        game.entry_doors(),
+        game.entry_door_frames().len(),
         1,
         "and the door the player came in through stands in the new room"
     );
@@ -56,7 +94,7 @@ fn the_camera_slides_into_the_next_room_and_the_entry_door_goes_once_it_lands() 
 
     game.wait_for_screen(GameScreen::Playing, 5.0);
     assert_eq!(
-        game.entry_doors(),
+        game.entry_door_frames().len(),
         0,
         "once the player is in, the door they came through is gone"
     );
@@ -82,12 +120,29 @@ impl HeadlessGame {
             .count()
     }
 
-    fn entry_doors(&mut self) -> usize {
+    /// The frame each entry door on show is drawn on: 0 shut, 2 and up
+    /// opening.
+    fn entry_door_frames(&mut self) -> Vec<usize> {
         let world = self.app.world_mut();
         world
-            .query_filtered::<Entity, With<EntryDoor>>()
+            .query_filtered::<&Sprite, With<EntryDoor>>()
             .iter(world)
-            .count()
+            .filter_map(|sprite| sprite.texture_atlas.as_ref())
+            .map(|atlas| atlas.index)
+            .collect()
+    }
+
+    /// How much of the crossing is left to run.
+    fn crossing_left_s(&self) -> f32 {
+        self.app.world().resource::<PhaseTimer>().0.remaining_secs()
+    }
+
+    fn hud_shown(&mut self) -> Visibility {
+        let world = self.app.world_mut();
+        *world
+            .query_filtered::<&Visibility, With<HealthBarFrame>>()
+            .single(world)
+            .expect("the run draws one health bar")
     }
 
     /// How visible the player is, from 0 before they have walked in to 1 once

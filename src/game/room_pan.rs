@@ -15,11 +15,13 @@ use super::*;
 #[derive(Component)]
 pub(super) struct DepartingRoom;
 
-/// Where the camera starts the slide and where it lands, and how wide the room
-/// it is leaving is, so that room can be stood clear of the next one.
+/// Where the camera starts the slide and where it lands, how wide the room it
+/// is leaving is, so that room can be stood clear of the next one, and whether
+/// the room now opening was walked into through a door.
 #[derive(Resource, Default)]
 pub(super) struct RoomPan {
     pub(super) departing_width_h: f32,
+    pub(super) came_through_a_door: bool,
     from: Vec2,
     to: Vec2,
 }
@@ -86,7 +88,9 @@ pub(super) fn send_off_the_departing_room(
 
 /// Starts the slide: `world::spawn_room` has just stood the camera where the
 /// new room opens, which is where the camera is headed, so it is put back
-/// where the departing room left it and sent across.
+/// where the departing room left it and sent across — at a steady speed, so
+/// a long crossing takes longer than a short one rather than every door
+/// moving at a pace of its own.
 pub(super) fn start_room_pan(
     data: Res<GameData>,
     mut pan: ResMut<RoomPan>,
@@ -100,7 +104,14 @@ pub(super) fn start_room_pan(
     pan.to = camera.translation.truncate();
     camera.translation.x = pan.from.x;
     camera.translation.y = pan.from.y;
-    timer.0 = Timer::from_seconds(data.gameplay.room_flow.room_pan_s, TimerMode::Once);
+    pan.came_through_a_door = true;
+    let room_flow = &data.gameplay.room_flow;
+    let travel_h = pan.from.distance(pan.to) / H_WORLD_UNITS;
+    // The easing costs the crossing some of its speed, and the entrance needs
+    // room to begin before the camera lands.
+    let seconds = (travel_h / room_flow.room_pan_speed_h_s * EASING_SLACK)
+        .max(room_flow.room_intro.early_start_s + SHORTEST_PAN_S);
+    timer.0 = Timer::from_seconds(seconds, TimerMode::Once);
     next_screen.set(GameScreen::Panning);
 }
 
@@ -171,3 +182,8 @@ pub(super) fn step_into_the_door(
 /// Behind the platforms and the decorations of both rooms, in front of the
 /// skylines that carry on past their walls.
 const GAP_Z: f32 = -5.0;
+/// Eased at both ends, the camera spends about this much longer crossing than
+/// it would at a flat speed.
+const EASING_SLACK: f32 = 1.5;
+/// However short the crossing, it is still a move rather than a cut.
+const SHORTEST_PAN_S: f32 = 0.25;

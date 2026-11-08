@@ -189,7 +189,8 @@ impl GameData {
             || self.gameplay.room_flow.bonus_reroll_animation_s <= 0.0
             || self.gameplay.room_flow.boss_intro_duration_s <= 0.0
             || self.gameplay.room_flow.room_transition_duration_s <= 0.0
-            || self.gameplay.room_flow.room_pan_s <= 0.0
+            || self.gameplay.room_flow.room_pan_speed_h_s <= 0.0
+            || self.gameplay.room_flow.room_intro.early_start_s < 0.0
             || self.gameplay.room_flow.room_gap_h <= 0.0
             || self.gameplay.room_flow.exit_side != "right"
         {
@@ -230,6 +231,7 @@ impl GameData {
             || !(0.0..=1.0).contains(&audio.paused_music_volume_multiplier)
             || !(0.0..=1.0).contains(&audio.room_clear_music_volume_multiplier)
             || !(0.0..=1.0).contains(&audio.paused_music_muffle)
+            || !(0.0..=1.0).contains(&audio.crossing_music_muffle)
             || !(0.1..=1.0).contains(&audio.room_clear_music_speed)
             || audio.intro_music_fade_out_s <= 0.0
             || audio.ambience_fade_in_s <= 0.0

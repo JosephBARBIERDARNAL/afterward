@@ -84,6 +84,10 @@ room_flow:
   # enemies materialize one after another (spread evenly over
   # `enemy_appear_spread_s`, each taking `enemy_appear_s`) before combat starts.
   room_intro:
+    # The entrance begins before the camera has landed: the entry door opens
+    # and the player starts walking out of it this long before the slide ends,
+    # so the room is already being entered as it slides into frame.
+    early_start_s: 0.4
     player_walk_in_s: 0.5
     player_walk_in_speed_h_s: 3
     player_fade_in_s: 0.2
@@ -93,10 +97,11 @@ room_flow:
     fight_start_delay_s: 0.2
   exit_side: right
   # Rooms are not cut apart: the camera slides out of the room being left into
-  # the next one, which stands `room_gap_h` further right across a dark gap,
-  # over `room_pan_s`. The player walks into the door behind them and steps out
-  # of the entry door waiting on the other side.
-  room_pan_s: 1.2
+  # the next one, which stands `room_gap_h` further right across a dark gap.
+  # The slide runs at `room_pan_speed_h_s`, so a long crossing takes longer
+  # than a short one instead of every door feeling different. The player walks
+  # into the door behind them and steps out of the entry door on the far side.
+  room_pan_speed_h_s: 22
   room_gap_h: 1.5
   # The exit door stands on the room's `exit`, locked until a bonus is picked.
   # Sheet frames, left to right: 0 locked, 1 unlocked, then the opening, played
@@ -234,6 +239,9 @@ audio:
   # How muffled the music sounds while the game is paused: 0 leaves it
   # untouched, 1 cuts the highs hardest, as if it played in another room.
   paused_music_muffle: 0.9
+  # How muffled the music and the city are while a door is crossed, as if the
+  # sound passed through the wall between two rooms.
+  crossing_music_muffle: 0.55
   # Background music: one track is picked at random when a run starts and loops
   # until the run ends. Paths are under src/assets/; gain multiplies the music
   # volume setting.

@@ -262,7 +262,7 @@ pub(super) fn update_hud(
         node.width = percent((health_fraction.clamp(0.0, 1.0) * 100.0).round() as u32);
     }
     for mut visibility in &mut bar_visibility {
-        *visibility = if matches!(screen.get(), GameScreen::RoomIntro | GameScreen::Playing) {
+        *visibility = if screen.get().shows_the_hud() {
             Visibility::Visible
         } else {
             Visibility::Hidden

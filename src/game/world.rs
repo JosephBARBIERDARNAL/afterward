@@ -4,18 +4,34 @@ use bevy::{image::ImageLoaderSettings, sprite::Anchor};
 
 const ENEMY_SPRITE_SCALE: f32 = 0.62;
 
+/// What building a room reads and writes: the rooms themselves, the run it is
+/// built for, and the slide that may have brought the player to its door.
+#[derive(SystemParam)]
+pub(super) struct RoomBuild<'w> {
+    data: Res<'w, GameData>,
+    pan: ResMut<'w, RoomPan>,
+    session: ResMut<'w, RunSession>,
+}
+
 pub(super) fn spawn_room(
     mut commands: Commands,
-    data: Res<GameData>,
-    mut session: ResMut<RunSession>,
+    build: RoomBuild,
     mut camera: Query<(&mut Transform, &mut RoomCamera), With<Camera2d>>,
     asset_server: Res<AssetServer>,
     sheets: Res<SpriteSheets>,
     mut shaders: ShaderAssets,
 ) {
+    let RoomBuild {
+        data,
+        mut pan,
+        mut session,
+    } = build;
     if session.world_loaded {
         return;
     }
+    // Until the slide says otherwise, this room is walked into from nowhere:
+    // the player fades in rather than stepping out of a door.
+    pan.came_through_a_door = false;
     let room = &data.rooms[&session.room_id];
     draw_room(&mut commands, room, &data, &asset_server, &mut shaders);
     let ammo = session.magazine_capacity(&data);

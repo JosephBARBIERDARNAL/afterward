@@ -101,7 +101,7 @@ pub(super) fn update_ammo_hud(
     let player = players
         .single()
         .ok()
-        .filter(|_| matches!(screen.get(), GameScreen::RoomIntro | GameScreen::Playing));
+        .filter(|_| screen.get().shows_the_hud());
     for mut visibility in &mut hud {
         *visibility = if player.is_some() {
             Visibility::Visible

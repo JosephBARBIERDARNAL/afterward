@@ -150,8 +150,9 @@ fn drive_visual_walkthrough(resources: VisualWalkthroughResources) {
         GameScreen::Bonus => 0.5,
         GameScreen::BossIntro => 0.35,
         GameScreen::Transitioning | GameScreen::TransitioningOut => 0.15,
-        // Halfway across the gap, with both rooms in frame.
-        GameScreen::Panning => data.gameplay.room_flow.room_pan_s / 2.0,
+        // Halfway across the gap, with both rooms in frame. How long the
+        // crossing takes is the crossing's own business, so this asks it.
+        GameScreen::Panning => timer.0.duration().as_secs_f32() / 2.0,
         // Partway through the words, with the water standing over the room.
         GameScreen::Prologue => data.gameplay.prologue.veil_fade_s + 2.5,
         GameScreen::Complete => 0.3,
