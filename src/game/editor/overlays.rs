@@ -9,8 +9,7 @@ use super::*;
 /// The frame the camera holds when the room opens, behind the one at the cursor.
 const SPAWN_FRAME_COLOR: Color = Color::srgba(0.45, 0.85, 1.0, 0.35);
 const FRAME_COLOR: Color = Color::srgb(0.45, 0.85, 1.0);
-/// The detection band, and the sight lines filling what is not behind cover.
-const SIGHT_EDGE_COLOR: Color = Color::srgba(0.95, 0.25, 0.2, 0.9);
+/// The sight lines filling the detection band, as far into it as cover allows.
 const SIGHT_COLOR: Color = Color::srgba(0.95, 0.2, 0.16, 0.22);
 /// Drawn when an enemy already sees the player standing on the spawn. It is
 /// the one line that has to stand out from the band around it, so it is paler
@@ -111,11 +110,6 @@ fn draw_sight(gizmos: &mut Gizmos, room: &RoomConfig, data: &GameData, platforms
         let feet = Vec2::new(spawn.position_h.x_h, spawn.position_h.y_h) * H_WORLD_UNITS;
         let eyes = feet + Vec2::Y * enemy.hurtbox_h.height / 2.0 * H_WORLD_UNITS;
         let far_x = eyes.x + world::IDLE_FACING * range;
-        gizmos.rect_2d(
-            Vec2::new((eyes.x + far_x) / 2.0, eyes.y),
-            Vec2::new(range, 2.0 * height),
-            SIGHT_EDGE_COLOR,
-        );
         for index in 0..=SIGHT_LINES {
             let target = band_point(eyes, far_x, height, index as f32 / SIGHT_LINES as f32);
             let seen = eyes.lerp(target, visible_fraction(eyes, target, platforms));
