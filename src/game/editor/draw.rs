@@ -202,10 +202,7 @@ pub(super) fn update_panels(
     };
     let unsaved = editor.unsaved_rooms(&data);
     let mut lines = vec![
-        format!(
-            "ROOM EDITOR  -  room {:02}  (chapter {})",
-            room.room_id, room.chapter_id
-        ),
+        format!("Room {}  (chapter {})", room.room_id, room.chapter_id),
         {
             let mut parts = Vec::new();
             if !unsaved.is_empty() {
@@ -276,7 +273,7 @@ pub(super) fn update_panels(
             cursor_h.x, cursor_h.y
         ));
     }
-    lines.push(String::from("Hold H: shortcuts"));
+    lines.push(String::from("\nHold H: shortcuts"));
     for mut text in &mut panel {
         text.0 = lines.join("\n");
     }

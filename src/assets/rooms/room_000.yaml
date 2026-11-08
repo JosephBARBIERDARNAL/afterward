@@ -38,12 +38,6 @@ platforms:
   - label: the ledge the whole room stands on
     color: "#292929"
     rect_h: { x: 34, y: 0, width: 2, height: 2 }
-  - color: "#292929"
-    rect_h: { x: 11, y: -0.5, width: 2, height: 0.5 }
-  - color: "#292929"
-    rect_h: { x: 16, y: -0.5, width: 6, height: 0.5 }
-  - color: "#292929"
-    rect_h: { x: 25, y: -0.5, width: 9, height: 0.5 }
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
 enemy_spawns: []
