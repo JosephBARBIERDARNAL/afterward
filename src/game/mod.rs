@@ -204,6 +204,7 @@ impl Plugin for GamePlugin {
                     combat::update_player_bullets,
                     combat::update_enemy_ai,
                     combat::update_enemy_platform_physics,
+                    combat::update_falls,
                     combat::update_projectiles,
                     combat::update_damage_numbers,
                     combat::update_dead_enemies,

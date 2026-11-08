@@ -5,6 +5,7 @@ mod control_bindings;
 mod e2e;
 mod enemy_jumping;
 mod enemy_shield;
+mod falling;
 mod gameplay_controls;
 mod gun;
 mod platform_movement;

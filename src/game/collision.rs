@@ -112,6 +112,15 @@ impl<'a> Platforms<'a> {
         blocked
     }
 
+    /// Whether anything holds up a body at `x` whose feet are at `feet_y`: the
+    /// platform it stands on, or one further down it would land on. Nothing
+    /// means a bottomless gap, which a body falls out of the room through.
+    pub(super) fn has_ground_below(&self, x: f32, feet_y: f32) -> bool {
+        self.0.iter().any(|platform| {
+            platform.supports_body_at(x) && platform.top <= feet_y + CONTACT_TOLERANCE
+        })
+    }
+
     /// The platform a grounded body at `x` stands on, with its feet at `feet_y`.
     pub(super) fn standing_on(&self, x: f32, feet_y: f32) -> Option<&'a PlatformSurface> {
         self.0.iter().copied().find(|platform| {

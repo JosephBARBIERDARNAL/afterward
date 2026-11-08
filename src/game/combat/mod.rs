@@ -7,6 +7,7 @@ mod damage;
 mod enemy_ai;
 mod enemy_body;
 mod enemy_jumps;
+mod falls;
 mod feedback;
 mod hitboxes;
 mod player_gun;
@@ -25,6 +26,7 @@ pub(super) use enemy_body::{
     EnemyShieldIcon, ProceduralMovementState,
 };
 use enemy_jumps::{JumpArc, JumpPlan, JumpRoute};
+pub(super) use falls::update_falls;
 use feedback::spawn_fire_burst;
 pub(super) use feedback::{HEALTH_BAR, SHIELDED_HEALTH_BAR};
 pub(super) use feedback::{

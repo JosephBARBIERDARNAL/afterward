@@ -340,8 +340,13 @@ pub(in crate::game) fn update_enemy_ai(
                 HALF_BODY_WIDTH,
                 room_width_h * H_WORLD_UNITS - HALF_BODY_WIDTH,
             );
-            // Platform sides stop an enemy as they stop the player.
-            transform.translation.x = surfaces.blocked_x(feet.x, wanted_x, feet.y);
+            // Platform sides stop an enemy as they stop the player, and so
+            // does a bottomless gap: an enemy walks down to a lower platform,
+            // never into a step with nothing under it at all.
+            let next_x = surfaces.blocked_x(feet.x, wanted_x, feet.y);
+            if surfaces.has_ground_below(next_x, feet.y) {
+                transform.translation.x = next_x;
+            }
             let movement_speed_h_s = enemy.movement_speed_h_s;
             let home_y = enemy.home_y;
             if let Some(movement) = &mut enemy.procedural_movement {
