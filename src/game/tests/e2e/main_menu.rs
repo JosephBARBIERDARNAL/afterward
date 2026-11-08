@@ -79,7 +79,7 @@ fn the_main_menu_opens_the_settings_and_comes_back_over_its_water() {
             .music_volume_percent,
         music.saturating_sub(5)
     );
-    game.tap(KeyCode::KeyE);
+    game.tap(KeyCode::KeyC);
     assert_eq!(game.screen(), GameScreen::Controls);
     assert_eq!(water_shown(&mut game), Visibility::Visible);
     game.tap(KeyCode::Escape);

@@ -151,8 +151,8 @@ effects:
     # How many turns a cell's point circles in a second, how fast the whole
     # field drifts across the screen in H per second, and how far a slow wave
     # bends the borders, in cells.
-    churn: 0.05
-    drift_h_s: 0.12
+    churn: 0.03
+    drift_h_s: 0.07
     wobble: 0.3
     # How thick the lit borders of the web are, and the fainter veins crossing
     # a cell, in cells.
@@ -168,6 +168,31 @@ effects:
     cell_color: "#2A0E2B"
     crest_color: "#4A1F4A"
     foam_color: "#7FE6E8"
+  # The droplet that falls where a button is hovered, selected with an arrow,
+  # or clicked: the drop goes in, the surface flashes, and rings spread out of
+  # the impact.
+  ripple:
+    # How far the rings reach from the spot the droplet lands on, in pixels,
+    # and how long the whole splash takes.
+    radius_px: 108
+    duration_s: 0.8
+    # How much of that the droplet spends falling in, before the impact.
+    fall: 0.3
+    # How many water pixels the splash is across, so it reads as pixel art at
+    # any window size.
+    pixels: 68
+    # How thick a ring is, in ripple radii, and how long after one ring the
+    # next is born, as a fraction of the spread.
+    ring_width: 0.07
+    ring_interval: 0.16
+    # How far the ordered dither spreads one tone into the next.
+    dither: 0.08
+    # The two tones, and how much of the card below each one covers. Cold and
+    # bright: the light on the flood, carried onto the menu.
+    crest_color: "#3C93A6"
+    crest_opacity: 0.4
+    foam_color: "#A6F6F2"
+    foam_opacity: 0.72
 
 window:
   # maximized (a window filling the screen), borderless_fullscreen, or windowed.

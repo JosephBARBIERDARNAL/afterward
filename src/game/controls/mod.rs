@@ -168,8 +168,9 @@ impl Display for GameAction {
 pub(super) struct ControlBindings {
     bindings: BTreeMap<GameAction, Vec<KeyCode>>,
     defaults: BTreeMap<GameAction, Vec<KeyCode>>,
-    pub(crate) selected_action_index: usize,
-    pub(crate) waiting_for_key: bool,
+    /// The action waiting for a key to be bound to it, while the controls
+    /// screen is listening for one.
+    pub(crate) rebinding: Option<GameAction>,
 }
 
 struct DefaultBindings(BTreeMap<GameAction, Vec<KeyCode>>);
@@ -229,10 +230,6 @@ impl ControlBindings {
             .is_some_and(|bindings| keys.any_just_pressed(bindings.iter().copied()))
     }
 
-    pub fn selected_action(&self) -> GameAction {
-        GameAction::ALL[self.selected_action_index]
-    }
-
     pub fn binding_label(&self, action: GameAction) -> String {
         self.bindings
             .get(&action)
@@ -250,21 +247,12 @@ impl ControlBindings {
             .map_or_else(String::new, |key| KeyLabel::from(*key).to_string())
     }
 
-    pub fn move_selection(&mut self, direction: i8) {
-        let len = GameAction::ALL.len();
-        self.selected_action_index = (self.selected_action_index as isize + isize::from(direction))
-            .rem_euclid(len as isize) as usize;
-    }
-
-    pub fn begin_rebinding(&mut self) {
-        self.waiting_for_key = true;
-    }
-
-    pub fn cancel_rebinding(&mut self) {
-        self.waiting_for_key = false;
-    }
-
+    /// Binds the next key pressed to the action being rebound, taking it off
+    /// whatever else held it. Returns whether a key was bound.
     pub fn capture_key(&mut self, keys: &ButtonInput<KeyCode>) -> bool {
+        let Some(action) = self.rebinding else {
+            return false;
+        };
         let Some(key) = keys
             .get_just_pressed()
             .copied()
@@ -272,18 +260,17 @@ impl ControlBindings {
         else {
             return false;
         };
-        let action = self.selected_action();
         for bindings in self.bindings.values_mut() {
             bindings.retain(|bound| *bound != key);
         }
         self.bindings.insert(action, vec![key]);
-        self.waiting_for_key = false;
+        self.rebinding = None;
         true
     }
 
     pub fn restore_defaults(&mut self, preferences: &PreferencesDir) {
         self.bindings.clone_from(&self.defaults);
-        self.waiting_for_key = false;
+        self.rebinding = None;
         save_bindings(self, preferences);
     }
 }

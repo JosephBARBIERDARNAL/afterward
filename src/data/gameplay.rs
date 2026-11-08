@@ -200,12 +200,39 @@ pub struct RoomFlowConfig {
     pub bonus_rerolls_per_run: u8,
 }
 
-/// What the 2D material shaders in `src/game/shaders/` are tuned with.
+/// What the shaders in `src/game/shaders/` and `src/game/ripple.rs` are tuned
+/// with.
 #[derive(Debug, Deserialize)]
 pub struct EffectsConfig {
     pub city_lights: CityLightsConfig,
     pub glow: GlowConfig,
     pub flood: FloodConfig,
+    pub ripple: RippleConfig,
+}
+
+/// The droplet that falls where a button is hovered, selected with an arrow,
+/// or clicked.
+#[derive(Debug, Deserialize)]
+pub struct RippleConfig {
+    /// How far the rings reach from the spot the droplet lands on, in pixels,
+    /// and how long the whole splash takes.
+    pub radius_px: f32,
+    pub duration_s: f32,
+    /// How much of that run the droplet spends falling in, before the impact.
+    pub fall: f32,
+    /// How many water pixels the splash is across.
+    pub pixels: f32,
+    /// How thick a ring is, in ripple radii, and how long after one ring the
+    /// next is born, as a fraction of the spread.
+    pub ring_width: f32,
+    pub ring_interval: f32,
+    /// How far the ordered dither spreads one tone into the next.
+    pub dither: f32,
+    /// The two tones, and how much of the card below each one covers.
+    pub crest_color: HexColor,
+    pub crest_opacity: f32,
+    pub foam_color: HexColor,
+    pub foam_opacity: f32,
 }
 
 /// The breathing lit windows and stars of the background layers.

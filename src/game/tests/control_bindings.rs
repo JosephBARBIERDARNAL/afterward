@@ -19,18 +19,9 @@ fn fullscreen_default_binding_can_be_remapped() {
         .binding_label(GameAction::ToggleFullscreen);
     assert_eq!(default_label, "F");
 
-    {
-        let mut bindings = app.world_mut().resource_mut::<controls::ControlBindings>();
-        let fullscreen = GameAction::ALL
-            .iter()
-            .position(|action| *action == GameAction::ToggleFullscreen)
-            .expect("fullscreen is a game action");
-        for _ in 0..fullscreen {
-            bindings.move_selection(1);
-        }
-        assert_eq!(bindings.selected_action(), GameAction::ToggleFullscreen);
-        bindings.begin_rebinding();
-    }
+    app.world_mut()
+        .resource_mut::<controls::ControlBindings>()
+        .rebinding = Some(GameAction::ToggleFullscreen);
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
         .press(KeyCode::KeyK);

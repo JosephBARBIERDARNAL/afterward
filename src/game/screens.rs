@@ -1,5 +1,5 @@
 use super::*;
-use crate::game::{controls::TypedLetters, interface::ScreenLabel};
+use crate::game::{controls::TypedLetters, interface::ScreenLabel, menus::MenuPressed};
 use bevy::window::{MonitorSelection, PrimaryWindow, WindowMode};
 use bevy::{app::AppExit, input::keyboard::KeyboardInput};
 
@@ -61,12 +61,16 @@ pub(super) struct ScreenInputResources<'w> {
     sounds: ResMut<'w, SoundQueue>,
 }
 
+/// Carries out what the player asked for: a button they pressed, with the
+/// mouse or the confirm key, or a letter shortcut typed straight at the
+/// screen. Both arrive here as a [`MenuAction`], so the two never drift apart.
 pub(super) fn handle_screen_input(
     mut commands: Commands,
     resources: ScreenInputResources,
     room_entities: Query<Entity, With<RoomEntity>>,
     mut windows: Query<&mut Window, With<PrimaryWindow>>,
     mut keyboard: MessageReader<KeyboardInput>,
+    mut presses: MessageReader<MenuPressed>,
     mut exit: MessageWriter<AppExit>,
 ) {
     let typed: TypedLetters = keyboard.read().collect();
@@ -83,85 +87,121 @@ pub(super) fn handle_screen_input(
         mut settings_return,
         mut sounds,
     } = resources;
-    match screen.get() {
-        GameScreen::MainMenu if controls.just_pressed(GameAction::Interact, &keys) => {
-            next_screen.set(reset_run(&mut session, &data, *start_room));
+    let screen = *screen.get();
+    let pausing = controls.just_pressed(GameAction::Pause, &keys);
+
+    // The controls screen, while it listens, belongs to the key being bound.
+    if screen == GameScreen::Controls && controls.rebinding.is_some() {
+        if keys.just_pressed(KeyCode::Escape) {
+            controls.rebinding = None;
+            sounds.push(SoundCue::UiCancel);
+        } else if controls.capture_key(&keys) {
+            controls::save_bindings(&controls, &preferences);
             sounds.push(SoundCue::UiConfirm);
         }
-        #[cfg(debug_assertions)]
-        GameScreen::MainMenu | GameScreen::Paused if typed.contains('d') => {
-            // From the main menu the editor opens the room runs start in;
-            // from the pause menu, the room being played.
-            if *screen.get() == GameScreen::MainMenu {
-                session.room_id = start_room.0;
-            }
-            next_screen.set(GameScreen::Editor);
-            sounds.push(SoundCue::UiConfirm);
-        }
-        GameScreen::MainMenu | GameScreen::Paused if typed.contains('s') => {
-            // Settings goes back to whichever menu opened it.
-            *settings_return = SettingsReturn(*screen.get());
-            next_screen.set(GameScreen::Settings);
-            sounds.push(SoundCue::UiConfirm);
-        }
-        GameScreen::MainMenu | GameScreen::Paused if typed.contains('q') => {
-            exit.write(AppExit::Success);
-        }
-        GameScreen::Playing if controls.just_pressed(GameAction::Pause, &keys) => {
+        return;
+    }
+
+    // Pausing and resuming belong to no button.
+    match screen {
+        GameScreen::Playing if pausing => {
             next_screen.set(GameScreen::Paused);
             sounds.push(SoundCue::UiCancel);
+            return;
         }
-        GameScreen::Paused
-            if keys.just_pressed(KeyCode::Enter)
-                || controls.just_pressed(GameAction::Pause, &keys) =>
-        {
+        GameScreen::Paused if pausing => {
             next_screen.set(GameScreen::Playing);
             sounds.push(SoundCue::UiConfirm);
+            return;
         }
-        GameScreen::Paused if typed.contains('m') => {
-            next_screen.set(GameScreen::MainMenu);
-            sounds.push(SoundCue::UiCancel);
+        _ => {}
+    }
+
+    // The letters and keys that press a button from anywhere on its screen,
+    // without walking to it first.
+    let letter = |letter| typed.contains(letter);
+    let shortcut = match screen {
+        GameScreen::MainMenu | GameScreen::Paused if letter('s') => Some(MenuAction::OpenSettings),
+        GameScreen::MainMenu | GameScreen::Paused if letter('q') => Some(MenuAction::Quit),
+        #[cfg(debug_assertions)]
+        GameScreen::MainMenu | GameScreen::Paused if letter('d') => Some(MenuAction::OpenEditor),
+        GameScreen::Paused if letter('m') => Some(MenuAction::LeaveRun),
+        GameScreen::Paused if letter('r') => Some(MenuAction::Restart),
+        GameScreen::Settings if letter('c') => Some(MenuAction::OpenControls),
+        GameScreen::Settings if controls.just_pressed(GameAction::ToggleFullscreen, &keys) => {
+            Some(MenuAction::ToggleFullscreen)
         }
-        GameScreen::Paused if typed.contains('r') => {
-            for entity in &room_entities {
-                commands.entity(entity).despawn();
+        GameScreen::Controls if letter('r') => Some(MenuAction::RestoreDefaultBindings),
+        GameScreen::Settings | GameScreen::Controls if pausing => Some(MenuAction::Back),
+        GameScreen::Dead | GameScreen::Complete if keys.just_pressed(KeyCode::Escape) => {
+            Some(MenuAction::Back)
+        }
+        _ => None,
+    };
+
+    for press in presses
+        .read()
+        .copied()
+        .chain(shortcut.map(|action| MenuPressed {
+            action,
+            along_bar: None,
+        }))
+    {
+        match press.action {
+            MenuAction::BeginRun => {
+                next_screen.set(reset_run(&mut session, &data, *start_room));
+                sounds.push(SoundCue::UiConfirm);
             }
-            next_screen.set(reset_run(&mut session, &data, *start_room));
-            sounds.push(SoundCue::RunRestarted);
-        }
-        GameScreen::Settings if controls.just_pressed(GameAction::Pause, &keys) => {
-            next_screen.set(settings_return.0);
-            sounds.push(SoundCue::UiCancel);
-        }
-        GameScreen::Settings => {
-            if controls.just_pressed(GameAction::NavigateUp, &keys)
-                || controls.just_pressed(GameAction::NavigateDown, &keys)
-            {
-                settings.selected_slider = 1 - settings.selected_slider;
-                sounds.push(SoundCue::UiMove);
+            MenuAction::Continue => {
+                next_screen.set(GameScreen::Playing);
+                sounds.push(SoundCue::UiConfirm);
             }
-            if controls.just_pressed(GameAction::MoveLeft, &keys)
-                || controls.just_pressed(GameAction::MoveRight, &keys)
-            {
-                let increase = controls.just_pressed(GameAction::MoveRight, &keys);
-                let volume = if settings.selected_slider == 0 {
-                    &mut settings.music_volume_percent
-                } else {
-                    &mut settings.sfx_volume_percent
-                };
-                *volume = if increase {
-                    volume.saturating_add(5).min(100)
-                } else {
-                    volume.saturating_sub(5)
-                };
-                settings::save_settings(&settings, &preferences);
-                sounds.push(SoundCue::UiMove);
+            MenuAction::Restart => {
+                for entity in &room_entities {
+                    commands.entity(entity).despawn();
+                }
+                next_screen.set(reset_run(&mut session, &data, *start_room));
+                sounds.push(SoundCue::RunRestarted);
             }
-            if controls.just_pressed(GameAction::Interact, &keys) {
+            MenuAction::OpenSettings => {
+                // Settings goes back to whichever menu opened it.
+                *settings_return = SettingsReturn(screen);
+                next_screen.set(GameScreen::Settings);
+                sounds.push(SoundCue::UiConfirm);
+            }
+            MenuAction::OpenControls => {
                 next_screen.set(GameScreen::Controls);
                 sounds.push(SoundCue::UiConfirm);
             }
-            if controls.just_pressed(GameAction::ToggleFullscreen, &keys) {
+            #[cfg(debug_assertions)]
+            MenuAction::OpenEditor => {
+                // From the main menu the editor opens the room runs start in;
+                // from the pause menu, the room being played.
+                if screen == GameScreen::MainMenu {
+                    session.room_id = start_room.0;
+                }
+                next_screen.set(GameScreen::Editor);
+                sounds.push(SoundCue::UiConfirm);
+            }
+            #[cfg(not(debug_assertions))]
+            MenuAction::OpenEditor => {}
+            MenuAction::LeaveRun => {
+                next_screen.set(GameScreen::MainMenu);
+                sounds.push(SoundCue::UiCancel);
+            }
+            MenuAction::Quit => {
+                exit.write(AppExit::Success);
+            }
+            MenuAction::Volume(channel) => {
+                // Only a click that landed inside the bar moves it; one on the
+                // row's name just walks the focus there.
+                if let Some(along_bar) = press.along_bar {
+                    settings.set_volume(channel, along_bar);
+                    settings::save_settings(&settings, &preferences);
+                    sounds.push(SoundCue::UiMove);
+                }
+            }
+            MenuAction::ToggleFullscreen => {
                 if let Ok(mut window) = windows.single_mut() {
                     if matches!(window.mode, WindowMode::BorderlessFullscreen(_)) {
                         window.mode = WindowMode::Windowed;
@@ -172,46 +212,23 @@ pub(super) fn handle_screen_input(
                 }
                 sounds.push(SoundCue::UiConfirm);
             }
-        }
-        GameScreen::Controls if controls.waiting_for_key => {
-            if keys.just_pressed(KeyCode::Escape) {
-                controls.cancel_rebinding();
-                sounds.push(SoundCue::UiCancel);
-            } else if controls.capture_key(&keys) {
-                controls::save_bindings(&controls, &preferences);
+            MenuAction::Rebind(action) => {
+                controls.rebinding = Some(action);
                 sounds.push(SoundCue::UiConfirm);
             }
-        }
-        GameScreen::Controls if controls.just_pressed(GameAction::Pause, &keys) => {
-            next_screen.set(GameScreen::Settings);
-            sounds.push(SoundCue::UiCancel);
-        }
-        GameScreen::Controls => {
-            if controls.just_pressed(GameAction::NavigateUp, &keys) {
-                controls.move_selection(-1);
-                sounds.push(SoundCue::UiMove);
-            } else if controls.just_pressed(GameAction::NavigateDown, &keys) {
-                controls.move_selection(1);
-                sounds.push(SoundCue::UiMove);
-            }
-            if controls.just_pressed(GameAction::Interact, &keys) {
-                controls.begin_rebinding();
-                sounds.push(SoundCue::UiConfirm);
-            }
-            if typed.contains('r') {
+            MenuAction::RestoreDefaultBindings => {
                 controls.restore_defaults(&preferences);
                 sounds.push(SoundCue::UiConfirm);
             }
+            MenuAction::Back => {
+                next_screen.set(match screen {
+                    GameScreen::Settings => settings_return.0,
+                    GameScreen::Controls => GameScreen::Settings,
+                    _ => GameScreen::MainMenu,
+                });
+                sounds.push(SoundCue::UiCancel);
+            }
         }
-        GameScreen::Dead | GameScreen::Complete
-            if keys.just_pressed(KeyCode::Enter)
-                || keys.just_pressed(KeyCode::Escape)
-                || controls.just_pressed(GameAction::Interact, &keys) =>
-        {
-            next_screen.set(GameScreen::MainMenu);
-            sounds.push(SoundCue::UiConfirm);
-        }
-        _ => {}
     }
 }
 

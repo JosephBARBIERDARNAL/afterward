@@ -78,6 +78,7 @@ Without `just`, pass the flag directly: `cargo run -- --room 7`.
 - Add a scenario for every player-facing flow or input bug: menus, pause, death, the bonus screen, the editor's shortcuts.
 - Tests must survive room edits. Gameplay tests build their own small room inline (see `enemy_jumping.rs`) instead of using an authored one. The full Chapter 1 playthrough (`chapter_one_run.rs`) depends on every room's layout, so it is `#[ignore]`d while rooms are being designed: run it with `just playthrough`.
 - Scenarios must survive room edits: `defeat_enemies`, `take_bonus` and `step_toward_exit` are the only shortcuts, for steps whose real input depends on a room's layout. Don't assert on specific spawn positions.
+- A headless test has no window and so no real pointer: `point_mouse_at` and `click_mouse_on` write the events the picking backend would have written, at a button `menu_button` looks up by its `MenuAction`. Both run a second frame, as `tap` does, so a screen the touch asked for has landed.
 - `PreferencesDir(None)` keeps tests away from the player's saved settings and bindings. `HeadlessGame::with_copied_data` points the YAML data (and editor saves) at a temporary copy, so tests never write to `src/assets`.
 
 ### Debug room editor
@@ -99,12 +100,40 @@ Debug builds (`cargo run`, `just run`) add `D  Debug editor` to the main menu (o
 
 Every hit area is data, in H: the player's hurtbox in `config/gameplay.yaml` (`player.hurtbox_h`), and each enemy type's hurtbox, attack hitboxes, and projectile sizes in `enemies/enemy_types.yaml` (its header explains the coordinates). `src/game/combat/hitboxes.rs` turns them into world rectangles for combat. The debug editor edits them too: select an enemy (its type's hurtbox, and the hitbox of the attack the Attack field picks) or the player spawn (the player's hurtbox); edits apply to every enemy of that type, undo with Cmd+Z, and Cmd+S rewrites only their lines in the two YAML files, keeping the comments. In debug builds, B toggles an overlay (`src/game/hitbox_overlay.rs`) that draws them with that same code: green player hurtbox, yellow enemy hurtboxes, red strikes (faint for an enemy's next attack), orange projectiles, cyan bullets.
 
+### Menus
+
+Every row of every menu — main, pause, settings, controls, and the two
+end-of-run screens — is a button, and so are the bonus screen's boxes. The
+mouse points at one and clicks it, the arrows walk to it, the confirm key
+presses the one the focus stands on, and the letter on a row's badge still
+presses it from anywhere on that screen.
+
+- `MenuAction::of(screen)` in `src/game/menus/actions.rs` is the one list of a
+  menu's buttons, in the order they are drawn. `menus.rs` draws that list and
+  `menus/input.rs` walks it, so what is on show and what the arrows reach can
+  never disagree. Adding a button means adding it there and giving it a row in
+  `MenuState::row`.
+- `MenuFocus` holds the button the player is on. A menu opens on its first
+  button, which is why Enter still resumes a paused run and still begins one
+  from the main menu.
+- `menus/input.rs` decides *which* button and *that* it was pressed; it leaves
+  a `MenuPressed`, which `screens::handle_screen_input` carries out beside the
+  letter shortcuts, so a click and a shortcut run the same code.
+- The focus and the volume levels are dressed onto the standing buttons each
+  frame (`highlight_menu_buttons`, `update_volume_bars`) rather than being part
+  of the `MenuView` the entities are rebuilt from: pointing at a row must never
+  pull it out from under the pointer.
+- A pointer reports itself in window pixels while the UI is laid out inside the
+  letterboxed viewport. `ripple::UiPointer` is what puts the two in the same
+  coordinates; anything comparing a pointer to a UI node goes through it.
+
 ### Shaders
 
 Two kinds of shader, both WGSL under `src/assets/shaders/`, both tuned from `effects:` in `config/gameplay.yaml`:
 
 - `src/game/shaders/` holds the 2D materials, drawn on `Mesh2d` quads sized by their transform (one shared unit square, `ShadedQuad`). `menu_water.wgsl` is the water the main menu sits on: a cellular field whose borders light up where two cells meet, bent by slow waves and quantized to a pixel grid and to four tones, so it reads as pixel art. Its quad is laid at startup, kept under the camera and only shown on the main menu, which is the one menu drawn without the blur, since the water is pixel art and must stay crisp. `city_lights.wgsl` draws every background layer: a pixel that stands brighter than the four around it *and* sits on a dark surround is a lit window or a star, and breathes at a pace its own position seeds — the dark-surround test is what keeps a dithered bright sky out of it. `glow.wgsl` is the pool of light behind anything the player should walk towards; give an entity `Glowing { color, radius_h }` and `attach_glows` hangs the quad behind it as a child, so it follows and dies with it.
 - `src/game/pause_blur.rs` is the full-screen pass behind a menu, a `Core2d` post-process rather than a material.
+- `src/game/ripple.rs` is the droplet that falls on a button the moment it is touched — hovered, reached with an arrow, or clicked — and the one shader drawn through the UI pipeline (`UiMaterial` on a `MaterialNode`) rather than on a `Mesh2d` quad, which is why it sits beside `src/game/shaders/` instead of inside it. `ripple.wgsl` drops the bead in, flashes where it lands and sends rings out, quantized to a pixel grid and to two tones like the flood. Anything that wants one writes a `Splash`: `Spot::Pointer` for exactly where the mouse touched, `Spot::Middle` for the middle of a button an arrow walked to. They stack in their own layer above the menus and die once they have played out.
 
 Shaders are plain `.wgsl`, not Bevy's own `.wesl`: a material's fragment shader redeclares the mesh2d `VertexOutput` and the `globals` binding itself instead of importing them, so nothing depends on Bevy's shader module paths. Effects are meant to be felt and not noticed — turn a value up to see what it does, then put it back.
 
@@ -162,6 +191,7 @@ Every surface texture is drawn in code with [Typst](https://typst.app) instead o
 
 - `src/data.rs` loads and validates every YAML file under `src/assets/` into the `GameData` resource. `src/data/` holds one module per YAML source: `gameplay.rs` (`config/gameplay.yaml`), `enemies.rs`, `backgrounds.rs`, `bonuses.rs`, `rooms.rs`, `surfaces.rs` (`surfaces/materials.yaml`), `color.rs`, `player_animations.rs`.
 - `src/game/bonus_pickup.rs` lays out a cleared room's bonus item and opens the bonus screen when the player touches it; `src/game/flow.rs` holds the rest of the room flow.
+- `src/game/menus.rs` draws the menus and `src/game/menus/` holds what their buttons do (`actions.rs`) and how they are walked and pressed (`input.rs`); `src/game/ripple.rs` holds the droplet that falls on a touched button.
 - `src/game/shaders/` holds the 2D material shaders; `src/game/collision.rs` holds room collision; `src/game/room_art.rs` draws platforms and decorations (world-aligned tiled textures via a repeat sampler and `Sprite::rect`, or a plain color, and outlines of uncovered edges).
 - `src/game/mod.rs` wires the `GamePlugin` (systems and states) and holds only shared items: `GameScreen`, `StartRoom`, `H_WORLD_UNITS`, small helpers. Components and resources live in the module that owns them (`session.rs` for `RunSession`, `sprites.rs` for sprite-sheet animation, `player/body.rs` for `PlayerBody`, `combat/enemy_body.rs` and `combat/components.rs` for combat entities, and so on) and are re-imported in `mod.rs` when other modules need them.
 - Game modules reach shared items through `use super::*;`; add a `use` in `mod.rs` for a type that several modules need, or a direct `use crate::game::...` for a type only one other module needs.

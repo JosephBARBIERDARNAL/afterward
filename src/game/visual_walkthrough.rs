@@ -68,6 +68,7 @@ struct VisualWalkthroughResources<'w, 's> {
     session: Res<'w, RunSession>,
     data: Res<'w, GameData>,
     walkthrough: ResMut<'w, VisualWalkthrough>,
+    settings_return: ResMut<'w, SettingsReturn>,
     enemies: Query<'w, 's, Entity, With<EnemyBody>>,
     players: Query<'w, 's, &'static mut Transform, With<PlayerBody>>,
     keys: ResMut<'w, ButtonInput<KeyCode>>,
@@ -101,6 +102,7 @@ fn drive_visual_walkthrough(resources: VisualWalkthroughResources) {
         session,
         data,
         mut walkthrough,
+        mut settings_return,
         enemies,
         mut players,
         mut keys,
@@ -224,7 +226,13 @@ fn drive_visual_walkthrough(resources: VisualWalkthroughResources) {
             walkthrough.pause_shown = true;
             next_screen.set(GameScreen::Paused);
         }
-        GameScreen::Paused => next_screen.set(GameScreen::Settings),
+        GameScreen::Paused => {
+            // The walkthrough steps between screens rather than pressing the
+            // menu's buttons, so it says for itself where the settings were
+            // opened from: that is what decides the backdrop behind them.
+            *settings_return = SettingsReturn(GameScreen::Paused);
+            next_screen.set(GameScreen::Settings);
+        }
         GameScreen::Settings => next_screen.set(GameScreen::Controls),
         GameScreen::Controls => next_screen.set(GameScreen::Playing),
         GameScreen::Playing => {

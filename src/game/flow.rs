@@ -1,5 +1,8 @@
 use super::*;
-use crate::game::bonus_screen::BonusChoice;
+use crate::game::{
+    bonus_screen::BonusChoice,
+    ripple::{Splash, Spot},
+};
 use yaml_serde::Value;
 
 pub(super) fn room_clear_check(
@@ -56,9 +59,10 @@ pub(super) struct BonusInputResources<'w> {
 pub(super) fn handle_bonus_input(
     resources: BonusInputResources,
     mut doors: Query<&mut Sprite, With<ExitDoor>>,
-    choices: Query<&BonusChoice>,
+    choices: Query<(Entity, &BonusChoice)>,
     mut pointer_overs: MessageReader<PointerOver>,
     mut pointer_clicks: MessageReader<PointerClick>,
+    mut splashes: MessageWriter<Splash>,
 ) {
     let BonusInputResources {
         time,
@@ -72,15 +76,23 @@ pub(super) fn handle_bonus_input(
     } = resources;
     let hovered = pointer_overs
         .read()
-        .filter_map(|over| choices.get(over.entity).ok())
-        .last()
-        .copied();
+        .filter_map(|over| {
+            choices
+                .get(over.entity)
+                .ok()
+                .map(|(_, choice)| (*choice, over.pointer.position))
+        })
+        .last();
     let clicked = pointer_clicks
         .read()
         .filter(|click| click.button == PointerButton::Primary)
-        .filter_map(|click| choices.get(click.entity).ok())
-        .last()
-        .copied();
+        .filter_map(|click| {
+            choices
+                .get(click.entity)
+                .ok()
+                .map(|(_, choice)| (*choice, click.pointer.position))
+        })
+        .last();
     let was_animating = session.bonus_reroll_animation_remaining_s > 0.0;
     session.bonus_reroll_animation_remaining_s =
         (session.bonus_reroll_animation_remaining_s - time.delta_secs().min(0.05)).max(0.0);
@@ -93,7 +105,9 @@ pub(super) fn handle_bonus_input(
 
     let can_reroll = reroll_available(&session, &data);
     let previous_choice = session.selected_choice;
-    if let Some(choice) = hovered.filter(|choice| *choice != BonusChoice::Reroll || can_reroll) {
+    if let Some((choice, _)) =
+        hovered.filter(|(choice, _)| *choice != BonusChoice::Reroll || can_reroll)
+    {
         session.selected_choice = choice;
     } else if controls.just_pressed(GameAction::NavigateUp, &keys) {
         session.selected_choice = previous_choice.previous();
@@ -103,8 +117,21 @@ pub(super) fn handle_bonus_input(
     if session.selected_choice != previous_choice {
         sounds.push(SoundCue::UiMove);
     }
+    // A droplet falls on the box touched: where the mouse landed on it, or in
+    // its middle when an arrow walked there.
+    let moved = session.selected_choice != previous_choice;
+    if let Some((_, at)) = clicked.or_else(|| hovered.filter(|_| moved)) {
+        splashes.write(Splash(Spot::Pointer(at)));
+    } else if moved {
+        splashes.write_batch(
+            choices
+                .iter()
+                .find(|(_, choice)| **choice == session.selected_choice)
+                .map(|(entity, _)| Splash(Spot::Middle(entity))),
+        );
+    }
 
-    let chosen = if let Some(choice) = clicked {
+    let chosen = if let Some((choice, _)) = clicked {
         choice
     } else if controls.just_pressed(GameAction::RerollBonus, &keys) {
         BonusChoice::Reroll

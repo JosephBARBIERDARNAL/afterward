@@ -1,6 +1,16 @@
 //! Main, pause, settings, controls, and end-of-run menus, drawn in the bonus
-//! screen's card style. Each frame the current screen is described as a
-//! [`MenuView`]; the menu's entities are rebuilt only when that view changes.
+//! screen's card style.
+//!
+//! Every row is a button: the mouse points at it and clicks it, the arrows
+//! walk to it, and the confirm key presses it, while the letter on its badge
+//! still works from anywhere on the screen. What each one does is a
+//! [`MenuAction`], and [`MenuFocus`] holds the one the player is on.
+//!
+//! Each frame the current screen is described as a [`MenuView`]. The menu's
+//! entities are rebuilt only when that view changes, which is why neither the
+//! focus nor a volume level is part of it: those are dressed onto the standing
+//! buttons instead, so pointing at a row never rebuilds the row under the
+//! pointer.
 
 use super::*;
 use crate::game::ui_style::{
@@ -9,8 +19,33 @@ use crate::game::ui_style::{
 };
 use bevy::text::FontSize;
 
+mod actions;
+mod input;
+
+pub(super) use actions::{MenuAction, MenuFocus, VolumeChannel};
+pub(super) use input::{MenuPressed, navigate_menus};
+
 #[derive(Component)]
 pub(super) struct MenuRoot;
+
+/// A menu button: what it does, and where it stands in its menu.
+#[derive(Component, Clone, Copy)]
+pub(super) struct MenuButton {
+    pub(super) action: MenuAction,
+    pub(super) index: usize,
+}
+
+/// The bar of a volume row. It is not picked itself — the row around it is —
+/// but a click inside its span sets the volume to where it landed.
+#[derive(Component, Clone, Copy)]
+pub(super) struct VolumeBar(pub(super) VolumeChannel);
+
+/// The filled part of a volume bar, and the reading beside it.
+#[derive(Component, Clone, Copy)]
+pub(super) struct VolumeFill(VolumeChannel);
+
+#[derive(Component, Clone, Copy)]
+pub(super) struct VolumeReading(VolumeChannel);
 
 pub(super) fn spawn_menu(mut commands: Commands) {
     commands.spawn((overlay_root(), MenuRoot));
@@ -31,36 +66,31 @@ pub(super) struct MenuView {
 pub(super) struct MenuRow {
     key: Option<String>,
     label: String,
-    /// A 0–100 slider drawn as a bar, for volume rows.
-    level: Option<u8>,
-    focus: RowFocus,
+    /// Volume rows draw a bar, whose level is dressed on separately.
+    slider: Option<VolumeChannel>,
+    action: MenuAction,
 }
 
 impl MenuRow {
-    /// A row triggered directly by its key, like the reroll box.
-    fn action(key: impl Into<String>, label: impl Into<String>) -> Self {
+    /// A row with a letter or key on its badge, which presses it from anywhere
+    /// on the screen.
+    fn action(key: impl Into<String>, label: impl Into<String>, action: MenuAction) -> Self {
         Self {
             key: Some(key.into()),
             label: label.into(),
-            level: None,
-            focus: RowFocus::Action,
+            slider: None,
+            action,
         }
     }
-}
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum RowFocus {
-    Action,
-    Selected,
-    Unselected,
-}
-
-impl From<bool> for RowFocus {
-    fn from(selected: bool) -> Self {
-        if selected {
-            Self::Selected
-        } else {
-            Self::Unselected
+    /// A volume row: a bar instead of a badge, moved with the left and right
+    /// keys or by clicking into it.
+    fn volume(label: &str, channel: VolumeChannel) -> Self {
+        Self {
+            key: None,
+            label: label.to_owned(),
+            slider: Some(channel),
+            action: MenuAction::Volume(channel),
         }
     }
 }
@@ -75,101 +105,47 @@ pub(super) struct MenuHint {
 pub(super) struct MenuState<'w> {
     screen: Res<'w, State<GameScreen>>,
     session: Res<'w, RunSession>,
-    settings: Res<'w, AudioSettings>,
     controls: Res<'w, ControlBindings>,
 }
 
 impl MenuState<'_> {
     fn view(&self) -> Option<MenuView> {
-        let controls = &self.controls;
-        let key = |action| controls.primary_label(action);
+        let screen = *self.screen.get();
+        let key = |action| self.controls.primary_label(action);
         let pair = |first, second| format!("{}/{}", key(first), key(second));
-        let editor_row = cfg!(debug_assertions).then(|| MenuRow::action("D", "Debug editor"));
-        let back_to_menu = || vec![MenuRow::action("ENTER", "Return to menu")];
-        let plain = |title, subtitle, rows| MenuView {
+        let hint = |key, label| MenuHint { key, label };
+        // The buttons, their order and their look all come from one list, so
+        // what is drawn and what the arrows walk can never disagree.
+        let rows = || {
+            MenuAction::of(screen)
+                .into_iter()
+                .map(|action| self.row(action))
+        };
+        let plain = |title, subtitle| MenuView {
             title,
             subtitle,
-            rows,
+            rows: rows().collect(),
             hints: Vec::new(),
             two_columns: false,
         };
-        let view = match self.screen.get() {
-            GameScreen::MainMenu => plain(
-                "AFTERWARD",
-                None,
-                [
-                    MenuRow::action(key(GameAction::Interact), "Begin run"),
-                    MenuRow::action("S", "Settings"),
-                ]
-                .into_iter()
-                .chain(editor_row)
-                .chain([MenuRow::action("Q", "Quit")])
-                .collect(),
-            ),
-            GameScreen::Paused => plain(
-                "PAUSED",
-                None,
-                [
-                    MenuRow::action("ENTER", "Continue"),
-                    MenuRow::action("S", "Settings"),
-                    MenuRow::action("R", "Restart"),
-                    MenuRow::action("M", "Main menu"),
-                ]
-                .into_iter()
-                .chain(editor_row)
-                .chain([MenuRow::action("Q", "Quit")])
-                .collect(),
-            ),
-            GameScreen::Settings => {
-                let slider = |index, label: &str, level| MenuRow {
-                    key: None,
-                    label: label.to_owned(),
-                    level: Some(level),
-                    focus: (self.settings.selected_slider == index).into(),
-                };
-                MenuView {
-                    title: "SETTINGS",
-                    subtitle: None,
-                    rows: vec![
-                        slider(0, "Music", self.settings.music_volume_percent),
-                        slider(1, "Sound", self.settings.sfx_volume_percent),
-                        MenuRow::action(key(GameAction::Interact), "Controls"),
-                        MenuRow::action(key(GameAction::ToggleFullscreen), "Fullscreen"),
-                        MenuRow::action(key(GameAction::Pause), "Back"),
-                    ],
-                    hints: vec![
-                        MenuHint {
-                            key: pair(GameAction::NavigateUp, GameAction::NavigateDown),
-                            label: "Select",
-                        },
-                        MenuHint {
-                            key: pair(GameAction::MoveLeft, GameAction::MoveRight),
-                            label: "Adjust",
-                        },
-                    ],
-                    two_columns: false,
-                }
-            }
+        let view = match screen {
+            GameScreen::MainMenu => plain("AFTERWARD", None),
+            GameScreen::Paused => plain("PAUSED", None),
+            GameScreen::Settings => MenuView {
+                title: "SETTINGS",
+                subtitle: None,
+                rows: rows().collect(),
+                hints: vec![
+                    hint(
+                        pair(GameAction::NavigateUp, GameAction::NavigateDown),
+                        "Select",
+                    ),
+                    hint(pair(GameAction::MoveLeft, GameAction::MoveRight), "Adjust"),
+                ],
+                two_columns: false,
+            },
             GameScreen::Controls => {
-                let rows = GameAction::ALL
-                    .iter()
-                    .enumerate()
-                    .map(|(index, action)| {
-                        let selected = controls.selected_action_index == index;
-                        MenuRow {
-                            key: Some(if selected && controls.waiting_for_key {
-                                String::from("...")
-                            } else {
-                                controls.binding_label(*action)
-                            }),
-                            label: action.label().to_owned(),
-                            level: None,
-                            focus: selected.into(),
-                        }
-                    })
-                    .collect();
-                let hint = |key, label| MenuHint { key, label };
-                let (subtitle, hints) = if controls.waiting_for_key {
+                let (subtitle, hints) = if self.controls.rebinding.is_some() {
                     (
                         Some(String::from("PRESS A KEY TO BIND")),
                         vec![hint(String::from("ESCAPE"), "Cancel")],
@@ -183,15 +159,13 @@ impl MenuState<'_> {
                                 "Select",
                             ),
                             hint(key(GameAction::Interact), "Remap"),
-                            hint(String::from("R"), "Restore defaults"),
-                            hint(key(GameAction::Pause), "Back"),
                         ],
                     )
                 };
                 MenuView {
                     title: "CONTROLS",
                     subtitle,
-                    rows,
+                    rows: rows().collect(),
                     hints,
                     two_columns: true,
                 }
@@ -199,12 +173,53 @@ impl MenuState<'_> {
             GameScreen::Dead => plain(
                 "RUN ENDED",
                 Some(format!("Fell in room {:02}", self.session.room_id)),
-                back_to_menu(),
             ),
-            GameScreen::Complete => plain("CHAPTER ONE CLEARED", None, back_to_menu()),
+            GameScreen::Complete => plain("CHAPTER ONE CLEARED", None),
             _ => return None,
         };
         Some(view)
+    }
+
+    /// How one button is drawn: the key that presses it from anywhere on the
+    /// screen, and what it says.
+    fn row(&self, action: MenuAction) -> MenuRow {
+        let key = |action| self.controls.primary_label(action);
+        let row = |badge: String, label: &str| MenuRow::action(badge, label, action);
+        match action {
+            MenuAction::BeginRun => row(key(GameAction::Interact), "Begin run"),
+            MenuAction::Continue => row(String::from("ENTER"), "Continue"),
+            MenuAction::Restart => row(String::from("R"), "Restart"),
+            MenuAction::OpenSettings => row(String::from("S"), "Settings"),
+            MenuAction::OpenControls => row(String::from("C"), "Controls"),
+            MenuAction::OpenEditor => row(String::from("D"), "Debug editor"),
+            MenuAction::LeaveRun => row(String::from("M"), "Main menu"),
+            MenuAction::Quit => row(String::from("Q"), "Quit"),
+            MenuAction::Volume(VolumeChannel::Music) => {
+                MenuRow::volume("Music", VolumeChannel::Music)
+            }
+            MenuAction::Volume(VolumeChannel::Sound) => {
+                MenuRow::volume("Sound", VolumeChannel::Sound)
+            }
+            MenuAction::ToggleFullscreen => row(key(GameAction::ToggleFullscreen), "Fullscreen"),
+            MenuAction::Rebind(bound) => MenuRow {
+                key: Some(if self.controls.rebinding == Some(bound) {
+                    String::from("...")
+                } else {
+                    self.controls.binding_label(bound)
+                }),
+                label: bound.label().to_owned(),
+                slider: None,
+                action,
+            },
+            MenuAction::RestoreDefaultBindings => row(String::from("R"), "Restore defaults"),
+            // The end-of-run screens have nowhere to go back to but the menu.
+            MenuAction::Back => match self.screen.get() {
+                GameScreen::Dead | GameScreen::Complete => {
+                    row(String::from("ENTER"), "Return to menu")
+                }
+                _ => row(key(GameAction::Pause), "Back"),
+            },
+        }
     }
 }
 
@@ -231,6 +246,43 @@ pub(super) fn update_menu(
         }
     }
     *shown = view;
+}
+
+/// Lights the button the player is on. The standing buttons are dressed each
+/// frame rather than rebuilt, so pointing at one never pulls it out from under
+/// the pointer.
+pub(super) fn highlight_menu_buttons(
+    screen: Res<State<GameScreen>>,
+    focus: Res<MenuFocus>,
+    mut buttons: Query<(&MenuButton, &mut BackgroundColor, &mut BorderColor)>,
+) {
+    let on = focus.lit(*screen.get());
+    for (button, mut background, mut border) in &mut buttons {
+        let lit = on == Some(button.index);
+        background.set_if_neq(BackgroundColor(if lit {
+            CARD_HIGHLIGHT_BACKGROUND
+        } else {
+            CARD_BACKGROUND
+        }));
+        border.set_if_neq(BorderColor::all(if lit { ACTIVE_BORDER } else { MUTED }));
+    }
+}
+
+/// Fills each volume bar to its setting and writes the reading beside it.
+pub(super) fn update_volume_bars(
+    settings: Res<AudioSettings>,
+    mut fills: Query<(&VolumeFill, &mut Node)>,
+    mut readings: Query<(&VolumeReading, &mut Text)>,
+) {
+    for (fill, mut node) in &mut fills {
+        node.width = percent(f32::from(settings.volume_of(fill.0)));
+    }
+    for (reading, mut text) in &mut readings {
+        let reading = format!("{}%", settings.volume_of(reading.0));
+        if text.0 != reading {
+            text.0 = reading;
+        }
+    }
 }
 
 fn text(content: impl Into<String>, font_px: f32, color: Color) -> impl Bundle {
@@ -284,8 +336,8 @@ impl MenuView {
                         Pickable::IGNORE,
                     ))
                     .with_children(|rows| {
-                        for row in &self.rows {
-                            row.spawn(rows, compact);
+                        for (index, row) in self.rows.iter().enumerate() {
+                            row.spawn(rows, index, compact);
                         }
                     });
                 if !self.hints.is_empty() {
@@ -329,12 +381,7 @@ impl MenuView {
 }
 
 impl MenuRow {
-    fn spawn(&self, parent: &mut ChildSpawnerCommands, compact: bool) {
-        let (background, border) = match self.focus {
-            RowFocus::Action => (CARD_BACKGROUND, ACTIVE_BORDER),
-            RowFocus::Selected => (CARD_HIGHLIGHT_BACKGROUND, ACTIVE_BORDER),
-            RowFocus::Unselected => (CARD_BACKGROUND, MUTED),
-        };
+    fn spawn(&self, parent: &mut ChildSpawnerCommands, index: usize, compact: bool) {
         parent
             .spawn((
                 Node {
@@ -350,9 +397,14 @@ impl MenuRow {
                     border_radius: BorderRadius::all(px(8)),
                     ..default()
                 },
-                BackgroundColor(background),
-                BorderColor::all(border),
-                Pickable::IGNORE,
+                BackgroundColor(CARD_BACKGROUND),
+                BorderColor::all(MUTED),
+                // No `Pickable::IGNORE` here, and one on everything inside:
+                // the row is what the mouse points at and clicks.
+                MenuButton {
+                    action: self.action,
+                    index,
+                },
             ))
             .with_children(|row| {
                 let (badge_px, key_font_px, label_font_px) = if compact {
@@ -375,7 +427,7 @@ impl MenuRow {
                         ..default()
                     },
                 ));
-                if let Some(level) = self.level {
+                if let Some(channel) = self.slider {
                     row.spawn((
                         Node {
                             width: px(180),
@@ -384,25 +436,28 @@ impl MenuRow {
                             ..default()
                         },
                         BackgroundColor(KEY_BACKGROUND),
+                        VolumeBar(channel),
                         Pickable::IGNORE,
                     ))
                     .with_child((
                         Node {
-                            width: percent(f32::from(level)),
+                            width: percent(0),
                             height: percent(100),
                             border_radius: BorderRadius::all(px(3)),
                             ..default()
                         },
                         BackgroundColor(ACTIVE_BORDER),
+                        VolumeFill(channel),
                         Pickable::IGNORE,
                     ));
                     row.spawn((
-                        text(format!("{level}%"), label_font_px, DESCRIPTION_COLOR),
+                        text(String::new(), label_font_px, DESCRIPTION_COLOR),
                         TextLayout::justify(Justify::Right),
                         Node {
                             min_width: px(64),
                             ..default()
                         },
+                        VolumeReading(channel),
                     ));
                 }
             });

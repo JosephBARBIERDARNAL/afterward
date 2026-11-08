@@ -61,6 +61,8 @@ mod tests {
     use super::*;
     use std::path::Path;
 
+    /// The ripple is a UI material rather than a 2D one, and lives beside this
+    /// module, but it is a material all the same and answers to the same check.
     #[test]
     fn every_material_points_at_a_shader_that_is_there() {
         let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
@@ -68,6 +70,7 @@ mod tests {
             city_lights::SHADER_PATH,
             flood::SHADER_PATH,
             glow::SHADER_PATH,
+            crate::game::ripple::SHADER_PATH,
         ] {
             assert!(
                 asset_root.join(path).is_file(),

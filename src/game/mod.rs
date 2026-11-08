@@ -30,6 +30,7 @@ mod menus;
 mod pause_blur;
 mod player;
 mod random;
+mod ripple;
 mod room_art;
 mod room_intro;
 mod screens;
@@ -55,6 +56,7 @@ use combat::{
 };
 use controls::{ControlBindings, GameAction};
 use flow::PhaseTimer;
+use menus::{MenuAction, MenuFocus, VolumeChannel};
 use player::{PlayerAction, PlayerBody, Reload};
 use random::RandomState;
 use session::RunSession;
@@ -107,6 +109,7 @@ impl Plugin for GamePlugin {
             app.init_asset::<audio::MusicStream>();
         }
         app.add_plugins((pause_blur::PauseBlurPlugin, shaders::ShaderPlugin))
+            .add_plugins(ripple::RipplePlugin)
             .register_asset_loader(audio::MusicStreamLoader)
             .init_state::<GameScreen>()
             .init_resource::<RunSession>()
@@ -114,6 +117,8 @@ impl Plugin for GamePlugin {
             .init_resource::<AudioSettings>()
             .init_resource::<PreferencesDir>()
             .init_resource::<SettingsReturn>()
+            .init_resource::<MenuFocus>()
+            .add_message::<menus::MenuPressed>()
             .init_resource::<ControlBindings>()
             .init_resource::<SoundQueue>()
             .init_resource::<audio::SoundBank>()
@@ -174,13 +179,18 @@ impl Plugin for GamePlugin {
                 (
                     interface::update_letterbox,
                     screens::update_screen_text,
-                    screens::handle_screen_input,
+                    (
+                        menus::navigate_menus,
+                        screens::handle_screen_input,
+                        menus::update_menu,
+                        (menus::highlight_menu_buttons, menus::update_volume_bars),
+                    )
+                        .chain(),
                     interface::update_room_clear_overlay,
                     interface::update_boss_intro_overlay,
                     interface::update_room_transition_overlay,
                     interface::update_menu_modal,
                     bonus_screen::update_bonus_screen,
-                    menus::update_menu,
                     camera::update_background_parallax,
                     interface::update_hud,
                     ammo_hud::update_ammo_hud,

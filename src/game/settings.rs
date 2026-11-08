@@ -2,12 +2,13 @@ use super::*;
 use serde::{Deserialize, Serialize};
 use std::{fs, path::PathBuf};
 
+/// How far one press of an arrow key moves a volume.
+const VOLUME_STEP_PERCENT: u8 = 5;
+
 #[derive(Resource, Serialize, Deserialize)]
 pub(super) struct AudioSettings {
     pub music_volume_percent: u8,
     pub sfx_volume_percent: u8,
-    #[serde(skip)]
-    pub selected_slider: u8,
 }
 
 impl Default for AudioSettings {
@@ -15,8 +16,38 @@ impl Default for AudioSettings {
         Self {
             music_volume_percent: 100,
             sfx_volume_percent: 100,
-            selected_slider: 0,
         }
+    }
+}
+
+impl AudioSettings {
+    pub(super) fn volume_of(&self, channel: VolumeChannel) -> u8 {
+        match channel {
+            VolumeChannel::Music => self.music_volume_percent,
+            VolumeChannel::Sound => self.sfx_volume_percent,
+        }
+    }
+
+    fn volume_mut(&mut self, channel: VolumeChannel) -> &mut u8 {
+        match channel {
+            VolumeChannel::Music => &mut self.music_volume_percent,
+            VolumeChannel::Sound => &mut self.sfx_volume_percent,
+        }
+    }
+
+    /// Moves a volume one step, the way an arrow key does.
+    pub(super) fn step_volume(&mut self, channel: VolumeChannel, up: bool) {
+        let volume = self.volume_mut(channel);
+        *volume = if up {
+            volume.saturating_add(VOLUME_STEP_PERCENT).min(100)
+        } else {
+            volume.saturating_sub(VOLUME_STEP_PERCENT)
+        };
+    }
+
+    /// Sets a volume to how far along its bar a click landed, 0 to 1.
+    pub(super) fn set_volume(&mut self, channel: VolumeChannel, along_bar: f32) {
+        *self.volume_mut(channel) = (along_bar.clamp(0.0, 1.0) * 100.0).round() as u8;
     }
 }
 

@@ -11,6 +11,8 @@ use super::super::*;
 use crate::game::{
     bonus_pickup::BonusPickup,
     combat::CombatProjectile,
+    menus::{MenuAction, MenuButton},
+    ripple::Ripple,
     shaders::{Flood, GlowAttached},
 };
 use bevy::{
@@ -20,9 +22,13 @@ use bevy::{
         keyboard::{Key, KeyboardInput, NativeKey},
     },
     log::LogPlugin,
+    picking::{
+        backend::HitData,
+        pointer::{Location, PointerId},
+    },
     render::{RenderPlugin, settings::WgpuSettings},
     time::TimeUpdateStrategy,
-    window::ExitCondition,
+    window::{ExitCondition, WindowRef},
     winit::WinitPlugin,
 };
 use std::{
@@ -36,6 +42,7 @@ mod death;
 mod editor;
 mod hitboxes;
 mod main_menu;
+mod menus;
 mod opening_room;
 mod pause;
 mod run;
@@ -189,6 +196,67 @@ impl HeadlessGame {
             repeat: false,
             window: Entity::PLACEHOLDER,
         });
+    }
+
+    /// The button a menu draws for `action`, the way the mouse finds it.
+    fn menu_button(&mut self, action: MenuAction) -> Entity {
+        let world = self.app.world_mut();
+        world
+            .query::<(Entity, &MenuButton)>()
+            .iter(world)
+            .find(|(_, button)| button.action == action)
+            .map(|(entity, _)| entity)
+            .unwrap_or_else(|| panic!("the menu on show draws a button for {action:?}"))
+    }
+
+    /// Where the mouse is, as the picking backend reports it. A window-less
+    /// test has no real pointer, so the scenarios write the events the
+    /// backend would have written.
+    fn mouse_at(&self, at: Vec2) -> bevy::picking::events::Pointer {
+        let target = WindowRef::Entity(Entity::PLACEHOLDER)
+            .normalize(None)
+            .expect("a named window normalizes without a primary one");
+        bevy::picking::events::Pointer::new(
+            PointerId::Mouse,
+            Location {
+                target: bevy::camera::NormalizedRenderTarget::Window(target),
+                position: at,
+            },
+        )
+    }
+
+    /// Moves the mouse onto a button, at `at` in window pixels. Like `tap`,
+    /// it runs a second frame, so a screen the touch asked for has landed.
+    fn point_mouse_at(&mut self, button: Entity, at: Vec2) {
+        let pointer = self.mouse_at(at);
+        self.app.world_mut().write_message(PointerOver {
+            entity: button,
+            pointer,
+            hit: HitData::new(Entity::PLACEHOLDER, 0.0, None, None),
+        });
+        self.app.update();
+        self.app.update();
+    }
+
+    /// Clicks a button, at `at` in window pixels.
+    fn click_mouse_on(&mut self, button: Entity, at: Vec2) {
+        let pointer = self.mouse_at(at);
+        self.app.world_mut().write_message(PointerClick {
+            entity: button,
+            pointer,
+            button: PointerButton::Primary,
+            hit: HitData::new(Entity::PLACEHOLDER, 0.0, None, None),
+            duration: Duration::from_millis(40),
+            count: 1,
+        });
+        self.app.update();
+        self.app.update();
+    }
+
+    /// How many droplets are falling over the menus.
+    fn droplets(&mut self) -> usize {
+        let world = self.app.world_mut();
+        world.query::<&Ripple>().iter(world).count()
     }
 
     /// Presses and releases `code` over two frames.
