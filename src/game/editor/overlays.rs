@@ -10,16 +10,18 @@ use super::*;
 const SPAWN_FRAME_COLOR: Color = Color::srgba(0.45, 0.85, 1.0, 0.35);
 const FRAME_COLOR: Color = Color::srgb(0.45, 0.85, 1.0);
 /// The detection band, and the sight lines filling what is not behind cover.
-const SIGHT_EDGE_COLOR: Color = Color::srgba(0.95, 0.25, 0.2, 0.75);
-const SIGHT_COLOR: Color = Color::srgba(0.9, 0.18, 0.15, 0.16);
+const SIGHT_EDGE_COLOR: Color = Color::srgba(0.95, 0.25, 0.2, 0.9);
+const SIGHT_COLOR: Color = Color::srgba(0.95, 0.2, 0.16, 0.22);
 /// Drawn when an enemy already sees the player standing on the spawn. It is
 /// the one line that has to stand out from the band around it, so it is paler
 /// than the deep red filling that.
 const SPOTTED_COLOR: Color = Color::srgb(1.0, 0.6, 0.55);
 
 /// Sight lines cast around the detection band, and the halvings that place
-/// each one's end against the platform that cuts it short.
-const SIGHT_LINES: usize = 48;
+/// each one's end against the platform that cuts it short. The lines fan out
+/// from one point, so they thin with distance: enough of them that the far
+/// end of the band still fills in rather than reading as stripes.
+const SIGHT_LINES: usize = 220;
 const SIGHT_CLIP_STEPS: usize = 12;
 
 /// Which layout overlays are drawn.
