@@ -221,8 +221,6 @@ pub struct RoomFlowConfig {
 pub struct PrologueConfig {
     /// How fast the text is written out.
     pub characters_per_s: f32,
-    /// How long the finished text stands before the run moves on.
-    pub hold_s: f32,
     /// How long the water takes to rise over the room, and to drain away.
     pub veil_fade_s: f32,
     /// The typing heard while the words are written.

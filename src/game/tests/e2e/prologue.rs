@@ -1,12 +1,13 @@
 use super::*;
 use crate::game::{
     audio::TypingSound,
-    prologue::{Prologue, PrologueText},
+    prologue::{Prologue, PrologueButton, PrologueText},
 };
 
 /// The door out of the opening room leads through the words the city is
-/// entered on: the water rises over the room, the lines are typed out with the
-/// typing heard under them, and a key hurries it along.
+/// entered on: the water rises over the room, the lines are written out with
+/// the typing heard under them, and they stand until the player presses the
+/// button that walks in.
 #[test]
 fn the_city_is_spoken_for_before_the_run_walks_into_it() {
     let mut game = HeadlessGame::new();
@@ -32,20 +33,46 @@ fn the_city_is_spoken_for_before_the_run_walks_into_it() {
         "which stands over the room the run is leaving"
     );
     assert_eq!(game.typing_sounds(), 1, "with the typing heard under them");
+    // Written out a character at a time, with every character holding its
+    // place from the first frame so the block never shifts under itself.
     let written = game.written_prologue();
+    assert_ne!(written, lines, "the words are still being written");
+    assert_eq!(written.chars().count(), lines.chars().count());
     assert!(
-        !written.is_empty() && lines.starts_with(&written) && written != lines,
-        "a line is written out a character at a time, not all at once: {written:?}"
+        written
+            .chars()
+            .zip(lines.chars())
+            .all(|(written, full)| written == full || written == ' '),
+        "what stands is the beginning of the words, not something else: {written:?}"
+    );
+    assert!(
+        written.contains(char::is_alphabetic),
+        "and some of it is up"
+    );
+    assert_eq!(
+        game.way_in_shown(),
+        Visibility::Hidden,
+        "the way in waits until there is nothing left to read"
     );
 
-    // The first key finishes the typing, and the typing stops with it.
-    game.tap(KeyCode::Space);
+    // Enter finishes the writing, and the typing stops with it.
+    game.tap(KeyCode::Enter);
     assert_eq!(game.written_prologue(), lines);
     assert_eq!(game.typing_sounds(), 0);
-    assert_eq!(game.screen(), GameScreen::Prologue, "the words still stand");
+    assert_eq!(
+        game.screen(),
+        GameScreen::Prologue,
+        "the words stand until the player says to walk in"
+    );
+    assert_eq!(
+        game.way_in_shown(),
+        Visibility::Visible,
+        "with the way in offered under them"
+    );
 
-    // The next one leaves for the city.
-    game.tap(KeyCode::Space);
+    // The button is a button like any other: the mouse presses it too.
+    let way_in = game.menu_button(MenuAction::EnterTheCity);
+    game.click_mouse_on(way_in, Vec2::new(400.0, 500.0));
     assert_ne!(game.screen(), GameScreen::Prologue);
 
     game.wait_for_screen(GameScreen::Playing, 15.0);
@@ -73,6 +100,14 @@ impl HeadlessGame {
             .query_filtered::<Entity, With<TypingSound>>()
             .iter(world)
             .count()
+    }
+
+    fn way_in_shown(&mut self) -> Visibility {
+        let world = self.app.world_mut();
+        *world
+            .query_filtered::<&Visibility, With<PrologueButton>>()
+            .single(world)
+            .expect("the way in is laid at startup")
     }
 
     fn written_prologue(&mut self) -> String {

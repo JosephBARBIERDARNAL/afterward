@@ -1,5 +1,7 @@
 use super::*;
-use crate::game::{controls::TypedLetters, interface::ScreenLabel, menus::MenuPressed};
+use crate::game::{
+    controls::TypedLetters, interface::ScreenLabel, menus::MenuPressed, prologue::Prologue,
+};
 use bevy::window::{MonitorSelection, PrimaryWindow, WindowMode};
 use bevy::{app::AppExit, input::keyboard::KeyboardInput};
 
@@ -53,6 +55,7 @@ pub(super) struct ScreenInputResources<'w> {
     preferences: Res<'w, PreferencesDir>,
     controls: ResMut<'w, ControlBindings>,
     settings_return: ResMut<'w, SettingsReturn>,
+    prologue: ResMut<'w, Prologue>,
     sounds: ResMut<'w, SoundQueue>,
 }
 
@@ -80,6 +83,7 @@ pub(super) fn handle_screen_input(
         preferences,
         mut controls,
         mut settings_return,
+        mut prologue,
         mut sounds,
     } = resources;
     let screen = *screen.get();
@@ -146,6 +150,14 @@ pub(super) fn handle_screen_input(
             MenuAction::BeginRun => {
                 next_screen.set(reset_run(&mut session, &data, *start_room));
                 sounds.push(SoundCue::UiConfirm);
+            }
+            MenuAction::EnterTheCity => {
+                // The first press finishes writing the words; the next one
+                // walks into what they are about.
+                if prologue.confirm(&data.gameplay.prologue.lines) {
+                    next_screen.set(GameScreen::RoomLoading);
+                    sounds.push(SoundCue::UiConfirm);
+                }
             }
             MenuAction::Continue => {
                 next_screen.set(GameScreen::Playing);

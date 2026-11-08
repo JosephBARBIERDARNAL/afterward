@@ -187,6 +187,8 @@ impl MenuState<'_> {
         let row = |badge: String, label: &str| MenuRow::action(badge, label, action);
         match action {
             MenuAction::BeginRun => row(key(GameAction::Interact), "Begin run"),
+            // The prologue draws this one itself, under the words it writes.
+            MenuAction::EnterTheCity => row(String::from("ENTER"), "Enter Afterward"),
             MenuAction::Continue => row(String::from("ENTER"), "Continue"),
             MenuAction::Restart => row(String::from("R"), "Restart"),
             MenuAction::OpenSettings => row(String::from("S"), "Settings"),

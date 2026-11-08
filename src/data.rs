@@ -217,13 +217,11 @@ impl GameData {
         }
         let prologue = &self.gameplay.prologue;
         if prologue.characters_per_s <= 0.0
-            || prologue.hold_s < 0.0
             || prologue.veil_fade_s <= 0.0
             || prologue.lines.iter().any(|line| line.trim().is_empty())
         {
             return Err(InvalidGameData::from(
-                "the prologue needs a positive typing speed and fade, a nonnegative hold, \
-                 and no empty lines",
+                "the prologue needs a positive typing speed and fade, and no empty lines",
             ));
         }
         let audio = &self.gameplay.audio;

@@ -108,6 +108,10 @@ mouse points at one and clicks it, the arrows walk to it, the confirm key
 presses the one the focus stands on, and the letter on a row's badge still
 presses it from anywhere on that screen.
 
+- The prologue's way in is on that same list (`MenuAction::of(GameScreen::Prologue)`),
+  though the prologue draws the button itself, under the words it writes: it
+  carries `MenuButton` like a menu row, so the arrows, the pointer, the ripple
+  and the focus highlight all treat it as one.
 - `MenuAction::of(screen)` in `src/game/menus/actions.rs` is the one list of a
   menu's buttons, in the order they are drawn. `menus.rs` draws that list and
   `menus/input.rs` walks it, so what is on show and what the arrows reach can
@@ -153,7 +157,7 @@ A door is crossed in the open rather than behind a fade (`src/game/room_pan.rs`)
 
 Every room stands the door the player came in through (`EntryDoor`) where their walk in begins: `room_intro` swings it open for them, then fades it away once they are in. The entrance starts `room_flow.room_intro.early_start_s` before the camera lands, so the door is already open and the player already stepping out of it as the room slides into frame; `room_intro::entrance_elapsed_s` is the one clock both halves read, and `start_room_intro` winds the intro timer forward by that much when the room was walked into through a door (`RoomPan::came_through_a_door`), so the walk carries on rather than starting over. The HUD stays up across the whole crossing (`GameScreen::shows_the_hud`), and the music and the city are heard through the wall while it lasts (`audio.crossing_music_muffle`).
 
-The door out of room 0 leads through the prologue (`src/game/prologue.rs`): the flood rises over the room the run is leaving — the same water the main menu sits on, drawn in front of the room instead of behind it — the lines of `prologue.lines` are typed out over it with `prologue.typing_sound` under them, and the water drains away over the slide into room 1. Any key hurries it along: the first finishes the typing, the next leaves for the city. The words and their timings are all in `prologue:` of `config/gameplay.yaml`.
+The door out of room 0 leads through the prologue (`src/game/prologue.rs`): the flood rises over the room the run is leaving — the same water the main menu sits on, drawn in front of the room instead of behind it — the lines of `prologue.lines` are written out over it with `prologue.typing_sound` under them, and the water drains away over the slide into room 1. The words stand on a card of their own, read from the left, and every character holds its place from the first frame (the untyped ones are drawn as spaces in the monospace font), so the block never shifts under itself as it fills in. Nothing moves on by itself: the Enter button under the words is a `MenuAction::EnterTheCity` like any other button, so Enter or a click presses it — the first press finishes the writing, the next walks into the city. The words and their timings are all in `prologue:` of `config/gameplay.yaml`.
 
 ### Enemy material and shields
 

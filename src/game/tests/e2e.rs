@@ -305,12 +305,12 @@ impl HeadlessGame {
     }
 
     /// The words the city is entered on, hurried along the way a player would:
-    /// one key finishes the typing, the next leaves for the city. Only the
-    /// door out of the opening room leads through them.
+    /// the first Enter finishes the writing, the next presses the button that
+    /// walks in. Only the door out of the opening room leads through them.
     fn skip_any_prologue(&mut self) {
         for _ in 0..600 {
             match self.screen() {
-                GameScreen::Prologue => self.tap(KeyCode::Space),
+                GameScreen::Prologue => self.tap(KeyCode::Enter),
                 GameScreen::Transitioning => self.app.update(),
                 _ => return,
             }

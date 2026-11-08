@@ -11,6 +11,8 @@ use super::*;
 #[derive(Component, Clone, Copy, Debug, Eq, PartialEq)]
 pub(in crate::game) enum MenuAction {
     BeginRun,
+    /// Walks into the city, from the words the prologue writes.
+    EnterTheCity,
     Continue,
     Restart,
     OpenSettings,
@@ -70,6 +72,7 @@ impl MenuAction {
                 .map(|action| Self::Rebind(*action))
                 .chain([Self::RestoreDefaultBindings, Self::Back])
                 .collect(),
+            GameScreen::Prologue => vec![Self::EnterTheCity],
             GameScreen::Dead | GameScreen::Complete => vec![Self::Back],
             _ => Vec::new(),
         }

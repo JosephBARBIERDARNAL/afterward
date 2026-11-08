@@ -153,8 +153,16 @@ fn drive_visual_walkthrough(resources: VisualWalkthroughResources) {
         // Halfway across the gap, with both rooms in frame. How long the
         // crossing takes is the crossing's own business, so this asks it.
         GameScreen::Panning => timer.0.duration().as_secs_f32() / 2.0,
-        // Partway through the words, with the water standing over the room.
-        GameScreen::Prologue => data.gameplay.prologue.veil_fade_s + 2.5,
+        // Once the words stand whole, with the way in offered under them.
+        GameScreen::Prologue => {
+            let prologue = &data.gameplay.prologue;
+            let characters = prologue
+                .lines
+                .iter()
+                .map(|line| line.chars().count() + 2)
+                .sum::<usize>();
+            prologue.veil_fade_s + characters as f32 / prologue.characters_per_s + 0.5
+        }
         GameScreen::Complete => 0.3,
         _ => return,
     };
@@ -213,6 +221,8 @@ fn drive_visual_walkthrough(resources: VisualWalkthroughResources) {
     walkthrough.action_started = true;
     match scene.screen {
         GameScreen::MainMenu => next_screen.set(GameScreen::Playing),
+        // Nobody is holding the keyboard: the walkthrough walks in itself.
+        GameScreen::Prologue => next_screen.set(GameScreen::RoomLoading),
         GameScreen::Playing if scene.door_open => {
             if let (Some(room), Ok(mut player)) =
                 (data.rooms.get(&scene.room_id), players.single_mut())

@@ -123,13 +123,12 @@ room_flow:
   bonus_rerolls_per_run: 3
 
 # The words the city is entered on, typed out over the water between the
-# opening room and room 1. `characters_per_s` is how fast they are written,
-# `hold_s` how long the finished text stands before the run moves on, and
+# opening room and room 1. `characters_per_s` is how fast they are written and
 # `veil_fade_s` how long the water takes to rise over the room and to drain
-# away again. Any key hurries it along.
+# away again. They stand until the player presses the Enter button under them;
+# pressing it while they are still being written finishes them at once.
 prologue:
   characters_per_s: 26
-  hold_s: 1.8
   veil_fade_s: 0.8
   typing_sound: { asset: audio/sfx/typing.wav, gain: 0.5 }
   lines:
