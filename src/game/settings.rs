@@ -20,6 +20,23 @@ impl Default for AudioSettings {
     }
 }
 
+/// The menu the settings screen goes back to, and so whether it and the
+/// controls screen stand over the main menu or over a paused run.
+#[derive(Resource, Clone, Copy, Default)]
+pub(super) struct SettingsReturn(pub(super) GameScreen);
+
+impl SettingsReturn {
+    /// Whether `screen` is drawn over the main menu: the menu itself, or the
+    /// settings and controls screens when the main menu opened them.
+    pub(super) fn on_the_main_menu(self, screen: GameScreen) -> bool {
+        match screen {
+            GameScreen::MainMenu => true,
+            GameScreen::Settings | GameScreen::Controls => self.0 == GameScreen::MainMenu,
+            _ => false,
+        }
+    }
+}
+
 pub(super) fn initialize_settings(
     data: Res<GameData>,
     preferences: Res<PreferencesDir>,

@@ -174,6 +174,7 @@ pub(super) struct MenuBackdrop;
 
 pub(super) fn update_menu_modal(
     screen: Res<State<GameScreen>>,
+    settings_return: Res<SettingsReturn>,
     mut backdrop: Query<(&mut BackgroundColor, &mut Visibility), With<MenuBackdrop>>,
     mut camera_blur: Query<&mut pause_blur::PauseBlur, With<Camera2d>>,
 ) {
@@ -188,8 +189,9 @@ pub(super) fn update_menu_modal(
     );
     let is_veiled = is_modal || *screen.get() == GameScreen::Bonus;
     // The blur muffles the room behind a menu. The main menu has no room
-    // behind it, but its own water, which is pixel art and stays crisp.
-    let is_blurred = is_veiled && *screen.get() != GameScreen::MainMenu;
+    // behind it, but its own water, which is pixel art and stays crisp — and
+    // so do the settings screens it opens.
+    let is_blurred = is_veiled && !settings_return.on_the_main_menu(*screen.get());
 
     for (mut color, mut visibility) in &mut backdrop {
         if is_veiled {

@@ -7,6 +7,7 @@ use bevy::audio::{
 mod mixing;
 mod music;
 
+use mixing::gameplay_effects_muted;
 pub(super) use mixing::update_audio_volume;
 pub(super) use music::{MusicStream, MusicStreamLoader};
 
@@ -272,17 +273,6 @@ pub(super) fn play_sound_queue(
             ManagedAudio { class, gain: *gain },
         ));
     }
-}
-
-fn gameplay_effects_muted(screen: GameScreen) -> bool {
-    matches!(
-        screen,
-        GameScreen::Paused
-            | GameScreen::Settings
-            | GameScreen::MainMenu
-            | GameScreen::Dead
-            | GameScreen::Complete
-    )
 }
 
 #[cfg(test)]

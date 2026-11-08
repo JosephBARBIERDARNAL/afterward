@@ -18,10 +18,15 @@ pub(crate) struct AudioMix {
 
 impl AudioMix {
     fn target(screen: GameScreen, audio: &AudioConfig) -> Self {
-        let paused = matches!(screen, GameScreen::Paused | GameScreen::Settings);
+        let paused = matches!(
+            screen,
+            GameScreen::Paused | GameScreen::Settings | GameScreen::Controls
+        );
         Self {
             music: match screen {
-                GameScreen::Paused | GameScreen::Settings => audio.paused_music_volume_multiplier,
+                GameScreen::Paused | GameScreen::Settings | GameScreen::Controls => {
+                    audio.paused_music_volume_multiplier
+                }
                 GameScreen::RoomClear | GameScreen::Bonus | GameScreen::BossIntro => {
                     audio.room_clear_music_volume_multiplier
                 }
@@ -127,11 +132,14 @@ pub fn update_audio_volume(
     }
 }
 
-fn gameplay_effects_muted(screen: GameScreen) -> bool {
+/// The screens where gameplay sounds have no business being heard: the menus
+/// standing over a run, and the ones outside one.
+pub(super) fn gameplay_effects_muted(screen: GameScreen) -> bool {
     matches!(
         screen,
         GameScreen::Paused
             | GameScreen::Settings
+            | GameScreen::Controls
             | GameScreen::MainMenu
             | GameScreen::Dead
             | GameScreen::Complete
@@ -149,6 +157,7 @@ mod tests {
             GameScreen::MainMenu,
             GameScreen::Paused,
             GameScreen::Settings,
+            GameScreen::Controls,
             GameScreen::Dead,
             GameScreen::Complete,
         ] {
@@ -196,15 +205,27 @@ mod tests {
         }
     }
 
+    /// The settings and controls screens stand over a paused run, so they
+    /// sound like one: the music stays as lowered and as muffled as it was.
     #[test]
     fn pausing_muffles_and_lowers_the_music_without_stopping_it() {
         let audio = tuning();
         let playing = AudioMix::target(GameScreen::Playing, &audio);
-        let paused = AudioMix::target(GameScreen::Paused, &audio);
 
-        assert!(paused.music < playing.music, "pausing lowers the music");
-        assert!(paused.music > 0.0, "the music keeps playing while paused");
-        assert!(paused.muffle > playing.muffle, "pausing muffles the music");
+        for screen in [
+            GameScreen::Paused,
+            GameScreen::Settings,
+            GameScreen::Controls,
+        ] {
+            let paused = AudioMix::target(screen, &audio);
+
+            assert!(paused.music < playing.music, "{screen:?} lowers the music");
+            assert!(paused.music > 0.0, "{screen:?} keeps the music playing");
+            assert!(
+                paused.muffle > playing.muffle,
+                "{screen:?} muffles the music"
+            );
+        }
         assert!(
             playing.muffle < 0.0001,
             "playing leaves the music unfiltered"

@@ -58,7 +58,7 @@ use flow::PhaseTimer;
 use player::{PlayerAction, PlayerBody, Reload};
 use random::RandomState;
 use session::RunSession;
-use settings::{AudioSettings, PreferencesDir};
+use settings::{AudioSettings, PreferencesDir, SettingsReturn};
 use shaders::{CityLightsMaterial, Glowing, ShaderAssets};
 use sprites::{AnimatedSprite, SpriteSheet, SpriteSheetSpec, SpriteSheets, set_animation};
 use world::{ExitDoor, RoomEntity};
@@ -113,6 +113,7 @@ impl Plugin for GamePlugin {
             .init_resource::<StartRoom>()
             .init_resource::<AudioSettings>()
             .init_resource::<PreferencesDir>()
+            .init_resource::<SettingsReturn>()
             .init_resource::<ControlBindings>()
             .init_resource::<SoundQueue>()
             .init_resource::<audio::SoundBank>()

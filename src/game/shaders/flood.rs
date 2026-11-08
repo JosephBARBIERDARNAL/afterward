@@ -2,7 +2,8 @@
 //! wine cells, quantized to a pixel grid so it reads as pixel art. The main
 //! menu is drawn over it, so the game opens on the thing it is about. The
 //! quad is laid once and kept under the camera, exactly covering the
-//! viewport, and only shows while the main menu is up.
+//! viewport, and only shows while the main menu is up — including behind the
+//! settings and controls screens the main menu opens.
 
 use super::*;
 use crate::data::HexColor;
@@ -95,10 +96,11 @@ pub(super) fn spawn_the_flood(
 /// left standing.
 pub(in crate::game) fn show_the_flood(
     screen: Res<State<GameScreen>>,
+    settings_return: Res<SettingsReturn>,
     camera: Query<&Transform, (With<Camera2d>, Without<Flood>)>,
     mut water: Query<(&mut Transform, &mut Visibility), With<Flood>>,
 ) {
-    let on_the_menu = *screen.get() == GameScreen::MainMenu;
+    let on_the_menu = settings_return.on_the_main_menu(*screen.get());
     let Ok(camera) = camera.single() else {
         return;
     };

@@ -57,6 +57,7 @@ pub(super) struct ScreenInputResources<'w> {
     settings: ResMut<'w, AudioSettings>,
     preferences: Res<'w, PreferencesDir>,
     controls: ResMut<'w, ControlBindings>,
+    settings_return: ResMut<'w, SettingsReturn>,
     sounds: ResMut<'w, SoundQueue>,
 }
 
@@ -79,6 +80,7 @@ pub(super) fn handle_screen_input(
         mut settings,
         preferences,
         mut controls,
+        mut settings_return,
         mut sounds,
     } = resources;
     match screen.get() {
@@ -96,6 +98,12 @@ pub(super) fn handle_screen_input(
             next_screen.set(GameScreen::Editor);
             sounds.push(SoundCue::UiConfirm);
         }
+        GameScreen::MainMenu | GameScreen::Paused if typed.contains('s') => {
+            // Settings goes back to whichever menu opened it.
+            *settings_return = SettingsReturn(*screen.get());
+            next_screen.set(GameScreen::Settings);
+            sounds.push(SoundCue::UiConfirm);
+        }
         GameScreen::MainMenu | GameScreen::Paused if typed.contains('q') => {
             exit.write(AppExit::Success);
         }
@@ -110,10 +118,6 @@ pub(super) fn handle_screen_input(
             next_screen.set(GameScreen::Playing);
             sounds.push(SoundCue::UiConfirm);
         }
-        GameScreen::Paused if typed.contains('s') => {
-            next_screen.set(GameScreen::Settings);
-            sounds.push(SoundCue::UiConfirm);
-        }
         GameScreen::Paused if typed.contains('m') => {
             next_screen.set(GameScreen::MainMenu);
             sounds.push(SoundCue::UiCancel);
@@ -126,7 +130,7 @@ pub(super) fn handle_screen_input(
             sounds.push(SoundCue::RunRestarted);
         }
         GameScreen::Settings if controls.just_pressed(GameAction::Pause, &keys) => {
-            next_screen.set(GameScreen::Paused);
+            next_screen.set(settings_return.0);
             sounds.push(SoundCue::UiCancel);
         }
         GameScreen::Settings => {
