@@ -101,10 +101,40 @@ room_flow:
   # `bob_height_h` up and down over `bob_period_s`.
   bonus_pickup:
     size_h: 0.5
-    bob_height_h: 0.15
-    bob_period_s: 1.8
+    bob_height_h: 0.075
+    bob_period_s: 3.6
     touch_radius_h: 0.7
   bonus_rerolls_per_run: 3
+
+# The 2D material shaders (`src/game/shaders/`). Everything here is meant to be
+# felt rather than noticed: turn a number up to see what it does, then back.
+effects:
+  # The lit windows and stars of the background layers breathe. A light is
+  # found rather than authored: a pixel whose brightness stands `light_threshold`
+  # above the four around it, judged over a `light_softness` margin, and whose
+  # surroundings are darker than `surround_ceiling` — which is what tells a
+  # window on a dark facade from the dither of a bright sky.
+  city_lights:
+    light_threshold: 0.04
+    light_softness: 0.08
+    surround_ceiling: 0.3
+    # The widest a light's brightness swings, and how long one breath takes.
+    # Each light draws its own swing and phase, so most barely move.
+    swing: 0.5
+    period_s: 6
+  # The pool of light behind anything the player should walk towards.
+  glow:
+    # How bright its core is, how far that swings, and how long one pulse takes.
+    strength: 0.45
+    pulse: 0.25
+    pulse_period_s: 2.8
+    # How far the light reaches past what it wraps, in H.
+    bonus_radius_h: 0.8
+    health_radius_h: 0.6
+    door_radius_h: 1.2
+    # A bonus item lights in its category's colour; these two light in their own.
+    health_color: "#4CF07A"
+    door_color: "#7FD4FF"
 
 window:
   # maximized (a window filling the screen), borderless_fullscreen, or windowed.

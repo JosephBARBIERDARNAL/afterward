@@ -47,6 +47,10 @@ pub(super) fn spawn_bonus_pickup(
             base_y,
             bob_phase_s: 0.0,
         },
+        Glowing {
+            color: Color::from(config.color),
+            radius_h: data.gameplay.effects.glow.bonus_radius_h,
+        },
         RoomEntity,
     ));
     sounds.push(SoundCue::BonusAppear);

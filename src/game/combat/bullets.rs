@@ -195,6 +195,10 @@ pub(in crate::game) fn update_player_bullets(
                                     HealthPickup {
                                         healing: data.gameplay.health_pickup.healing,
                                     },
+                                    Glowing {
+                                        color: Color::from(data.gameplay.effects.glow.health_color),
+                                        radius_h: data.gameplay.effects.glow.health_radius_h,
+                                    },
                                     RoomEntity,
                                 ));
                             }

@@ -8,7 +8,7 @@
 //! `step_toward_exit` puts the player beside the door.
 
 use super::super::*;
-use crate::game::{bonus_pickup::BonusPickup, combat::CombatProjectile};
+use crate::game::{bonus_pickup::BonusPickup, combat::CombatProjectile, shaders::GlowAttached};
 use bevy::{
     audio::{AudioPlugin, AudioSource},
     input::{

@@ -98,6 +98,15 @@ Debug builds (`cargo run`, `just run`) add `D  Debug editor` to the main menu (o
 
 Every hit area is data, in H: the player's hurtbox in `config/gameplay.yaml` (`player.hurtbox_h`), and each enemy type's hurtbox, attack hitboxes, and projectile sizes in `enemies/enemy_types.yaml` (its header explains the coordinates). `src/game/combat/hitboxes.rs` turns them into world rectangles for combat. The debug editor edits them too: select an enemy (its type's hurtbox, and the hitbox of the attack the Attack field picks) or the player spawn (the player's hurtbox); edits apply to every enemy of that type, undo with Cmd+Z, and Cmd+S rewrites only their lines in the two YAML files, keeping the comments. In debug builds, B toggles an overlay (`src/game/hitbox_overlay.rs`) that draws them with that same code: green player hurtbox, yellow enemy hurtboxes, red strikes (faint for an enemy's next attack), orange projectiles, cyan bullets.
 
+### Shaders
+
+Two kinds of shader, both WGSL under `src/assets/shaders/`, both tuned from `effects:` in `config/gameplay.yaml`:
+
+- `src/game/shaders/` holds the 2D materials, drawn on `Mesh2d` quads sized by their transform (one shared unit square, `ShadedQuad`). `city_lights.wgsl` draws every background layer: a pixel that stands brighter than the four around it *and* sits on a dark surround is a lit window or a star, and breathes at a pace its own position seeds — the dark-surround test is what keeps a dithered bright sky out of it. `glow.wgsl` is the pool of light behind anything the player should walk towards; give an entity `Glowing { color, radius_h }` and `attach_glows` hangs the quad behind it as a child, so it follows and dies with it.
+- `src/game/pause_blur.rs` is the full-screen pass behind a menu, a `Core2d` post-process rather than a material.
+
+Shaders are plain `.wgsl`, not Bevy's own `.wesl`: a material's fragment shader redeclares the mesh2d `VertexOutput` and the `globals` binding itself instead of importing them, so nothing depends on Bevy's shader module paths. Effects are meant to be felt and not noticed — turn a value up to see what it does, then put it back.
+
 ### Audio
 
 Nothing is generated: every sound in the game is a real recording. A `SoundCue` plays the file `config/gameplay.yaml` lists for it under `audio.recorded_effects` and stays silent when there is none, and the music is one of the tracks in `audio.music_tracks`. Most cues have no sound yet; leave them silent until a recording exists rather than synthesizing a placeholder. `src/game/audio.rs` plays it all through `ManagedAudio`, whose class decides which volume setting applies (music or sound effects) and how `audio/mixing.rs` fades it per screen.
@@ -129,7 +138,7 @@ Every surface texture is drawn in code with [Typst](https://typst.app) instead o
 
 - `src/data.rs` loads and validates every YAML file under `src/assets/` into the `GameData` resource. `src/data/` holds one module per YAML source: `gameplay.rs` (`config/gameplay.yaml`), `enemies.rs`, `backgrounds.rs`, `bonuses.rs`, `rooms.rs`, `surfaces.rs` (`surfaces/materials.yaml`), `color.rs`, `player_animations.rs`.
 - `src/game/bonus_pickup.rs` lays out a cleared room's bonus item and opens the bonus screen when the player touches it; `src/game/flow.rs` holds the rest of the room flow.
-- `src/game/collision.rs` holds room collision; `src/game/room_art.rs` draws platforms and decorations (world-aligned tiled textures via a repeat sampler and `Sprite::rect`, or a plain color, and outlines of uncovered edges).
+- `src/game/shaders/` holds the 2D material shaders; `src/game/collision.rs` holds room collision; `src/game/room_art.rs` draws platforms and decorations (world-aligned tiled textures via a repeat sampler and `Sprite::rect`, or a plain color, and outlines of uncovered edges).
 - `src/game/mod.rs` wires the `GamePlugin` (systems and states) and holds only shared items: `GameScreen`, `StartRoom`, `H_WORLD_UNITS`, small helpers. Components and resources live in the module that owns them (`session.rs` for `RunSession`, `sprites.rs` for sprite-sheet animation, `player/body.rs` for `PlayerBody`, `combat/enemy_body.rs` and `combat/components.rs` for combat entities, and so on) and are re-imported in `mod.rs` when other modules need them.
 - Game modules reach shared items through `use super::*;`; add a `use` in `mod.rs` for a type that several modules need, or a direct `use crate::game::...` for a type only one other module needs.
 - Tests live in `src/game/tests/` (gameplay, driven through a headless `App`) and in `#[cfg(test)]` modules next to the code they cover.

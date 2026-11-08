@@ -25,6 +25,16 @@ fn the_empty_opening_room_offers_its_bonus_at_once_and_runs_into_room_one() {
     // With no enemies there is nothing to clear, so the bonus item is simply
     // there from the start, with no room-clear flash on the way.
     assert_ne!(game.screen(), GameScreen::RoomClear);
+    game.run_seconds(0.2);
+    let world = game.app.world_mut();
+    assert_eq!(
+        world
+            .query_filtered::<Entity, (With<BonusPickup>, With<GlowAttached>)>()
+            .iter(world)
+            .count(),
+        1,
+        "the bonus item is lit by an aura"
+    );
     game.take_bonus();
     let offers = game.session().offered_bonuses.clone();
     assert_eq!(offers.len(), 2);

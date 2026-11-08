@@ -11,12 +11,13 @@ pub(super) fn spawn_room(
     mut camera: Query<(&mut Transform, &mut RoomCamera), With<Camera2d>>,
     asset_server: Res<AssetServer>,
     sheets: Res<SpriteSheets>,
+    mut shaders: ShaderAssets,
 ) {
     if session.world_loaded {
         return;
     }
     let room = &data.rooms[&session.room_id];
-    draw_room(&mut commands, room, &data, &asset_server);
+    draw_room(&mut commands, room, &data, &asset_server, &mut shaders);
     let ammo = session.magazine_capacity(&data);
     spawn_player(&mut commands, room, &data, &sheets, ammo);
     spawn_enemies(&mut commands, room, &data, &sheets);
@@ -39,6 +40,7 @@ pub(super) fn draw_room(
     room: &RoomConfig,
     data: &GameData,
     asset_server: &AssetServer,
+    shaders: &mut ShaderAssets,
 ) {
     let profile = &data.backgrounds.profiles[&room.background_profile];
     let tile_h = profile.tile_h;
@@ -68,17 +70,25 @@ pub(super) fn draw_room(
                 settings.sampler = filtering.into();
             })
             .load(asset.to_string());
+        // One material per layer, so its tiles batch together: it draws the
+        // layer as a sprite would, with its lit windows and stars breathing.
+        let material = shaders.city_lights.add(CityLightsMaterial::new(
+            image,
+            Color::WHITE,
+            layer_index,
+            &data.gameplay.effects.city_lights,
+        ));
         for tile_index in first_tile..=last_tile {
             let base_x = (tile_index as f32 + 0.5) * tile_width_h * H_WORLD_UNITS;
-            let mut sprite = Sprite::from_image(image.clone());
-            sprite.custom_size = Some(Vec2::new(
-                tile_width_h * H_WORLD_UNITS,
-                tile_h * H_WORLD_UNITS,
-            ));
             commands.spawn((
-                sprite,
+                Mesh2d(shaders.quad.0.clone()),
+                MeshMaterial2d(material.clone()),
                 // `update_background_parallax` keeps it centered on the camera vertically.
-                Transform::from_xyz(base_x, 0.0, -80.0 + layer_index as f32),
+                Transform::from_xyz(base_x, 0.0, -80.0 + layer_index as f32).with_scale(Vec3::new(
+                    tile_width_h * H_WORLD_UNITS,
+                    tile_h * H_WORLD_UNITS,
+                    1.0,
+                )),
                 BackgroundParallax {
                     base_x,
                     factor: parallax,

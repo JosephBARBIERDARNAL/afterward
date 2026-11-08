@@ -370,6 +370,32 @@ impl GameData {
                 )));
             }
         }
+        let lights = &self.gameplay.effects.city_lights;
+        let glow = &self.gameplay.effects.glow;
+        if [
+            lights.light_threshold,
+            lights.light_softness,
+            lights.surround_ceiling,
+            lights.swing,
+            glow.strength,
+            glow.pulse,
+        ]
+        .iter()
+        .any(|value| !(0.0..=1.0).contains(value))
+            || [
+                lights.period_s,
+                glow.pulse_period_s,
+                glow.bonus_radius_h,
+                glow.health_radius_h,
+                glow.door_radius_h,
+            ]
+            .iter()
+            .any(|value| !value.is_finite() || *value <= 0.0)
+        {
+            return Err(InvalidGameData::from(
+                "shader effect fractions must be within 0..=1, and their periods and radii positive",
+            ));
+        }
         let pickup = &self.gameplay.room_flow.bonus_pickup;
         if [pickup.size_h, pickup.bob_period_s, pickup.touch_radius_h]
             .iter()

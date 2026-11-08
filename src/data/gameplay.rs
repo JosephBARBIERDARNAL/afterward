@@ -2,7 +2,7 @@
 
 use serde::Deserialize;
 
-use super::{ImageSizeConfig, PerAim};
+use super::{HexColor, ImageSizeConfig, PerAim};
 
 /// Width of the player's (and every enemy's) collision box, in H. Its height
 /// is 1 H by definition.
@@ -15,6 +15,7 @@ pub struct GameplayConfig {
     pub player: PlayerConfig,
     pub health_pickup: HealthPickupConfig,
     pub room_flow: RoomFlowConfig,
+    pub effects: EffectsConfig,
     pub window: WindowConfig,
     pub audio: AudioConfig,
     pub controls: ControlsConfig,
@@ -190,6 +191,43 @@ pub struct RoomFlowConfig {
     pub exit_door: ExitDoorConfig,
     pub bonus_pickup: BonusPickupConfig,
     pub bonus_rerolls_per_run: u8,
+}
+
+/// What the 2D material shaders in `src/game/shaders/` are tuned with.
+#[derive(Debug, Deserialize)]
+pub struct EffectsConfig {
+    pub city_lights: CityLightsConfig,
+    pub glow: GlowConfig,
+}
+
+/// The breathing lit windows and stars of the background layers.
+#[derive(Debug, Deserialize)]
+pub struct CityLightsConfig {
+    /// How far above the pixels around it a pixel's brightness must stand to
+    /// count as a light, and the margin over which that judgement fades in.
+    pub light_threshold: f32,
+    pub light_softness: f32,
+    /// How bright the pixels around a light may be for it to still count as
+    /// one: a lit window sits on a dark facade, a dithered sky does not.
+    pub surround_ceiling: f32,
+    /// The widest a light's brightness swings, and how long one breath takes.
+    pub swing: f32,
+    pub period_s: f32,
+}
+
+/// The pool of light behind anything the player should walk towards.
+#[derive(Debug, Deserialize)]
+pub struct GlowConfig {
+    /// How bright the core is, how far that swings, and how long one pulse takes.
+    pub strength: f32,
+    pub pulse: f32,
+    pub pulse_period_s: f32,
+    /// How far the light reaches past what it wraps, in H.
+    pub bonus_radius_h: f32,
+    pub health_radius_h: f32,
+    pub door_radius_h: f32,
+    pub health_color: HexColor,
+    pub door_color: HexColor,
 }
 
 /// The bonus item lying on the room's `bonus` spot once it is cleared.

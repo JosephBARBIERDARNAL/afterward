@@ -35,6 +35,7 @@ mod room_intro;
 mod screens;
 mod session;
 mod settings;
+mod shaders;
 mod sprites;
 mod ui_style;
 mod visual_walkthrough;
@@ -58,6 +59,7 @@ use player::{PlayerAction, PlayerBody, Reload};
 use random::RandomState;
 use session::RunSession;
 use settings::{AudioSettings, PreferencesDir};
+use shaders::{CityLightsMaterial, Glowing, ShaderAssets};
 use sprites::{AnimatedSprite, SpriteSheet, SpriteSheetSpec, SpriteSheets, set_animation};
 use world::{ExitDoor, RoomEntity};
 
@@ -104,7 +106,7 @@ impl Plugin for GamePlugin {
         } else {
             app.init_asset::<audio::MusicStream>();
         }
-        app.add_plugins(pause_blur::PauseBlurPlugin)
+        app.add_plugins((pause_blur::PauseBlurPlugin, shaders::ShaderPlugin))
             .register_asset_loader(audio::MusicStreamLoader)
             .init_state::<GameScreen>()
             .init_resource::<RunSession>()
@@ -181,6 +183,7 @@ impl Plugin for GamePlugin {
                     camera::update_background_parallax,
                     interface::update_hud,
                     ammo_hud::update_ammo_hud,
+                    shaders::attach_glows,
                 ),
             )
             .add_systems(
@@ -211,6 +214,7 @@ impl Plugin for GamePlugin {
                     combat::update_player_death,
                     bonus_pickup::spawn_bonus_pickup,
                     bonus_pickup::update_bonus_pickup,
+                    shaders::light_the_unlocked_door,
                     flow::handle_door_touch,
                     flow::room_clear_check,
                 )
