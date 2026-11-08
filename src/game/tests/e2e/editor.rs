@@ -174,14 +174,13 @@ fn the_editor_shows_its_shortcuts_only_while_h_is_held() {
 }
 
 #[test]
-fn the_editor_toggles_the_viewport_reach_and_sight_overlays() {
+fn the_editor_toggles_the_viewport_and_sight_overlays() {
     let mut game = HeadlessGame::with_copied_data();
     game.tap(KeyCode::KeyD);
     assert_eq!(game.screen(), GameScreen::Editor);
-    // Room 1, with every platform and enemy selected, so the overlays below
-    // draw arcs and sight lines for real rather than finding nothing to draw.
+    // Room 1, which has enemies, so the sight overlay draws its bands and
+    // lines for real rather than finding nothing to draw.
     game.tap(KeyCode::PageDown);
-    command_presses(&mut game, KeyCode::KeyA, "a", 1);
     // The inspector names the overlays that are on, so a toggle is visible
     // even without a window to draw them in.
     let shown = |game: &mut HeadlessGame| {
@@ -204,15 +203,13 @@ fn the_editor_toggles_the_viewport_reach_and_sight_overlays() {
 
     game.tap(KeyCode::KeyF);
     assert!(shown(&mut game).ends_with("frame"));
-    game.tap(KeyCode::KeyJ);
     game.tap(KeyCode::KeyV);
-    assert!(shown(&mut game).ends_with("frame, reach, sight"));
+    assert!(shown(&mut game).ends_with("frame, sight"));
 
     // Each key turns its own overlay back off, and the room is never edited.
     let room = game.data().rooms[&1].clone();
-    game.tap(KeyCode::KeyJ);
-    assert!(shown(&mut game).ends_with("frame, sight"));
     game.tap(KeyCode::KeyF);
+    assert!(shown(&mut game).ends_with("sight"));
     game.tap(KeyCode::KeyV);
     assert!(shown(&mut game).ends_with("off"));
     assert_eq!(game.data().rooms[&1], room, "the toggles edit nothing");

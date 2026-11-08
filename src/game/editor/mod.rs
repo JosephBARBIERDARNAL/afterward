@@ -587,7 +587,6 @@ fn enter_editor(
                 String::from("Home: fit the room"),
                 String::from("P / D / E: add platform / decoration / enemy"),
                 String::from("F: viewport frame, at the spawn and at the cursor"),
-                String::from("J: jump and dash reach of the selection"),
                 String::from("V: what idle enemies see"),
                 String::from("Click a material or a color: paint the selection"),
                 String::from("Del: delete"),
