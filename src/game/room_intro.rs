@@ -60,6 +60,45 @@ pub(super) fn update_room_intro(
     }
 }
 
+/// Opens the door the player steps out of when a room opens, then sends it
+/// away once they are standing in the room. It stays shut while the camera is
+/// still crossing into the room.
+pub(super) fn open_the_entry_door(
+    mut commands: Commands,
+    screen: Res<State<GameScreen>>,
+    timer: Res<PhaseTimer>,
+    data: Res<GameData>,
+    mut doors: Query<(Entity, &mut Sprite), With<EntryDoor>>,
+) {
+    let elapsed_s = if *screen.get() == GameScreen::RoomIntro {
+        timer.0.elapsed_secs()
+    } else {
+        0.0
+    };
+    let intro = &data.gameplay.room_flow.room_intro;
+    let frames = data.gameplay.room_flow.exit_door.frames;
+    let opening_frames = frames - ExitDoor::FIRST_OPENING_FRAME;
+    // It swings open over the first half of the walk out, and fades away over
+    // the hold that follows, with the player standing clear of it.
+    let opening = (elapsed_s / (intro.player_walk_in_s / 2.0)).clamp(0.0, 1.0);
+    let frame = if opening <= 0.0 {
+        0
+    } else {
+        ExitDoor::FIRST_OPENING_FRAME
+            + ((opening * opening_frames as f32) as usize).min(opening_frames - 1)
+    };
+    let faded = ((elapsed_s - intro.player_walk_in_s) / intro.player_idle_hold_s).clamp(0.0, 1.0);
+    for (entity, mut sprite) in &mut doors {
+        if let Some(atlas) = sprite.texture_atlas.as_mut() {
+            atlas.index = frame;
+        }
+        sprite.color = Color::WHITE.with_alpha(1.0 - faded);
+        if faded >= 1.0 {
+            commands.entity(entity).despawn();
+        }
+    }
+}
+
 #[derive(SystemParam)]
 pub(super) struct RoomIntroPoseResources<'w> {
     screen: Res<'w, State<GameScreen>>,

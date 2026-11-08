@@ -189,6 +189,8 @@ impl GameData {
             || self.gameplay.room_flow.bonus_reroll_animation_s <= 0.0
             || self.gameplay.room_flow.boss_intro_duration_s <= 0.0
             || self.gameplay.room_flow.room_transition_duration_s <= 0.0
+            || self.gameplay.room_flow.room_pan_s <= 0.0
+            || self.gameplay.room_flow.room_gap_h <= 0.0
             || self.gameplay.room_flow.exit_side != "right"
         {
             return Err(InvalidGameData::from(

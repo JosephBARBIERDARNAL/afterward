@@ -260,10 +260,9 @@ pub(super) fn update_boss_intro(
 }
 
 pub(super) fn update_room_transition(
-    mut commands: Commands,
     time: Res<Time>,
     data: Res<GameData>,
-    entities: Query<Entity, With<RoomEntity>>,
+    mut pan: ResMut<RoomPan>,
     mut session: ResMut<RunSession>,
     mut timer: ResMut<PhaseTimer>,
     mut next_screen: ResMut<NextState<GameScreen>>,
@@ -281,9 +280,9 @@ pub(super) fn update_room_transition(
         next_screen.set(GameScreen::TransitioningOut);
         return;
     }
-    for entity in &entities {
-        commands.entity(entity).despawn();
-    }
+    // The room stays on screen: `room_pan` stands it to the left of the next
+    // one and lets it go once the camera has crossed.
+    pan.departing_width_h = data.rooms[&session.room_id].size.width_h;
     session.world_loaded = false;
     session.door_open = false;
     session.room_cleared = false;
@@ -307,18 +306,6 @@ pub(super) fn animate_exit_door(
             atlas.index = (ExitDoor::FIRST_OPENING_FRAME + step).min(frames - 1);
         }
     }
-}
-
-pub(super) fn start_room_transition_fade_out(
-    data: Res<GameData>,
-    mut timer: ResMut<PhaseTimer>,
-    mut next_screen: ResMut<NextState<GameScreen>>,
-) {
-    timer.0 = Timer::from_seconds(
-        data.gameplay.room_flow.room_transition_duration_s / 2.0,
-        TimerMode::Once,
-    );
-    next_screen.set(GameScreen::TransitioningOut);
 }
 
 pub(super) fn update_room_transition_fade_out(

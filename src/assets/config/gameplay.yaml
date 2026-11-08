@@ -92,6 +92,12 @@ room_flow:
     enemy_appear_spread_s: 0.45
     fight_start_delay_s: 0.2
   exit_side: right
+  # Rooms are not cut apart: the camera slides out of the room being left into
+  # the next one, which stands `room_gap_h` further right across a dark gap,
+  # over `room_pan_s`. The player walks into the door behind them and steps out
+  # of the entry door waiting on the other side.
+  room_pan_s: 1.2
+  room_gap_h: 1.5
   # The exit door stands on the room's `exit`, locked until a bonus is picked.
   # Sheet frames, left to right: 0 locked, 1 unlocked, then the opening, played
   # over the first half of the room transition.

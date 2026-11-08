@@ -33,6 +33,7 @@ mod random;
 mod ripple;
 mod room_art;
 mod room_intro;
+mod room_pan;
 mod screens;
 mod session;
 mod settings;
@@ -59,11 +60,12 @@ use flow::PhaseTimer;
 use menus::{MenuAction, MenuFocus, VolumeChannel};
 use player::{PlayerAction, PlayerBody, Reload};
 use random::RandomState;
+use room_pan::RoomPan;
 use session::RunSession;
 use settings::{AudioSettings, PreferencesDir, SettingsReturn};
 use shaders::{CityLightsMaterial, Glowing, ShaderAssets};
 use sprites::{AnimatedSprite, SpriteSheet, SpriteSheetSpec, SpriteSheets, set_animation};
-use world::{ExitDoor, RoomEntity};
+use world::{EntryDoor, ExitDoor, RoomEntity};
 
 const H_WORLD_UNITS: f32 = 48.0;
 /// Horizontal speed, in world units per second, above which a body counts as moving.
@@ -113,6 +115,7 @@ impl Plugin for GamePlugin {
             .register_asset_loader(audio::MusicStreamLoader)
             .init_state::<GameScreen>()
             .init_resource::<RunSession>()
+            .init_resource::<RoomPan>()
             .init_resource::<StartRoom>()
             .init_resource::<AudioSettings>()
             .init_resource::<PreferencesDir>()
@@ -165,7 +168,12 @@ impl Plugin for GamePlugin {
             )
             .add_systems(
                 OnEnter(GameScreen::RoomLoading),
-                (world::spawn_room, flow::start_room_transition_fade_out).chain(),
+                (
+                    room_pan::send_off_the_departing_room,
+                    world::spawn_room,
+                    room_pan::start_room_pan,
+                )
+                    .chain(),
             )
             .add_systems(
                 OnEnter(GameScreen::MainMenu),
@@ -259,8 +267,9 @@ impl Plugin for GamePlugin {
                 Update,
                 (
                     room_intro::update_room_intro.run_if(in_state(GameScreen::RoomIntro)),
-                    room_intro::pose_room_intro.run_if(
+                    (room_intro::pose_room_intro, room_intro::open_the_entry_door).run_if(
                         in_state(GameScreen::RoomLoading)
+                            .or_else(in_state(GameScreen::Panning))
                             .or_else(in_state(GameScreen::TransitioningOut))
                             .or_else(in_state(GameScreen::RoomIntro)),
                     ),
@@ -277,7 +286,12 @@ impl Plugin for GamePlugin {
             )
             .add_systems(
                 Update,
-                flow::animate_exit_door.run_if(in_state(GameScreen::Transitioning)),
+                (flow::animate_exit_door, room_pan::step_into_the_door)
+                    .run_if(in_state(GameScreen::Transitioning)),
+            )
+            .add_systems(
+                Update,
+                room_pan::update_room_pan.run_if(in_state(GameScreen::Panning)),
             )
             .add_systems(
                 Update,
@@ -289,6 +303,7 @@ impl Plugin for GamePlugin {
                 assets::animate_sprites.run_if(
                     in_state(GameScreen::Playing)
                         .or_else(in_state(GameScreen::RoomIntro))
+                        .or_else(in_state(GameScreen::Transitioning))
                         .or_else(in_state(GameScreen::RoomClear))
                         .or_else(in_state(GameScreen::Bonus)),
                 ),
@@ -313,6 +328,8 @@ enum GameScreen {
     BossIntro,
     Transitioning,
     RoomLoading,
+    /// The camera sliding out of one room and into the next.
+    Panning,
     TransitioningOut,
     Settings,
     Controls,

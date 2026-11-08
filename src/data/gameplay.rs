@@ -203,6 +203,10 @@ pub struct RoomFlowConfig {
     pub room_transition_duration_s: f32,
     pub room_intro: RoomIntroConfig,
     pub exit_side: String,
+    /// How long the camera takes to slide from one room into the next.
+    pub room_pan_s: f32,
+    /// How wide the dark gap between two rooms is, in H.
+    pub room_gap_h: f32,
     pub exit_door: ExitDoorConfig,
     pub bonus_pickup: BonusPickupConfig,
     pub bonus_rerolls_per_run: u8,

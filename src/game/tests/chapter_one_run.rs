@@ -59,6 +59,7 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
         )))
         .init_state::<GameScreen>()
         .init_resource::<RunSession>()
+        .init_resource::<RoomPan>()
         .init_resource::<StartRoom>()
         .init_resource::<AudioSettings>()
         .insert_resource(RandomState(0x4a75_6572_6e65_7974))
@@ -70,7 +71,17 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
         .add_message::<KeyboardInput>()
         .add_message::<PointerOver>()
         .add_message::<PointerClick>()
-        .add_systems(Startup, controls::initialize_control_bindings)
+        // The pan between rooms moves the camera; this harness draws nothing,
+        // so it stands one in for the pan to carry.
+        .add_systems(
+            Startup,
+            (
+                controls::initialize_control_bindings,
+                |mut commands: Commands| {
+                    commands.spawn((Camera2d, Transform::default()));
+                },
+            ),
+        )
         .add_systems(OnEnter(GameScreen::Playing), spawn_test_room)
         .add_systems(
             Update,
@@ -87,7 +98,12 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
         )
         .add_systems(
             OnEnter(GameScreen::RoomLoading),
-            (spawn_test_room, flow::start_room_transition_fade_out).chain(),
+            (
+                room_pan::send_off_the_departing_room,
+                spawn_test_room,
+                room_pan::start_room_pan,
+            )
+                .chain(),
         )
         .add_systems(
             OnEnter(GameScreen::RoomIntro),
@@ -288,6 +304,10 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
         .add_systems(
             Update,
             flow::update_room_transition_fade_out.run_if(in_state(GameScreen::TransitioningOut)),
+        )
+        .add_systems(
+            Update,
+            room_pan::update_room_pan.run_if(in_state(GameScreen::Panning)),
         )
         .add_systems(
             Update,

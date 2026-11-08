@@ -46,6 +46,7 @@ mod main_menu;
 mod menus;
 mod opening_room;
 mod pause;
+mod room_pan;
 mod run;
 
 const FRAME_S: f32 = 1.0 / 60.0;

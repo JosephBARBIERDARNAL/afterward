@@ -12,22 +12,14 @@ pub(super) fn update_screen_text(
     let message = match screen.get() {
         GameScreen::RoomClear => String::from("ROOM CLEARED"),
         GameScreen::BossIntro => String::from("CHAPTER ONE\n\nTHE EVIL WIZARD"),
-        GameScreen::Transitioning => data
+        // A room led into by a door says nothing: the camera carries the
+        // player there in the open. The door out of the chapter is the one
+        // worth announcing.
+        GameScreen::Transitioning | GameScreen::TransitioningOut => data
             .rooms
             .get(&session.room_id)
             .filter(|room| data.rooms.contains_key(&room.next_room_id))
-            .map_or_else(
-                || String::from("CHAPTER ONE COMPLETE"),
-                |room| format!("ENTERING ROOM {:02}", room.next_room_id),
-            ),
-        GameScreen::RoomLoading | GameScreen::TransitioningOut => data
-            .rooms
-            .get(&session.room_id)
-            .filter(|room| data.rooms.contains_key(&room.next_room_id))
-            .map_or_else(
-                || String::from("CHAPTER ONE COMPLETE"),
-                |_| format!("ROOM {:02}", session.room_id),
-            ),
+            .map_or_else(|| String::from("CHAPTER ONE COMPLETE"), |_| String::new()),
         // Menus are drawn as cards by `menus::update_menu`.
         GameScreen::MainMenu
         | GameScreen::Paused
@@ -37,6 +29,8 @@ pub(super) fn update_screen_text(
         | GameScreen::Complete
         | GameScreen::RoomIntro
         | GameScreen::Playing
+        | GameScreen::RoomLoading
+        | GameScreen::Panning
         | GameScreen::Bonus => String::new(),
         #[cfg(debug_assertions)]
         GameScreen::Editor => String::new(),

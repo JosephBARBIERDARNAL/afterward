@@ -22,6 +22,7 @@ pub(super) fn spawn_room(
     spawn_player(&mut commands, room, &data, &sheets, ammo);
     spawn_enemies(&mut commands, room, &data, &sheets);
     spawn_exit_door(&mut commands, room, &data, &sheets);
+    spawn_entry_door(&mut commands, room, &data, &sheets);
 
     if let Ok((mut transform, mut rig)) = camera.single_mut() {
         rig.size_h = Vec2::new(room.size.width_h, room.size.height_h);
@@ -117,6 +118,45 @@ pub(super) fn spawn_exit_door(
     data: &GameData,
     sheets: &SpriteSheets,
 ) {
+    spawn_door(
+        commands,
+        Vec2::new(room.exit.x_h, room.exit.y_h),
+        data,
+        sheets,
+        ExitDoor,
+    );
+}
+
+/// The door the player came in through, standing where their walk into the
+/// room begins: `room_intro` opens it, walks them out of it, and sends it
+/// away once they are in.
+pub(super) fn spawn_entry_door(
+    commands: &mut Commands,
+    room: &RoomConfig,
+    data: &GameData,
+    sheets: &SpriteSheets,
+) {
+    let intro = &data.gameplay.room_flow.room_intro;
+    spawn_door(
+        commands,
+        Vec2::new(
+            room.player_spawn.x_h - intro.player_walk_in_s * intro.player_walk_in_speed_h_s,
+            room.player_spawn.y_h,
+        ),
+        data,
+        sheets,
+        EntryDoor,
+    );
+}
+
+/// A closed door from the exit-door sheet, standing with its foot on `at_h`.
+fn spawn_door(
+    commands: &mut Commands,
+    at_h: Vec2,
+    data: &GameData,
+    sheets: &SpriteSheets,
+    door: impl Component,
+) {
     let sheet = &sheets.0[ExitDoor::SHEET];
     let height = data.gameplay.room_flow.exit_door.height_h * H_WORLD_UNITS;
     let mut sprite = Sprite::from_atlas_image(
@@ -133,11 +173,11 @@ pub(super) fn spawn_exit_door(
     commands.spawn((
         sprite,
         Transform::from_xyz(
-            room.exit.x_h * H_WORLD_UNITS,
-            room.exit.y_h * H_WORLD_UNITS + height / 2.0,
+            at_h.x * H_WORLD_UNITS,
+            at_h.y * H_WORLD_UNITS + height / 2.0,
             2.0,
         ),
-        ExitDoor,
+        door,
         RoomEntity,
     ));
 }
@@ -421,3 +461,8 @@ impl ExitDoor {
     pub(crate) const UNLOCKED_FRAME: usize = 1;
     pub(crate) const FIRST_OPENING_FRAME: usize = 2;
 }
+
+/// The door the player steps out of when a room opens, drawn from the same
+/// sheet as the exit door and gone once they are standing in the room.
+#[derive(Component)]
+pub(crate) struct EntryDoor;

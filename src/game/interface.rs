@@ -307,11 +307,19 @@ pub(super) fn update_boss_intro_overlay(
 pub(super) fn update_room_transition_overlay(
     screen: Res<State<GameScreen>>,
     timer: Res<PhaseTimer>,
+    data: Res<GameData>,
+    session: Res<RunSession>,
     mut overlay: Query<(&mut BackgroundColor, &mut Visibility), With<RoomTransitionOverlay>>,
 ) {
+    // A door that leads into another room is crossed in the open, with the
+    // camera sliding across the gap; only the last door of the chapter, which
+    // leads out of the run, darkens the screen.
+    let leads_onward = data
+        .rooms
+        .get(&session.room_id)
+        .is_some_and(|room| data.rooms.contains_key(&room.next_room_id));
     let opacity = match screen.get() {
-        GameScreen::Transitioning => Some(timer.0.fraction()),
-        GameScreen::RoomLoading => Some(1.0),
+        GameScreen::Transitioning if !leads_onward => Some(timer.0.fraction()),
         GameScreen::TransitioningOut => Some(1.0 - timer.0.fraction()),
         _ => None,
     };
