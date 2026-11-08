@@ -105,17 +105,7 @@ pub(super) fn draw_room(
 /// Spawns the colliders of the room's platforms; `room_art::draw` draws them.
 pub(super) fn spawn_room_platforms(commands: &mut Commands, room: &RoomConfig, data: &GameData) {
     for block in &room.platforms {
-        let rect = block.rect_h;
-        commands.spawn((
-            PlatformSurface {
-                left: rect.x * H_WORLD_UNITS,
-                right: rect.right() * H_WORLD_UNITS,
-                bottom: rect.y * H_WORLD_UNITS,
-                top: rect.top() * H_WORLD_UNITS,
-                footstep: data.surfaces.footstep(&block.fill),
-            },
-            RoomEntity,
-        ));
+        commands.spawn((PlatformSurface::of(block, data), RoomEntity));
     }
 }
 
@@ -200,7 +190,7 @@ pub(super) fn spawn_player(
 }
 
 /// The way enemies look while idle: left, the way the player walks in from.
-const IDLE_FACING: f32 = -1.0;
+pub(super) const IDLE_FACING: f32 = -1.0;
 
 pub(super) fn spawn_enemies(
     commands: &mut Commands,

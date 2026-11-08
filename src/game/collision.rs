@@ -5,6 +5,7 @@
 //! the center of its feet.
 
 use super::*;
+use crate::data::PlatformConfig;
 
 /// Gap, in world units, within which a body counts as touching a platform.
 const CONTACT_TOLERANCE: f32 = 1.0;
@@ -22,6 +23,18 @@ pub(super) struct PlatformSurface {
 }
 
 impl PlatformSurface {
+    /// The collider of an authored platform, in world units.
+    pub(super) fn of(block: &PlatformConfig, data: &GameData) -> Self {
+        let rect = block.rect_h;
+        Self {
+            left: rect.x * H_WORLD_UNITS,
+            right: rect.right() * H_WORLD_UNITS,
+            bottom: rect.y * H_WORLD_UNITS,
+            top: rect.top() * H_WORLD_UNITS,
+            footstep: data.surfaces.footstep(&block.fill),
+        }
+    }
+
     /// Whether a body centered at `x` overlaps this platform horizontally, so
     /// it can stand on its top or bump its head on its underside. Shared by
     /// physics and AI so they agree at ledges.

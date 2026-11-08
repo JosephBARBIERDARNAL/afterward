@@ -230,6 +230,12 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
             editor.field = 0;
         }
     } else if command {
+    } else if letter('f') {
+        editor.overlays.viewport = !editor.overlays.viewport;
+    } else if letter('j') {
+        editor.overlays.reach = !editor.overlays.reach;
+    } else if letter('v') {
+        editor.overlays.sight = !editor.overlays.sight;
     } else if letter('p') || letter('d') {
         let decoration = letter('d');
         let (width, height) = if decoration {

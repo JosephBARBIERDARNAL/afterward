@@ -10,12 +10,14 @@ mod draw;
 mod hitboxes;
 mod inspector;
 mod keyboard;
+mod overlays;
 mod palette;
 mod pointer;
 
 use clipboard::Clipboard;
 use hitboxes::Hitboxes;
 use inspector::Field;
+use overlays::Overlays;
 
 /// Grid step, in H, that dragged and nudged positions snap to.
 const SNAP_H: f32 = 0.25;
@@ -55,6 +57,7 @@ impl Plugin for EditorPlugin {
                     // the frame renders, so an edit doesn't flash them at y = 0.
                     camera::update_background_parallax,
                     draw::draw_overlay,
+                    overlays::draw_overlays,
                     draw::update_panels,
                     draw::show_help_while_h_is_held,
                     palette::refresh_palette,
@@ -346,6 +349,8 @@ struct RoomEditor {
     clipboard: Option<Clipboard>,
     /// The cursor is over an editor panel, so clicks don't reach the room.
     pointer_over_panel: bool,
+    /// The layout overlays that are drawn over the room.
+    overlays: Overlays,
     /// The editor opened this frame: the key that opened it (D in a menu)
     /// must not also act as an editor shortcut.
     just_opened: bool,
@@ -378,6 +383,7 @@ impl Default for RoomEditor {
             hue: 0.0,
             clipboard: None,
             pointer_over_panel: false,
+            overlays: Overlays::default(),
             just_opened: false,
             problem: None,
             view_dirty: true,
@@ -580,6 +586,9 @@ fn enter_editor(
                 String::from("Pinch or wheel: zoom"),
                 String::from("Home: fit the room"),
                 String::from("P / D / E: add platform / decoration / enemy"),
+                String::from("F: viewport frame, at the spawn and at the cursor"),
+                String::from("J: jump and dash reach of the selection"),
+                String::from("V: what idle enemies see"),
                 String::from("Click a material or a color: paint the selection"),
                 String::from("Del: delete"),
                 format!("{COMMAND_KEY}+D: duplicate"),

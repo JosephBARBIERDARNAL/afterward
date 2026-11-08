@@ -273,6 +273,7 @@ pub(super) fn update_panels(
             cursor_h.x, cursor_h.y
         ));
     }
+    lines.push(format!("Overlays (F/J/V): {}", editor.overlays.describe()));
     lines.push(String::from("\nHold H: shortcuts"));
     for mut text in &mut panel {
         text.0 = lines.join("\n");
