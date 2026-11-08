@@ -45,3 +45,8 @@ pub(crate) struct DamageNumber {
 pub(crate) struct HealthPickup {
     pub(crate) healing: f32,
 }
+
+impl HealthPickup {
+    /// Its sprite's key in `SpriteSheets`.
+    pub(crate) const SHEET: &'static str = "health_pickup";
+}

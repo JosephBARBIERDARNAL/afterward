@@ -178,6 +178,10 @@ pub struct SizeH {
 pub struct HealthPickupConfig {
     pub healing: f32,
     pub base_drop_chance: f32,
+    /// Path under `src/assets/`.
+    pub sprite: String,
+    pub sprite_size_px: ImageSizeConfig,
+    pub size_h: f32,
 }
 
 #[derive(Debug, Deserialize)]

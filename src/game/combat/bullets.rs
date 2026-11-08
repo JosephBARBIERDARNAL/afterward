@@ -177,23 +177,29 @@ pub(in crate::game) fn update_player_bullets(
                             commands.entity(entity).insert(DeadEnemy {
                                 timer: Timer::from_seconds(0.9, TimerMode::Once),
                             });
-                            let drop_chance = data.gameplay.health_pickup.base_drop_chance
+                            let item = &data.gameplay.health_pickup;
+                            let drop_chance = item.base_drop_chance
                                 * session.bonus_multiplier(
                                     &data,
                                     "scavenger",
                                     "health_drop_chance_multiplier",
                                 );
                             if random.chance(drop_chance.min(1.0)) {
+                                let mut sprite = Sprite::from_image(
+                                    sheets
+                                        .0
+                                        .get(HealthPickup::SHEET)
+                                        .map(|sheet| sheet.image.clone())
+                                        .unwrap_or_default(),
+                                );
+                                sprite.custom_size = Some(Vec2::splat(item.size_h * H_WORLD_UNITS));
                                 commands.spawn((
-                                    Sprite::from_color(
-                                        Color::srgb(0.28, 0.95, 0.48),
-                                        Vec2::splat(18.0),
-                                    ),
+                                    sprite,
                                     Transform::from_translation(
                                         enemy_transform.translation + Vec3::new(0.0, 20.0, 0.8),
                                     ),
                                     HealthPickup {
-                                        healing: data.gameplay.health_pickup.healing,
+                                        healing: item.healing,
                                     },
                                     Glowing {
                                         color: Color::from(data.gameplay.effects.glow.health_color),

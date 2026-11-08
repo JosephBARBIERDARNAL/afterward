@@ -1,4 +1,5 @@
 use super::*;
+use crate::{data::HealthPickupConfig, game::combat::HealthPickup};
 
 mod boss_sheets;
 mod enemy_sheets;
@@ -14,15 +15,18 @@ pub(super) fn load_sprites(
         .into_iter()
         .chain(enemy_sheets::sprites())
         .chain(boss_sheets::sprites())
-        .chain([exit_door_sheet(&data.gameplay.room_flow.exit_door)])
+        .chain([
+            exit_door_sheet(&data.gameplay.room_flow.exit_door),
+            health_pickup_sheet(&data.gameplay.health_pickup),
+        ])
         .collect::<Vec<_>>();
 
     let mut sheets = BTreeMap::new();
     for spec in specs {
-        // Sheets under `ui/` are Typst pixel art drawn near 1:1, so they keep
-        // their hard pixel edges; the character sheets are scaled down and
-        // look better with the default filtering.
-        let image = if spec.path.starts_with("ui/") {
+        // Sheets under `ui/` and `pickups/` are Typst pixel art drawn near
+        // 1:1, so they keep their hard pixel edges; the character sheets are
+        // scaled down and look better with the default filtering.
+        let image = if spec.path.starts_with("ui/") || spec.path.starts_with("pickups/") {
             crate::game::ui_style::load_pixel_art(&asset_server, spec.path)
         } else {
             asset_server.load(spec.path)
@@ -57,6 +61,20 @@ fn exit_door_sheet(door: &crate::data::ExitDoorConfig) -> SpriteSheetSpec {
         frame_width: door.frame_size_px.width,
         frame_height: door.frame_size_px.height,
         frames: door.frames,
+        fps: 1.0,
+        first_cell: UVec2::ZERO,
+    }
+}
+
+/// The health drop an enemy may leave behind: one still frame, loaded with
+/// every other sprite so laying one down never waits on the asset server.
+fn health_pickup_sheet(pickup: &HealthPickupConfig) -> SpriteSheetSpec {
+    SpriteSheetSpec {
+        key: HealthPickup::SHEET.into(),
+        path: pickup.sprite.clone(),
+        frame_width: pickup.sprite_size_px.width,
+        frame_height: pickup.sprite_size_px.height,
+        frames: 1,
         fps: 1.0,
         first_cell: UVec2::ZERO,
     }
@@ -98,7 +116,10 @@ mod tests {
             .into_iter()
             .chain(enemy_sheets::sprites())
             .chain(boss_sheets::sprites())
-            .chain([exit_door_sheet(&data.gameplay.room_flow.exit_door)]);
+            .chain([
+                exit_door_sheet(&data.gameplay.room_flow.exit_door),
+                health_pickup_sheet(&data.gameplay.health_pickup),
+            ]);
 
         for spec in specs {
             let path = asset_root.join(&spec.path);

@@ -65,9 +65,14 @@ player:
     impact_burst:
       { radius_h: 0.32, duration_s: 0.24, embers: 7, ember_speed_h_s: 4.5 }
 
+# The healing a dying enemy sometimes leaves behind: the medical cross of
+# `sprite`, drawn `size_h` tall where the enemy fell.
 health_pickup:
   healing: 10
   base_drop_chance: 0.04
+  sprite: pickups/health.png
+  sprite_size_px: { width: 24, height: 24 }
+  size_h: 0.4
 
 room_flow:
   clear_animation_s: 0.5
