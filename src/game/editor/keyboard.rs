@@ -4,7 +4,8 @@
 
 use super::*;
 use crate::data::{
-    DecorationConfig, DecorationLayer, EnemySpawnConfig, Fill, PlatformConfig, SpawnPosition,
+    DecorationConfig, DecorationLayer, EnemySpawnConfig, Facing, Fill, PlatformConfig,
+    SpawnPosition,
 };
 use bevy::input::{
     ButtonState,
@@ -303,6 +304,7 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
                 label: None,
                 type_id,
                 position_h: SpawnPosition { x_h, y_h },
+                facing: Facing::default(),
                 stat_overrides: None,
             });
             added = Some(EditorItem::Enemy(room.enemy_spawns.len() - 1));

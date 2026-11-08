@@ -189,9 +189,6 @@ pub(super) fn spawn_player(
     ));
 }
 
-/// The way enemies look while idle: left, the way the player walks in from.
-pub(super) const IDLE_FACING: f32 = -1.0;
-
 pub(super) fn spawn_enemies(
     commands: &mut Commands,
     room: &RoomConfig,
@@ -272,11 +269,12 @@ pub(super) fn spawn_enemies(
             - origin_above_feet_px)
             * scale;
         let home_y = spawn.position_h.y_h * H_WORLD_UNITS + feet_offset;
+        let facing = f32::from(spawn.facing);
         let enemy = commands
             .spawn((
                 Sprite {
-                    // Enemies idle watching the way the player walks in from.
-                    flip_x: IDLE_FACING < 0.0,
+                    // An idle enemy watches the way the room points it.
+                    flip_x: facing < 0.0,
                     ..Sprite::from_atlas_image(
                         sheet.image.clone(),
                         TextureAtlas {
@@ -328,7 +326,7 @@ pub(super) fn spawn_enemies(
                     }),
                     preferred_distance_h,
                     attacks,
-                    facing: IDLE_FACING,
+                    facing,
                     engaged: false,
                     attack_cooldown: 0.0,
                     windup_remaining: 0.0,

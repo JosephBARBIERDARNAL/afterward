@@ -4,8 +4,8 @@
 use std::fmt::{self, Display, Formatter};
 
 use super::{
-    DecorationConfig, DecorationLayer, EnemySpawnConfig, EnemyStatOverrides, Fill, PlatformConfig,
-    RectH, RoomConfig, SizeH,
+    DecorationConfig, DecorationLayer, EnemySpawnConfig, EnemyStatOverrides, Facing, Fill,
+    PlatformConfig, RectH, RoomConfig, SizeH,
 };
 
 const HEADER: &str = "\
@@ -130,6 +130,7 @@ impl Display for EnemySpawnConfig {
                     "position_h: {{ x: {}, y: {} }}",
                     self.position_h.x_h, self.position_h.y_h
                 ),
+                format!("facing: {}", self.facing),
             ])
             .chain(overrides)
             .collect();
@@ -195,6 +196,15 @@ impl Display for SizeH {
             "{{ width: {}, height: {} }}",
             self.width, self.height
         )
+    }
+}
+
+impl Display for Facing {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
+        formatter.write_str(match self {
+            Self::Left => "left",
+            Self::Right => "right",
+        })
     }
 }
 
@@ -275,6 +285,40 @@ next_room_id: 4
         assert!(
             written.contains("color: \"#2DE2D5\""),
             "an unquoted #RRGGBB would read back as a YAML comment: {written}"
+        );
+        let read_back: RoomConfig =
+            yaml_serde::from_str(&written).expect("the written room is valid YAML");
+        assert_eq!(read_back, room);
+    }
+
+    #[test]
+    fn an_enemy_keeps_the_way_it_faces_through_a_round_trip() {
+        let room: RoomConfig = yaml_serde::from_str(
+            "
+room_id: 3
+chapter_id: 1
+size: { width_h: 24, height_h: 13.5 }
+background_profile: city_blue_day
+player_spawn: { x_h: 2, y_h: 1 }
+platforms:
+  - { material: city_pavement, rect_h: { x: 0, y: 0, width: 24, height: 1 } }
+enemy_spawns:
+  - { type_id: swordsman, position_h: { x: 10, y: 1 }, facing: right }
+  - { type_id: swordsman, position_h: { x: 14, y: 1 } }
+bonus: { x_h: 20, y_h: 1 }
+exit: { x_h: 22, y_h: 1 }
+next_room_id: 4
+",
+        )
+        .expect("a spawn facing right parses");
+        assert_eq!(room.enemy_spawns[0].facing, Facing::Right);
+        // An enemy watches the way the player walks in from unless the room
+        // says otherwise.
+        assert_eq!(room.enemy_spawns[1].facing, Facing::Left);
+        let written = room.to_string();
+        assert!(
+            written.contains("facing: right"),
+            "every spawn is written with the way it faces: {written}"
         );
         let read_back: RoomConfig =
             yaml_serde::from_str(&written).expect("the written room is valid YAML");

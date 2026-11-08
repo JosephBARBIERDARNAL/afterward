@@ -4,7 +4,7 @@
 //! together.
 
 use super::*;
-use crate::data::{DecorationLayer, EnemyStatOverrides, EnemyTypeConfig};
+use crate::data::{DecorationLayer, EnemyStatOverrides, EnemyTypeConfig, Facing};
 
 /// How far one Left/Right press grows or shrinks the room, in H.
 const ROOM_SIZE_STEP_H: f32 = 0.5;
@@ -20,6 +20,7 @@ pub(super) enum Field {
     Fill,
     Layer,
     EnemyType,
+    EnemyFacing,
     X,
     Y,
     Width,
@@ -78,6 +79,7 @@ impl Field {
             Some(EditorItem::Enemy(_)) => &[
                 Self::Label,
                 Self::EnemyType,
+                Self::EnemyFacing,
                 Self::X,
                 Self::Y,
                 Self::Health,
@@ -109,6 +111,7 @@ impl Field {
             Self::Fill => "Fill",
             Self::Layer => "Layer",
             Self::EnemyType => "Type",
+            Self::EnemyFacing => "Facing",
             Self::X => "X (H)",
             Self::Y => "Y (H)",
             Self::Width => "Width (H)",
@@ -227,6 +230,7 @@ impl Field {
                 _ => String::new(),
             },
             Self::EnemyType => spawn.map_or_else(String::new, |spawn| spawn.type_id.to_string()),
+            Self::EnemyFacing => spawn.map_or_else(String::new, |spawn| spawn.facing.to_string()),
             Self::X => origin.map_or_else(String::new, |origin| origin.x.to_string()),
             Self::Y => origin.map_or_else(String::new, |origin| origin.y.to_string()),
             Self::Width => rect.map_or_else(String::new, |rect| rect.width.to_string()),
@@ -329,6 +333,16 @@ impl Field {
                     {
                         spawn.type_id = type_id;
                     }
+                }
+            }
+            Self::EnemyFacing => {
+                if let Some(EditorItem::Enemy(index)) = item
+                    && let Some(spawn) = room.enemy_spawns.get_mut(index)
+                {
+                    spawn.facing = match spawn.facing {
+                        Facing::Left => Facing::Right,
+                        Facing::Right => Facing::Left,
+                    };
                 }
             }
             Self::X | Self::Y => {

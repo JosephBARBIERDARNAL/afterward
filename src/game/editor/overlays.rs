@@ -109,7 +109,8 @@ fn draw_sight(gizmos: &mut Gizmos, room: &RoomConfig, data: &GameData, platforms
         // higher up: the same eyes `EnemyBody::sees_player` uses.
         let feet = Vec2::new(spawn.position_h.x_h, spawn.position_h.y_h) * H_WORLD_UNITS;
         let eyes = feet + Vec2::Y * enemy.hurtbox_h.height / 2.0 * H_WORLD_UNITS;
-        let far_x = eyes.x + world::IDLE_FACING * range;
+        let facing = f32::from(spawn.facing);
+        let far_x = eyes.x + facing * range;
         for index in 0..=SIGHT_LINES {
             let target = band_point(eyes, far_x, height, index as f32 / SIGHT_LINES as f32);
             let seen = eyes.lerp(target, visible_fraction(eyes, target, platforms));
@@ -120,7 +121,7 @@ fn draw_sight(gizmos: &mut Gizmos, room: &RoomConfig, data: &GameData, platforms
         let offset = player - eyes;
         if offset.x.abs() <= range
             && offset.y.abs() <= height
-            && offset.x * world::IDLE_FACING >= 0.0
+            && offset.x * facing >= 0.0
             && !platforms.blocks_sight(eyes, player)
         {
             gizmos.line_2d(eyes, player, SPOTTED_COLOR);

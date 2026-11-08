@@ -3,10 +3,11 @@
 # What an idle enemy sees. It stands idle until the player comes into sight,
 # which takes all three: no further than range_h away, no more than height_h
 # above or below its eyes (both measured between the two hurtbox centers), and
-# on the side it faces, with no platform standing between them. An enemy idles
-# facing left, the way the player walks in from. Being shot wakes it whatever
-# it can see. Once it has seen the player, retain_target keeps it chasing even
-# out of sight; without it, losing sight sends it back to idle.
+# on the side it faces, with no platform standing between them. Which side it
+# faces is the `facing` of its room spawn: left, the way the player walks in
+# from, unless that room turns it right. Being shot wakes it whatever it can
+# see. Once it has seen the player, retain_target keeps it chasing even out of
+# sight; without it, losing sight sends it back to idle.
 detection:
   range_h: 10
   height_h: 3

@@ -110,7 +110,30 @@ pub struct EnemySpawnConfig {
     pub label: Option<String>,
     pub type_id: EnemyTypeId,
     pub position_h: SpawnPosition,
+    /// The way it looks, and so watches, until it spots the player.
+    #[serde(default)]
+    pub facing: Facing,
     pub stat_overrides: Option<EnemyStatOverrides>,
+}
+
+/// The way an enemy looks while it idles. It defaults to `Left`, the way the
+/// player walks in from; a chasing enemy turns toward the player instead.
+#[derive(Debug, Clone, Copy, Default, Deserialize, Eq, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum Facing {
+    #[default]
+    Left,
+    Right,
+}
+
+/// The sign combat, sight, and sprite flipping work in: -1 left, 1 right.
+impl From<Facing> for f32 {
+    fn from(facing: Facing) -> Self {
+        match facing {
+            Facing::Left => -1.0,
+            Facing::Right => 1.0,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Deserialize)]

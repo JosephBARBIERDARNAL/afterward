@@ -98,7 +98,7 @@ pub(super) fn draw_overlay(mut gizmos: Gizmos, editor: Res<RoomEditor>, data: Re
     }
 
     // The selected body's hitboxes, drawn by the code combat uses. An enemy
-    // strikes toward the player spawn, the way it faces in play.
+    // strikes the way the room points it, as it does on its first attack.
     let mut world_outline = |rect: Rect, color: Color| {
         let min = rect.min / H_WORLD_UNITS;
         let size = rect.size() / H_WORLD_UNITS;
@@ -138,7 +138,7 @@ pub(super) fn draw_overlay(mut gizmos: Gizmos, editor: Res<RoomEditor>, data: Re
                     ),
                     ENEMY_HURTBOX_COLOR,
                 );
-                let facing = room.player_spawn.x_h - spawn.position_h.x_h;
+                let facing = f32::from(spawn.facing);
                 let strike = enemy
                     .attack
                     .iter()
