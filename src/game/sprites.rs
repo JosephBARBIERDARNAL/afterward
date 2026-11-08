@@ -63,14 +63,14 @@ pub(crate) fn set_animation(
 impl EnemyTypeId {
     pub(crate) fn idle_sheet(&self) -> &'static str {
         match &**self {
-            "swordsman" => "enemy_swordsman_idle",
-            "infantryman" => "enemy_infantry_idle",
-            "destroyer" => "enemy_destroyer_idle",
-            "gorgon_1" => "enemy_gorgon_1_idle",
-            "gorgon_2" => "enemy_gorgon_2_idle",
-            "gorgon_3" => "enemy_gorgon_3_idle",
-            "dark_ninja" => "enemy_dark_ninja_idle",
-            "evil_wizard" => "boss_idle",
+            "blade_unit" => "enemy_swordsman_idle",
+            "rifle_unit" => "enemy_infantry_idle",
+            "heavy_unit" => "enemy_destroyer_idle",
+            "stalker_unit" => "enemy_gorgon_1_idle",
+            "lancer_unit" => "enemy_gorgon_2_idle",
+            "breaker_unit" => "enemy_gorgon_3_idle",
+            "scout_unit" => "enemy_dark_ninja_idle",
+            "emitter_unit" => "boss_idle",
             _ => "enemy_swordsman_idle",
         }
     }

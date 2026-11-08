@@ -7,7 +7,7 @@ description: "A bare shell waiting for a layout, wide enough to be flanked by a 
 size:
   width_h: 72
   height_h: 30
-background_profile: clouds_pastel_tower
+background_profile: drowned_city
 player_spawn:
   x_h: 3
   y_h: 2
@@ -29,25 +29,25 @@ platforms:
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
 enemy_spawns:
-  - type_id: swordsman
+  - type_id: blade_unit
     position_h: { x: 10, y: 2 }
-  - type_id: infantryman
+  - type_id: rifle_unit
     position_h: { x: 16.25, y: 2 }
-  - type_id: gorgon_1
+  - type_id: stalker_unit
     position_h: { x: 22.5, y: 2 }
-  - type_id: gorgon_2
+  - type_id: lancer_unit
     position_h: { x: 28.75, y: 2 }
-  - type_id: gorgon_2
+  - type_id: lancer_unit
     position_h: { x: 35, y: 2 }
-  - type_id: destroyer
+  - type_id: heavy_unit
     position_h: { x: 41, y: 2 }
-  - type_id: gorgon_1
+  - type_id: stalker_unit
     position_h: { x: 47.25, y: 2 }
-  - type_id: swordsman
+  - type_id: blade_unit
     position_h: { x: 53.5, y: 2 }
-  - type_id: infantryman
+  - type_id: rifle_unit
     position_h: { x: 59.75, y: 2 }
-  - type_id: dark_ninja
+  - type_id: scout_unit
     position_h: { x: 66, y: 2 }
 # The bonus item, lying beside the door once every enemy is down.
 bonus:

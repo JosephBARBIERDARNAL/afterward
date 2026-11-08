@@ -32,9 +32,13 @@ jumping:
 #   hurtbox reaches the box's far edge.
 # - a projectile attack's projectile_size_h: the shot's size.
 # material picks the sound a hit on the enemy makes; metal enemies also
-# carry a shield that soaks their first hit.
+# carry a shield that soaks their first hit. Nothing here is alive: the cast
+# is the machines the drowned city never switched off, so the materials are
+# an armoured chassis (metal) and a light frame (polymer). The sprite sheets
+# they currently wear are placeholders from a fantasy pack and do not match
+# these names yet; see art/README.md.
 types:
-  swordsman:
+  blade_unit:
     hurtbox_h: { width: 0.6, height: 1 }
     health: 30
     material: metal
@@ -50,7 +54,7 @@ types:
       hitbox_h: { x: -0.3, y: 0, width: 0.8, height: 0.95 }
       cooldown_s: 1.2
       windup_s: 0.35
-  infantryman:
+  rifle_unit:
     hurtbox_h: { width: 0.6, height: 1 }
     health: 24
     material: metal
@@ -64,7 +68,7 @@ types:
       projectile_speed_h_s: 8
       cooldown_s: 1.5
       windup_s: 0.4
-  destroyer:
+  heavy_unit:
     hurtbox_h: { width: 0.6, height: 1 }
     health: 45
     material: metal
@@ -78,10 +82,10 @@ types:
       projectile_speed_h_s: 7
       cooldown_s: 2.2
       windup_s: 0.7
-  gorgon_1:
+  stalker_unit:
     hurtbox_h: { width: 0.6, height: 1 }
     health: 28
-    material: flesh
+    material: polymer
     movement_speed_h_s: 3.5
     behavior: melee_pursuit
     attack:
@@ -90,10 +94,10 @@ types:
       hitbox_h: { x: 0, y: 0, width: 1, height: 1.5 }
       cooldown_s: 1.4
       windup_s: 0.3
-  gorgon_2:
+  lancer_unit:
     hurtbox_h: { width: 0.6, height: 1 }
     health: 36
-    material: flesh
+    material: polymer
     movement_speed_h_s: 2.3
     behavior: ranged_keep_distance
     preferred_distance_h: { min: 5, max: 8 }
@@ -104,10 +108,10 @@ types:
       projectile_speed_h_s: 7
       cooldown_s: 2
       windup_s: 0.5
-  gorgon_3:
+  breaker_unit:
     hurtbox_h: { width: 0.6, height: 1 }
     health: 46
-    material: flesh
+    material: polymer
     movement_speed_h_s: 2.2
     behavior: melee_pursuit
     attack:
@@ -117,10 +121,10 @@ types:
       cooldown_s: 1.8
       windup_s: 0.55
   # Fast, fragile melee: dashes in and slashes before others can react.
-  dark_ninja:
+  scout_unit:
     hurtbox_h: { width: 0.6, height: 1 }
     health: 26
-    material: flesh
+    material: polymer
     movement_speed_h_s: 4
     behavior: melee_pursuit
     attack:
@@ -129,10 +133,10 @@ types:
       hitbox_h: { x: -0.1, y: 0, width: 0.6, height: 0.95 }
       cooldown_s: 1.3
       windup_s: 0.25
-  evil_wizard:
+  emitter_unit:
     hurtbox_h: { width: 0.6, height: 2.6 }
     health: 300
-    material: flesh
+    material: polymer
     movement_speed_h_s: 3
     jump_height_h: 2.75
     behavior: boss

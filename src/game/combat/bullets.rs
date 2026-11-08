@@ -147,7 +147,7 @@ pub(in crate::game) fn update_player_bullets(
                             damage,
                             false,
                         );
-                        if enemy.type_id == "evil_wizard" {
+                        if enemy.type_id == "emitter_unit" {
                             enemy.knockback_velocity =
                                 bullet.velocity.x.signum() * gun.boss_knockback_h_s;
                             enemy_transform.translation.y = enemy.home_y;

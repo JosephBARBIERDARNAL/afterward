@@ -9,7 +9,7 @@ fn the_gun_fires_alternating_shots_aims_and_reloads_its_magazine() {
     let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
     let mut data = GameData::load(&asset_root).expect("Chapter 1 data should load");
     // A fixed layout, independent of the authored rooms: a flat floor with
-    // the player on the left and one Gorgon ahead. The Gorgon is of flesh, so
+    // the player on the left and one stalker ahead. The stalker is of polymer, so
     // no shield soaks a round and every shot lands on its health.
     *data.rooms.get_mut(&1).expect("room 1 should exist") = yaml_serde::from_str(
         "
@@ -21,7 +21,7 @@ player_spawn: { x_h: 2.5, y_h: 1 }
 platforms:
   - { material: city_pavement, rect_h: { x: 0, y: 0, width: 48, height: 1 } }
 enemy_spawns:
-  - { type_id: gorgon_1, position_h: { x: 10, y: 1 } }
+  - { type_id: stalker_unit, position_h: { x: 10, y: 1 } }
 bonus: { x_h: 43, y_h: 1 }
 exit: { x_h: 45, y_h: 1 }
 next_room_id: 2

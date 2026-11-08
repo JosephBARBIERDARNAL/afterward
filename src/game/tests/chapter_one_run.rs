@@ -482,12 +482,12 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
     assert_eq!(session.owned_bonuses.len(), 11);
     assert_eq!(owned_bonuses.len(), session.owned_bonuses.len());
     assert_eq!(cleared_rosters, expected_rosters);
-    let evil_wizard = enemy_bodies
+    let emitter_unit = enemy_bodies
         .iter(app.world())
-        .find(|enemy| enemy.type_id == "evil_wizard")
+        .find(|enemy| enemy.type_id == "emitter_unit")
         .expect("room 10 should spawn the Evil Wizard from YAML");
-    assert_eq!(evil_wizard.health, 0.0);
-    assert!(evil_wizard.phase_two_announced);
+    assert_eq!(emitter_unit.health, 0.0);
+    assert!(emitter_unit.phase_two_announced);
 }
 
 fn spawn_test_room(

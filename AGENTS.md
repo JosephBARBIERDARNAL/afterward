@@ -122,9 +122,32 @@ Each type in `enemies/enemy_types.yaml` declares a `material`, which decides the
 - `EnemyBody::shielded` is the whole state. `combat/shield.rs` watches it rather than being told: the frame it goes false, the icon starts its break and despawns once it has played out.
 - The icon is `art/ui/enemy_shield.typ`, a 6-frame sheet (frame 0 is the shield, 1-5 the break) whose `fps` in `assets/enemy_sheets.rs` sets how fast it shatters. Sprite sheets under `ui/` load with nearest sampling, unlike the character sheets.
 
+### Art direction
+
+`art/README.md` is the reference for how the game looks, and every asset — surface,
+backdrop, character, UI piece, shader, effect — answers to it. Read it before
+drawing anything or picking a colour, and change it first when the direction
+itself changes. The short version:
+
+- The city drowned after a collapse that left the power on. The flood is
+  wine-dark, stained by what the city leaked into it, and the run is a climb out
+  of it over ten chapters. The enemies are the machines nobody switched off.
+- **The world is cold; only danger and help are warm.** Orange, red and warm
+  white are reserved for attack wind-ups, projectiles, damage and pickups. Never
+  spend them on decoration.
+- **No world pixel goes brighter than `#6A6288`.** The exceptions are declared:
+  light sources, the flood's crests, the player, and anything warm under the
+  first rule.
+- **The flood, or its light, is in every frame.**
+
+Colour belongs in the YAML and in the Typst palettes, not in `art/README.md`:
+the master palette there names the roles, and `art/_palettes.typ`,
+`art/surfaces/textures/*/_*.typ`, `surfaces/materials.yaml` and
+`config/gameplay.yaml` hold the values the game reads.
+
 ### Typst pixel art
 
-Every surface texture is drawn in code with [Typst](https://typst.app) instead of a paint program, as are the HUD pieces in `src/assets/ui/` and the bonus items in `src/assets/pickups/`: the families are `city`, `metal`, `carved`, and `wood`. Sources live in `art/`, mirroring their output path under `src/assets/` (`art/surfaces/textures/wood/planks.typ` renders `src/assets/surfaces/textures/wood/planks.png`).
+Every surface texture is drawn in code with [Typst](https://typst.app) instead of a paint program, as are the HUD pieces in `src/assets/ui/`, the bonus items in `src/assets/pickups/`, and the backdrop bands in `src/assets/background/drowned-city/`: the surface families are `city`, `metal`, `carved`, and `wood`. Sources live in `art/`, mirroring their output path under `src/assets/` (`art/surfaces/textures/wood/planks.typ` renders `src/assets/surfaces/textures/wood/planks.png`).
 
 - `just art` renders every source (needs `typst` 0.15.1). The PNGs are committed, so building the game never needs Typst; rerun `just art` and commit both after editing a source. CI (`.github/workflows/art.yml`) re-renders with the same pinned Typst version and fails if any PNG differs from its source; bump `TYPST_VERSION` there when upgrading Typst locally.
 - `art/_pixel.typ` makes a page exactly the image's size and draws 1 pt squares, rendered at 72 ppi: one square per pixel, no anti-aliasing. `pixels` draws text art (one character per pixel, looked up in a palette); `pixels-by` computes each pixel from a function.

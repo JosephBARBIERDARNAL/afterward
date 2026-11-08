@@ -2,12 +2,12 @@
 // along its top and left, a brighter node where the lines cross, a halo
 // fading into the plate, and a sunken bolt at its center.
 #import "../../../_pixel.typ": pixels-by
-#import "_city.typ": neon
+#import "_city.typ": conduit
 
 #pixels-by(
   16,
   16,
-  neon,
+  conduit,
   (x, y) => {
     if (x, y) == (0, 0) { "r" } else if x == 0 or y == 0 {
       "l"

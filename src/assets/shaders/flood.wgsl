@@ -1,6 +1,7 @@
-// The water the main menu sits on: a web of light wandering slowly over deep
-// blue cells, quantized to a pixel grid and to four tones, so it reads as
-// pixel art rather than as a smooth gradient.
+// The flood: a web of cold light wandering slowly over deep wine cells,
+// quantized to a pixel grid and to four tones, so it reads as pixel art
+// rather than as a smooth gradient. The main menu is drawn over it, which is
+// the flooded city seen from its surface.
 //
 // The web is a cellular field: every cell holds one point circling its middle,
 // and the water lights up where the two nearest points are equally far — the

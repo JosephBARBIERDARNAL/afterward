@@ -388,6 +388,24 @@ profiles:
         parallax: 0.15
       - asset: background/clouds/full-moon/layer-3.png
         parallax: 0.35
+  # The drowned city (art/background/drowned-city/, drawn in Typst). Flat
+  # silhouette bands of the master palette, each nearer one darker, standing
+  # in the flood that fills the bottom of the backdrop. `sky` is the opaque
+  # backdrop and carries the water; the tower bands are transparent above
+  # their own waterline, so the flood shows between them.
+  drowned_city:
+    backdrop: background/drowned-city/sky.png
+    source_size_px: { width: 576, height: 324 }
+    tile_h: 13.5
+    repeat_horizontal: true
+    filtering: nearest
+    layers:
+      - asset: background/drowned-city/towers_far.png
+        parallax: 0.08
+      - asset: background/drowned-city/towers_mid.png
+        parallax: 0.18
+      - asset: background/drowned-city/towers_near.png
+        parallax: 0.32
   # City skylines (craftpix.net). `layer-1` is the opaque sky; higher layers
   # are nearer rows of buildings. The front row stops at 0.5 because rooms
   # draw their own ground.

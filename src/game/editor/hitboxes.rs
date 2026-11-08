@@ -283,18 +283,20 @@ mod tests {
         let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
         let mut data = GameData::load(&asset_root).expect("Chapter 1 YAML should be valid");
         let original = Hitboxes::of(&data);
-        let swordsman = "swordsman".parse::<EnemyTypeId>().expect("a valid type ID");
-        let boss = "evil_wizard"
+        let blade_unit = "blade_unit"
+            .parse::<EnemyTypeId>()
+            .expect("a valid type ID");
+        let boss = "emitter_unit"
             .parse::<EnemyTypeId>()
             .expect("a valid type ID");
 
         // The player's hurtbox, a type's hurtbox, the boss's second attack.
         Field::HurtboxWidth.adjust_hitbox(&mut data, None, 0, 2.0);
-        Field::HurtboxHeight.adjust_hitbox(&mut data, Some(&swordsman), 0, -4.0);
+        Field::HurtboxHeight.adjust_hitbox(&mut data, Some(&blade_unit), 0, -4.0);
         Field::HitboxX.adjust_hitbox(&mut data, Some(&boss), 1, 1.0);
         let player = data.gameplay.player.hurtbox_h.width;
         assert!((player - original.player.width - 0.1).abs() < 1e-5);
-        let swordsman_height = data.enemies.types[&swordsman].hurtbox_h.height;
+        let blade_unit_height = data.enemies.types[&blade_unit].hurtbox_h.height;
         let boss_x = data.enemies.types[&boss].attacks[1]
             .hitbox_h
             .expect("the lunge has a hitbox")
@@ -329,7 +331,7 @@ mod tests {
         assert!(enemies.contains("# Hitboxes, in H"), "comments survive");
         assert_eq!(enemies.lines().count(), source.lines().count());
         let saved = yaml_serde::from_str::<EnemyTypes>(&enemies).expect("valid YAML");
-        assert_eq!(saved.types[&swordsman].hurtbox_h.height, swordsman_height);
+        assert_eq!(saved.types[&blade_unit].hurtbox_h.height, blade_unit_height);
         let gameplay =
             fs::read_to_string(copy.join("config/gameplay.yaml")).expect("the saved file reads");
         let saved = yaml_serde::from_str::<GameplayConfig>(&gameplay).expect("valid YAML");

@@ -1,27 +1,28 @@
-//! The water the main menu is drawn over: a slow caustic web of light over
-//! deep blue cells, quantized to a pixel grid so it reads as pixel art. The
-//! quad is laid once and kept under the camera, exactly covering the viewport,
-//! and only shows while the main menu is up.
+//! The flood the city drowned in: a slow caustic web of cold light over deep
+//! wine cells, quantized to a pixel grid so it reads as pixel art. The main
+//! menu is drawn over it, so the game opens on the thing it is about. The
+//! quad is laid once and kept under the camera, exactly covering the
+//! viewport, and only shows while the main menu is up.
 
 use super::*;
 use crate::data::HexColor;
 
-pub(super) const SHADER_PATH: &str = "shaders/menu_water.wgsl";
+pub(super) const SHADER_PATH: &str = "shaders/flood.wgsl";
 /// Behind everything else the camera draws.
-const WATER_Z: f32 = -100.0;
+const FLOOD_Z: f32 = -100.0;
 
-/// The quad the menu's water is drawn on.
+/// The quad the flood is drawn on.
 #[derive(Component)]
-pub(in crate::game) struct MenuWater;
+pub(in crate::game) struct Flood;
 
 #[derive(Asset, TypePath, AsBindGroup, Clone)]
-pub(super) struct MenuWaterMaterial {
+pub(super) struct FloodMaterial {
     #[uniform(0)]
-    settings: WaterSettings,
+    settings: FloodSettings,
 }
 
 #[derive(Clone, ShaderType)]
-struct WaterSettings {
+struct FloodSettings {
     /// The four tones, darkest first: the heart of a cell, its body, the
     /// lighter water towards its border, and the lit web itself.
     depth: Vec4,
@@ -38,7 +39,7 @@ struct WaterSettings {
     lines: Vec4,
 }
 
-impl Material2d for MenuWaterMaterial {
+impl Material2d for FloodMaterial {
     fn fragment_shader() -> ShaderRef {
         SHADER_PATH.into()
     }
@@ -48,20 +49,20 @@ impl Material2d for MenuWaterMaterial {
     }
 }
 
-/// Lays the water the main menu shows, hidden until that menu is up.
-pub(super) fn spawn_menu_water(
+/// Lays the flood the main menu is drawn over, hidden until that menu is up.
+pub(super) fn spawn_the_flood(
     mut commands: Commands,
     data: Res<GameData>,
     mut assets: ShaderAssets,
 ) {
-    let config = &data.gameplay.effects.menu_water;
+    let config = &data.gameplay.effects.flood;
     let tone = |color: HexColor| LinearRgba::from(Color::from(color)).to_vec4();
     let viewport_h = Vec2::new(
         data.gameplay.viewport_width_h(),
         data.gameplay.viewport.height_h,
     );
-    let material = assets.water.add(MenuWaterMaterial {
-        settings: WaterSettings {
+    let material = assets.flood.add(FloodMaterial {
+        settings: FloodSettings {
             depth: tone(config.depth_color),
             cell: tone(config.cell_color),
             crest: tone(config.crest_color),
@@ -86,23 +87,23 @@ pub(super) fn spawn_menu_water(
         MeshMaterial2d(material),
         Transform::from_scale((viewport_h * H_WORLD_UNITS).extend(1.0)),
         Visibility::Hidden,
-        MenuWater,
+        Flood,
     ));
 }
 
-/// Shows the water while the main menu is up, under wherever the camera was
+/// Shows the flood while the main menu is up, under wherever the camera was
 /// left standing.
-pub(in crate::game) fn show_menu_water(
+pub(in crate::game) fn show_the_flood(
     screen: Res<State<GameScreen>>,
-    camera: Query<&Transform, (With<Camera2d>, Without<MenuWater>)>,
-    mut water: Query<(&mut Transform, &mut Visibility), With<MenuWater>>,
+    camera: Query<&Transform, (With<Camera2d>, Without<Flood>)>,
+    mut water: Query<(&mut Transform, &mut Visibility), With<Flood>>,
 ) {
     let on_the_menu = *screen.get() == GameScreen::MainMenu;
     let Ok(camera) = camera.single() else {
         return;
     };
     for (mut transform, mut visibility) in &mut water {
-        transform.translation = camera.translation.truncate().extend(WATER_Z);
+        transform.translation = camera.translation.truncate().extend(FLOOD_Z);
         *visibility = if on_the_menu {
             Visibility::Visible
         } else {

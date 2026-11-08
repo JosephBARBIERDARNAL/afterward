@@ -4,11 +4,11 @@ use std::{path::Path, time::Duration};
 use bevy::{prelude::MinimalPlugins, state::app::StatesPlugin, time::TimeUpdateStrategy};
 
 #[test]
-fn swordsman_bobs_while_walking_and_returns_to_idle_pose() {
+fn blade_unit_bobs_while_walking_and_returns_to_idle_pose() {
     let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
     let mut data = GameData::load(&asset_root).expect("Chapter 1 data should load");
     // A fixed layout, independent of the authored rooms: a flat floor with
-    // the player on the left and one swordsman ahead.
+    // the player on the left and one blade_unit ahead.
     *data.rooms.get_mut(&1).expect("room 1 should exist") = yaml_serde::from_str(
         "
 room_id: 1
@@ -19,7 +19,7 @@ player_spawn: { x_h: 2.5, y_h: 1 }
 platforms:
   - { material: city_pavement, rect_h: { x: 0, y: 0, width: 48, height: 1 } }
 enemy_spawns:
-  - { type_id: swordsman, position_h: { x: 10, y: 1 } }
+  - { type_id: blade_unit, position_h: { x: 10, y: 1 } }
 bonus: { x_h: 43, y_h: 1 }
 exit: { x_h: 45, y_h: 1 }
 next_room_id: 2
@@ -72,12 +72,12 @@ next_room_id: 2
         .add_systems(Update, combat::update_enemy_ai);
 
     app.update();
-    let (swordsman, home_y) = {
+    let (blade_unit, home_y) = {
         let mut enemies = app.world_mut().query::<(Entity, &EnemyBody)>();
         let (entity, enemy) = enemies
             .iter(app.world())
-            .find(|(_, enemy)| enemy.type_id == "swordsman")
-            .expect("room 1 should spawn a Swordsman");
+            .find(|(_, enemy)| enemy.type_id == "blade_unit")
+            .expect("room 1 should spawn a BladeUnit");
         (entity, enemy.home_y)
     };
     let mut highest_position = home_y;
@@ -85,8 +85,8 @@ next_room_id: 2
         app.update();
         let position_y = app
             .world()
-            .get::<Transform>(swordsman)
-            .expect("Swordsman should remain spawned")
+            .get::<Transform>(blade_unit)
+            .expect("BladeUnit should remain spawned")
             .translation
             .y;
         highest_position = highest_position.max(position_y);
@@ -102,19 +102,19 @@ next_room_id: 2
             .single(app.world())
             .expect("room should spawn one player")
     };
-    let swordsman_x = app
+    let blade_unit_x = app
         .world()
-        .get::<Transform>(swordsman)
-        .expect("Swordsman should remain spawned")
+        .get::<Transform>(blade_unit)
+        .expect("BladeUnit should remain spawned")
         .translation
         .x;
-    // Within the Swordsman's reach, whatever its authored hitbox is, so it
+    // Within the BladeUnit's reach, whatever its authored hitbox is, so it
     // stops walking and settles back into its idle pose.
     let stand_off = {
         let enemy = app
             .world()
-            .get::<EnemyBody>(swordsman)
-            .expect("Swordsman should remain spawned");
+            .get::<EnemyBody>(blade_unit)
+            .expect("BladeUnit should remain spawned");
         let half_width = app
             .world()
             .resource::<GameData>()
@@ -134,17 +134,17 @@ next_room_id: 2
     app.world_mut()
         .get_mut::<Transform>(player)
         .expect("player should remain spawned")
-        .translation = Vec3::new(swordsman_x - stand_off, player_y, 0.0);
+        .translation = Vec3::new(blade_unit_x - stand_off, player_y, 0.0);
     app.world_mut()
-        .get_mut::<EnemyBody>(swordsman)
-        .expect("Swordsman should remain spawned")
+        .get_mut::<EnemyBody>(blade_unit)
+        .expect("BladeUnit should remain spawned")
         .attack_cooldown = 10.0;
 
     app.update();
-    let swordsman_transform = app
+    let blade_unit_transform = app
         .world()
-        .get::<Transform>(swordsman)
-        .expect("Swordsman should remain spawned");
-    assert_eq!(swordsman_transform.translation.y, home_y);
-    assert_eq!(swordsman_transform.rotation, Quat::IDENTITY);
+        .get::<Transform>(blade_unit)
+        .expect("BladeUnit should remain spawned");
+    assert_eq!(blade_unit_transform.translation.y, home_y);
+    assert_eq!(blade_unit_transform.rotation, Quat::IDENTITY);
 }

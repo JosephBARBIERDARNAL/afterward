@@ -98,7 +98,7 @@ impl PartialEq<&str> for EnemyTypeId {
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum EnemyMaterial {
-    Flesh,
+    Polymer,
     Metal,
 }
 

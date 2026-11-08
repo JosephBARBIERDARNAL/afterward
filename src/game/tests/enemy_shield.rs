@@ -9,8 +9,8 @@ fn a_metal_enemys_shield_soaks_one_shot_and_shatters_before_its_health_drops() {
     let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
     let mut data = GameData::load(&asset_root).expect("Chapter 1 data should load");
     // A fixed layout, independent of the authored rooms: a flat floor with the
-    // player on the left, a metal swordsman in front of it, and a Gorgon of
-    // flesh further off to stand for the unshielded case.
+    // player on the left, a metal blade_unit in front of it, and a stalker of
+    // polymer further off to stand for the unshielded case.
     *data.rooms.get_mut(&1).expect("room 1 should exist") = yaml_serde::from_str(
         "
 room_id: 1
@@ -21,8 +21,8 @@ player_spawn: { x_h: 2.5, y_h: 1 }
 platforms:
   - { material: city_pavement, rect_h: { x: 0, y: 0, width: 48, height: 1 } }
 enemy_spawns:
-  - { type_id: swordsman, position_h: { x: 10, y: 1 } }
-  - { type_id: gorgon_1, position_h: { x: 20, y: 1 } }
+  - { type_id: blade_unit, position_h: { x: 10, y: 1 } }
+  - { type_id: stalker_unit, position_h: { x: 20, y: 1 } }
 bonus: { x_h: 43, y_h: 1 }
 exit: { x_h: 45, y_h: 1 }
 next_room_id: 2
@@ -122,7 +122,7 @@ next_room_id: 2
             .expect("the layout should spawn one enemy of each material")
     };
     let metal = enemy_of(&mut app, EnemyMaterial::Metal);
-    let flesh = enemy_of(&mut app, EnemyMaterial::Flesh);
+    let polymer = enemy_of(&mut app, EnemyMaterial::Polymer);
     let body = |app: &App, entity: Entity| {
         let enemy = app
             .world()
@@ -139,7 +139,7 @@ next_room_id: 2
 
     let (shielded, full_health) = body(&app, metal);
     assert!(shielded, "a metal enemy enters the room shielded");
-    assert!(!body(&app, flesh).0, "an enemy of flesh has no shield");
+    assert!(!body(&app, polymer).0, "an enemy of polymer has no shield");
     assert_eq!(
         shield_icons(&mut app),
         1,

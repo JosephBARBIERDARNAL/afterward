@@ -99,7 +99,7 @@ fn a_chasing_enemy_stops_at_a_bottomless_edge_instead_of_walking_in() {
     let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
     let mut data = GameData::load(&asset_root).expect("Chapter 1 data should load");
     // A fixed layout, independent of the authored rooms: two ledges with a
-    // gap too wide to leap between them, the player across it from one Gorgon.
+    // gap too wide to leap between them, the player across it from one stalker.
     let room = data.rooms.get_mut(&3).expect("room 3 should exist");
     let layout: RoomConfig = yaml_serde::from_str(
         "
@@ -112,7 +112,7 @@ platforms:
   - { material: city_pavement, rect_h: { x: 0, y: 0, width: 10, height: 1 } }
   - { material: city_pavement, rect_h: { x: 16, y: 0, width: 32, height: 1 } }
 enemy_spawns:
-  - { type_id: gorgon_1, position_h: { x: 9, y: 1 } }
+  - { type_id: stalker_unit, position_h: { x: 9, y: 1 } }
 bonus: { x_h: 43, y_h: 1 }
 exit: { x_h: 45, y_h: 1 }
 next_room_id: 4
@@ -191,7 +191,7 @@ fn an_enemy_that_falls_out_of_the_room_counts_as_down() {
     let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
     let mut data = GameData::load(&asset_root).expect("Chapter 1 data should load");
     // A fixed layout, independent of the authored rooms: a ledge, and one
-    // Gorgon left hanging in the air over the gap beyond it.
+    // stalker left hanging in the air over the gap beyond it.
     let room = data.rooms.get_mut(&3).expect("room 3 should exist");
     let layout: RoomConfig = yaml_serde::from_str(
         "
@@ -203,7 +203,7 @@ player_spawn: { x_h: 2.5, y_h: 1 }
 platforms:
   - { material: city_pavement, rect_h: { x: 0, y: 0, width: 10, height: 1 } }
 enemy_spawns:
-  - { type_id: gorgon_1, position_h: { x: 20, y: 6 } }
+  - { type_id: stalker_unit, position_h: { x: 20, y: 6 } }
 bonus: { x_h: 43, y_h: 1 }
 exit: { x_h: 45, y_h: 1 }
 next_room_id: 4

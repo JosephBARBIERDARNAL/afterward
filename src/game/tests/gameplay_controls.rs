@@ -8,7 +8,7 @@ fn default_inputs_move_and_defeat_a_room_enemy() {
     let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
     let mut data = GameData::load(&asset_root).expect("Chapter 1 data should load");
     // A fixed layout, independent of the authored rooms: a flat floor with
-    // the player on the left and one swordsman ahead.
+    // the player on the left and one blade_unit ahead.
     *data.rooms.get_mut(&1).expect("room 1 should exist") = yaml_serde::from_str(
         "
 room_id: 1
@@ -19,7 +19,7 @@ player_spawn: { x_h: 2.5, y_h: 1 }
 platforms:
   - { material: city_pavement, rect_h: { x: 0, y: 0, width: 48, height: 1 } }
 enemy_spawns:
-  - { type_id: swordsman, position_h: { x: 10, y: 1 } }
+  - { type_id: blade_unit, position_h: { x: 10, y: 1 } }
 bonus: { x_h: 43, y_h: 1 }
 exit: { x_h: 45, y_h: 1 }
 next_room_id: 2
@@ -140,7 +140,7 @@ next_room_id: 2
             .expect("the enemy should remain available for verification")
             .health,
         0.0,
-        "the player should defeat the swordsman using movement and gun inputs"
+        "the player should defeat the blade_unit using movement and gun inputs"
     );
     assert!(
         app.world()

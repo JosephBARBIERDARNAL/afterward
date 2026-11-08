@@ -7,7 +7,7 @@ description: "A bare shell waiting for a layout, with the chapter's boss alone i
 size:
   width_h: 48
   height_h: 22.5
-background_profile: clouds_thunderstorm
+background_profile: drowned_city
 player_spawn:
   x_h: 3
   y_h: 2
@@ -29,7 +29,7 @@ platforms:
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
 enemy_spawns:
-  - type_id: evil_wizard
+  - type_id: emitter_unit
     position_h: { x: 24, y: 2 }
 # The bonus item, lying beside the door once every enemy is down.
 bonus:

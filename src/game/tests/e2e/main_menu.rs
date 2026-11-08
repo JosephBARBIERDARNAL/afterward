@@ -1,7 +1,7 @@
 use super::*;
 
 #[test]
-fn the_menu_water_shows_only_while_the_main_menu_is_up() {
+fn the_flood_shows_only_while_the_main_menu_is_up() {
     let mut game = HeadlessGame::new();
     assert_eq!(game.screen(), GameScreen::MainMenu);
 
@@ -9,7 +9,7 @@ fn the_menu_water_shows_only_while_the_main_menu_is_up() {
     let water = |game: &mut HeadlessGame| {
         let world = game.app.world_mut();
         world
-            .query_filtered::<(&Visibility, &Transform), With<MenuWater>>()
+            .query_filtered::<(&Visibility, &Transform), With<Flood>>()
             .single(world)
             .map(|(visibility, transform)| (*visibility, transform.translation.truncate()))
             .expect("the menu water is laid at startup")

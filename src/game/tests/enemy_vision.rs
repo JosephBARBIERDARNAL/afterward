@@ -8,7 +8,7 @@ fn an_enemy_only_chases_a_player_it_can_see() {
     let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
     let mut data = GameData::load(&asset_root).expect("Chapter 1 data should load");
     // A fixed layout, independent of the authored rooms: a flat street with a
-    // pillar to hide behind, one Swordsman watching the way the player walks
+    // pillar to hide behind, one BladeUnit watching the way the player walks
     // in from, and a second one at the far end with its back to it.
     *data.rooms.get_mut(&1).expect("room 1 should exist") = yaml_serde::from_str(
         "
@@ -21,8 +21,8 @@ platforms:
   - { material: city_pavement, rect_h: { x: 0, y: 0, width: 48, height: 1 } }
   - { material: city_plating, rect_h: { x: 24, y: 1, width: 1, height: 4 } }
 enemy_spawns:
-  - { type_id: swordsman, position_h: { x: 30, y: 1 } }
-  - { type_id: swordsman, position_h: { x: 40, y: 1 }, facing: right }
+  - { type_id: blade_unit, position_h: { x: 30, y: 1 } }
+  - { type_id: blade_unit, position_h: { x: 40, y: 1 }, facing: right }
 bonus: { x_h: 43, y_h: 1 }
 exit: { x_h: 45, y_h: 1 }
 next_room_id: 2
@@ -83,7 +83,7 @@ next_room_id: 2
         spawned.sort_by(|(_, left), (_, right)| left.total_cmp(right));
         spawned
     };
-    let [(swordsman, _), (lookout, _)] = spawned[..] else {
+    let [(blade_unit, _), (lookout, _)] = spawned[..] else {
         panic!("the layout should spawn two Swordsmen");
     };
     let player = {
@@ -102,34 +102,34 @@ next_room_id: 2
     let chasing = |app: &App, enemy: Entity| {
         app.world()
             .get::<EnemyBody>(enemy)
-            .expect("the Swordsman should remain spawned")
+            .expect("the BladeUnit should remain spawned")
             .engaged
     };
 
     // Detection range is 10 H: the player walks in far beyond it.
     stands_at(&mut app, 2.5, 1.0);
     assert!(
-        !chasing(&app, swordsman),
+        !chasing(&app, blade_unit),
         "a player across the room should go unnoticed"
     );
-    // Close enough, but high above the Swordsman's eyes.
+    // Close enough, but high above the BladeUnit's eyes.
     stands_at(&mut app, 26.0, 6.0);
     assert!(
-        !chasing(&app, swordsman),
+        !chasing(&app, blade_unit),
         "a player overhead should go unnoticed"
     );
     // At its level and in front of it, but with the pillar in between.
     stands_at(&mut app, 22.0, 1.0);
     assert!(
-        !chasing(&app, swordsman),
+        !chasing(&app, blade_unit),
         "a player behind the pillar should go unnoticed"
     );
-    // Close and in the open, but behind the Swordsman's back, and in front of
+    // Close and in the open, but behind the BladeUnit's back, and in front of
     // the lookout but out of its range.
     stands_at(&mut app, 34.0, 1.0);
     assert!(
-        !chasing(&app, swordsman),
-        "a player behind the Swordsman should go unnoticed"
+        !chasing(&app, blade_unit),
+        "a player behind the BladeUnit should go unnoticed"
     );
     assert!(
         !chasing(&app, lookout),
@@ -138,13 +138,13 @@ next_room_id: 2
     // In the open, in front of it, within range: seen at last.
     stands_at(&mut app, 26.0, 1.0);
     assert!(
-        chasing(&app, swordsman),
+        chasing(&app, blade_unit),
         "a player in plain sight should be chased"
     );
     // Once seen, the chase holds even when the player breaks sight again.
     stands_at(&mut app, 2.5, 1.0);
     assert!(
-        chasing(&app, swordsman),
+        chasing(&app, blade_unit),
         "a seen player stays the target while retain_target is set"
     );
     // The lookout watches the way the room points it, toward the exit.

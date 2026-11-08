@@ -609,7 +609,7 @@ mod tests {
                 data.rooms.len()
             );
         }
-        assert_eq!(data.rooms[&10].enemy_spawns[0].type_id, "evil_wizard");
+        assert_eq!(data.rooms[&10].enemy_spawns[0].type_id, "emitter_unit");
         assert_eq!(
             data.surfaces.materials.len(),
             13,

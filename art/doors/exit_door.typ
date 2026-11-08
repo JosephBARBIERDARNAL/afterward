@@ -11,18 +11,18 @@
 #let openings = (0, 0, 1, 2, 4, 6, 8, 10, 12, 14, 15, 16, 17, 18)
 
 #let palette = (
-  "#": rgb("#07080f"), // outline, grooves
-  "f": rgb("#1b1f2e"), // frame
-  "F": rgb("#2a3045"), // frame highlight
-  "p": rgb("#232838"), // panel
-  "P": rgb("#2f3549"), // panel highlight
-  "t": rgb("#0f3a44"), // unlit trim
-  "c": rgb("#3ff3ff"), // neon cyan
-  "a": rgb("#ff2e88"), // neon magenta
-  "v": rgb("#120d24"), // doorway depth
-  "s": rgb("#0b0818"), // doorway scanline
-  "w": rgb("#1fa6c2"), // doorway glow
-  "W": rgb("#b8fbff"), // doorway core
+  "#": rgb("#08070f"), // outline, grooves
+  "f": rgb("#1c1a2e"), // frame
+  "F": rgb("#2e2a47"), // frame highlight
+  "p": rgb("#221f3b"), // panel
+  "P": rgb("#332f4c"), // panel highlight
+  "t": rgb("#13303a"), // unlit trim
+  "c": rgb("#6fd3e8"), // emergency strip, the way out
+  "a": rgb("#c8389b"), // dying signage, still locked
+  "v": rgb("#100a16"), // doorway depth
+  "s": rgb("#0b0810"), // doorway scanline
+  "w": rgb("#3fa8bf"), // doorway glow
+  "W": rgb("#9fe4ee"), // doorway core
 )
 
 // The doorway behind the panels: a bright core fading out, with scanlines.

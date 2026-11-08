@@ -13,12 +13,16 @@ texture_tile_h: 0.25
 
 # Drawn along every block edge that no other block covers, so blocks read
 # clearly against the backgrounds. Thicknesses are in texture pixels.
+#
+# The highlight is the wet sheen of a drowned city: cold emergency-strip
+# light caught along every exposed edge, not a white rim. It is what makes a
+# surface read as wet without a single new texture.
 edges:
-  outline_color: "#10111C"
+  outline_color: "#08070F"
   outline_alpha: 0.9
   outline_px: 1
-  highlight_color: "#FFFFFF"
-  highlight_alpha: 0.22
+  highlight_color: "#6FD3E8"
+  highlight_alpha: 0.28
   highlight_px: 1
 
 # Decoration panels are non-solid. Background panels sit behind the platforms
@@ -26,7 +30,7 @@ edges:
 # over the bodies.
 decoration_layers:
   background:
-    tint: "#6E7590"
+    tint: "#5A5478"
     alpha: 1
   foreground:
     tint: "#FFFFFF"
@@ -36,12 +40,12 @@ decoration_layers:
 color_footstep: stone
 
 materials:
-  # City: the grounds of a lit-up skyline.
+  # City: the streets and floors of the drowned city.
   city_pavement:
     texture: surfaces/textures/city/pavement.png
     footstep: stone
-  city_neon_grid:
-    texture: surfaces/textures/city/neon_grid.png
+  city_conduit_grid:
+    texture: surfaces/textures/city/conduit_grid.png
     footstep: stone
   city_plating:
     texture: surfaces/textures/city/plating.png
@@ -51,8 +55,8 @@ materials:
   metal_plates:
     texture: surfaces/textures/metal/plates.png
     footstep: stone
-  metal_rusty_plates:
-    texture: surfaces/textures/metal/rusty_plates.png
+  metal_corroded_plates:
+    texture: surfaces/textures/metal/corroded_plates.png
     footstep: stone
   metal_tread:
     texture: surfaces/textures/metal/tread.png

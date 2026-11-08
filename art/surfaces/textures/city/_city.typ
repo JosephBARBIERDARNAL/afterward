@@ -1,28 +1,30 @@
-// Palettes of the city texture family: the grounds of a lit-up skyline.
+// Palettes of the city texture family: the grounds of a drowned city, mixed
+// from the master palette in art/README.md.
 
 // Poured concrete, for street slabs.
 #let concrete = (
-  "#": rgb("#1b1f2a"),
-  "d": rgb("#3c4454"),
-  "m": rgb("#5a6476"),
-  "l": rgb("#79828f"),
-  "r": rgb("#949cab"),
+  "#": rgb("#0e0d18"),
+  "d": rgb("#1f1c30"),
+  "m": rgb("#2e2a47"),
+  "l": rgb("#413a5e"),
+  "r": rgb("#5a5179"),
 )
 
-// Dark floor panels lit by cyan seams.
-#let neon = (
-  "#": rgb("#090d18"),
-  "d": rgb("#141c30"),
-  "m": rgb("#20304f"),
-  "l": rgb("#2de2d5"),
-  "r": rgb("#a6f7f0"),
+// Dark floor panels lit by live seams: the emergency lighting is the only
+// thing in the frame allowed past the world's value ceiling.
+#let conduit = (
+  "#": rgb("#08070f"),
+  "d": rgb("#16142a"),
+  "m": rgb("#221f3b"),
+  "l": rgb("#3fa8bf"),
+  "r": rgb("#9fe4ee"),
 )
 
-// Blue-grey hull alloy with amber bolts.
+// Hull alloy with indicator bolts, still lit in dying signage magenta.
 #let alloy = (
-  "#": rgb("#12161f"),
-  "d": rgb("#2b3240"),
-  "m": rgb("#454e60"),
-  "l": rgb("#6d7889"),
-  "r": rgb("#d9a84c"),
+  "#": rgb("#0d0c16"),
+  "d": rgb("#221f33"),
+  "m": rgb("#332f4c"),
+  "l": rgb("#4c4670"),
+  "r": rgb("#c8389b"),
 )

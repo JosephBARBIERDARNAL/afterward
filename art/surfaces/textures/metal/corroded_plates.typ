@@ -1,13 +1,13 @@
-// Riveted plates in rust colors, with darker streaks running down from the
+// Riveted plates in corroded colors, with darker streaks running down from the
 // top rivets.
 #import "../../../_pixel.typ": pixels-by
-#import "../../../_palettes.typ": rust
+#import "../../../_palettes.typ": corrosion
 #import "_metal.typ": plate
 
 #pixels-by(
   16,
   16,
-  rust,
+  corrosion,
   (x, y) => {
     let streak = (
       (x == 2 and y >= 4 and y <= 8)

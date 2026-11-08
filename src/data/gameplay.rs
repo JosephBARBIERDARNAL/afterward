@@ -51,7 +51,7 @@ pub struct RecordedEffects {
     pub gun_shot: AudioAsset,
     pub reload: AudioAsset,
     pub door_open: AudioAsset,
-    /// A hit on the player, or on an enemy of flesh.
+    /// A hit on the player, or on an enemy of polymer.
     pub damage_neutral: AudioAsset,
     /// A hit on a metal enemy whose shield is already gone.
     pub damage_metal: AudioAsset,
@@ -205,7 +205,7 @@ pub struct RoomFlowConfig {
 pub struct EffectsConfig {
     pub city_lights: CityLightsConfig,
     pub glow: GlowConfig,
-    pub menu_water: MenuWaterConfig,
+    pub flood: FloodConfig,
 }
 
 /// The breathing lit windows and stars of the background layers.
@@ -223,9 +223,10 @@ pub struct CityLightsConfig {
     pub period_s: f32,
 }
 
-/// The water the main menu is drawn over.
+/// The flood: the water the city drowned in, and the water the main menu
+/// is drawn over.
 #[derive(Debug, Deserialize)]
-pub struct MenuWaterConfig {
+pub struct FloodConfig {
     /// How many water pixels fit in one H.
     pub pixels_per_h: f32,
     /// How wide one cell of the web is, in H.

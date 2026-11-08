@@ -7,7 +7,7 @@ description: "A bare shell waiting for a layout: 96 H of floor, the last room be
 size:
   width_h: 96
   height_h: 27
-background_profile: clouds_night_blue
+background_profile: drowned_city
 player_spawn:
   x_h: 3
   y_h: 2
@@ -29,35 +29,35 @@ platforms:
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
 enemy_spawns:
-  - type_id: gorgon_2
+  - type_id: lancer_unit
     position_h: { x: 10, y: 2 }
-  - type_id: gorgon_1
+  - type_id: stalker_unit
     position_h: { x: 15.75, y: 2 }
-  - type_id: swordsman
+  - type_id: blade_unit
     position_h: { x: 21.5, y: 2 }
-  - type_id: infantryman
+  - type_id: rifle_unit
     position_h: { x: 27.25, y: 2 }
-  - type_id: gorgon_3
+  - type_id: breaker_unit
     position_h: { x: 32.75, y: 2 }
-  - type_id: dark_ninja
+  - type_id: scout_unit
     position_h: { x: 38.5, y: 2 }
-  - type_id: destroyer
+  - type_id: heavy_unit
     position_h: { x: 44.25, y: 2 }
-  - type_id: swordsman
+  - type_id: blade_unit
     position_h: { x: 50, y: 2 }
-  - type_id: gorgon_3
+  - type_id: breaker_unit
     position_h: { x: 55.75, y: 2 }
-  - type_id: gorgon_1
+  - type_id: stalker_unit
     position_h: { x: 61.5, y: 2 }
-  - type_id: gorgon_3
+  - type_id: breaker_unit
     position_h: { x: 67.25, y: 2 }
-  - type_id: destroyer
+  - type_id: heavy_unit
     position_h: { x: 72.75, y: 2 }
-  - type_id: gorgon_2
+  - type_id: lancer_unit
     position_h: { x: 78.5, y: 2 }
-  - type_id: infantryman
+  - type_id: rifle_unit
     position_h: { x: 84.25, y: 2 }
-  - type_id: destroyer
+  - type_id: heavy_unit
     position_h: { x: 90, y: 2 }
 # The bonus item, lying beside the door once every enemy is down.
 bonus:

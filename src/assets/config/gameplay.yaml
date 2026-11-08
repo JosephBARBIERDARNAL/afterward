@@ -140,9 +140,10 @@ effects:
     # A bonus item lights in its category's colour; these two light in their own.
     health_color: "#4CF07A"
     door_color: "#7FD4FF"
-  # The water the main menu is drawn over: a web of light wandering over deep
-  # blue cells, quantized to a pixel grid and to the four tones below.
-  menu_water:
+  # The flood the city drowned in, and the water the main menu is drawn over:
+  # a web of cold light wandering over deep wine cells, quantized to a pixel
+  # grid and to the four tones below.
+  flood:
     # How many water pixels fit in one H; the game's own art is 64 px per H.
     pixels_per_h: 32
     # How wide one cell of the web is, in H.
@@ -160,11 +161,13 @@ effects:
     # How far the ordered dither spreads one tone into the next.
     dither: 0.1
     # The four tones, darkest first: the heart of a cell, its body, the lighter
-    # water towards its border, and the lit web itself.
-    depth_color: "#152A63"
-    cell_color: "#2A4DB5"
-    crest_color: "#3F72DE"
-    foam_color: "#89E6F2"
+    # water towards its border, and the lit web itself. Hot in hue and dark in
+    # value, so the flood never competes with the action; the light on it is
+    # cold.
+    depth_color: "#0F0514"
+    cell_color: "#2A0E2B"
+    crest_color: "#4A1F4A"
+    foam_color: "#7FE6E8"
 
 window:
   # maximized (a window filling the screen), borderless_fullscreen, or windowed.

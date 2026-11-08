@@ -303,8 +303,8 @@ player_spawn: { x_h: 2, y_h: 1 }
 platforms:
   - { material: city_pavement, rect_h: { x: 0, y: 0, width: 24, height: 1 } }
 enemy_spawns:
-  - { type_id: swordsman, position_h: { x: 10, y: 1 }, facing: right }
-  - { type_id: swordsman, position_h: { x: 14, y: 1 } }
+  - { type_id: blade_unit, position_h: { x: 10, y: 1 }, facing: right }
+  - { type_id: blade_unit, position_h: { x: 14, y: 1 } }
 bonus: { x_h: 20, y_h: 1 }
 exit: { x_h: 22, y_h: 1 }
 next_room_id: 4

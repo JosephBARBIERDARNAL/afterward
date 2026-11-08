@@ -111,7 +111,7 @@ pub(in crate::game) fn update_enemy_ai(
                 "fall"
             };
             set_enemy_animation(&mut sprite, &mut animation, &sheets, &enemy.type_id, action);
-            if enemy.type_id != "evil_wizard" {
+            if enemy.type_id != "emitter_unit" {
                 // Without jump art, hold the current walk frame in the air.
                 animation.timer.reset();
             }
@@ -375,7 +375,7 @@ pub(in crate::game) fn update_enemy_ai(
                 let action = match attack.kind.as_str() {
                     "telegraphed_lunge" => "attack_2",
                     "jump_slam" => "jump",
-                    _ if enemy.type_id == "evil_wizard" => "attack_1",
+                    _ if enemy.type_id == "emitter_unit" => "attack_1",
                     _ => "attack",
                 };
                 set_enemy_animation(&mut sprite, &mut animation, &sheets, &enemy.type_id, action);

@@ -66,7 +66,7 @@ pub(super) enum SoundCue {
 /// What a hit sounds like, by what it lands on.
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub(super) enum DamageSound {
-    /// The player, and enemies of flesh.
+    /// The player, and enemies of polymer.
     Neutral,
     /// A metal enemy whose shield is already gone.
     Metal,
@@ -79,7 +79,7 @@ impl DamageSound {
         match (material, shielded) {
             (EnemyMaterial::Metal, true) => Self::MetalArmor,
             (EnemyMaterial::Metal, false) => Self::Metal,
-            (EnemyMaterial::Flesh, _) => Self::Neutral,
+            (EnemyMaterial::Polymer, _) => Self::Neutral,
         }
     }
 }
@@ -89,25 +89,25 @@ impl DamageSound {
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub(super) enum EnemySoundStyle {
     Generic,
-    Swordsman,
-    Infantryman,
-    Destroyer,
-    GorgonOne,
-    GorgonTwo,
-    GorgonThree,
-    EvilWizard,
+    BladeUnit,
+    RifleUnit,
+    HeavyUnit,
+    StalkerUnit,
+    LancerUnit,
+    BreakerUnit,
+    EmitterUnit,
 }
 
 impl From<&EnemyTypeId> for EnemySoundStyle {
     fn from(type_id: &EnemyTypeId) -> Self {
         match &**type_id {
-            "swordsman" => Self::Swordsman,
-            "infantryman" => Self::Infantryman,
-            "destroyer" => Self::Destroyer,
-            "gorgon_1" => Self::GorgonOne,
-            "gorgon_2" => Self::GorgonTwo,
-            "gorgon_3" => Self::GorgonThree,
-            "evil_wizard" => Self::EvilWizard,
+            "blade_unit" => Self::BladeUnit,
+            "rifle_unit" => Self::RifleUnit,
+            "heavy_unit" => Self::HeavyUnit,
+            "stalker_unit" => Self::StalkerUnit,
+            "lancer_unit" => Self::LancerUnit,
+            "breaker_unit" => Self::BreakerUnit,
+            "emitter_unit" => Self::EmitterUnit,
             _ => Self::Generic,
         }
     }

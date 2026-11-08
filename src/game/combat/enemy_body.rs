@@ -7,7 +7,7 @@ pub(crate) struct EnemyBody {
     pub(crate) type_id: EnemyTypeId,
     pub(crate) material: EnemyMaterial,
     /// Whether the shield a metal enemy starts with is still up, soaking the
-    /// next hit. Always false for enemies of flesh.
+    /// next hit. Always false for enemies of polymer.
     pub(crate) shielded: bool,
     pub(crate) health: f32,
     pub(crate) max_health: f32,
