@@ -39,7 +39,7 @@ impl Plugin for EditorPlugin {
         app.init_resource::<RoomEditor>()
             .add_systems(
                 OnEnter(GameScreen::Editor),
-                (world::cleanup_room, audio::stop_chapter_music, enter_editor).chain(),
+                (world::cleanup_room, audio::stop_run_audio, enter_editor).chain(),
             )
             .add_systems(
                 OnExit(GameScreen::Editor),

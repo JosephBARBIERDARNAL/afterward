@@ -218,6 +218,16 @@ audio:
     - { asset: audio/music/track_1.mp3, gain: 0.5 }
     - { asset: audio/music/track_2.mp3, gain: 0.5 }
     - { asset: audio/music/track_3.mp3, gain: 0.5 }
+  # The opening music: it starts with the game, carries the main menu and the
+  # opening room, and fades away over `intro_music_fade_out_s` as the run
+  # crosses into room 1, where a chapter track takes over.
+  intro_music: { asset: audio/music/intro.mp3, gain: 0.3 }
+  intro_music_fade_out_s: 2.5
+  # The city heard under everything, from the room a run opens in to its end:
+  # a loop kept well below the rest, faded in over `ambience_fade_in_s`. Raise
+  # its gain to hear more of the street, lower it to leave only a hum.
+  ambience: { asset: audio/ambience/city.mp3, gain: 0.12 }
+  ambience_fade_in_s: 2
   # Every sound effect is a recording: a cue listed here plays its file, and a
   # cue with no file here stays silent. Paths are under src/assets/; gain
   # multiplies the sound-effects volume setting.

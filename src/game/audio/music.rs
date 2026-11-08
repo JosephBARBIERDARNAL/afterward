@@ -231,12 +231,19 @@ mod tests {
         assert!(muffled_peak > 0.0, "the muffled tone is still playing");
     }
 
+    /// Every looping layer: the chapter tracks, the music the game opens on,
+    /// and the city under a run.
     #[test]
-    fn every_background_track_the_game_lists_decodes() {
+    fn every_background_layer_the_game_lists_decodes() {
         let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
         let data = GameData::load(&asset_root).expect("Chapter 1 data should load");
+        let audio = &data.gameplay.audio;
 
-        for track in &data.gameplay.audio.music_tracks {
+        for track in audio
+            .music_tracks
+            .iter()
+            .chain([&audio.intro_music, &audio.ambience])
+        {
             let bytes = std::fs::read(asset_root.join(&track.asset))
                 .unwrap_or_else(|error| panic!("{} should be readable: {error}", track.asset));
             let stream = MusicStream::from(AudioSource {

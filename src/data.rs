@@ -218,6 +218,8 @@ impl GameData {
             || !(0.0..=1.0).contains(&audio.room_clear_music_volume_multiplier)
             || !(0.0..=1.0).contains(&audio.paused_music_muffle)
             || !(0.1..=1.0).contains(&audio.room_clear_music_speed)
+            || audio.intro_music_fade_out_s <= 0.0
+            || audio.ambience_fade_in_s <= 0.0
         {
             return Err(InvalidGameData::from(
                 "audio tuning values are out of range",
@@ -539,7 +541,11 @@ impl GameData {
             &recorded.bonus_reroll,
         ]
         .into_iter()
-        .chain(&self.gameplay.audio.music_tracks);
+        .chain(&self.gameplay.audio.music_tracks)
+        .chain([
+            &self.gameplay.audio.intro_music,
+            &self.gameplay.audio.ambience,
+        ]);
         for sound in sounds {
             if !asset_root.join(&sound.asset).is_file() {
                 return Err(InvalidGameData::from(format!(

@@ -135,12 +135,16 @@ impl Plugin for GamePlugin {
                     assets::load_sprites,
                     settings::initialize_settings,
                     controls::initialize_control_bindings,
-                    audio::initialize_sound_bank,
+                    (audio::initialize_sound_bank, audio::start_intro_music).chain(),
                 ),
             )
             .add_systems(
                 OnEnter(GameScreen::Playing),
-                (world::spawn_room, audio::start_chapter_music),
+                (
+                    world::spawn_room,
+                    audio::start_chapter_music,
+                    audio::start_run_ambience,
+                ),
             )
             .add_systems(
                 OnEnter(GameScreen::RoomClear),
@@ -152,6 +156,7 @@ impl Plugin for GamePlugin {
                     world::spawn_room,
                     room_intro::start_room_intro,
                     audio::start_chapter_music,
+                    audio::start_run_ambience,
                 ),
             )
             .add_systems(
@@ -164,15 +169,23 @@ impl Plugin for GamePlugin {
             )
             .add_systems(
                 OnEnter(GameScreen::MainMenu),
-                (world::cleanup_room, audio::stop_chapter_music),
+                (
+                    world::cleanup_room,
+                    audio::stop_run_audio,
+                    audio::start_intro_music,
+                ),
+            )
+            .add_systems(
+                OnEnter(GameScreen::Transitioning),
+                audio::fade_out_intro_music,
             )
             .add_systems(
                 OnEnter(GameScreen::Dead),
-                (world::cleanup_room, audio::stop_chapter_music),
+                (world::cleanup_room, audio::stop_run_audio),
             )
             .add_systems(
                 OnEnter(GameScreen::Complete),
-                (audio::stop_chapter_music, audio::queue_victory_cue),
+                (audio::stop_run_audio, audio::queue_victory_cue),
             )
             .add_systems(
                 Update,

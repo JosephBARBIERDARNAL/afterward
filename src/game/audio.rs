@@ -8,7 +8,7 @@ mod mixing;
 mod music;
 
 use mixing::gameplay_effects_muted;
-pub(super) use mixing::update_audio_volume;
+pub(super) use mixing::{AudioFade, update_audio_volume};
 pub(super) use music::{MusicStream, MusicStreamLoader};
 
 #[derive(Resource, Default)]
@@ -135,13 +135,23 @@ impl SoundCue {
 pub(super) struct SoundBank {
     cues: BTreeMap<SoundCue, (Handle<AudioSource>, f32)>,
     /// The background tracks a run picks from, with their gains.
-    music_tracks: Vec<(Handle<MusicStream>, f32)>,
+    music_tracks: Vec<Layer>,
+    /// The music the game opens on, and the city under the whole run.
+    intro_music: Option<Layer>,
+    ambience: Option<Layer>,
 }
 
-#[derive(Component, Clone, Copy, Eq, PartialEq)]
-enum AudioClass {
+/// A looping background layer: the file it plays and how loud it plays it.
+type Layer = (Handle<MusicStream>, f32);
+
+#[derive(Component, Clone, Copy, Debug, Eq, PartialEq)]
+pub(super) enum AudioClass {
+    /// The music the game opens on, from launch until a run leaves room 0.
+    IntroMusic,
     /// The background track picked for the run.
     Music,
+    /// The city heard under a run from end to end.
+    Ambience,
     GameplayEffect,
     InterfaceEffect,
     TerminalEffect,
@@ -149,7 +159,7 @@ enum AudioClass {
 
 #[derive(Component)]
 pub(super) struct ManagedAudio {
-    class: AudioClass,
+    pub(super) class: AudioClass,
     gain: f32,
 }
 
@@ -178,13 +188,120 @@ pub(super) fn initialize_sound_bank(
         bank.cues
             .insert(cue, (asset_server.load(effect.asset.clone()), effect.gain));
     }
-    bank.music_tracks = data
-        .gameplay
-        .audio
-        .music_tracks
+    let audio = &data.gameplay.audio;
+    let layer =
+        |sound: &crate::data::AudioAsset| (asset_server.load(sound.asset.clone()), sound.gain);
+    bank.music_tracks = audio.music_tracks.iter().map(layer).collect();
+    bank.intro_music = Some(layer(&audio.intro_music));
+    bank.ambience = Some(layer(&audio.ambience));
+}
+
+/// Lays down a looping background layer. `MusicStream` loops itself, so that
+/// the filter the mixer runs it through keeps working past the first
+/// play-through; Bevy's own looping would buffer the decoded source and freeze
+/// it.
+fn play_layer(
+    commands: &mut Commands,
+    (source, gain): &Layer,
+    class: AudioClass,
+    settings: &AudioSettings,
+    fade: Option<AudioFade>,
+) {
+    let mut layer = commands.spawn((
+        AudioPlayer(source.clone()),
+        PlaybackSettings::ONCE.with_volume(Volume::Linear(
+            settings.music_volume_percent as f32 / 100.0 * gain,
+        )),
+        ManagedAudio { class, gain: *gain },
+    ));
+    if let Some(fade) = fade {
+        layer.insert(fade);
+    }
+}
+
+/// Starts the music the game opens on: it plays from launch, through the main
+/// menu and the opening room, until a run crosses into room 1 and a chapter
+/// track takes over. Returning to the main menu starts it again.
+pub(super) fn start_intro_music(
+    mut commands: Commands,
+    bank: Res<SoundBank>,
+    settings: Res<AudioSettings>,
+    active_audio: Query<&ManagedAudio>,
+) {
+    let Some(intro) = bank.intro_music.as_ref() else {
+        return;
+    };
+    if active_audio
         .iter()
-        .map(|track| (asset_server.load(track.asset.clone()), track.gain))
-        .collect();
+        .any(|audio| audio.class == AudioClass::IntroMusic)
+    {
+        return;
+    }
+    play_layer(
+        &mut commands,
+        intro,
+        AudioClass::IntroMusic,
+        &settings,
+        None,
+    );
+}
+
+/// Opens the city under the run, on the first room it enters: it rises over
+/// `audio.ambience_fade_in_s` and stays until the run ends.
+pub(super) fn start_run_ambience(
+    mut commands: Commands,
+    bank: Res<SoundBank>,
+    data: Res<GameData>,
+    settings: Res<AudioSettings>,
+    active_audio: Query<&ManagedAudio>,
+) {
+    let Some(ambience) = bank.ambience.as_ref() else {
+        return;
+    };
+    if active_audio
+        .iter()
+        .any(|audio| audio.class == AudioClass::Ambience)
+    {
+        return;
+    }
+    play_layer(
+        &mut commands,
+        ambience,
+        AudioClass::Ambience,
+        &settings,
+        Some(AudioFade::in_over(data.gameplay.audio.ambience_fade_in_s)),
+    );
+}
+
+/// Sends the opening music away over `audio.intro_music_fade_out_s`: the run
+/// is leaving the opening room behind, and a chapter track is about to stand
+/// in its place.
+pub(super) fn fade_out_intro_music(
+    mut commands: Commands,
+    data: Res<GameData>,
+    session: Res<RunSession>,
+    active_audio: Query<(Entity, &ManagedAudio)>,
+) {
+    // Only the opening room hands over to a chapter track this way; every
+    // other door leads from one chapter track to the same one.
+    if session.room_id != 0 {
+        return;
+    }
+    fade_intro_music_out(&mut commands, &data, &active_audio);
+}
+
+fn fade_intro_music_out(
+    commands: &mut Commands,
+    data: &GameData,
+    active_audio: &Query<(Entity, &ManagedAudio)>,
+) {
+    for (entity, audio) in active_audio {
+        if audio.class == AudioClass::IntroMusic {
+            commands.entity(entity).insert(AudioFade::out_over(
+                data.gameplay.audio.intro_music_fade_out_s,
+            ));
+        }
+    }
 }
 
 pub(super) fn queue_victory_cue(mut queue: ResMut<SoundQueue>) {
@@ -195,50 +312,42 @@ pub(super) fn queue_boss_intro(mut queue: ResMut<SoundQueue>) {
     queue.push(SoundCue::BossIntro);
 }
 
-/// Starts the music of a run, on the first room it enters. Later rooms find it
-/// already playing and leave it alone, so one background track plays from the
-/// first room to the end of the run.
-/// Starts the music of a run, on the first room it enters. Later rooms find it
-/// already playing and leave it alone, so one background track plays from the
-/// first room to the end of the run.
+/// Starts the music of a run, on the first room it enters that belongs to a
+/// chapter. Room 0 is left to the opening music, which bows out as the run
+/// crosses into room 1; later rooms find the track already playing and leave
+/// it alone, so one track plays to the end of the run.
 pub(super) fn start_chapter_music(
     mut commands: Commands,
     bank: Res<SoundBank>,
+    data: Res<GameData>,
+    session: Res<RunSession>,
     settings: Res<AudioSettings>,
     mut random: ResMut<RandomState>,
-    active_audio: Query<&ManagedAudio>,
+    active_audio: Query<(Entity, &ManagedAudio)>,
 ) {
-    if active_audio
-        .iter()
-        .any(|audio| audio.class == AudioClass::Music)
+    if session.room_id == 0
+        || active_audio
+            .iter()
+            .any(|(_, audio)| audio.class == AudioClass::Music)
         || bank.music_tracks.is_empty()
     {
         return;
     }
     let index = random.index(bank.music_tracks.len());
-    let Some((source, gain)) = bank.music_tracks.get(index) else {
+    let Some(track) = bank.music_tracks.get(index) else {
         return;
     };
-    commands.spawn((
-        AudioPlayer(source.clone()),
-        // `MusicStream` loops itself, so that its filter keeps working past
-        // the first play-through.
-        PlaybackSettings::ONCE.with_volume(Volume::Linear(
-            settings.music_volume_percent as f32 / 100.0 * gain,
-        )),
-        ManagedAudio {
-            class: AudioClass::Music,
-            gain: *gain,
-        },
-    ));
+    play_layer(&mut commands, track, AudioClass::Music, &settings, None);
+    // A run started past the opening room (`--room 7`) never crossed the door
+    // that would have sent the opening music away; it goes now.
+    fade_intro_music_out(&mut commands, &data, &active_audio);
 }
 
-pub(super) fn stop_chapter_music(
-    mut commands: Commands,
-    active_audio: Query<(Entity, &ManagedAudio)>,
-) {
+/// Takes down what a run was playing: its chapter track and the city under
+/// it. The opening music is not a run's to stop.
+pub(super) fn stop_run_audio(mut commands: Commands, active_audio: Query<(Entity, &ManagedAudio)>) {
     for (entity, audio) in &active_audio {
-        if audio.class == AudioClass::Music {
+        if matches!(audio.class, AudioClass::Music | AudioClass::Ambience) {
             commands.entity(entity).despawn();
         }
     }

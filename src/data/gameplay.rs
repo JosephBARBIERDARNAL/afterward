@@ -41,6 +41,14 @@ pub struct AudioConfig {
     pub paused_music_muffle: f32,
     /// Background music; one is picked at random when a run starts.
     pub music_tracks: Vec<AudioAsset>,
+    /// The opening music, playing from launch until a run leaves room 0.
+    pub intro_music: AudioAsset,
+    /// How long the opening music takes to fade away once it is over.
+    pub intro_music_fade_out_s: f32,
+    /// The city heard under everything for the length of a run.
+    pub ambience: AudioAsset,
+    /// How long the city takes to rise to its gain when a run opens.
+    pub ambience_fade_in_s: f32,
     pub recorded_effects: RecordedEffects,
 }
 

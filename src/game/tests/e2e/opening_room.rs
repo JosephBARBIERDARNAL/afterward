@@ -56,3 +56,63 @@ fn the_empty_opening_room_offers_its_bonus_at_once_and_runs_into_room_one() {
         "room 1's roster waits on the other side"
     );
 }
+
+/// The opening music carries the menu and the opening room, and hands over to
+/// a chapter track as the run crosses into room 1, where the city it opened
+/// under keeps playing.
+#[test]
+fn the_opening_music_gives_way_to_a_chapter_track_on_the_way_into_room_one() {
+    let mut game = HeadlessGame::new();
+    assert_eq!(
+        game.layers(AudioClass::IntroMusic),
+        1,
+        "the game opens on its own music"
+    );
+    assert_eq!(game.layers(AudioClass::Ambience), 0);
+    assert_eq!(game.layers(AudioClass::Music), 0);
+
+    game.tap(KeyCode::Enter);
+    game.wait_for_screen(GameScreen::Playing, 10.0);
+    assert_eq!(game.session().room_id, 0);
+    assert_eq!(
+        game.layers(AudioClass::IntroMusic),
+        1,
+        "and keeps playing through the opening room"
+    );
+    assert_eq!(
+        game.layers(AudioClass::Music),
+        0,
+        "where no chapter track stands over it"
+    );
+    assert_eq!(
+        game.layers(AudioClass::Ambience),
+        1,
+        "with the city rising under it"
+    );
+
+    game.take_bonus();
+    game.tap(KeyCode::Digit1);
+    game.leave_through_the_door();
+    game.wait_for_screen(GameScreen::Playing, 15.0);
+    assert_eq!(game.session().room_id, 1);
+    assert_eq!(
+        game.layers(AudioClass::Music),
+        1,
+        "room 1 opens on a chapter track"
+    );
+    assert_eq!(
+        game.layers(AudioClass::Ambience),
+        1,
+        "the city plays on under it"
+    );
+
+    // The opening music takes `intro_music_fade_out_s` to bow out, and is gone
+    // once it has.
+    let fade_out_s = game.data().gameplay.audio.intro_music_fade_out_s;
+    game.run_seconds(fade_out_s + 0.5);
+    assert_eq!(
+        game.layers(AudioClass::IntroMusic),
+        0,
+        "and the opening music has faded away"
+    );
+}

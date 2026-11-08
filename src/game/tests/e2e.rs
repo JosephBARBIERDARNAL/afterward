@@ -9,6 +9,7 @@
 
 use super::super::*;
 use crate::game::{
+    audio::{AudioClass, ManagedAudio},
     bonus_pickup::BonusPickup,
     combat::CombatProjectile,
     menus::{MenuAction, MenuButton},
@@ -251,6 +252,17 @@ impl HeadlessGame {
         });
         self.app.update();
         self.app.update();
+    }
+
+    /// How many sounds of `class` are playing: the background layers are one
+    /// entity each, so this is 1 while a layer is up and 0 once it is gone.
+    fn layers(&mut self, class: AudioClass) -> usize {
+        let world = self.app.world_mut();
+        world
+            .query::<&ManagedAudio>()
+            .iter(world)
+            .filter(|audio| audio.class == class)
+            .count()
     }
 
     /// How many droplets are falling over the menus.
