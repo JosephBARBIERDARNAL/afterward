@@ -8,8 +8,10 @@ use bevy::{
     text::FontSize,
 };
 
-pub(super) const CARD_BACKGROUND: Color = Color::srgba(0.03, 0.035, 0.07, 0.94);
-pub(super) const CARD_HIGHLIGHT_BACKGROUND: Color = Color::srgba(0.11, 0.12, 0.19, 0.96);
+// The cards are semi-transparent, so the water behind the main menu (and the
+// blurred room behind the other menus) shows through them.
+pub(super) const CARD_BACKGROUND: Color = Color::srgba(0.03, 0.035, 0.07, 0.7);
+pub(super) const CARD_HIGHLIGHT_BACKGROUND: Color = Color::srgba(0.11, 0.12, 0.19, 0.8);
 pub(super) const KEY_BACKGROUND: Color = Color::srgba(1.0, 1.0, 1.0, 0.1);
 pub(super) const ACTIVE_BORDER: Color = Color::srgba(0.92, 0.94, 1.0, 0.85);
 pub(super) const MUTED: Color = Color::srgba(0.6, 0.62, 0.7, 0.55);
@@ -46,6 +48,12 @@ pub(super) fn title(text: impl Into<String>) -> impl Bundle {
         },
         TextLayout::justify(Justify::Center),
         TextColor(Color::WHITE),
+        // The main menu's title stands over moving water, which is bright
+        // where its web of light crosses.
+        TextShadow {
+            offset: Vec2::splat(2.0),
+            color: Color::srgba(0.0, 0.0, 0.0, 0.7),
+        },
         Node {
             margin: UiRect::bottom(px(8)),
             ..default()

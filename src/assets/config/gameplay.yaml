@@ -140,6 +140,31 @@ effects:
     # A bonus item lights in its category's colour; these two light in their own.
     health_color: "#4CF07A"
     door_color: "#7FD4FF"
+  # The water the main menu is drawn over: a web of light wandering over deep
+  # blue cells, quantized to a pixel grid and to the four tones below.
+  menu_water:
+    # How many water pixels fit in one H; the game's own art is 64 px per H.
+    pixels_per_h: 32
+    # How wide one cell of the web is, in H.
+    cell_h: 2.4
+    # How many turns a cell's point circles in a second, how fast the whole
+    # field drifts across the screen in H per second, and how far a slow wave
+    # bends the borders, in cells.
+    churn: 0.05
+    drift_h_s: 0.12
+    wobble: 0.3
+    # How thick the lit borders of the web are, and the fainter veins crossing
+    # a cell, in cells.
+    web_width: 0.07
+    vein_width: 0.07
+    # How far the ordered dither spreads one tone into the next.
+    dither: 0.1
+    # The four tones, darkest first: the heart of a cell, its body, the lighter
+    # water towards its border, and the lit web itself.
+    depth_color: "#152A63"
+    cell_color: "#2A4DB5"
+    crest_color: "#3F72DE"
+    foam_color: "#89E6F2"
 
 window:
   # maximized (a window filling the screen), borderless_fullscreen, or windowed.

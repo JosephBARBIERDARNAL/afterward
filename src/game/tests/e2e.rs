@@ -8,7 +8,11 @@
 //! `step_toward_exit` puts the player beside the door.
 
 use super::super::*;
-use crate::game::{bonus_pickup::BonusPickup, combat::CombatProjectile, shaders::GlowAttached};
+use crate::game::{
+    bonus_pickup::BonusPickup,
+    combat::CombatProjectile,
+    shaders::{GlowAttached, MenuWater},
+};
 use bevy::{
     audio::{AudioPlugin, AudioSource},
     input::{
@@ -31,6 +35,7 @@ mod bonus;
 mod death;
 mod editor;
 mod hitboxes;
+mod main_menu;
 mod opening_room;
 mod pause;
 mod run;

@@ -186,10 +186,13 @@ pub(super) fn update_menu_modal(
             | GameScreen::Dead
             | GameScreen::Complete
     );
-    let is_blurred = is_modal || *screen.get() == GameScreen::Bonus;
+    let is_veiled = is_modal || *screen.get() == GameScreen::Bonus;
+    // The blur muffles the room behind a menu. The main menu has no room
+    // behind it, but its own water, which is pixel art and stays crisp.
+    let is_blurred = is_veiled && *screen.get() != GameScreen::MainMenu;
 
     for (mut color, mut visibility) in &mut backdrop {
-        if is_blurred {
+        if is_veiled {
             color.0 = Color::srgba(0.015, 0.02, 0.04, 0.36);
             *visibility = Visibility::Visible;
         } else {

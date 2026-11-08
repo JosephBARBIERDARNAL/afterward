@@ -202,6 +202,7 @@ pub struct RoomFlowConfig {
 pub struct EffectsConfig {
     pub city_lights: CityLightsConfig,
     pub glow: GlowConfig,
+    pub menu_water: MenuWaterConfig,
 }
 
 /// The breathing lit windows and stars of the background layers.
@@ -217,6 +218,33 @@ pub struct CityLightsConfig {
     /// The widest a light's brightness swings, and how long one breath takes.
     pub swing: f32,
     pub period_s: f32,
+}
+
+/// The water the main menu is drawn over.
+#[derive(Debug, Deserialize)]
+pub struct MenuWaterConfig {
+    /// How many water pixels fit in one H.
+    pub pixels_per_h: f32,
+    /// How wide one cell of the web is, in H.
+    pub cell_h: f32,
+    /// How many turns a cell's point circles in a second, how fast the whole
+    /// field drifts across the screen in H per second, and how far a slow wave
+    /// bends the borders, in cells.
+    pub churn: f32,
+    pub drift_h_s: f32,
+    pub wobble: f32,
+    /// How thick the lit borders of the web are, and the fainter veins
+    /// crossing a cell, in cells.
+    pub web_width: f32,
+    pub vein_width: f32,
+    /// How far the ordered dither spreads one tone into the next.
+    pub dither: f32,
+    /// The four tones, darkest first: the heart of a cell, its body, the
+    /// lighter water towards its border, and the lit web itself.
+    pub depth_color: HexColor,
+    pub cell_color: HexColor,
+    pub crest_color: HexColor,
+    pub foam_color: HexColor,
 }
 
 /// The pool of light behind anything the player should walk towards.
