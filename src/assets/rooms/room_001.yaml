@@ -6,39 +6,91 @@ chapter_id: 1
 description: "The first street: a long ledge under the morning skyline, one raised walkway to climb, and a single ninja between the player and the door."
 size:
   width_h: 48
-  height_h: 24
+  height_h: 16
 background_profile: city_blue_morning
 player_spawn:
-  x_h: 5
-  y_h: 11.5
+  x_h: 2.25
+  y_h: 2
 # Solid platforms: land on their top, stop against their sides, bump
 # your head on their underside. They stop shots too.
 platforms:
-  - label: the walkway the fight starts on
-    material: city_neon_grid
-    rect_h: { x: 2, y: 7, width: 9, height: 3 }
-  - label: the street the room stands on
-    material: city_pavement
-    rect_h: { x: -11.75, y: -7.5, width: 71.5, height: 9.5 }
-  - label: west wall
-    material: city_plating
-    rect_h: { x: -11.75, y: 2, width: 13.75, height: 21 }
-  - label: roofline
-    material: city_plating
-    rect_h: { x: -11.5, y: 23, width: 71.5, height: 8.5 }
-  - label: east wall
-    material: city_plating
-    rect_h: { x: 46, y: 2, width: 13.75, height: 21 }
+  - label: the ledge the whole room stands on
+    color: "#292929"
+    rect_h: { x: 1, y: 0, width: 14, height: 2 }
+  - label: the ledge the whole room stands on
+    color: "#292929"
+    rect_h: { x: 47, y: 0, width: 1, height: 16 }
+  - label: the ledge the whole room stands on
+    color: "#292929"
+    rect_h: { x: 0, y: 0, width: 1, height: 16 }
+  - color: "#292929"
+    rect_h: { x: 1, y: 5, width: 5, height: 4 }
+  - color: "#292929"
+    rect_h: { x: 6, y: 5, width: 1, height: 1 }
+  - label: the ledge the whole room stands on
+    color: "#292929"
+    rect_h: { x: 19, y: 0, width: 3, height: 2 }
+  - label: the ledge the whole room stands on
+    color: "#292929"
+    rect_h: { x: 45, y: 10, width: 2, height: 2 }
+  - color: "#292929"
+    rect_h: { x: 41, y: 11.75, width: 4, height: 0.25 }
+  - color: "#292929"
+    rect_h: { x: 11, y: 3.75, width: 2.5, height: 0.25 }
+  - color: "#292929"
+    rect_h: { x: 7, y: 6, width: 1, height: 1 }
+  - color: "#292929"
+    rect_h: { x: 8, y: 5, width: 1, height: 1 }
+  - color: "#292929"
+    rect_h: { x: 7, y: 5, width: 1, height: 1 }
+  - color: "#292929"
+    rect_h: { x: 6, y: 6, width: 1, height: 1 }
+  - color: "#292929"
+    rect_h: { x: 6, y: 7, width: 1, height: 1 }
+  - color: "#292929"
+    rect_h: { x: 7, y: 11.5, width: 2.5, height: 0.25 }
+  - color: "#292929"
+    rect_h: { x: 12, y: 10, width: 6, height: 2 }
+  - color: "#292929"
+    rect_h: { x: 12, y: 7, width: 2, height: 3 }
+  - color: "#292929"
+    rect_h: { x: 14, y: 7, width: 7, height: 1 }
+  - color: "#292929"
+    rect_h: { x: 37, y: 5, width: 8, height: 2 }
+  - color: "#292929"
+    rect_h: { x: 34, y: 0, width: 3, height: 1 }
+  - color: "#292929"
+    rect_h: { x: 40, y: 0, width: 7, height: 1 }
+  - color: "#292929"
+    rect_h: { x: 45, y: 2.75, width: 2, height: 0.25 }
+  - color: "#292929"
+    rect_h: { x: 35, y: 9, width: 2, height: 0.25 }
+  - color: "#292929"
+    rect_h: { x: 38, y: 10.5, width: 2, height: 0.25 }
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
 enemy_spawns:
-  - type_id: dark_ninja
-    position_h: { x: 8.5, y: 12.25 }
+  - type_id: swordsman
+    position_h: { x: 2.5, y: 9 }
+  - type_id: swordsman
+    position_h: { x: 16, y: 8 }
+    stat_overrides: { health: 30 }
+  - type_id: swordsman
+    position_h: { x: 43.25, y: 1 }
+    stat_overrides: { health: 30 }
+  - type_id: destroyer
+    position_h: { x: 14.75, y: 12 }
+    stat_overrides: { health: 30 }
+  - type_id: swordsman
+    position_h: { x: 42.25, y: 7 }
+    stat_overrides: { health: 30 }
+  - type_id: destroyer
+    position_h: { x: 39, y: 7 }
 # The bonus item, lying beside the door once every enemy is down.
 bonus:
-  x_h: 41
-  y_h: 2
+  x_h: 45.5
+  y_h: 12
 exit:
-  x_h: 43
-  y_h: 2
+  x_h: 46.5
+  y_h: 12
 next_room_id: 2

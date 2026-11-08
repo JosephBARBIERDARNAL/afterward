@@ -46,7 +46,7 @@ types:
     attack:
       kind: melee
       damage: 8
-      hitbox_h: { x: 0, y: 0, width: 0.9, height: 1.5 }
+      hitbox_h: { x: -0.3, y: 0, width: 0.8, height: 0.95 }
       cooldown_s: 1.2
       windup_s: 0.35
   infantryman:
