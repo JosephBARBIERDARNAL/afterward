@@ -87,7 +87,7 @@ enemy_spawns:
     facing: left
     stat_overrides: { health: 30 }
   - type_id: destroyer
-    position_h: { x: 14.75, y: 12 }
+    position_h: { x: 14.5, y: 12 }
     facing: left
     stat_overrides: { health: 30 }
   - type_id: swordsman

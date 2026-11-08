@@ -11,7 +11,7 @@ use bevy::{
 // The cards are semi-transparent, so the water behind the main menu (and the
 // blurred room behind the other menus) shows through them.
 pub(super) const CARD_BACKGROUND: Color = Color::srgba(0.03, 0.035, 0.07, 0.7);
-pub(super) const CARD_HIGHLIGHT_BACKGROUND: Color = Color::srgba(0.11, 0.12, 0.19, 0.8);
+pub(super) const CARD_HIGHLIGHT_BACKGROUND: Color = Color::srgba(0.11, 0.12, 0.19, 0.9);
 pub(super) const KEY_BACKGROUND: Color = Color::srgba(1.0, 1.0, 1.0, 0.1);
 pub(super) const ACTIVE_BORDER: Color = Color::srgba(0.92, 0.94, 1.0, 0.85);
 pub(super) const MUTED: Color = Color::srgba(0.6, 0.62, 0.7, 0.55);
