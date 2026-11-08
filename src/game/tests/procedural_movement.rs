@@ -108,6 +108,23 @@ next_room_id: 2
         .expect("Swordsman should remain spawned")
         .translation
         .x;
+    // Within the Swordsman's reach, whatever its authored hitbox is, so it
+    // stops walking and settles back into its idle pose.
+    let stand_off = {
+        let enemy = app
+            .world()
+            .get::<EnemyBody>(swordsman)
+            .expect("Swordsman should remain spawned");
+        let half_width = app
+            .world()
+            .resource::<GameData>()
+            .gameplay
+            .player
+            .hurtbox_h
+            .width
+            / 2.0;
+        (enemy.attacks[0].reach_h + half_width) * 0.5 * H_WORLD_UNITS
+    };
     let player_y = app
         .world()
         .get::<Transform>(player)
@@ -117,7 +134,7 @@ next_room_id: 2
     app.world_mut()
         .get_mut::<Transform>(player)
         .expect("player should remain spawned")
-        .translation = Vec3::new(swordsman_x - H_WORLD_UNITS, player_y, 0.0);
+        .translation = Vec3::new(swordsman_x - stand_off, player_y, 0.0);
     app.world_mut()
         .get_mut::<EnemyBody>(swordsman)
         .expect("Swordsman should remain spawned")

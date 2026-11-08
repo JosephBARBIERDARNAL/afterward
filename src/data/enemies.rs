@@ -14,11 +14,21 @@ use super::{RangeConfig, RectH, SizeH};
 
 #[derive(Debug, Deserialize)]
 pub struct EnemyTypes {
-    pub detection_range_h: f32,
-    pub retain_target_after_detection: bool,
+    pub detection: EnemyDetectionConfig,
     pub damage_triggers_combat: bool,
     pub jumping: EnemyJumpingConfig,
     pub types: BTreeMap<EnemyTypeId, EnemyTypeConfig>,
+}
+
+/// What brings the player into an idle enemy's sight.
+#[derive(Debug, Deserialize)]
+pub struct EnemyDetectionConfig {
+    /// How far the enemy sees, between the two hurtbox centers.
+    pub range_h: f32,
+    /// How far above or below its own eyes it still sees the player.
+    pub height_h: f32,
+    /// Whether an enemy that has seen the player keeps chasing out of sight.
+    pub retain_target: bool,
 }
 
 #[derive(Debug, Deserialize)]

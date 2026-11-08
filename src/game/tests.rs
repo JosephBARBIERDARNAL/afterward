@@ -5,6 +5,7 @@ mod control_bindings;
 mod e2e;
 mod enemy_jumping;
 mod enemy_shield;
+mod enemy_vision;
 mod falling;
 mod gameplay_controls;
 mod gun;
@@ -40,6 +41,26 @@ fn projectiles_collide_with_platforms_along_their_travel_path() {
         Vec2::new(50.0, 10.0),
         Vec2::splat(6.0),
     ));
+}
+
+#[test]
+fn platforms_hide_what_stands_behind_them() {
+    // Sight travels like a shot: a platform between two points hides one from
+    // the other, and one beside or below the line does not.
+    let pillar = PlatformSurface {
+        left: 100.0,
+        right: 120.0,
+        bottom: 0.0,
+        top: 50.0,
+        footstep: FootstepSound::Stone,
+    };
+
+    assert!(pillar.blocks_sight(Vec2::new(60.0, 25.0), Vec2::new(160.0, 25.0)));
+    assert!(!pillar.blocks_sight(Vec2::new(60.0, 60.0), Vec2::new(160.0, 60.0)));
+    // A sight line that stops short of the pillar is not blocked by it.
+    assert!(!pillar.blocks_sight(Vec2::new(60.0, 25.0), Vec2::new(90.0, 25.0)));
+    // Climbing over it: the line clears the top before reaching its near side.
+    assert!(!pillar.blocks_sight(Vec2::new(90.0, 45.0), Vec2::new(130.0, 120.0)));
 }
 
 #[test]

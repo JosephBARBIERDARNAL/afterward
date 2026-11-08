@@ -37,6 +37,32 @@ impl PlatformSurface {
             && feet_y + H_WORLD_UNITS > self.bottom + CONTACT_TOLERANCE
     }
 
+    /// Whether this platform stands between `from` and `to`, hiding one from
+    /// the other. Platforms are solid on every side, so they are the room's
+    /// only cover, for sight as much as for shots.
+    pub(super) fn blocks_sight(&self, from: Vec2, to: Vec2) -> bool {
+        // Clip the segment against the platform's two slabs: it is hidden
+        // behind the platform when some stretch of it lies inside both.
+        let delta = to - from;
+        let mut entry: f32 = 0.0;
+        let mut exit: f32 = 1.0;
+        for (origin, step, min, max) in [
+            (from.x, delta.x, self.left, self.right),
+            (from.y, delta.y, self.bottom, self.top),
+        ] {
+            if step == 0.0 {
+                if origin < min || origin > max {
+                    return false;
+                }
+                continue;
+            }
+            let (near, far) = ((min - origin) / step, (max - origin) / step);
+            entry = entry.max(near.min(far));
+            exit = exit.min(near.max(far));
+        }
+        entry <= exit
+    }
+
     /// Whether a projectile sweeping from `start` to `end` runs into this
     /// platform.
     pub(super) fn intersects_projectile(&self, start: Vec2, end: Vec2, half_size: Vec2) -> bool {
@@ -56,6 +82,13 @@ impl PlatformSurface {
 pub(super) struct Platforms<'a>(pub(super) Vec<&'a PlatformSurface>);
 
 impl<'a> Platforms<'a> {
+    /// Whether any platform hides `to` from an eye at `from`.
+    pub(super) fn blocks_sight(&self, from: Vec2, to: Vec2) -> bool {
+        self.0
+            .iter()
+            .any(|platform| platform.blocks_sight(from, to))
+    }
+
     /// The highest platform top a body at `x` crossed while its feet fell from
     /// `previous_feet_y` to `feet_y`.
     pub(super) fn landing(

@@ -13,6 +13,7 @@ mod hitboxes;
 mod player_gun;
 mod projectiles;
 mod shield;
+mod vision;
 
 pub(super) use bullets::update_player_bullets;
 pub(super) use cleanup::clear_room_combat_effects;

@@ -51,6 +51,7 @@ pub(in crate::game) fn update_enemy_ai(
     let level_change_threshold = jumping.level_change_threshold_h * H_WORLD_UNITS;
     // Attacks start once the player's hurtbox edge enters their hitbox.
     let player_half_width_h = data.gameplay.player.hurtbox_h.width / 2.0;
+    let player_box = player_hurtbox(player_transform.translation, &data);
     let player_feet = Vec2::new(
         player_transform.translation.x,
         player_transform.translation.y - 0.5 * H_WORLD_UNITS,
@@ -80,14 +81,13 @@ pub(in crate::game) fn update_enemy_ai(
         }
         let dx = player_transform.translation.x - transform.translation.x;
         let distance_h = dx.abs() / H_WORLD_UNITS;
-        if !enemy.engaged && distance_h <= data.enemies.detection_range_h {
+        let sees_player =
+            enemy.sees_player(&transform, player_box, &data.enemies.detection, &surfaces);
+        if !enemy.engaged && sees_player {
             enemy.engaged = true;
             sounds.push(SoundCue::enemy_idle(&enemy.type_id));
         }
-        if enemy.engaged
-            && !data.enemies.retain_target_after_detection
-            && distance_h > data.enemies.detection_range_h
-        {
+        if enemy.engaged && !data.enemies.detection.retain_target && !sees_player {
             enemy.engaged = false;
         }
         if !enemy.engaged {
@@ -97,7 +97,8 @@ pub(in crate::game) fn update_enemy_ai(
             }
             continue;
         }
-        sprite.flip_x = dx < 0.0;
+        enemy.facing = if dx < 0.0 { -1.0 } else { 1.0 };
+        sprite.flip_x = enemy.facing < 0.0;
         let feet = Vec2::new(transform.translation.x, enemy.home_y - enemy.feet_offset);
 
         // Airborne after a jump or a step off a ledge: physics owns the motion.
@@ -124,11 +125,7 @@ pub(in crate::game) fn update_enemy_ai(
             sounds.push(SoundCue::EnemyAttack(audio::EnemySoundStyle::from(
                 &enemy.type_id,
             )));
-            if attack.hits(
-                feet,
-                dx,
-                player_hurtbox(player_transform.translation, &data),
-            ) {
+            if attack.hits(feet, dx, player_box) {
                 apply_player_damage(
                     PlayerDamageResources {
                         commands: &mut commands,
@@ -221,11 +218,7 @@ pub(in crate::game) fn update_enemy_ai(
                     }
                     // Struck from where the enemy stands now, after any lunge.
                     let strike_feet = Vec2::new(transform.translation.x, feet.y);
-                    if attack.hits(
-                        strike_feet,
-                        dx,
-                        player_hurtbox(player_transform.translation, &data),
-                    ) {
+                    if attack.hits(strike_feet, dx, player_box) {
                         apply_player_damage(
                             PlayerDamageResources {
                                 commands: &mut commands,
@@ -349,12 +342,12 @@ pub(in crate::game) fn update_enemy_ai(
             }
             let movement_speed_h_s = enemy.movement_speed_h_s;
             let home_y = enemy.home_y;
+            let facing = enemy.facing;
             if let Some(movement) = &mut enemy.procedural_movement {
                 movement.phase_radians = (movement.phase_radians
                     + dt * movement_speed_h_s * movement.cycles_per_h * std::f32::consts::TAU)
                     .rem_euclid(std::f32::consts::TAU);
                 let gait = movement.phase_radians.sin();
-                let facing = if dx < 0.0 { -1.0 } else { 1.0 };
                 transform.translation.y =
                     home_y + gait.max(0.0) * movement.bob_height_h * H_WORLD_UNITS;
                 transform.rotation = Quat::from_rotation_z(gait * movement.lean_radians * facing);

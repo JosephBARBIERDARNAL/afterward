@@ -7,8 +7,8 @@ use bevy::{
 };
 
 use crate::data::{
-    Aim, EnemyAttackConfig, EnemyMaterial, EnemyTypeId, FootstepSound, GameData,
-    PLAYER_COLLISION_WIDTH_H,
+    Aim, EnemyAttackConfig, EnemyDetectionConfig, EnemyMaterial, EnemyTypeId, FootstepSound,
+    GameData, PLAYER_COLLISION_WIDTH_H,
 };
 
 mod ammo_hud;

@@ -26,6 +26,10 @@ pub(crate) struct EnemyBody {
     pub(crate) procedural_movement: Option<ProceduralMovementState>,
     pub(crate) preferred_distance_h: Option<(f32, f32)>,
     pub(crate) attacks: Vec<EnemyAttack>,
+    /// The way the enemy looks, and so the way it sees: -1 left, 1 right. An
+    /// idle enemy keeps the facing it was spawned with; a chasing one turns
+    /// toward the player.
+    pub(crate) facing: f32,
     pub(crate) engaged: bool,
     pub(crate) attack_cooldown: f32,
     pub(crate) windup_remaining: f32,
