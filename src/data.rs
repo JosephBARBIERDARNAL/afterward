@@ -217,6 +217,7 @@ impl GameData {
             || !(0.0..=1.0).contains(&audio.paused_music_volume_multiplier)
             || !(0.0..=1.0).contains(&audio.room_clear_music_volume_multiplier)
             || !(0.0..=1.0).contains(&audio.paused_music_muffle)
+            || !(0.1..=1.0).contains(&audio.room_clear_music_speed)
         {
             return Err(InvalidGameData::from(
                 "audio tuning values are out of range",

@@ -11,6 +11,9 @@ pub(crate) struct AudioMix {
     /// 0 leaves the music untouched; 1 cuts its highs hardest, as if it played
     /// in another room.
     muffle: f32,
+    /// How fast the music plays: 1 is its recorded speed, and below that it
+    /// drags, dropping in pitch as well as in tempo.
+    music_speed: f32,
 }
 
 impl AudioMix {
@@ -34,6 +37,12 @@ impl AudioMix {
             } else {
                 0.0
             },
+            music_speed: match screen {
+                GameScreen::RoomClear | GameScreen::Bonus | GameScreen::BossIntro => {
+                    audio.room_clear_music_speed
+                }
+                _ => 1.0,
+            },
         }
     }
 
@@ -46,6 +55,7 @@ impl AudioMix {
                 max_delta,
             ),
             muffle: move_towards(self.muffle, target.muffle, max_delta),
+            music_speed: move_towards(self.music_speed, target.music_speed, max_delta),
         }
     }
 
@@ -54,6 +64,7 @@ impl AudioMix {
             (self.music, other.music),
             (self.gameplay_effects, other.gameplay_effects),
             (self.muffle, other.muffle),
+            (self.music_speed, other.music_speed),
         ]
         .into_iter()
         .any(|(mine, theirs)| (mine - theirs).abs() > 0.0001)
@@ -110,6 +121,9 @@ pub fn update_audio_volume(
         sink.set_volume(Volume::Linear(
             channel_volume as f32 / 100.0 * audio.gain * next_mix.of(audio.class),
         ));
+        if audio.class == AudioClass::Music {
+            sink.set_speed(next_mix.music_speed);
+        }
     }
 }
 
@@ -155,16 +169,18 @@ mod tests {
         }
     }
 
-    #[test]
-    fn pausing_muffles_and_lowers_the_music_without_stopping_it() {
+    /// The tuning values the mix is read against; the shipped ones, so a test
+    /// fails if the two drift apart.
+    fn tuning() -> AudioConfig {
         let sound = || AudioAsset {
             asset: String::new(),
             gain: 1.0,
         };
-        let audio = AudioConfig {
+        AudioConfig {
             footstep_interval_s: 0.42,
             paused_music_volume_multiplier: 0.35,
             room_clear_music_volume_multiplier: 0.55,
+            room_clear_music_speed: 0.8,
             paused_music_muffle: 0.9,
             music_tracks: Vec::new(),
             recorded_effects: RecordedEffects {
@@ -177,7 +193,12 @@ mod tests {
                 damage_metal: sound(),
                 damage_metal_armor: sound(),
             },
-        };
+        }
+    }
+
+    #[test]
+    fn pausing_muffles_and_lowers_the_music_without_stopping_it() {
+        let audio = tuning();
         let playing = AudioMix::target(GameScreen::Playing, &audio);
         let paused = AudioMix::target(GameScreen::Paused, &audio);
 
@@ -187,6 +208,36 @@ mod tests {
         assert!(
             playing.muffle < 0.0001,
             "playing leaves the music unfiltered"
+        );
+    }
+
+    #[test]
+    fn clearing_a_room_lowers_the_music_and_drags_it_down() {
+        let audio = tuning();
+        let playing = AudioMix::target(GameScreen::Playing, &audio);
+
+        for screen in [
+            GameScreen::RoomClear,
+            GameScreen::Bonus,
+            GameScreen::BossIntro,
+        ] {
+            let cleared = AudioMix::target(screen, &audio);
+
+            assert!(cleared.music < playing.music, "{screen:?} lowers the music");
+            assert!(cleared.music > 0.0, "{screen:?} keeps the music playing");
+            assert!(
+                cleared.music_speed < playing.music_speed,
+                "{screen:?} slows the music down"
+            );
+            assert!(
+                cleared.music_speed > 0.0,
+                "{screen:?} does not stall the music"
+            );
+        }
+
+        assert!(
+            (playing.music_speed - 1.0).abs() < 0.0001,
+            "playing leaves the music at its recorded speed"
         );
     }
 }

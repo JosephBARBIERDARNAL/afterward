@@ -33,6 +33,9 @@ pub struct AudioConfig {
     pub footstep_interval_s: f32,
     pub paused_music_volume_multiplier: f32,
     pub room_clear_music_volume_multiplier: f32,
+    /// How fast the music plays once a room is cleared, as a fraction of its
+    /// recorded speed: below 1 it drags, dropping in pitch as well as tempo.
+    pub room_clear_music_speed: f32,
     /// How muffled the music sounds while paused: 0 leaves it untouched, 1 cuts
     /// the highs hardest.
     pub paused_music_muffle: f32,

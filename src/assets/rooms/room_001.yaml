@@ -29,7 +29,7 @@ platforms:
     rect_h: { x: 6, y: 5, width: 1, height: 1 }
   - label: the ledge the whole room stands on
     color: "#292929"
-    rect_h: { x: 19, y: 0, width: 3, height: 2 }
+    rect_h: { x: 23, y: 4.75, width: 5, height: 0.25 }
   - label: the ledge the whole room stands on
     color: "#292929"
     rect_h: { x: 45, y: 10, width: 2, height: 2 }
@@ -67,25 +67,44 @@ platforms:
     rect_h: { x: 35, y: 9, width: 2, height: 0.25 }
   - color: "#292929"
     rect_h: { x: 38, y: 10.5, width: 2, height: 0.25 }
+  - label: the ledge the whole room stands on
+    color: "#292929"
+    rect_h: { x: 24.5, y: 0, width: 5.5, height: 3 }
+  - color: "#292929"
+    rect_h: { x: 46.25, y: 4.75, width: 0.75, height: 0.25 }
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
 enemy_spawns:
   - type_id: swordsman
     position_h: { x: 2.5, y: 9 }
+    facing: right
   - type_id: swordsman
     position_h: { x: 16, y: 8 }
+    facing: right
     stat_overrides: { health: 30 }
   - type_id: swordsman
     position_h: { x: 43.25, y: 1 }
+    facing: left
     stat_overrides: { health: 30 }
   - type_id: destroyer
     position_h: { x: 14.75, y: 12 }
+    facing: left
     stat_overrides: { health: 30 }
   - type_id: swordsman
     position_h: { x: 42.25, y: 7 }
+    facing: right
     stat_overrides: { health: 30 }
   - type_id: destroyer
     position_h: { x: 39, y: 7 }
+    facing: left
+  - type_id: swordsman
+    position_h: { x: 25, y: 5 }
+    facing: left
+    stat_overrides: { health: 30 }
+  - type_id: swordsman
+    position_h: { x: 27, y: 3 }
+    facing: left
+    stat_overrides: { health: 30 }
 # The bonus item, lying beside the door once every enemy is down.
 bonus:
   x_h: 45.5
