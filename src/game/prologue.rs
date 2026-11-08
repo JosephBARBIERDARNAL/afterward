@@ -254,9 +254,13 @@ pub(super) fn update_prologue(
         *border = BorderColor::all(MUTED.with_alpha(MUTED.alpha() * prologue.veil));
     }
     for mut visibility in &mut button {
-        // The way in is offered once there is nothing left to read.
+        // The way in is offered once there is nothing left to read. It is
+        // shown by inheriting the layer's visibility rather than by being
+        // visible of its own: `Visibility::Visible` would stand even once the
+        // prologue layer around it is hidden, and follow the player into the
+        // city.
         *visibility = if typed {
-            Visibility::Visible
+            Visibility::Inherited
         } else {
             Visibility::Hidden
         };

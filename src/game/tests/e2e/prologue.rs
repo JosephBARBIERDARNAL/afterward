@@ -49,9 +49,8 @@ fn the_city_is_spoken_for_before_the_run_walks_into_it() {
         written.contains(char::is_alphabetic),
         "and some of it is up"
     );
-    assert_eq!(
-        game.way_in_shown(),
-        Visibility::Hidden,
+    assert!(
+        !game.way_in_shown(),
         "the way in waits until there is nothing left to read"
     );
 
@@ -64,11 +63,7 @@ fn the_city_is_spoken_for_before_the_run_walks_into_it() {
         GameScreen::Prologue,
         "the words stand until the player says to walk in"
     );
-    assert_eq!(
-        game.way_in_shown(),
-        Visibility::Visible,
-        "with the way in offered under them"
-    );
+    assert!(game.way_in_shown(), "with the way in offered under them");
 
     // The button is a button like any other: the mouse presses it too.
     let way_in = game.menu_button(MenuAction::EnterTheCity);
@@ -81,6 +76,10 @@ fn the_city_is_spoken_for_before_the_run_walks_into_it() {
         game.water_shown(),
         Visibility::Hidden,
         "and the water drains away behind them"
+    );
+    assert!(
+        !game.way_in_shown(),
+        "the way in is left at the door, not carried into the city"
     );
     assert_eq!(game.app.world().resource::<Prologue>().veil, 0.0);
 }
@@ -102,12 +101,15 @@ impl HeadlessGame {
             .count()
     }
 
-    fn way_in_shown(&mut self) -> Visibility {
+    /// Whether the way in is on show, as the screen has it rather than as the
+    /// button asks: a button of a hidden layer is not on show.
+    fn way_in_shown(&mut self) -> bool {
         let world = self.app.world_mut();
-        *world
-            .query_filtered::<&Visibility, With<PrologueButton>>()
+        world
+            .query_filtered::<&InheritedVisibility, With<PrologueButton>>()
             .single(world)
             .expect("the way in is laid at startup")
+            .get()
     }
 
     fn written_prologue(&mut self) -> String {
