@@ -1,0 +1,12 @@
+The player's sprite sheets in `sheets/`, and the loose effect sheets in
+`../effects/`, are cut from three free Craftpix "prototype character" packs:
+
+  - Free Pixel Art Prototype Character Sprites
+  - Free 2D Pixel Prototype Character Pack 2
+  - Prototype Pixel Hero Free Sprite Pack 3
+
+License: https://craftpix.net/file-licenses/
+
+Each file here is one animation from those packs, renamed to the clip it
+plays (see `animations.yaml`). The packs' own folders, their PSD sources and
+the animations the game decided against are not kept in the repository.

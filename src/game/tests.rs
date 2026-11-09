@@ -8,11 +8,14 @@ mod enemy_shield;
 mod enemy_vision;
 mod falling;
 mod gameplay_controls;
+mod melee_combo;
 mod platform_movement;
 mod player_controls;
 mod player_stances;
 mod procedural_movement;
+mod swimming;
 mod variable_jump;
+mod wall_jump;
 
 #[test]
 fn projectiles_collide_with_platforms_along_their_travel_path() {

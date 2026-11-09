@@ -3,7 +3,7 @@
 # values mark the feet baseline on a platform top.
 room_id: 2
 chapter_id: 1
-description: "A bare shell waiting for a layout: one flat floor, its walls, and the room's roster strung along it. The first real fight of the chapter."
+description: "Three things the city teaches, in a row: fists on the open street, then the flooded stretch that has to be swum, then the shaft whose walls are the only way up. The slab at x 44 seals the street, so the shaft is not a detour."
 size:
   width_h: 72
   height_h: 27
@@ -14,9 +14,15 @@ player_spawn:
 # Solid platforms: land on their top, stop against their sides, bump
 # your head on their underside. They stop shots too.
 platforms:
-  - label: the floor the room stands on
+  - label: the street the room opens on
     material: city_pavement
-    rect_h: { x: -2, y: 0, width: 76, height: 2 }
+    rect_h: { x: -2, y: 0, width: 24, height: 2 }
+  - label: the basin the flood stands in
+    material: city_pavement
+    rect_h: { x: 22, y: 0, width: 14, height: 0.5 }
+  - label: the street on the far bank
+    material: city_pavement
+    rect_h: { x: 36, y: 0, width: 38, height: 2 }
   - label: west wall
     material: city_plating
     rect_h: { x: -2, y: 2, width: 2, height: 25 }
@@ -26,23 +32,42 @@ platforms:
   - label: roofline
     material: city_plating
     rect_h: { x: -2, y: 27, width: 76, height: 2 }
+  - label: shaft, the near wall - hangs clear of the street, so it is walked under
+    material: city_plating
+    rect_h: { x: 41, y: 4.5, width: 1.5, height: 6.5 }
+  - label: shaft, the far wall - this is what seals the street
+    material: city_plating
+    rect_h: { x: 44.5, y: 2, width: 1.5, height: 9 }
+  - label: the walkway the shaft comes out on
+    material: city_plating
+    rect_h: { x: 46, y: 10.5, width: 8, height: 0.5 }
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
+# Water: not solid, but a body inside it swims instead of walking.
+water:
+  - label: the flooded stretch - its surface stands half an H over the street
+    rect_h: { x: 22, y: 0.5, width: 14, height: 2 }
 enemy_spawns:
-  - type_id: rifle_unit
+  - label: first blood, on the open street
+    type_id: blade_unit
     position_h: { x: 10, y: 2 }
-  - type_id: blade_unit
-    position_h: { x: 19.25, y: 2 }
-  - type_id: rifle_unit
-    position_h: { x: 28.75, y: 2 }
-  - type_id: blade_unit
-    position_h: { x: 38, y: 2 }
-  - type_id: rifle_unit
-    position_h: { x: 47.25, y: 2 }
-  - type_id: stalker_unit
-    position_h: { x: 56.75, y: 2 }
-  - type_id: stalker_unit
-    position_h: { x: 66, y: 2 }
+    facing: left
+  - label: a rifle to make the crossing hurry
+    type_id: rifle_unit
+    position_h: { x: 17, y: 2 }
+    facing: left
+  - label: waiting on the far bank
+    type_id: stalker_unit
+    position_h: { x: 38.5, y: 2 }
+    facing: left
+  - label: on the walkway, met on the way out of the shaft
+    type_id: blade_unit
+    position_h: { x: 50, y: 11 }
+    facing: left
+  - label: the last of them, between the shaft and the door
+    type_id: stalker_unit
+    position_h: { x: 60, y: 2 }
+    facing: left
 # The bonus item, lying beside the door once every enemy is down.
 bonus:
   x_h: 67

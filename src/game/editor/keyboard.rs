@@ -5,13 +5,18 @@
 use super::*;
 use crate::data::{
     DecorationConfig, DecorationLayer, EnemySpawnConfig, Facing, Fill, PlatformConfig,
-    SpawnPosition,
+    SpawnPosition, WaterPool,
 };
 use bevy::input::{
     ButtonState,
     keyboard::{Key, KeyboardInput},
 };
 use std::fs;
+
+/// The size, in H, of the pool W lays: wide and shallow, as a flooded street
+/// stands.
+const WATER_WIDTH_H: f32 = 6.0;
+const WATER_HEIGHT_H: f32 = 2.0;
 
 /// Feeds typed characters into the open text field; Enter keeps the text,
 /// Escape drops it. Keys handled here are hidden from the shortcuts.
@@ -235,6 +240,24 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
         editor.overlays.viewport = !editor.overlays.viewport;
     } else if letter('v') {
         editor.overlays.sight = !editor.overlays.sight;
+    } else if letter('w') {
+        // A pool is the flood itself, so it has no fill to pick: only a
+        // rectangle, laid wide and shallow around the cursor.
+        let rect_h = RectH {
+            x: snap(cursor_h.x - WATER_WIDTH_H / 2.0, false),
+            y: snap(cursor_h.y - WATER_HEIGHT_H / 2.0, false),
+            width: WATER_WIDTH_H,
+            height: WATER_HEIGHT_H,
+        };
+        let mut added = None;
+        editor.edit(&mut data, |room| {
+            room.water.push(WaterPool {
+                label: None,
+                rect_h,
+            });
+            added = Some(EditorItem::Water(room.water.len() - 1));
+        });
+        editor.select(added);
     } else if letter('p') || letter('d') {
         let decoration = letter('d');
         let (width, height) = if decoration {

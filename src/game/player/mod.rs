@@ -93,13 +93,16 @@ pub(super) fn update_player(
     if held(GameAction::MoveRight) {
         direction += 1.0;
     }
-    // Cover plants the player, and a wall push owns them until its lock runs
-    // out, so neither takes steering.
-    if player.covering || player.wall_control_lock_s > 0.0 {
+    // Cover plants the player, and the push off a wall owns them until its
+    // lock runs out: no steering then, and no drag either, so the shove
+    // carries them clear instead of being rubbed out the frame it is given.
+    if player.covering {
         direction = 0.0;
     }
-    if direction != 0.0 {
-        player.facing = direction.signum();
+    if player.wall_control_lock_s == 0.0 {
+        if direction != 0.0 {
+            player.facing = direction.signum();
+        }
         let max_speed_h_s = if player.swimming {
             water_tuning.swim_speed_h_s
         } else if player.crouching {
@@ -109,24 +112,18 @@ pub(super) fn update_player(
         } else {
             tuning.air_max_speed_h_s
         };
-        let target_speed = direction * max_speed_h_s * movement_multiplier * H_WORLD_UNITS;
-        let acceleration = if player.swimming {
+        let rate_h_s2 = if player.swimming {
             water_tuning.drag_h_s2
+        } else if direction == 0.0 {
+            tuning.deceleration_h_s2
         } else {
             tuning.acceleration_h_s2
         };
         player.velocity.x = move_towards(
             player.velocity.x,
-            target_speed,
-            acceleration * H_WORLD_UNITS * dt,
+            direction * max_speed_h_s * movement_multiplier * H_WORLD_UNITS,
+            rate_h_s2 * H_WORLD_UNITS * dt,
         );
-    } else {
-        let deceleration = if player.swimming {
-            water_tuning.drag_h_s2
-        } else {
-            tuning.deceleration_h_s2
-        };
-        player.velocity.x = move_towards(player.velocity.x, 0.0, deceleration * H_WORLD_UNITS * dt);
     }
 
     if let Some(pool) = pool {
