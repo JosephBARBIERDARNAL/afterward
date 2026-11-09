@@ -20,6 +20,7 @@ pub(in crate::game) fn update_projectiles(
     resources: ProjectileResources,
     mut player_query: ProjectilePlayerQuery,
     mut projectiles: Query<(Entity, &mut Transform, &mut CombatProjectile)>,
+    mut decoys: DecoyQuery,
     platforms: Query<&PlatformSurface>,
 ) {
     let ProjectileResources {
@@ -42,9 +43,28 @@ pub(in crate::game) fn update_projectiles(
         projectile_transform.translation.x += travel;
         let end = projectile_transform.translation.truncate();
         let mut hit = projectile.life_s <= 0.0;
-        let hurtbox = player_hurtbox(player_transform.translation, &data);
-        if !Rect::from_center_half_size(end, projectile.half_size)
-            .intersect(hurtbox)
+        let shot = Rect::from_center_half_size(end, projectile.half_size);
+        // A double left by Decoy is shot at as the player is, and stands in
+        // the way of a shot aimed past it.
+        let struck_double = decoys
+            .iter()
+            .find(|(_, decoy_transform, _)| {
+                !shot
+                    .intersect(player_hurtbox(decoy_transform.translation, &data))
+                    .is_empty()
+            })
+            .map(|(entity, _, _)| entity);
+        if let Some(entity) = struck_double {
+            hurt_the_decoy(
+                &mut commands,
+                &mut sounds,
+                &mut decoys,
+                entity,
+                projectile.damage,
+            );
+            hit = true;
+        } else if !shot
+            .intersect(player_hurtbox(player_transform.translation, &data))
             .is_empty()
         {
             apply_player_damage(

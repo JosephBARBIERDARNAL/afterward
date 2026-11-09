@@ -6,6 +6,8 @@ pub(in crate::game) fn clear_room_combat_effects(
     damage_numbers: Query<Entity, With<DamageNumber>>,
     corpses: Query<Entity, With<DeadEnemy>>,
     impacts: Query<Entity, With<ImpactEffect>>,
+    // Nothing is left to strike at a double once the room is won.
+    doubles: Query<Entity, With<Decoy>>,
 ) {
     for entity in &projectiles {
         commands.entity(entity).despawn();
@@ -17,6 +19,9 @@ pub(in crate::game) fn clear_room_combat_effects(
         commands.entity(entity).despawn();
     }
     for entity in &impacts {
+        commands.entity(entity).despawn();
+    }
+    for entity in &doubles {
         commands.entity(entity).despawn();
     }
 }

@@ -238,7 +238,7 @@ impl Plugin for GamePlugin {
                 Update,
                 (camera::follow_camera, player::update_player)
                     .chain()
-                    .before(combat::player_melee)
+                    .before(combat::plant_decoy)
                     .run_if(
                         in_state(GameScreen::Playing)
                             .or_else(in_state(GameScreen::RoomClear))
@@ -248,6 +248,10 @@ impl Plugin for GamePlugin {
             .add_systems(
                 Update,
                 (
+                    // Before the melee and the AI: it takes the spot the roll
+                    // `update_player` just set off from, and the AI then marks
+                    // the double it left standing there.
+                    combat::plant_decoy,
                     combat::player_melee,
                     combat::update_enemy_ai,
                     combat::update_enemy_platform_physics,

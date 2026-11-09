@@ -2,6 +2,10 @@ use super::*;
 
 mod blows;
 mod cleanup;
+mod decoy;
+pub(in crate::game) use decoy::Decoy;
+pub(super) use decoy::plant_decoy;
+use decoy::{DecoyQuery, Mark, hurt_the_decoy};
 mod components;
 mod damage;
 mod enemy_ai;

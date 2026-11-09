@@ -2,6 +2,7 @@ use super::*;
 mod bonus_screen_idle;
 mod chapter_one_run;
 mod control_bindings;
+mod decoy;
 mod e2e;
 mod enemy_jumping;
 mod enemy_shield;

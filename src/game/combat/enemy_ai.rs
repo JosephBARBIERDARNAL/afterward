@@ -32,6 +32,7 @@ pub(in crate::game) fn update_enemy_ai(
     resources: EnemyAiResources,
     mut player_query: EnemyAiPlayerQuery,
     mut enemies: EnemyAiEnemiesQuery,
+    mut decoys: DecoyQuery,
     platforms: Query<&PlatformSurface>,
 ) {
     let EnemyAiResources {
@@ -52,10 +53,15 @@ pub(in crate::game) fn update_enemy_ai(
     // Attacks start once the player's hurtbox edge enters their hitbox.
     let player_half_width_h = data.gameplay.player.hurtbox_h.width / 2.0;
     let player_box = player_hurtbox(player_transform.translation, &data);
-    let player_feet = Vec2::new(
-        player_transform.translation.x,
-        player_transform.translation.y - 0.5 * H_WORLD_UNITS,
-    );
+    let player_mark = Mark {
+        hurtbox: player_box,
+        feet: Vec2::new(
+            player_transform.translation.x,
+            player_transform.translation.y - 0.5 * H_WORLD_UNITS,
+        ),
+        grounded: player.grounded,
+        decoy: None,
+    };
     player.invulnerability_timer = (player.invulnerability_timer - dt).max(0.0);
 
     for (mut enemy, mut transform, mut sprite, mut animation) in &mut enemies {
@@ -78,8 +84,6 @@ pub(in crate::game) fn update_enemy_ai(
             transform.translation.x += enemy.knockback_velocity * H_WORLD_UNITS * dt;
             enemy.knockback_velocity = move_towards(enemy.knockback_velocity, 0.0, 14.0 * dt);
         }
-        let dx = player_transform.translation.x - transform.translation.x;
-        let distance_h = dx.abs() / H_WORLD_UNITS;
         let sees_player =
             enemy.sees_player(&transform, player_box, &data.enemies.detection, &surfaces);
         if !enemy.engaged && sees_player {
@@ -96,6 +100,11 @@ pub(in crate::game) fn update_enemy_ai(
             }
             continue;
         }
+        // Decoy's double stands in for the player: an engaged enemy walks at
+        // and swings at whichever of the two is nearer to it.
+        let mark = player_mark.nearest_to(transform.translation.x, &decoys, &data);
+        let dx = mark.feet.x - transform.translation.x;
+        let distance_h = dx.abs() / H_WORLD_UNITS;
         enemy.facing = if dx < 0.0 { -1.0 } else { 1.0 };
         sprite.flip_x = enemy.facing < 0.0;
         let feet = Vec2::new(transform.translation.x, enemy.home_y - enemy.feet_offset);
@@ -124,8 +133,8 @@ pub(in crate::game) fn update_enemy_ai(
             sounds.push(SoundCue::EnemyAttack(audio::EnemySoundStyle::from(
                 &enemy.type_id,
             )));
-            if attack.hits(feet, dx, player_box) {
-                apply_player_damage(
+            if attack.hits(feet, dx, mark.hurtbox) {
+                mark.strike(
                     PlayerDamageResources {
                         commands: &mut commands,
                         data: &data,
@@ -137,6 +146,7 @@ pub(in crate::game) fn update_enemy_ai(
                         transform: player_transform,
                         attacker_x: transform.translation.x,
                     },
+                    &mut decoys,
                     attack.damage,
                 );
             }
@@ -166,7 +176,7 @@ pub(in crate::game) fn update_enemy_ai(
                     let jump_height = enemy.jump_height_h * H_WORLD_UNITS;
                     let arc = JumpArc::between(
                         feet,
-                        Vec2::new(player_feet.x, player_feet.y.min(feet.y + jump_height)),
+                        Vec2::new(mark.feet.x, mark.feet.y.min(feet.y + jump_height)),
                         jump_height,
                         gravity,
                     );
@@ -217,8 +227,8 @@ pub(in crate::game) fn update_enemy_ai(
                     }
                     // Struck from where the enemy stands now, after any lunge.
                     let strike_feet = Vec2::new(transform.translation.x, feet.y);
-                    if attack.hits(strike_feet, dx, player_box) {
-                        apply_player_damage(
+                    if attack.hits(strike_feet, dx, mark.hurtbox) {
+                        mark.strike(
                             PlayerDamageResources {
                                 commands: &mut commands,
                                 data: &data,
@@ -230,6 +240,7 @@ pub(in crate::game) fn update_enemy_ai(
                                 transform: player_transform,
                                 attacker_x: transform.translation.x,
                             },
+                            &mut decoys,
                             attack.damage,
                         );
                     }
@@ -262,8 +273,8 @@ pub(in crate::game) fn update_enemy_ai(
         };
         // Only a grounded player defines a level; a mid-jump player does not
         // send enemies scrambling for platforms.
-        let rise = player_feet.y - feet.y;
-        let other_level = player.grounded && rise.abs() > level_change_threshold;
+        let rise = mark.feet.y - feet.y;
+        let other_level = mark.grounded && rise.abs() > level_change_threshold;
         let standing = surfaces
             .standing_on(feet.x, feet.y)
             .filter(|_| enemy.grounded);
@@ -276,7 +287,7 @@ pub(in crate::game) fn update_enemy_ai(
         };
         let route = JumpRoute {
             feet,
-            target_feet: player_feet,
+            target_feet: mark.feet,
             direction,
             jump_height: enemy.jump_height_h * H_WORLD_UNITS,
             air_speed: jumping.air_speed_h_s * H_WORLD_UNITS,

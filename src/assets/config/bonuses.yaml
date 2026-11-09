@@ -358,6 +358,12 @@ bonuses:
     category: agility
     rarity: uncommon
     effects: { turn_speed_retention: 1 }
+  - id: decoy
+    name: Decoy
+    description: Rolling leaves a double of you behind for enemies to swing at.
+    category: agility
+    rarity: rare
+    effects: { decoy_health: 30 }
   - id: cold_read
     name: Cold Read
     description: Enemy wind-ups last 10% longer.

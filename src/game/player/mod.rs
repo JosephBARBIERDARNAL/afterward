@@ -181,6 +181,9 @@ pub(super) fn update_player(
     {
         // Down and Jump together: a roll rather than a hop.
         player.roll_s = Some(0.0);
+        // Decoy leaves a double of the player here: `combat::plant_decoy`
+        // takes the spot once the roll has set off from it.
+        player.roll_origin = Some(transform.translation);
         player.velocity.x = player.facing * tuning.roll.speed_h_s * H_WORLD_UNITS;
         player.start_action(PlayerAction::Roll, clips.roll.duration_s());
     } else if tapped(GameAction::Jump) && !player.covering && player.roll_s.is_none() {

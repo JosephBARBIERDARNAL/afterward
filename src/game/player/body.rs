@@ -30,6 +30,9 @@ pub(crate) struct PlayerBody {
     pub(crate) charge_s: f32,
     /// How far into the roll the player is, while one is under way.
     pub(crate) roll_s: Option<f32>,
+    /// Where a roll just began, until `combat::plant_decoy` has taken it:
+    /// the spot Decoy's double is left standing on.
+    pub(crate) roll_origin: Option<Vec3>,
     pub(crate) crouching: bool,
     pub(crate) covering: bool,
     /// Swimming: inside one of the room's water pools, where the stroke
@@ -77,6 +80,7 @@ impl Default for PlayerBody {
             slam_landed: false,
             charge_s: 0.0,
             roll_s: None,
+            roll_origin: None,
             crouching: false,
             covering: false,
             swimming: false,
