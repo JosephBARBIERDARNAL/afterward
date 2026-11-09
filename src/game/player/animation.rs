@@ -36,8 +36,9 @@ impl PlayerSprite<'_> {
     }
 
     /// Picks the clip for the player's current state. One-shot actions (blows
-    /// of the melee chain, hits, landings, wall pushes, the dive) play over
-    /// the movement clips until they end; dying and Cover override everything.
+    /// of the melee chain, the gather and the charged blow, the slam, the
+    /// roll, hits, landings, wall pushes, the dive) play over the movement
+    /// clips until they end; dying and Cover override everything.
     pub(super) fn update(
         &mut self,
         player: &mut PlayerBody,
@@ -57,13 +58,22 @@ impl PlayerSprite<'_> {
         if let Some(action) = player.action {
             let key = match action {
                 PlayerAction::Strike { strike, .. } => strike.clip_key(),
+                PlayerAction::Charging => "player_charge",
+                PlayerAction::ChargedBlow => "player_charge_brace",
+                PlayerAction::Slam => "player_ground_slam",
+                PlayerAction::Roll => "player_roll",
+                PlayerAction::Rise => "player_rise",
+                PlayerAction::Aura(aura) => aura.clip_key(),
+                PlayerAction::Drink => "player_drink",
+                PlayerAction::Healing => "player_healing",
                 PlayerAction::Hit => "player_hit",
                 PlayerAction::Land => "player_land",
                 PlayerAction::WallJump => "player_wall_jump",
                 PlayerAction::Dive => "player_dive",
             };
+            let looping = action == PlayerAction::Charging;
             if restart {
-                self.restart(key, false);
+                self.restart(key, looping);
                 // A chain sped up by a bonus plays its blow that much faster.
                 if let PlayerAction::Strike { strike, speed } = action
                     && let Some(sheet) = self.sheets.0.get(strike.clip_key())
@@ -74,7 +84,7 @@ impl PlayerSprite<'_> {
                     );
                 }
             } else {
-                self.play(key, false);
+                self.play(key, looping);
             }
             return;
         }

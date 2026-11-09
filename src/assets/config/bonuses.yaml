@@ -36,6 +36,11 @@ rarities:
 
 # Every category holds enough bonuses that a whole chapter of pickups, rerolls
 # included, can never run it dry (`GameData::validate` checks it).
+#
+# Fire Kick, Power Strike and Explosive Strike are the melee chain's rival
+# finishers: each is a step of `player.melee` in `config/gameplay.yaml` that
+# only a run owning it throws, and a run holding more than one throws the last
+# of them listed there rather than all of them.
 bonuses:
   - id: heavy_hands
     name: Heavy Hands
@@ -64,6 +69,18 @@ bonuses:
   - id: fire_kick
     name: Fire Kick
     description: Adds a blazing fourth blow to the chain, dealing 45 damage.
+    category: combat
+    rarity: epic
+    effects: { adds_combo_step: 1 }
+  - id: power_strike
+    name: Power Strike
+    description: Ends the chain with a heavier blow, dealing 38 damage.
+    category: combat
+    rarity: rare
+    effects: { adds_combo_step: 1 }
+  - id: explosive_strike
+    name: Explosive Strike
+    description: Ends the chain with a blast that hits every side at once, dealing 30 damage.
     category: combat
     rarity: epic
     effects: { adds_combo_step: 1 }

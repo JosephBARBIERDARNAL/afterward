@@ -149,21 +149,57 @@ pub struct PlayerConfig {
     /// Seconds the last death frame holds before the run ends.
     pub death_hold_s: f32,
     pub melee: MeleeConfig,
+    pub roll: RollConfig,
     pub wall: WallConfig,
     pub water: WaterConfig,
 }
 
 /// The player's only weapon: a melee chain. Each press lands the next blow of
 /// `steps`; letting `combo_window_s` lapse after one ends drops the chain back
-/// to its first step.
+/// to its first step. The steps with no `requires_bonus` are the chain every
+/// run throws; those with one are its rival finishers.
 #[derive(Debug, Deserialize)]
 pub struct MeleeConfig {
     pub combo_window_s: f32,
     /// Knockback a blow gives the boss, the only body the player can shove.
     pub boss_knockback_h_s: f32,
     pub steps: Vec<MeleeComboStep>,
+    pub slam: SlamConfig,
+    pub charge: ChargeConfig,
     /// The burst drawn where a blow lands.
     pub impact_burst: BurstConfig,
+}
+
+/// Attack with Down held in mid-air: the player is driven at the floor, and
+/// the landing hurts everything to both sides of them.
+#[derive(Debug, Deserialize)]
+pub struct SlamConfig {
+    pub damage: f32,
+    /// Measured from the feet and mirrored around them, like a blow landing
+    /// on both sides.
+    pub hitbox_h: RectH,
+    pub drop_speed_h_s: f32,
+}
+
+/// Attack held rather than tapped: the gather, and the blow it throws.
+#[derive(Debug, Deserialize)]
+pub struct ChargeConfig {
+    /// How long Attack is held, after the blow in hand ends, before the
+    /// charged blow is ready.
+    pub ready_s: f32,
+    pub damage: f32,
+    pub hitbox_h: RectH,
+    pub contact_s: f32,
+    pub lunge_h_s: f32,
+}
+
+/// The roll Down and Jump together ask for.
+#[derive(Debug, Deserialize)]
+pub struct RollConfig {
+    pub speed_h_s: f32,
+    /// The stretch of the roll nothing can hurt the player through.
+    pub invulnerable_from_s: f32,
+    pub invulnerable_to_s: f32,
 }
 
 /// One blow of the chain.
@@ -175,13 +211,34 @@ pub struct MeleeComboStep {
     /// Where the blow lands, from the player's feet: `x` points the way they
     /// face (negative reaches behind), `y` up.
     pub hitbox_h: RectH,
+    /// Whether the blow reaches behind the player as well as in front, which
+    /// mirrors `hitbox_h` around their feet instead of pointing it.
+    #[serde(default)]
+    pub both_sides: bool,
     /// How far into the clip the blow connects.
     pub contact_s: f32,
     /// Forward shove the blow gives the player, so the chain carries them in.
     pub lunge_h_s: f32,
-    /// Part of the chain only while this bonus is owned.
+    /// A finisher, thrown only by a run owning this bonus and only in place
+    /// of the other finishers: of the ones a run holds, the last listed wins.
     #[serde(default)]
     pub requires_bonus: Option<String>,
+}
+
+impl MeleeConfig {
+    /// The chain a run actually throws: every step owing nothing to a bonus,
+    /// then the one finisher its bonuses bought, if any.
+    pub(crate) fn chain<'a>(&'a self, owned: &dyn Fn(&str) -> bool) -> Vec<&'a MeleeComboStep> {
+        self.steps
+            .iter()
+            .filter(|step| step.requires_bonus.is_none())
+            .chain(self.steps.iter().rev().find(|step| {
+                step.requires_bonus
+                    .as_ref()
+                    .is_some_and(|bonus| owned(bonus))
+            }))
+            .collect()
+    }
 }
 
 /// Clinging to a platform's side and pushing off it.

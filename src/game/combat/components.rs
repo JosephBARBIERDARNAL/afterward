@@ -32,6 +32,21 @@ pub(crate) struct HealthPickup {
     pub(crate) healing: f32,
 }
 
+/// The green plusses drifting off something being healed: they hang over a
+/// pickup lying on the floor for as long as it lies there, and over the
+/// player for one play-through each time Recovery restores a point.
+#[derive(Component)]
+pub(crate) struct HealEffect {
+    pub(crate) timer: Option<Timer>,
+}
+
+impl HealEffect {
+    /// Its sheet's key in `SpriteSheets`.
+    pub(crate) const SHEET: &'static str = "effect_health_regeneration";
+    /// How tall it is drawn, in H.
+    pub(crate) const HEIGHT_H: f32 = 0.5;
+}
+
 impl HealthPickup {
     /// Its sprite's key in `SpriteSheets`.
     pub(crate) const SHEET: &'static str = "health_pickup";

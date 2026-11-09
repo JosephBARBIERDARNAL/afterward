@@ -5,7 +5,7 @@ mod animation;
 mod body;
 
 use animation::{AnimationState, PlayerSprite};
-pub(super) use body::{PlayerAction, PlayerBody, Strike};
+pub(super) use body::{BonusAura, PlayerAction, PlayerBody, Strike, Thrown};
 
 #[derive(SystemParam)]
 pub(super) struct PlayerUpdateResources<'w, 's> {
@@ -58,6 +58,11 @@ pub(super) fn update_player(
         player.action = None;
     }
     player.wall_control_lock_s = (player.wall_control_lock_s - dt).max(0.0);
+    // The roll runs on its own clock and ends with its clip.
+    player.roll_s = player
+        .roll_s
+        .filter(|_| matches!(player.action, Some(PlayerAction::Roll)))
+        .map(|elapsed_s| elapsed_s + dt);
     let mut sprite_view = PlayerSprite {
         sprite: &mut sprite,
         animation: &mut animation,
@@ -68,7 +73,10 @@ pub(super) fn update_player(
     // keeps living, without input, behind the room-clear flash and the bonus
     // screen: an airborne player lands, then idles.
     let alive = player.dying_s.is_none();
-    let controllable = alive && *screen.get() == GameScreen::Playing;
+    // Getting up off the floor takes as long as it takes: Last Stand gives
+    // the player their life back, not the frames.
+    let rising = matches!(player.action, Some(PlayerAction::Rise));
+    let controllable = alive && !rising && *screen.get() == GameScreen::Playing;
     let held = |action| controllable && controls.pressed(action, &keys);
     let tapped = |action| controllable && controls.just_pressed(action, &keys);
 
@@ -76,9 +84,13 @@ pub(super) fn update_player(
     let previous_x = transform.translation.x;
     let pool = waters.around(previous_x, previous_feet);
     player.swimming = pool.is_some();
-    player.covering = player.grounded && !player.swimming && held(GameAction::Cover);
-    player.crouching =
-        player.grounded && !player.swimming && !player.covering && held(GameAction::MoveDown);
+    let rolling = player.roll_s.is_some();
+    player.covering = player.grounded && !player.swimming && !rolling && held(GameAction::Cover);
+    player.crouching = player.grounded
+        && !player.swimming
+        && !player.covering
+        && !rolling
+        && held(GameAction::MoveDown);
 
     let movement_multiplier =
         session.bonus_multiplier(&data, "fleet_feet", "movement_speed_multiplier");
@@ -99,7 +111,15 @@ pub(super) fn update_player(
     if player.covering {
         direction = 0.0;
     }
-    if player.wall_control_lock_s == 0.0 {
+    if player.slamming {
+        // The slam is a straight drop: nothing steers it.
+        player.velocity.x = 0.0;
+    } else if let Some(elapsed_s) = player.roll_s {
+        // The roll carries the player the way they already faced, and cannot
+        // be steered once it is under way.
+        let _ = elapsed_s;
+        player.velocity.x = player.facing * tuning.roll.speed_h_s * H_WORLD_UNITS;
+    } else if player.wall_control_lock_s == 0.0 {
         if direction != 0.0 {
             player.facing = direction.signum();
         }
@@ -153,7 +173,17 @@ pub(super) fn update_player(
             );
         }
         player.jump_held = held(GameAction::Jump);
-    } else if tapped(GameAction::Jump) && !player.covering {
+    } else if tapped(GameAction::Jump)
+        && player.grounded
+        && held(GameAction::MoveDown)
+        && !player.covering
+        && player.roll_s.is_none()
+    {
+        // Down and Jump together: a roll rather than a hop.
+        player.roll_s = Some(0.0);
+        player.velocity.x = player.facing * tuning.roll.speed_h_s * H_WORLD_UNITS;
+        player.start_action(PlayerAction::Roll, clips.roll.duration_s());
+    } else if tapped(GameAction::Jump) && !player.covering && player.roll_s.is_none() {
         if let Some(wall) = player.wall_cling {
             // Pushing off a wall throws the player up and away from it, and
             // turns them to face the way they are thrown.
@@ -200,7 +230,9 @@ pub(super) fn update_player(
     // Gravity before the horizontal step, so the frame's whole vertical reach
     // is known: a body rising over a ledge this frame also clears its side.
     // Water holds the body up instead, and a wall it clings to slows the fall.
-    if !player.swimming {
+    if player.slamming {
+        player.velocity.y = -tuning.melee.slam.drop_speed_h_s * H_WORLD_UNITS;
+    } else if !player.swimming {
         player.velocity.y -= tuning.gravity_h_s2 * H_WORLD_UNITS * dt;
         if player.wall_cling.is_some() {
             player.velocity.y = player
@@ -291,8 +323,12 @@ pub(super) fn update_player(
         player.jumps_used = 0;
         if !was_grounded {
             sounds.push(SoundCue::Landing);
-            // Touching down in place plays the landing crouch.
-            if direction == 0.0 && player.action.is_none() && alive {
+            if player.slamming {
+                // The floor is reached: `combat/player_melee.rs` breaks it.
+                player.slamming = false;
+                player.slam_landed = true;
+            } else if direction == 0.0 && player.action.is_none() && alive {
+                // Touching down in place plays the landing crouch.
                 player.start_action(PlayerAction::Land, clips.land.duration_s());
             }
         }

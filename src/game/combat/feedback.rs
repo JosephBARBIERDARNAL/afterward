@@ -140,6 +140,88 @@ pub(in crate::game) fn update_impact_effects(
     }
 }
 
+/// Restores the trickle Recovery pays while nothing is engaged, and takes
+/// away the plusses that have finished drifting.
+#[derive(SystemParam)]
+pub(in crate::game) struct HealingResources<'w> {
+    time: Res<'w, Time>,
+    data: Res<'w, GameData>,
+    sheets: Res<'w, SpriteSheets>,
+    session: ResMut<'w, RunSession>,
+}
+
+pub(in crate::game) fn update_healing_over_time(
+    mut commands: Commands,
+    resources: HealingResources,
+    enemies: Query<&EnemyBody>,
+    players: Query<&Transform, With<PlayerBody>>,
+    mut effects: Query<(Entity, &mut HealEffect)>,
+) {
+    let HealingResources {
+        time,
+        data,
+        sheets,
+        mut session,
+    } = resources;
+    for (entity, mut effect) in &mut effects {
+        if let Some(timer) = effect.timer.as_mut() {
+            timer.tick(time.delta());
+            if timer.is_finished() {
+                commands.entity(entity).despawn();
+            }
+        }
+    }
+    if !session.has_bonus("recovery") || session.health >= session.max_health {
+        return;
+    }
+    if enemies
+        .iter()
+        .any(|enemy| enemy.health > 0.0 && enemy.engaged)
+    {
+        session.idle_healing = 0.0;
+        return;
+    }
+    let per_s = data.bonus_effect("recovery", "idle_regeneration_per_s");
+    session.idle_healing += per_s * time.delta_secs().min(0.05);
+    if session.idle_healing < 1.0 {
+        return;
+    }
+    let restored = session.idle_healing.floor();
+    session.idle_healing -= restored;
+    session.health = (session.health + restored).min(session.max_health);
+    // One play-through of the plusses over the body for every point back.
+    let (Ok(transform), Some(sheet)) = (players.single(), sheets.0.get(HealEffect::SHEET)) else {
+        return;
+    };
+    let mut sprite = Sprite::from_atlas_image(
+        sheet.image.clone(),
+        TextureAtlas {
+            layout: sheet.layout.clone(),
+            index: 0,
+        },
+    );
+    sprite.custom_size =
+        Some(sheet.frame_size * HealEffect::HEIGHT_H * H_WORLD_UNITS / sheet.frame_size.y);
+    commands.spawn((
+        sprite,
+        Transform::from_translation(transform.translation + Vec3::new(0.0, 12.0, 1.0)),
+        AnimatedSprite {
+            sheet: HealEffect::SHEET.to_string(),
+            frame: 0,
+            frames: sheet.frames,
+            timer: Timer::from_seconds(1.0 / sheet.fps, TimerMode::Repeating),
+            looping: false,
+        },
+        HealEffect {
+            timer: Some(Timer::from_seconds(
+                sheet.frames as f32 / sheet.fps,
+                TimerMode::Once,
+            )),
+        },
+        RoomEntity,
+    ));
+}
+
 pub(in crate::game) fn update_health_bars(
     mut commands: Commands,
     enemies: HealthBarEnemiesQuery,
@@ -192,11 +274,18 @@ pub(in crate::game) fn update_health_pickups(
         {
             continue;
         }
-        session.health = (session.health + pickup.healing).min(session.max_health);
+        let healing = pickup.healing
+            * session.bonus_multiplier(&data, "field_dressing", "health_pickup_multiplier");
+        session.health = (session.health + healing).min(session.max_health);
         sounds.push(SoundCue::Pickup);
+        // The flask is raised and drunk where it was found.
+        player_body.start_action(
+            PlayerAction::Drink,
+            data.player_animations.clips.drink.duration_s(),
+        );
         if session.has_bonus("sated_fury") {
             player_body.sated_fury_timer =
-                data.bonus_effect("sated_fury", "healing_pickup_fire_rate_duration_s");
+                data.bonus_effect("sated_fury", "healing_pickup_combo_speed_duration_s");
         }
         commands.entity(entity).despawn();
     }

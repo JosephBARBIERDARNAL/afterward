@@ -59,7 +59,7 @@ use combat::{
 use controls::{ControlBindings, GameAction};
 use flow::PhaseTimer;
 use menus::{MenuAction, MenuFocus, VolumeChannel};
-use player::{PlayerAction, PlayerBody, Strike};
+use player::{BonusAura, PlayerAction, PlayerBody, Strike};
 use prologue::Prologue;
 use random::RandomState;
 use room_pan::RoomPan;
@@ -259,6 +259,7 @@ impl Plugin for GamePlugin {
                     combat::update_health_bars,
                     combat::update_enemy_shields,
                     combat::update_health_pickups,
+                    combat::update_healing_over_time,
                     combat::update_player_death,
                     bonus_pickup::spawn_bonus_pickup,
                     bonus_pickup::update_bonus_pickup,

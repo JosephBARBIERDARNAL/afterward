@@ -59,6 +59,13 @@ pub(crate) struct RunSession {
     pub(crate) room_cleared: bool,
     pub(crate) door_open: bool,
     pub(crate) room_ward_used: bool,
+    /// The part of a health point Recovery has restored but not yet paid out.
+    pub(crate) idle_healing: f32,
+    /// Last Stand is spent once a run, not once a room.
+    pub(crate) last_stand_used: bool,
+    /// Whether anything has hurt the player in this room, which Clean Sweep
+    /// pays for going without.
+    pub(crate) damaged_this_room: bool,
     pub(crate) world_loaded: bool,
 }
 
@@ -95,6 +102,9 @@ impl Default for RunSession {
             room_cleared: false,
             door_open: false,
             room_ward_used: false,
+            idle_healing: 0.0,
+            last_stand_used: false,
+            damaged_this_room: false,
             world_loaded: false,
         }
     }

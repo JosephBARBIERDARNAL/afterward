@@ -147,6 +147,35 @@ impl GameData {
                 )));
             }
         }
+        let slam = &melee.slam;
+        let charge = &melee.charge;
+        if [
+            slam.damage,
+            slam.drop_speed_h_s,
+            charge.ready_s,
+            charge.damage,
+            charge.contact_s,
+        ]
+        .iter()
+        .any(|value| !value.is_finite() || *value <= 0.0)
+            || !(slam.hitbox_h.width > 0.0 && slam.hitbox_h.height > 0.0)
+            || !(charge.hitbox_h.width > 0.0 && charge.hitbox_h.height > 0.0)
+            || charge.contact_s > self.player_animations.clips.charge_brace.duration_s()
+        {
+            return Err(InvalidGameData::from(
+                "the slam and the charged blow need positive damage, timings and hitboxes, \
+                 and the charged blow must connect within its clip",
+            ));
+        }
+        let roll = &player.roll;
+        if !(roll.speed_h_s.is_finite() && roll.speed_h_s > 0.0)
+            || !(0.0..=roll.invulnerable_to_s).contains(&roll.invulnerable_from_s)
+            || roll.invulnerable_to_s > self.player_animations.clips.roll.duration_s()
+        {
+            return Err(InvalidGameData::from(
+                "the roll needs a positive speed and an invulnerable stretch inside its clip",
+            ));
+        }
         let wall = &player.wall;
         if [
             wall.slide_speed_h_s,

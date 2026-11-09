@@ -2,6 +2,7 @@ use super::*;
 use crate::{data::HealthPickupConfig, game::combat::HealthPickup};
 
 mod boss_sheets;
+mod effect_sheets;
 mod enemy_sheets;
 mod player_sheets;
 
@@ -15,6 +16,7 @@ pub(super) fn load_sprites(
         .into_iter()
         .chain(enemy_sheets::sprites())
         .chain(boss_sheets::sprites())
+        .chain(effect_sheets::sprites())
         .chain([
             exit_door_sheet(&data.gameplay.room_flow.exit_door),
             health_pickup_sheet(&data.gameplay.health_pickup),
@@ -23,10 +25,13 @@ pub(super) fn load_sprites(
 
     let mut sheets = BTreeMap::new();
     for spec in specs {
-        // Sheets under `ui/` and `pickups/` are Typst pixel art drawn near
-        // 1:1, so they keep their hard pixel edges; the character sheets are
-        // scaled down and look better with the default filtering.
-        let image = if spec.path.starts_with("ui/") || spec.path.starts_with("pickups/") {
+        // Sheets under `ui/`, `pickups/` and `effects/` are pixel art drawn
+        // near 1:1, so they keep their hard pixel edges; the character sheets
+        // are scaled down and look better with the default filtering.
+        let image = if spec.path.starts_with("ui/")
+            || spec.path.starts_with("pickups/")
+            || spec.path.starts_with("effects/")
+        {
             crate::game::ui_style::load_pixel_art(&asset_server, spec.path)
         } else {
             asset_server.load(spec.path)
@@ -116,6 +121,7 @@ mod tests {
             .into_iter()
             .chain(enemy_sheets::sprites())
             .chain(boss_sheets::sprites())
+            .chain(effect_sheets::sprites())
             .chain([
                 exit_door_sheet(&data.gameplay.room_flow.exit_door),
                 health_pickup_sheet(&data.gameplay.health_pickup),

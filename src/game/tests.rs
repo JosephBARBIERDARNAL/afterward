@@ -13,6 +13,7 @@ mod platform_movement;
 mod player_controls;
 mod player_stances;
 mod procedural_movement;
+mod slam_and_roll;
 mod swimming;
 mod variable_jump;
 mod wall_jump;

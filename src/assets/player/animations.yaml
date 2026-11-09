@@ -52,9 +52,38 @@ clips:
   cover: { sheet: player/sheets/cover.png, frames: 12, fps: 20 }
   hit: { sheet: player/sheets/hit.png, frames: 3, fps: 14 }
   death: { sheet: player/sheets/death.png, frames: 5, fps: 9 }
-  # The melee combo, in the order the steps of `player.melee` of
-  # `config/gameplay.yaml` call for them.
+  # The melee chain, in the order the steps of `player.melee` of
+  # `config/gameplay.yaml` call for them. The last four are finishers: a run
+  # throws whichever one of them its bonuses bought.
   strike_1: { sheet: player/sheets/strike_1.png, frames: 7, fps: 24 }
   strike_2: { sheet: player/sheets/strike_2.png, frames: 8, fps: 24 }
   kick: { sheet: player/sheets/kick.png, frames: 5, fps: 18 }
+  power_strike: { sheet: player/sheets/power_strike.png, frames: 11, fps: 26 }
   fire_kick: { sheet: player/sheets/fire_kick.png, frames: 11, fps: 26 }
+  explosive_strike: { sheet: player/sheets/explosive_strike.png, frames: 9, fps: 22 }
+  # Attack with Down held in mid-air: the drop, then the floor it breaks.
+  ground_slam: { sheet: player/sheets/ground_slam.png, frames: 12, fps: 24 }
+  # Down and Jump together on the ground: a roll that nothing can hit through
+  # its middle.
+  roll: { sheet: player/sheets/roll.png, frames: 9, fps: 18 }
+  # Attack held rather than tapped: the gather, then the brace it is thrown
+  # from. The charge loops until the key goes.
+  charge: { sheet: player/sheets/charge.png, frames: 6, fps: 12 }
+  charge_brace: { sheet: player/sheets/charge_brace.png, frames: 10, fps: 16 }
+  # Healing, by where it comes from: a flask off the floor, and the glow of a
+  # bonus that heals a cleared room.
+  drink: { sheet: player/sheets/drink.png, frames: 8, fps: 14 }
+  healing: { sheet: player/sheets/healing.png, frames: 8, fps: 14 }
+  # Getting up off the floor again, which only Last Stand ever asks for.
+  rise: { sheet: player/sheets/rise.png, frames: 8, fps: 10 }
+  # Planting the decoy that enemies swing at.
+  summon: { sheet: player/sheets/summon.png, frames: 8, fps: 16 }
+  # Going into a door and coming out of the next one.
+  dissolve: { sheet: player/sheets/dissolve.png, frames: 6, fps: 14 }
+  materialize: { sheet: player/sheets/materialize.png, frames: 6, fps: 14 }
+  # The aura worn for a moment when a bonus is taken, one per category; the
+  # defensive one is the guard's own sheet, played through once.
+  aura_combat: { sheet: player/sheets/aura_combat.png, frames: 10, fps: 18 }
+  aura_agility: { sheet: player/sheets/aura_agility.png, frames: 6, fps: 14 }
+  aura_intelligence: { sheet: player/sheets/aura_intelligence.png, frames: 10, fps: 18 }
+  aura_defense: { sheet: player/sheets/cover.png, frames: 12, fps: 20 }

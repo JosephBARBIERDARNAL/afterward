@@ -12,6 +12,7 @@ pub(super) fn room_clear_check(
     mut timer: ResMut<PhaseTimer>,
     mut next_screen: ResMut<NextState<GameScreen>>,
     mut sounds: ResMut<SoundQueue>,
+    mut players: Query<&mut PlayerBody>,
 ) {
     if session.room_cleared || session.health <= 0.0 {
         return;
@@ -21,6 +22,23 @@ pub(super) fn room_clear_check(
     }
     session.room_cleared = true;
     session.offered_bonuses.clear();
+    // What a cleared room pays out, and the glow it is paid out under.
+    let mut healing = 0.0;
+    if session.has_bonus("second_wind") {
+        healing += data.bonus_effect("second_wind", "room_clear_healing");
+    }
+    if session.has_bonus("clean_sweep") && !session.damaged_this_room {
+        healing += data.bonus_effect("clean_sweep", "flawless_room_healing");
+    }
+    if healing > 0.0 {
+        session.health = (session.health + healing).min(session.max_health);
+        if let Ok(mut player) = players.single_mut() {
+            player.start_action(
+                PlayerAction::Healing,
+                data.player_animations.clips.healing.duration_s(),
+            );
+        }
+    }
     // A room authored without enemies (the opening room 0) has nothing to
     // clear: its bonus item is simply there from the start, with no flash.
     if data.rooms[&session.room_id].enemy_spawns.is_empty() {
@@ -59,6 +77,7 @@ pub(super) struct BonusInputResources<'w> {
 pub(super) fn handle_bonus_input(
     resources: BonusInputResources,
     mut doors: Query<&mut Sprite, With<ExitDoor>>,
+    mut players: Query<&mut PlayerBody>,
     choices: Query<(Entity, &BonusChoice)>,
     mut pointer_overs: MessageReader<PointerOver>,
     mut pointer_clicks: MessageReader<PointerClick>,
@@ -190,6 +209,17 @@ pub(super) fn handle_bonus_input(
     session.owned_bonuses.push(chosen_id.clone());
     droplet_on(chosen);
     sounds.push(SoundCue::BonusSelected);
+    // The build is worn for a moment: the player comes back into the room
+    // wrapped in the glow of the category they just took from.
+    if let Ok(mut player) = players.single_mut()
+        && let Some(aura) = session
+            .bonus_category
+            .as_deref()
+            .and_then(|category| category.parse::<BonusAura>().ok())
+    {
+        let duration_s = aura.clip(&data.player_animations.clips).duration_s();
+        player.start_action(PlayerAction::Aura(aura), duration_s);
+    }
     if let Some(bonus) = data
         .bonuses
         .bonuses
@@ -319,6 +349,7 @@ pub(super) fn update_room_transition(
     session.room_cleared = false;
     session.bonus_category = None;
     session.room_ward_used = false;
+    session.damaged_this_room = false;
     session.room_id = next_room_id;
     next_screen.set(if opening_room {
         GameScreen::Prologue

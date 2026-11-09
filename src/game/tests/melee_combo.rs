@@ -192,6 +192,76 @@ next_room_id: 2
         "with Fire Kick owned the chain runs to a fourth blow"
     );
 
+    // The finishers are rivals, not a queue: a run holding two of them throws
+    // the one listed last, and still only one.
+    for _ in 0..(combo_window_s / 0.05).ceil() as usize + 2 {
+        frame(&mut app, false);
+    }
+    app.world_mut()
+        .resource_mut::<RunSession>()
+        .owned_bonuses
+        .push(String::from("explosive_strike"));
+    assert_eq!(blow(&mut app, 6), "player_strike_1");
+    assert_eq!(blow(&mut app, 7), "player_strike_2");
+    assert_eq!(blow(&mut app, 6), "player_kick");
+    assert_eq!(
+        blow(&mut app, 8),
+        "player_explosive_strike",
+        "the last finisher listed outranks the others a run holds"
+    );
+    assert_eq!(
+        blow(&mut app, 6),
+        "player_strike_1",
+        "and the chain is still four blows long, not five"
+    );
+
+    // Holding Attack rather than tapping it gathers, and letting go throws the
+    // heavy blow.
+    for _ in 0..(combo_window_s / 0.05).ceil() as usize + 2 {
+        frame(&mut app, false);
+    }
+    let charge = {
+        let data = app.world().resource::<GameData>();
+        data.gameplay.player.melee.charge.ready_s
+    };
+    // The first press still throws the chain's first blow; the gather begins
+    // once that blow has ended and Attack is still down.
+    {
+        let mut input = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
+        input.release_all();
+        input.clear();
+        input.press(KeyCode::KeyJ);
+    }
+    app.update();
+    for _ in 0..((charge + 0.5) / 0.05).ceil() as usize {
+        app.world_mut()
+            .resource_mut::<ButtonInput<KeyCode>>()
+            .clear();
+        app.update();
+    }
+    assert_eq!(
+        app.world()
+            .get::<AnimatedSprite>(player)
+            .expect("the player keeps its animation")
+            .sheet,
+        "player_charge",
+        "Attack held past the blow in hand gathers for the heavy one"
+    );
+    frame(&mut app, false);
+    frame(&mut app, false);
+    assert_eq!(
+        app.world()
+            .get::<AnimatedSprite>(player)
+            .expect("the player keeps its animation")
+            .sheet,
+        "player_charge_brace",
+        "letting the gather go throws the charged blow"
+    );
+    // Let it play itself out before anything else is asked for.
+    for _ in 0..16 {
+        frame(&mut app, false);
+    }
+
     // Cover plants the player: the chain cannot be thrown from behind a guard.
     {
         let mut input = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();

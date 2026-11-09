@@ -267,6 +267,7 @@ pub(super) fn reset_run(
     session.bonus_reroll_animation_remaining_s = 0.0;
     session.bonus_chosen_hold_remaining_s = 0.0;
     session.room_ward_used = false;
+    session.damaged_this_room = false;
     session.room_cleared = false;
     session.door_open = false;
     session.world_loaded = false;

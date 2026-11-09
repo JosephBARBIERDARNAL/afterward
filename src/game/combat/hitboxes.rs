@@ -2,7 +2,7 @@
 //! these, so the overlay draws exactly what hits.
 
 use super::*;
-use crate::data::MeleeComboStep;
+use crate::data::{MeleeComboStep, RectH};
 
 /// Where enemy strikes and projectiles hit the player whose body is centered
 /// on `center` (half an H above the feet).
@@ -29,23 +29,38 @@ impl EnemyBody {
     }
 }
 
+/// Where a hit area measured in H from a body's feet lands in the world. `x`
+/// points the way `facing` does, `reach` stretches it, and a blow landing on
+/// `both_sides` is mirrored around the feet instead of pointed. Every blow the
+/// player throws — the chain's, the charged one, the slam — and the debug
+/// overlay that draws them all come through here.
+pub(crate) fn blow_area(
+    hitbox: RectH,
+    feet: Vec2,
+    facing: f32,
+    reach: f32,
+    both_sides: bool,
+) -> Rect {
+    let (near, far) = if both_sides {
+        let reach_h = (hitbox.x + hitbox.width) * reach;
+        (-reach_h, reach_h)
+    } else if facing < 0.0 {
+        (-(hitbox.x + hitbox.width) * reach, -hitbox.x * reach)
+    } else {
+        (hitbox.x * reach, (hitbox.x + hitbox.width) * reach)
+    };
+    Rect::new(
+        feet.x + near * H_WORLD_UNITS,
+        feet.y + hitbox.y * H_WORLD_UNITS,
+        feet.x + far * H_WORLD_UNITS,
+        feet.y + (hitbox.y + hitbox.height) * H_WORLD_UNITS,
+    )
+}
+
 impl MeleeComboStep {
-    /// Where this blow of the player's chain lands: measured from `feet` (in
-    /// world units) with `x` pointing the way they face, and stretched out by
-    /// `reach`.
+    /// Where this blow of the player's chain lands, thrown from `feet`.
     pub(crate) fn hitbox_at(&self, feet: Vec2, facing: f32, reach: f32) -> Rect {
-        let hitbox = self.hitbox_h;
-        let (near, far) = if facing < 0.0 {
-            (-(hitbox.x + hitbox.width) * reach, -hitbox.x * reach)
-        } else {
-            (hitbox.x * reach, (hitbox.x + hitbox.width) * reach)
-        };
-        Rect::new(
-            feet.x + near * H_WORLD_UNITS,
-            feet.y + hitbox.y * H_WORLD_UNITS,
-            feet.x + far * H_WORLD_UNITS,
-            feet.y + (hitbox.y + hitbox.height) * H_WORLD_UNITS,
-        )
+        blow_area(self.hitbox_h, feet, facing, reach, self.both_sides)
     }
 }
 

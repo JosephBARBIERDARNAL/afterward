@@ -59,17 +59,58 @@ player:
         hitbox_h: { x: 0.2, y: 0.15, width: 1, height: 0.5 }
         contact_s: 0.11
         lunge_h_s: 2.5
-      # The chain's fourth blow only exists while Fire Kick is owned.
+      # The finishers. A step naming a bonus is only thrown by a run that
+      # owns it, and it is thrown *instead of* nothing rather than alongside
+      # the others: a run holding several throws the last of them listed
+      # here, so this order is the order they outrank each other in.
+      - strike: power_strike
+        damage: 38
+        hitbox_h: { x: 0.15, y: 0.2, width: 1, height: 0.55 }
+        contact_s: 0.22
+        lunge_h_s: 4
+        requires_bonus: power_strike
       - strike: fire_kick
         damage: 45
         hitbox_h: { x: 0.15, y: 0.2, width: 1.1, height: 0.55 }
         contact_s: 0.19
         lunge_h_s: 3
         requires_bonus: fire_kick
+      # The one blow that lands on every side at once, so it is worth less
+      # against a single body and far more in the middle of a crowd.
+      - strike: explosive_strike
+        damage: 30
+        hitbox_h: { x: 0, y: 0, width: 1.2, height: 1 }
+        both_sides: true
+        contact_s: 0.18
+        lunge_h_s: 0
+        requires_bonus: explosive_strike
+    # Attack with Down held in mid-air drives the player straight at the
+    # floor; the landing breaks it, hurting everything to both sides. It is
+    # the one answer to a crowd met from above.
+    slam:
+      damage: 34
+      hitbox_h: { x: 0, y: 0, width: 1.6, height: 0.6 }
+      drop_speed_h_s: 22
+    # Attack held rather than tapped: once the blow in hand has ended, the
+    # player gathers for `ready_s`, and letting go then throws one heavy blow
+    # that goes through a shield instead of being soaked by it.
+    charge:
+      ready_s: 0.7
+      damage: 40
+      hitbox_h: { x: 0.15, y: 0.15, width: 1.1, height: 0.6 }
+      contact_s: 0.2
+      lunge_h_s: 3
     # The burst drawn where a blow lands: a hot core that swells and fades
     # while embers fly outward.
     impact_burst:
       { radius_h: 0.32, duration_s: 0.24, embers: 7, ember_speed_h_s: 4.5 }
+  # Down and Jump together on the ground: a forward roll that carries the
+  # player clear. Nothing can hurt them between `invulnerable_from_s` and
+  # `invulnerable_to_s` of it, which is the only way through a shot.
+  roll:
+    speed_h_s: 9
+    invulnerable_from_s: 0.1
+    invulnerable_to_s: 0.4
   # Clinging to a platform's side and pushing off it, Mario style: a player
   # pressed into a wall in mid-air slides down it instead of falling, and Jump
   # throws them up and away. The lock keeps movement input off them for a

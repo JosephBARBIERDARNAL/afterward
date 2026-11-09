@@ -4,7 +4,10 @@
 //! `enemies/enemy_types.yaml`.
 
 use super::*;
-use crate::game::combat::{CombatProjectile, player_hurtbox};
+use crate::game::{
+    combat::{CombatProjectile, melee_blow_area, player_hurtbox},
+    player::Thrown,
+};
 
 const PLAYER_HURTBOX_COLOR: Color = Color::srgb(0.3, 1.0, 0.45);
 const ENEMY_HURTBOX_COLOR: Color = Color::srgb(1.0, 0.9, 0.2);
@@ -32,6 +35,7 @@ pub(super) fn draw_hitbox_overlay(
     mut gizmos: Gizmos,
     overlay: Res<HitboxOverlay>,
     data: Res<GameData>,
+    session: Res<RunSession>,
     players: Query<(&PlayerBody, &Transform)>,
     enemies: Query<(&EnemyBody, &Transform, &Sprite)>,
     projectiles: Query<(&Transform, &CombatProjectile)>,
@@ -48,18 +52,34 @@ pub(super) fn draw_hitbox_overlay(
             player_hurtbox(transform.translation, &data),
             PLAYER_HURTBOX_COLOR,
         );
-        // The blow being thrown, or faintly the one the next press would
-        // throw, drawn where it would land.
-        let (step, color) = match player.strike {
-            Some(strike) => (melee.steps.get(strike.step), STRIKE_COLOR),
-            None => (melee.steps.get(player.combo_step), NEXT_STRIKE_COLOR),
+        // The blow in the air, or faintly the one the next press would
+        // throw, drawn where it would land. The chain is the run's own, so a
+        // finisher bonus shows up here as the last blow it reaches.
+        let feet = Vec2::new(
+            transform.translation.x,
+            transform.translation.y - H_WORLD_UNITS / 2.0,
+        );
+        let chain = melee.chain(&|bonus| session.has_bonus(bonus));
+        let pointed =
+            |hitbox, both_sides| melee_blow_area(hitbox, feet, player.facing, 1.0, both_sides);
+        let (area, color) = match player.strike.map(|strike| strike.thrown) {
+            Some(Thrown::Step(index)) => (
+                chain
+                    .get(index)
+                    .map(|step| pointed(step.hitbox_h, step.both_sides)),
+                STRIKE_COLOR,
+            ),
+            Some(Thrown::Charged) => (Some(pointed(melee.charge.hitbox_h, false)), STRIKE_COLOR),
+            None if player.slamming => (Some(pointed(melee.slam.hitbox_h, true)), STRIKE_COLOR),
+            None => (
+                chain
+                    .get(player.combo_step)
+                    .map(|step| pointed(step.hitbox_h, step.both_sides)),
+                NEXT_STRIKE_COLOR,
+            ),
         };
-        if let Some(step) = step {
-            let feet = Vec2::new(
-                transform.translation.x,
-                transform.translation.y - H_WORLD_UNITS / 2.0,
-            );
-            outline(step.hitbox_at(feet, player.facing, 1.0), color);
+        if let Some(area) = area {
+            outline(area, color);
         }
     }
     for (enemy, transform, sprite) in &enemies {
