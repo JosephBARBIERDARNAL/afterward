@@ -246,7 +246,6 @@ impl GameData {
             &controls.navigate_up,
             &controls.navigate_down,
             &controls.jump,
-            &controls.dash,
             &controls.shoot,
             &controls.aim_up,
             &controls.reload,

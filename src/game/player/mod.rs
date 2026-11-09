@@ -52,8 +52,6 @@ pub(super) fn update_player(
     if player.action_animation_timer == 0.0 {
         player.action = None;
     }
-    player.dash_shot_timer = (player.dash_shot_timer - dt).max(0.0);
-    player.dash_cooldown = (player.dash_cooldown - dt).max(0.0);
     let mut sprite_view = PlayerSprite {
         sprite: &mut sprite,
         animation: &mut animation,
@@ -67,7 +65,7 @@ pub(super) fn update_player(
     let controllable = alive && *screen.get() == GameScreen::Playing;
     let held = |action| controllable && controls.pressed(action, &keys);
     let tapped = |action| controllable && controls.just_pressed(action, &keys);
-    player.covering = player.grounded && player.dash_timer == 0.0 && held(GameAction::Cover);
+    player.covering = player.grounded && held(GameAction::Cover);
     player.crouching = player.grounded && !player.covering && held(GameAction::MoveDown);
 
     let movement_multiplier =
@@ -76,7 +74,6 @@ pub(super) fn update_player(
         * tuning.max_speed_h_s
         * movement_multiplier
         * H_WORLD_UNITS;
-    let was_dashing = player.dash_timer > 0.0;
     let mut direction: f32 = 0.0;
     if held(GameAction::MoveLeft) {
         direction -= 1.0;
@@ -87,34 +84,26 @@ pub(super) fn update_player(
     if player.covering {
         direction = 0.0;
     }
-    // Sprinting lasts until the player stops, turns, crouches, or covers.
-    if direction != player.facing || player.crouching || player.covering {
-        player.sprinting = false;
-    }
     if direction != 0.0 {
-        if !was_dashing {
-            // Reversing on the ground plays a turn-around step.
-            if direction != player.facing
-                && player.grounded
-                && player.velocity.x * direction < -MOVING_SPEED_THRESHOLD
-                && !matches!(
-                    player.action,
-                    Some(PlayerAction::Shot { .. } | PlayerAction::Hit)
-                )
-            {
-                let running = player.velocity.x.abs() >= jog_speed;
-                let clip = if running {
-                    &clips.turn_run
-                } else {
-                    &clips.turn
-                };
-                player.start_action(PlayerAction::Turn { running }, clip.duration_s());
-            }
-            player.facing = direction.signum();
+        // Reversing on the ground plays a turn-around step.
+        if direction != player.facing
+            && player.grounded
+            && player.velocity.x * direction < -MOVING_SPEED_THRESHOLD
+            && !matches!(
+                player.action,
+                Some(PlayerAction::Shot { .. } | PlayerAction::Hit)
+            )
+        {
+            let running = player.velocity.x.abs() >= jog_speed;
+            let clip = if running {
+                &clips.turn_run
+            } else {
+                &clips.turn
+            };
+            player.start_action(PlayerAction::Turn { running }, clip.duration_s());
         }
-        let max_speed_h_s = if player.sprinting {
-            data.bonus_effect("sprinter", "sprint_speed_h_s")
-        } else if player.crouching {
+        player.facing = direction.signum();
+        let max_speed_h_s = if player.crouching {
             tuning.crouch_speed_h_s
         } else if player.grounded {
             tuning.max_speed_h_s
@@ -164,44 +153,12 @@ pub(super) fn update_player(
         }
     }
 
-    if tapped(GameAction::Dash) && player.dash_cooldown == 0.0 && !player.covering {
-        player.dash_timer = tuning.dash_duration_s;
-        player.dash_cooldown = tuning.dash_cooldown_s
-            * session.bonus_multiplier(&data, "dash_recharge", "dash_cooldown_multiplier");
-        player.dash_invulnerability_timer = tuning.dash_invulnerability_s;
-        player.dash_direction = player.facing;
-        sounds.push(SoundCue::Dash);
-    }
-
-    let dash_step = player.dash_timer.min(dt);
-    player.dash_timer = (player.dash_timer - dash_step).max(0.0);
-    let normal_step = dt - dash_step;
-    if was_dashing && player.dash_timer == 0.0 {
-        player.dash_shot_timer = if session.has_bonus("dash_shot") {
-            data.bonus_effect("dash_shot", "post_dash_window_s")
-        } else {
-            0.0
-        };
-        // Sprinter: a grounded dash still pushed forward turns into a sprint.
-        if session.has_bonus("sprinter") && player.grounded && direction == player.dash_direction {
-            player.sprinting = true;
-            player.velocity.x = direction
-                * data.bonus_effect("sprinter", "sprint_speed_h_s")
-                * movement_multiplier
-                * H_WORLD_UNITS;
-        }
-    }
-
     // Gravity before the horizontal step, so the frame's whole vertical reach
     // is known: a body rising over a ledge this frame also clears its side.
-    if normal_step > 0.0 {
-        player.velocity.y -= tuning.gravity_h_s2 * H_WORLD_UNITS * normal_step;
-    }
+    player.velocity.y -= tuning.gravity_h_s2 * H_WORLD_UNITS * dt;
     let previous_feet = transform.translation.y - H_WORLD_UNITS / 2.0;
     let previous_x = transform.translation.x;
-    let dash_dx =
-        player.dash_direction * tuning.dash_distance_h / tuning.dash_duration_s * H_WORLD_UNITS;
-    let dx = dash_dx * dash_step + player.velocity.x * normal_step;
+    let dx = player.velocity.x * dt;
     let room = &data.rooms[&session.room_id];
     let room_width_world = room.size.width_h * H_WORLD_UNITS;
     let wanted_x = (previous_x + dx).clamp(HALF_BODY_WIDTH, room_width_world - HALF_BODY_WIDTH);

@@ -141,7 +141,7 @@ fn drive_visual_walkthrough(resources: VisualWalkthroughResources) {
     }
 
     let capture_delay_s = match scene.screen {
-        GameScreen::MainMenu => 0.5,
+        GameScreen::MainMenu | GameScreen::Difficulty => 0.5,
         GameScreen::Playing if scene.door_open => 0.35,
         GameScreen::Playing if scene.room_cleared => 0.35,
         GameScreen::Playing => 0.75,
@@ -169,6 +169,7 @@ fn drive_visual_walkthrough(resources: VisualWalkthroughResources) {
     if !walkthrough.capture_requested && walkthrough.elapsed_s >= capture_delay_s {
         let screenshot_name = match scene.screen {
             GameScreen::MainMenu => String::from("main-menu"),
+            GameScreen::Difficulty => String::from("difficulty"),
             GameScreen::Playing if scene.door_open => {
                 format!("room_{:03}_door", scene.room_id)
             }
@@ -220,7 +221,8 @@ fn drive_visual_walkthrough(resources: VisualWalkthroughResources) {
 
     walkthrough.action_started = true;
     match scene.screen {
-        GameScreen::MainMenu => next_screen.set(GameScreen::Playing),
+        GameScreen::MainMenu => next_screen.set(GameScreen::Difficulty),
+        GameScreen::Difficulty => next_screen.set(GameScreen::Playing),
         // Nobody is holding the keyboard: the walkthrough walks in itself.
         GameScreen::Prologue => next_screen.set(GameScreen::RoomLoading),
         GameScreen::Playing if scene.door_open => {

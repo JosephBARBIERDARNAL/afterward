@@ -10,9 +10,6 @@ pub(crate) struct PlayerBody {
     pub(crate) jumps_used: u8,
     /// Rising from a jump whose button is still held; releasing it cuts the rise.
     pub(crate) jump_held: bool,
-    pub(crate) dash_timer: f32,
-    pub(crate) dash_cooldown: f32,
-    pub(crate) dash_direction: f32,
     /// Seconds until the gun can fire again.
     pub(crate) fire_cooldown: f32,
     /// Rounds left in the magazine.
@@ -28,8 +25,6 @@ pub(crate) struct PlayerBody {
     pub(crate) magazine_healing: f32,
     pub(crate) crouching: bool,
     pub(crate) covering: bool,
-    /// Sprinter bonus: running faster since a grounded dash.
-    pub(crate) sprinting: bool,
     /// Seconds spent standing idle, for the hand fidgets.
     pub(crate) idle_s: f32,
     /// The next fidget uses the right hand.
@@ -37,8 +32,6 @@ pub(crate) struct PlayerBody {
     /// Seconds since the player died, while the death animation plays.
     pub(crate) dying_s: Option<f32>,
     pub(crate) invulnerability_timer: f32,
-    pub(crate) dash_invulnerability_timer: f32,
-    pub(crate) dash_shot_timer: f32,
     pub(crate) rhythm_timer: f32,
     pub(crate) rhythm_stacks: u8,
     pub(crate) chain_reaction_timer: f32,
@@ -60,9 +53,6 @@ impl Default for PlayerBody {
             grounded: true,
             jumps_used: 0,
             jump_held: false,
-            dash_timer: 0.0,
-            dash_cooldown: 0.0,
-            dash_direction: 1.0,
             fire_cooldown: 0.0,
             ammo: 0,
             reload: None,
@@ -72,13 +62,10 @@ impl Default for PlayerBody {
             magazine_healing: 0.0,
             crouching: false,
             covering: false,
-            sprinting: false,
             idle_s: 0.0,
             fidget_right: false,
             dying_s: None,
             invulnerability_timer: 0.0,
-            dash_invulnerability_timer: 0.0,
-            dash_shot_timer: 0.0,
             rhythm_timer: 0.0,
             rhythm_stacks: 0,
             chain_reaction_timer: 0.0,

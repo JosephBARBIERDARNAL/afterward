@@ -57,11 +57,12 @@ impl AudioSettings {
 pub(super) struct SettingsReturn(pub(super) GameScreen);
 
 impl SettingsReturn {
-    /// Whether `screen` is drawn over the main menu: the menu itself, or the
-    /// settings and controls screens when the main menu opened them.
-    pub(super) fn on_the_main_menu(self, screen: GameScreen) -> bool {
+    /// Whether `screen` is drawn over the flood rather than over a room: the
+    /// main menu and the difficulty it opens, the screen a run ends on, and
+    /// the settings and controls screens when the main menu opened them.
+    pub(super) fn over_the_flood(self, screen: GameScreen) -> bool {
         match screen {
-            GameScreen::MainMenu => true,
+            GameScreen::MainMenu | GameScreen::Difficulty | GameScreen::Dead => true,
             GameScreen::Settings | GameScreen::Controls => self.0 == GameScreen::MainMenu,
             _ => false,
         }

@@ -31,15 +31,12 @@ clips:
   idle_fidget_right: { sheet: player/sheets/idle_fidget_right.png, frames: 4, fps: 5 }
   walk: { sheet: player/sheets/walk.png, frames: 8, fps: 10 }
   jog: { sheet: player/sheets/jog.png, frames: 8, fps: 13 }
-  # Sprinter bonus only.
-  sprint: { sheet: player/sheets/sprint.png, frames: 8, fps: 18 }
   # Holding Down on the ground.
   crouch: { sheet: player/sheets/crouch.png, frames: 4, fps: 6 }
   crouch_walk: { sheet: player/sheets/crouch_walk.png, frames: 8, fps: 10 }
   # Reversing direction on the ground: below, then above the jog speed.
   turn: { sheet: player/sheets/turn.png, frames: 4, fps: 20 }
   turn_run: { sheet: player/sheets/turn_run.png, frames: 5, fps: 20 }
-  dash: { sheet: player/sheets/dash.png, frames: 5, fps: 25 }
   # Take-off, then the rising loop until the player starts falling.
   jump: { sheet: player/sheets/jump.png, frames: 5, fps: 16 }
   ascend: { sheet: player/sheets/ascend.png, frames: 2, fps: 8 }

@@ -2,9 +2,45 @@
 
 use super::*;
 
+/// How hard a run was asked to be. Nothing reads it yet: the choice is made
+/// before the run opens, remembered for the next one, and changes nothing.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub(crate) enum Difficulty {
+    Easy,
+    #[default]
+    Normal,
+    Hard,
+}
+
+impl Difficulty {
+    /// The choices, in the order the difficulty screen draws them.
+    pub(crate) const ALL: [Self; 3] = [Self::Easy, Self::Normal, Self::Hard];
+
+    pub(crate) fn label(self) -> &'static str {
+        match self {
+            Self::Easy => "Easy",
+            Self::Normal => "Normal",
+            Self::Hard => "Hard",
+        }
+    }
+
+    /// The colour the choice's box is edged in, from `difficulty:` of
+    /// `config/gameplay.yaml`.
+    pub(crate) fn edge(self, colors: &DifficultyColors) -> HexColor {
+        match self {
+            Self::Easy => colors.easy,
+            Self::Normal => colors.normal,
+            Self::Hard => colors.hard,
+        }
+    }
+}
+
 #[derive(Resource, Debug)]
 pub(crate) struct RunSession {
     pub(crate) room_id: u16,
+    /// What the player asked for on the difficulty screen; it outlives a run,
+    /// so the next one opens on the same choice.
+    pub(crate) difficulty: Difficulty,
     pub(crate) health: f32,
     pub(crate) max_health: f32,
     pub(crate) rerolls: u8,
@@ -52,6 +88,7 @@ impl Default for RunSession {
     fn default() -> Self {
         Self {
             room_id: 0,
+            difficulty: Difficulty::default(),
             health: 100.0,
             max_health: 100.0,
             rerolls: 3,

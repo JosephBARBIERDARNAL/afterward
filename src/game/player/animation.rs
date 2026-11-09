@@ -82,10 +82,6 @@ impl PlayerSprite<'_> {
             }
             return;
         }
-        if player.dash_timer > 0.0 {
-            self.play("player_dash", false);
-            return;
-        }
         if !player.grounded {
             let key = if player.velocity.y > 0.0 {
                 // Take-off, then the rising loop.
@@ -150,9 +146,7 @@ impl PlayerSprite<'_> {
             return;
         }
         if state.moving {
-            let key = if player.sprinting {
-                "player_sprint"
-            } else if speed >= state.jog_speed {
+            let key = if speed >= state.jog_speed {
                 "player_jog"
             } else {
                 "player_walk"

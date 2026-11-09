@@ -115,19 +115,11 @@ pub(in crate::game) fn player_gun(
     } else {
         session.bonus_multiplier(&data, "aerial_gunner", "airborne_bullet_damage_multiplier")
     };
-    // Dash Shot boosts only the first shot after a dash.
-    let dash_shot = if player.dash_shot_timer > 0.0 {
-        player.dash_shot_timer = 0.0;
-        session.bonus_multiplier(&data, "dash_shot", "post_dash_bullet_damage_multiplier")
-    } else {
-        1.0
-    };
     let damage = gun.damage
         * session.bonus_multiplier(&data, "hollow_points", "bullet_damage_multiplier")
         * last_round_bonus
         * chain_reaction
-        * airborne
-        * dash_shot;
+        * airborne;
 
     let angle = match aim {
         Aim::Straight => 0.0,

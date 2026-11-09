@@ -94,7 +94,7 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
                 screens::handle_screen_input,
             )
                 .chain()
-                .run_if(in_state(GameScreen::MainMenu)),
+                .run_if(in_state(GameScreen::MainMenu).or_else(in_state(GameScreen::Difficulty))),
         )
         .add_systems(
             OnEnter(GameScreen::RoomLoading),
@@ -442,7 +442,6 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
     let player_velocity = player.velocity;
     let player_facing = player.facing;
     let player_grounded = player.grounded;
-    let player_dash_cooldown = player.dash_cooldown;
     let input = app.world().resource::<ButtonInput<KeyCode>>();
     let left_pressed = app
         .world()
@@ -471,7 +470,7 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
     assert_eq!(
         *app.world().resource::<State<GameScreen>>().get(),
         GameScreen::Complete,
-        "the input-driven run should reach the Chapter 1 completion screen; room: {}, health: {}, bonuses: {:?}, living enemies: {}, enemy states: {:?}, door open: {}, player position: {:?}, velocity: {:?}, grounded: {}, dash cooldown: {}, facing: {}, left pressed: {}, right pressed: {}, current screen: {:?}, current offers: {:?}, interact binding: {}",
+        "the input-driven run should reach the Chapter 1 completion screen; room: {}, health: {}, bonuses: {:?}, living enemies: {}, enemy states: {:?}, door open: {}, player position: {:?}, velocity: {:?}, grounded: {}, facing: {}, left pressed: {}, right pressed: {}, current screen: {:?}, current offers: {:?}, interact binding: {}",
         session.room_id,
         session.health,
         session.owned_bonuses,
@@ -481,7 +480,6 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
         player_position,
         player_velocity,
         player_grounded,
-        player_dash_cooldown,
         player_facing,
         left_pressed,
         right_pressed,

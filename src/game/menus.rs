@@ -25,6 +25,9 @@ mod input;
 pub(super) use actions::{MenuAction, MenuFocus, VolumeChannel};
 pub(super) use input::{MenuPressed, navigate_menus};
 
+/// How strongly a button's own edge colour shows while the focus is elsewhere.
+const DIMMED_EDGE_ALPHA: f32 = 0.45;
+
 #[derive(Component)]
 pub(super) struct MenuRoot;
 
@@ -39,6 +42,11 @@ pub(super) struct MenuButton {
 /// but a click inside its span sets the volume to where it landed.
 #[derive(Component, Clone, Copy)]
 pub(super) struct VolumeBar(pub(super) VolumeChannel);
+
+/// A colour of the button's own to edge it in, dimmed until the focus stands
+/// on it. Buttons without one take the menu's border.
+#[derive(Component, Clone, Copy)]
+pub(super) struct MenuEdge(Color);
 
 /// The filled part of a volume bar, and the reading beside it.
 #[derive(Component, Clone, Copy)]
@@ -68,6 +76,9 @@ pub(super) struct MenuRow {
     label: String,
     /// Volume rows draw a bar, whose level is dressed on separately.
     slider: Option<VolumeChannel>,
+    /// A colour of the row's own to edge the box in, for the rows that stand
+    /// for something coloured; the rest take the menu's border.
+    edge: Option<Color>,
     action: MenuAction,
 }
 
@@ -79,6 +90,19 @@ impl MenuRow {
             key: Some(key.into()),
             label: label.into(),
             slider: None,
+            edge: None,
+            action,
+        }
+    }
+
+    /// A box edged in a colour of its own, with nothing on a badge: one of the
+    /// difficulties, reached with the arrows or the mouse.
+    fn choice(label: &str, edge: Color, action: MenuAction) -> Self {
+        Self {
+            key: None,
+            label: label.to_owned(),
+            slider: None,
+            edge: Some(edge),
             action,
         }
     }
@@ -90,6 +114,7 @@ impl MenuRow {
             key: None,
             label: label.to_owned(),
             slider: Some(channel),
+            edge: None,
             action: MenuAction::Volume(channel),
         }
     }
@@ -106,6 +131,7 @@ pub(super) struct MenuState<'w> {
     screen: Res<'w, State<GameScreen>>,
     session: Res<'w, RunSession>,
     controls: Res<'w, ControlBindings>,
+    data: Res<'w, GameData>,
 }
 
 impl MenuState<'_> {
@@ -130,6 +156,19 @@ impl MenuState<'_> {
         };
         let view = match screen {
             GameScreen::MainMenu => plain("AFTERWARD", None),
+            GameScreen::Difficulty => MenuView {
+                title: "DIFFICULTY",
+                subtitle: None,
+                rows: rows().collect(),
+                hints: vec![
+                    hint(
+                        pair(GameAction::NavigateUp, GameAction::NavigateDown),
+                        "Select",
+                    ),
+                    hint(key(GameAction::Interact), "Begin"),
+                ],
+                two_columns: false,
+            },
             GameScreen::Paused => plain("PAUSED", None),
             GameScreen::Settings => MenuView {
                 title: "SETTINGS",
@@ -187,6 +226,11 @@ impl MenuState<'_> {
         let row = |badge: String, label: &str| MenuRow::action(badge, label, action);
         match action {
             MenuAction::BeginRun => row(key(GameAction::Interact), "Begin"),
+            MenuAction::ChooseDifficulty(level) => MenuRow::choice(
+                level.label(),
+                Color::from(level.edge(&self.data.gameplay.difficulty)),
+                action,
+            ),
             // The prologue draws this one itself, under the words it writes.
             MenuAction::EnterTheCity => row(String::from("ENTER"), "Enter Afterward"),
             MenuAction::Continue => row(String::from("ENTER"), "Continue"),
@@ -211,6 +255,7 @@ impl MenuState<'_> {
                 }),
                 label: bound.label().to_owned(),
                 slider: None,
+                edge: None,
                 action,
             },
             MenuAction::RestoreDefaultBindings => row(String::from("R"), "Restore defaults"),
@@ -219,6 +264,7 @@ impl MenuState<'_> {
                 GameScreen::Dead | GameScreen::Complete => {
                     row(String::from("ENTER"), "Return to menu")
                 }
+                GameScreen::Difficulty => row(key(GameAction::Pause), "Main menu"),
                 _ => row(key(GameAction::Pause), "Back"),
             },
         }
@@ -256,17 +302,30 @@ pub(super) fn update_menu(
 pub(super) fn highlight_menu_buttons(
     screen: Res<State<GameScreen>>,
     focus: Res<MenuFocus>,
-    mut buttons: Query<(&MenuButton, &mut BackgroundColor, &mut BorderColor)>,
+    mut buttons: Query<(
+        &MenuButton,
+        Option<&MenuEdge>,
+        &mut BackgroundColor,
+        &mut BorderColor,
+    )>,
 ) {
     let on = focus.lit(*screen.get());
-    for (button, mut background, mut border) in &mut buttons {
+    for (button, edge, mut background, mut border) in &mut buttons {
         let lit = on == Some(button.index);
         background.set_if_neq(BackgroundColor(if lit {
             CARD_HIGHLIGHT_BACKGROUND
         } else {
             CARD_BACKGROUND
         }));
-        border.set_if_neq(BorderColor::all(if lit { ACTIVE_BORDER } else { MUTED }));
+        // A button with a colour of its own keeps it either way, and only
+        // comes up to full strength under the focus.
+        let color = match edge {
+            Some(MenuEdge(edge)) if lit => *edge,
+            Some(MenuEdge(edge)) => edge.with_alpha(DIMMED_EDGE_ALPHA),
+            None if lit => ACTIVE_BORDER,
+            None => MUTED,
+        };
+        border.set_if_neq(BorderColor::all(color));
     }
 }
 
@@ -384,84 +443,86 @@ impl MenuView {
 
 impl MenuRow {
     fn spawn(&self, parent: &mut ChildSpawnerCommands, index: usize, compact: bool) {
-        parent
-            .spawn((
+        let mut row = parent.spawn((
+            Node {
+                width: percent(if compact { 49 } else { 100 }),
+                // Rows without a key badge (the volume sliders) keep the
+                // height of the rows that have one.
+                min_height: px(if compact { 48 } else { 72 }),
+                flex_direction: FlexDirection::Row,
+                align_items: AlignItems::Center,
+                column_gap: px(16),
+                padding: UiRect::axes(px(16), px(if compact { 6 } else { 12 })),
+                border: UiRect::all(px(2)),
+                border_radius: BorderRadius::all(px(8)),
+                ..default()
+            },
+            BackgroundColor(CARD_BACKGROUND),
+            BorderColor::all(MUTED),
+            // No `Pickable::IGNORE` here, and one on everything inside:
+            // the row is what the mouse points at and clicks.
+            MenuButton {
+                action: self.action,
+                index,
+            },
+        ));
+        if let Some(edge) = self.edge {
+            row.insert(MenuEdge(edge));
+        }
+        row.with_children(|row| {
+            let (badge_px, key_font_px, label_font_px) = if compact {
+                (32.0, 15.0, 16.0)
+            } else {
+                (44.0, 20.0, 22.0)
+            };
+            if let Some(key) = &self.key {
+                row.spawn(key_badge(badge_px)).with_child(text(
+                    key.clone(),
+                    key_font_px,
+                    Color::WHITE,
+                ));
+            }
+            row.spawn((
+                text(self.label.clone(), label_font_px, Color::WHITE),
                 Node {
-                    width: percent(if compact { 49 } else { 100 }),
-                    // Rows without a key badge (the volume sliders) keep the
-                    // height of the rows that have one.
-                    min_height: px(if compact { 48 } else { 72 }),
-                    flex_direction: FlexDirection::Row,
-                    align_items: AlignItems::Center,
-                    column_gap: px(16),
-                    padding: UiRect::axes(px(16), px(if compact { 6 } else { 12 })),
-                    border: UiRect::all(px(2)),
-                    border_radius: BorderRadius::all(px(8)),
+                    flex_grow: 1.0,
+                    min_width: px(0),
                     ..default()
                 },
-                BackgroundColor(CARD_BACKGROUND),
-                BorderColor::all(MUTED),
-                // No `Pickable::IGNORE` here, and one on everything inside:
-                // the row is what the mouse points at and clicks.
-                MenuButton {
-                    action: self.action,
-                    index,
-                },
-            ))
-            .with_children(|row| {
-                let (badge_px, key_font_px, label_font_px) = if compact {
-                    (32.0, 15.0, 16.0)
-                } else {
-                    (44.0, 20.0, 22.0)
-                };
-                if let Some(key) = &self.key {
-                    row.spawn(key_badge(badge_px)).with_child(text(
-                        key.clone(),
-                        key_font_px,
-                        Color::WHITE,
-                    ));
-                }
+            ));
+            if let Some(channel) = self.slider {
                 row.spawn((
-                    text(self.label.clone(), label_font_px, Color::WHITE),
                     Node {
-                        flex_grow: 1.0,
-                        min_width: px(0),
+                        width: px(180),
+                        height: px(12),
+                        border_radius: BorderRadius::all(px(3)),
                         ..default()
                     },
+                    BackgroundColor(KEY_BACKGROUND),
+                    VolumeBar(channel),
+                    Pickable::IGNORE,
+                ))
+                .with_child((
+                    Node {
+                        width: percent(0),
+                        height: percent(100),
+                        border_radius: BorderRadius::all(px(3)),
+                        ..default()
+                    },
+                    BackgroundColor(ACTIVE_BORDER),
+                    VolumeFill(channel),
+                    Pickable::IGNORE,
                 ));
-                if let Some(channel) = self.slider {
-                    row.spawn((
-                        Node {
-                            width: px(180),
-                            height: px(12),
-                            border_radius: BorderRadius::all(px(3)),
-                            ..default()
-                        },
-                        BackgroundColor(KEY_BACKGROUND),
-                        VolumeBar(channel),
-                        Pickable::IGNORE,
-                    ))
-                    .with_child((
-                        Node {
-                            width: percent(0),
-                            height: percent(100),
-                            border_radius: BorderRadius::all(px(3)),
-                            ..default()
-                        },
-                        BackgroundColor(ACTIVE_BORDER),
-                        VolumeFill(channel),
-                        Pickable::IGNORE,
-                    ));
-                    row.spawn((
-                        text(String::new(), label_font_px, DESCRIPTION_COLOR),
-                        TextLayout::justify(Justify::Right),
-                        Node {
-                            min_width: px(64),
-                            ..default()
-                        },
-                        VolumeReading(channel),
-                    ));
-                }
-            });
+                row.spawn((
+                    text(String::new(), label_font_px, DESCRIPTION_COLOR),
+                    TextLayout::justify(Justify::Right),
+                    Node {
+                        min_width: px(64),
+                        ..default()
+                    },
+                    VolumeReading(channel),
+                ));
+            }
+        });
     }
 }

@@ -4,8 +4,7 @@ use super::*;
 fn the_empty_opening_room_offers_its_bonus_at_once_and_runs_into_room_one() {
     let mut game = HeadlessGame::new();
     assert_eq!(game.screen(), GameScreen::MainMenu);
-    game.tap(KeyCode::Enter);
-    game.wait_for_screen(GameScreen::Playing, 10.0);
+    game.begin_run();
     assert_eq!(game.session().room_id, 0, "a run opens in room 0");
     assert!(game.enemies().is_empty(), "with nothing to fight");
 
@@ -72,8 +71,7 @@ fn the_opening_music_gives_way_to_a_chapter_track_on_the_way_into_room_one() {
     assert_eq!(game.layers(AudioClass::Ambience), 0);
     assert_eq!(game.layers(AudioClass::Music), 0);
 
-    game.tap(KeyCode::Enter);
-    game.wait_for_screen(GameScreen::Playing, 10.0);
+    game.begin_run();
     assert_eq!(game.session().room_id, 0);
     assert_eq!(
         game.layers(AudioClass::IntroMusic),

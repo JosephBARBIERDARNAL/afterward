@@ -1,9 +1,9 @@
 //! The flood the city drowned in: a slow caustic web of cold light over deep
 //! wine cells, quantized to a pixel grid so it reads as pixel art. The main
-//! menu is drawn over it, so the game opens on the thing it is about. The
-//! quad is laid once and kept under the camera, exactly covering the
-//! viewport, and only shows while the main menu is up — including behind the
-//! settings and controls screens the main menu opens.
+//! menu is drawn over it, so the game opens on the thing it is about, and the
+//! screen a run ends on closes on the same water. The quad is laid once and
+//! kept under the camera, exactly covering the viewport, and only shows on
+//! the screens standing over no room at all.
 
 use super::*;
 use crate::{data::HexColor, game::prologue::Prologue};
@@ -96,9 +96,9 @@ pub(super) fn spawn_the_flood(
     ));
 }
 
-/// Shows the flood while the main menu is up, under wherever the camera was
-/// left standing — and stands the same water in front of the room instead
-/// while the prologue writes over it.
+/// Shows the flood under the screens that stand over no room, wherever the
+/// camera was left standing — and stands the same water in front of the room
+/// instead while the prologue writes over it.
 pub(in crate::game) fn show_the_flood(
     screen: Res<State<GameScreen>>,
     settings_return: Res<SettingsReturn>,
@@ -114,7 +114,7 @@ pub(in crate::game) fn show_the_flood(
         With<Flood>,
     >,
 ) {
-    let on_the_menu = settings_return.on_the_main_menu(*screen.get());
+    let over_the_flood = settings_return.over_the_flood(*screen.get());
     let Ok(camera) = camera.single() else {
         return;
     };
@@ -128,7 +128,7 @@ pub(in crate::game) fn show_the_flood(
         if let Some(mut water) = materials.get_mut(&material.0) {
             water.settings.lines.z = opacity;
         }
-        *visibility = if on_the_menu || prologue.veil > 0.0 {
+        *visibility = if over_the_flood || prologue.veil > 0.0 {
             Visibility::Visible
         } else {
             Visibility::Hidden

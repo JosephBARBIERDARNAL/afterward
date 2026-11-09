@@ -56,7 +56,6 @@ pub(super) enum GameAction {
     NavigateUp,
     NavigateDown,
     Jump,
-    Dash,
     Shoot,
     AimUp,
     Reload,
@@ -70,14 +69,13 @@ pub(super) enum GameAction {
 }
 
 impl GameAction {
-    pub const ALL: [Self; 17] = [
+    pub const ALL: [Self; 16] = [
         Self::MoveLeft,
         Self::MoveRight,
         Self::MoveDown,
         Self::NavigateUp,
         Self::NavigateDown,
         Self::Jump,
-        Self::Dash,
         Self::Shoot,
         Self::AimUp,
         Self::Reload,
@@ -98,7 +96,6 @@ impl GameAction {
             Self::NavigateUp => "MENU UP",
             Self::NavigateDown => "MENU DOWN",
             Self::Jump => "JUMP",
-            Self::Dash => "DASH",
             Self::Shoot => "SHOOT",
             Self::AimUp => "AIM UP",
             Self::Reload => "RELOAD",
@@ -124,7 +121,6 @@ impl FromStr for GameAction {
             "navigate_up" => Ok(Self::NavigateUp),
             "navigate_down" => Ok(Self::NavigateDown),
             "jump" => Ok(Self::Jump),
-            "dash" => Ok(Self::Dash),
             "shoot" => Ok(Self::Shoot),
             "aim_up" => Ok(Self::AimUp),
             "reload" => Ok(Self::Reload),
@@ -149,7 +145,6 @@ impl Display for GameAction {
             Self::NavigateUp => "navigate_up",
             Self::NavigateDown => "navigate_down",
             Self::Jump => "jump",
-            Self::Dash => "dash",
             Self::Shoot => "shoot",
             Self::AimUp => "aim_up",
             Self::Reload => "reload",
@@ -193,7 +188,6 @@ impl From<&ControlsConfig> for DefaultBindings {
                 parse_keys(&controls.navigate_down),
             ),
             (GameAction::Jump, parse_keys(&controls.jump)),
-            (GameAction::Dash, parse_keys(&controls.dash)),
             (GameAction::Shoot, parse_keys(&controls.shoot)),
             (GameAction::AimUp, parse_keys(&controls.aim_up)),
             (GameAction::Reload, parse_keys(&controls.reload)),

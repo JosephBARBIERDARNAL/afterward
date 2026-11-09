@@ -10,7 +10,10 @@ use super::*;
 /// a click and the confirm key reach the same place.
 #[derive(Component, Clone, Copy, Debug, Eq, PartialEq)]
 pub(in crate::game) enum MenuAction {
+    /// Opens the screen that asks how hard the run should be.
     BeginRun,
+    /// Begins the run, on the difficulty its box stands for.
+    ChooseDifficulty(Difficulty),
     /// Walks into the city, from the words the prologue writes.
     EnterTheCity,
     Continue,
@@ -72,6 +75,11 @@ impl MenuAction {
                 .map(|action| Self::Rebind(*action))
                 .chain([Self::RestoreDefaultBindings, Self::Back])
                 .collect(),
+            GameScreen::Difficulty => Difficulty::ALL
+                .iter()
+                .map(|level| Self::ChooseDifficulty(*level))
+                .chain([Self::Back])
+                .collect(),
             GameScreen::Prologue => vec![Self::EnterTheCity],
             GameScreen::Dead | GameScreen::Complete => vec![Self::Back],
             _ => Vec::new(),
@@ -91,12 +99,17 @@ pub(in crate::game) struct MenuFocus {
 
 impl MenuFocus {
     /// The button `screen` is focused on, after settling the focus against the
-    /// menu now on show: a new menu starts at its first button, and a menu
-    /// that lost buttons never leaves the focus past its last one.
-    pub(in crate::game) fn settle(&mut self, screen: GameScreen, buttons: usize) -> Option<usize> {
+    /// menu now on show: a new menu starts on `opening`, and a menu that lost
+    /// buttons never leaves the focus past its last one.
+    pub(in crate::game) fn settle(
+        &mut self,
+        screen: GameScreen,
+        buttons: usize,
+        opening: usize,
+    ) -> Option<usize> {
         if self.screen != Some(screen) {
             self.screen = Some(screen);
-            self.index = 0;
+            self.index = opening;
         }
         if buttons == 0 {
             return None;
@@ -145,6 +158,16 @@ mod tests {
             "every binding, then restore-defaults and back"
         );
         assert_eq!(MenuAction::of(GameScreen::Dead), vec![MenuAction::Back]);
+        assert_eq!(
+            MenuAction::of(GameScreen::Difficulty),
+            vec![
+                MenuAction::ChooseDifficulty(Difficulty::Easy),
+                MenuAction::ChooseDifficulty(Difficulty::Normal),
+                MenuAction::ChooseDifficulty(Difficulty::Hard),
+                MenuAction::Back,
+            ],
+            "the three difficulties, easiest first, and the way back"
+        );
         assert!(
             MenuAction::of(GameScreen::Playing).is_empty(),
             "the game itself has no menu buttons"
@@ -153,27 +176,35 @@ mod tests {
     }
 
     #[test]
-    fn the_focus_starts_a_new_menu_at_its_first_button_and_wraps_around_it() {
+    fn the_focus_starts_a_new_menu_where_it_opens_and_wraps_around_it() {
         let mut focus = MenuFocus::default();
-        assert_eq!(focus.settle(GameScreen::Paused, 5), Some(0));
+        assert_eq!(focus.settle(GameScreen::Paused, 5, 0), Some(0));
 
         focus.walk(1, 5);
         focus.walk(1, 5);
-        assert_eq!(focus.settle(GameScreen::Paused, 5), Some(2));
+        assert_eq!(focus.settle(GameScreen::Paused, 5, 0), Some(2));
         focus.walk(-3, 5);
         assert_eq!(
-            focus.settle(GameScreen::Paused, 5),
+            focus.settle(GameScreen::Paused, 5, 0),
             Some(4),
             "wraps backwards"
         );
         focus.walk(1, 5);
-        assert_eq!(focus.settle(GameScreen::Paused, 5), Some(0), "and forwards");
+        assert_eq!(
+            focus.settle(GameScreen::Paused, 5, 0),
+            Some(0),
+            "and forwards"
+        );
 
         // Another menu starts over, and a shorter one never strands the focus.
         focus.walk(3, 5);
-        assert_eq!(focus.settle(GameScreen::Settings, 5), Some(0));
+        assert_eq!(focus.settle(GameScreen::Settings, 5, 0), Some(0));
         focus.walk(4, 5);
-        assert_eq!(focus.settle(GameScreen::Settings, 2), Some(1));
-        assert_eq!(focus.settle(GameScreen::Playing, 0), None);
+        assert_eq!(focus.settle(GameScreen::Settings, 2, 0), Some(1));
+        assert_eq!(focus.settle(GameScreen::Playing, 0, 0), None);
+
+        // A menu that opens somewhere other than its first button, like the
+        // difficulty standing on the one already chosen.
+        assert_eq!(focus.settle(GameScreen::Difficulty, 4, 1), Some(1));
     }
 }

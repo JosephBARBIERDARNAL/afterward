@@ -34,7 +34,6 @@ pub(super) enum SoundCue {
     Jump,
     Landing,
     Footstep(FootstepSound),
-    Dash,
     GunShot,
     BulletHit,
     LastRoundHit,

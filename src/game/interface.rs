@@ -181,6 +181,7 @@ pub(super) fn update_menu_modal(
     let is_modal = matches!(
         screen.get(),
         GameScreen::MainMenu
+            | GameScreen::Difficulty
             | GameScreen::Paused
             | GameScreen::Settings
             | GameScreen::Controls
@@ -188,10 +189,10 @@ pub(super) fn update_menu_modal(
             | GameScreen::Complete
     );
     let is_veiled = is_modal || *screen.get() == GameScreen::Bonus;
-    // The blur muffles the room behind a menu. The main menu has no room
-    // behind it, but its own water, which is pixel art and stays crisp — and
-    // so do the settings screens it opens.
-    let is_blurred = is_veiled && !settings_return.on_the_main_menu(*screen.get());
+    // The blur muffles the room behind a menu. The screens standing over the
+    // flood have no room behind them, but that water, which is pixel art and
+    // stays crisp.
+    let is_blurred = is_veiled && !settings_return.over_the_flood(*screen.get());
 
     for (mut color, mut visibility) in &mut backdrop {
         if is_veiled {

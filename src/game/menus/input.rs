@@ -23,6 +23,7 @@ pub(in crate::game) struct MenuPressed {
 #[derive(SystemParam)]
 pub(in crate::game) struct MenuInput<'w, 's> {
     screen: Res<'w, State<GameScreen>>,
+    session: Res<'w, RunSession>,
     keys: Res<'w, ButtonInput<KeyCode>>,
     controls: Res<'w, ControlBindings>,
     focus: ResMut<'w, MenuFocus>,
@@ -51,6 +52,7 @@ pub(in crate::game) fn navigate_menus(
 ) {
     let MenuInput {
         screen,
+        session,
         keys,
         controls,
         mut focus,
@@ -63,7 +65,13 @@ pub(in crate::game) fn navigate_menus(
     } = input;
     let screen = *screen.get();
     let actions = MenuAction::of(screen);
-    let Some(standing_on) = focus.settle(screen, actions.len()) else {
+    // A menu opens on its first button, except the difficulty, which opens on
+    // the one already chosen.
+    let opening = actions
+        .iter()
+        .position(|action| *action == MenuAction::ChooseDifficulty(session.difficulty))
+        .unwrap_or(0);
+    let Some(standing_on) = focus.settle(screen, actions.len(), opening) else {
         return;
     };
     // While the controls screen listens for a key to bind, every key belongs

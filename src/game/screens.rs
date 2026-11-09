@@ -24,6 +24,7 @@ pub(super) fn update_screen_text(
             .map_or_else(|| String::from("CHAPTER ONE COMPLETE"), |_| String::new()),
         // Menus are drawn as cards by `menus::update_menu`.
         GameScreen::MainMenu
+        | GameScreen::Difficulty
         | GameScreen::Paused
         | GameScreen::Settings
         | GameScreen::Controls
@@ -131,7 +132,9 @@ pub(super) fn handle_screen_input(
             Some(MenuAction::ToggleFullscreen)
         }
         GameScreen::Controls if letter('r') => Some(MenuAction::RestoreDefaultBindings),
-        GameScreen::Settings | GameScreen::Controls if pausing => Some(MenuAction::Back),
+        GameScreen::Settings | GameScreen::Controls | GameScreen::Difficulty if pausing => {
+            Some(MenuAction::Back)
+        }
         GameScreen::Dead | GameScreen::Complete if keys.just_pressed(KeyCode::Escape) => {
             Some(MenuAction::Back)
         }
@@ -148,6 +151,12 @@ pub(super) fn handle_screen_input(
     {
         match press.action {
             MenuAction::BeginRun => {
+                // The run begins on the difficulty screen, not in a room.
+                next_screen.set(GameScreen::Difficulty);
+                sounds.push(SoundCue::UiConfirm);
+            }
+            MenuAction::ChooseDifficulty(level) => {
+                session.difficulty = level;
                 next_screen.set(reset_run(&mut session, &data, *start_room));
                 sounds.push(SoundCue::UiConfirm);
             }

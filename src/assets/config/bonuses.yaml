@@ -76,21 +76,11 @@ bonuses:
     description: Increase jump height by 15%.
     category: agility
     effects: { jump_height_multiplier: 1.15 }
-  - id: dash_recharge
-    name: Dash Recharge
-    description: Reduce dash cooldown by 20%.
-    category: agility
-    effects: { dash_cooldown_multiplier: 0.8 }
   - id: double_jump
     name: Double Jump
     description: Gain one additional mid-air jump at 80% of normal jump impulse.
     category: agility
     effects: { extra_midair_jumps: 1, extra_jump_impulse_factor: 0.8 }
-  - id: sprinter
-    name: Sprinter
-    description: After a grounded dash, keep sprinting at 8.5 H/s until you stop or turn.
-    category: agility
-    effects: { sprint_speed_h_s: 8.5 }
   - id: marked_prey
     name: Marked Prey
     description: Bullet hits mark an enemy for 2 seconds; further bullets on it deal 15% more damage.
@@ -116,11 +106,6 @@ bonuses:
     description: Bullet hits restore 1 health, up to 5 health per magazine.
     category: combined
     effects: { bullet_hit_healing: 1, magazine_healing_cap: 5 }
-  - id: dash_shot
-    name: Dash Shot
-    description: The first shot within 1 second after dashing deals 25% more damage.
-    category: combined
-    effects: { post_dash_window_s: 1, post_dash_bullet_damage_multiplier: 1.25 }
   - id: aerial_gunner
     name: Aerial Gunner
     description: Deal 20% more bullet damage while airborne.
@@ -240,16 +225,31 @@ bonuses:
     description: Increase airborne movement speed by 15%.
     category: agility
     effects: { air_speed_multiplier: 1.15 }
-  - id: light_step
-    name: Light Step
-    description: Reduce dash cooldown by 10%.
+  - id: tailwind
+    name: Tailwind
+    description: Increase movement speed by 8%.
     category: agility
-    effects: { dash_cooldown_multiplier: 0.9 }
-  - id: long_dash
-    name: Long Dash
-    description: Increase dash distance by 20%.
+    effects: { movement_speed_multiplier: 1.08 }
+  - id: springheel
+    name: Springheel
+    description: Increase jump height by 8%.
     category: agility
-    effects: { dash_distance_multiplier: 1.2 }
+    effects: { jump_height_multiplier: 1.08 }
+  - id: kick_off
+    name: Kick Off
+    description: A mid-air jump is as strong as one from the ground.
+    category: agility
+    effects: { extra_jump_impulse_factor: 1 }
+  - id: float
+    name: Float
+    description: Holding Jump at the top of a jump hangs there for 0.3 seconds.
+    category: agility
+    effects: { hang_duration_s: 0.3 }
+  - id: low_crawl
+    name: Low Crawl
+    description: Increase crouch speed by 60%.
+    category: agility
+    effects: { crouch_speed_multiplier: 1.6 }
   - id: quick_crouch
     name: Quick Crouch
     description: Increase crouch speed by 30%.
@@ -265,11 +265,6 @@ bonuses:
     description: Keep 20% more speed when landing.
     category: agility
     effects: { landing_speed_retention: 1.2 }
-  - id: evasive
-    name: Evasive
-    description: A dash makes you untouchable for 0.2 seconds.
-    category: agility
-    effects: { dash_invulnerability_s: 0.2 }
   - id: nimble
     name: Nimble
     description: Increase movement speed by 6%.
@@ -375,6 +370,11 @@ bonuses:
     description: Increase health pickup drop chance by 15% relative to its base chance.
     category: combined
     effects: { health_drop_chance_multiplier: 1.15 }
+  - id: brace
+    name: Brace
+    description: Standing still reduces damage taken by 10% and adds 5% bullet damage.
+    category: combined
+    effects: { standing_damage_taken_multiplier: 0.9, standing_damage_multiplier: 1.05 }
   - id: clean_sweep
     name: Clean Sweep
     description: Clearing a room without taking damage restores 10 health.

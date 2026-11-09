@@ -24,7 +24,7 @@ jumping:
   air_speed_h_s: 5
   cooldown_s: 0.6
   level_change_threshold_h: 1
-# Hitboxes, in H (F3 in debug builds draws them all over the game):
+# Hitboxes, in H (B in debug builds draws them all over the game):
 # - hurtbox_h: where bullets hit the enemy, centered on it, from its feet up.
 # - an attack's hitbox_h: where its strike (or a slam's landing) hurts the
 #   player, from the enemy's feet; x points the way the enemy faces (negative

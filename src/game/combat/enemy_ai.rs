@@ -57,7 +57,6 @@ pub(in crate::game) fn update_enemy_ai(
         player_transform.translation.y - 0.5 * H_WORLD_UNITS,
     );
     player.invulnerability_timer = (player.invulnerability_timer - dt).max(0.0);
-    player.dash_invulnerability_timer = (player.dash_invulnerability_timer - dt).max(0.0);
 
     for (mut enemy, mut transform, mut sprite, mut animation) in &mut enemies {
         if enemy.health <= 0.0 {

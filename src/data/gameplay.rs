@@ -16,6 +16,7 @@ pub struct GameplayConfig {
     pub health_pickup: HealthPickupConfig,
     pub room_flow: RoomFlowConfig,
     pub prologue: PrologueConfig,
+    pub difficulty: DifficultyColors,
     pub effects: EffectsConfig,
     pub window: WindowConfig,
     pub audio: AudioConfig,
@@ -27,6 +28,15 @@ impl GameplayConfig {
         self.viewport.height_h * f32::from(self.viewport.aspect_ratio.width)
             / f32::from(self.viewport.aspect_ratio.height)
     }
+}
+
+/// The colour each difficulty's box is edged in on the screen that asks for
+/// one. The choice itself has no other data, because nothing reads it yet.
+#[derive(Debug, Deserialize)]
+pub struct DifficultyColors {
+    pub easy: HexColor,
+    pub normal: HexColor,
+    pub hard: HexColor,
 }
 
 #[derive(Debug, Deserialize)]
@@ -92,7 +102,6 @@ pub struct ControlsConfig {
     pub navigate_up: Vec<String>,
     pub navigate_down: Vec<String>,
     pub jump: Vec<String>,
-    pub dash: Vec<String>,
     pub shoot: Vec<String>,
     pub aim_up: Vec<String>,
     pub reload: Vec<String>,
@@ -137,11 +146,7 @@ pub struct PlayerConfig {
     pub jump_impulse_h_s: f32,
     pub jumps_per_takeoff: u8,
     pub jump_release_velocity_multiplier: f32,
-    pub dash_distance_h: f32,
-    pub dash_duration_s: f32,
-    pub dash_cooldown_s: f32,
     pub damage_invulnerability_s: f32,
-    pub dash_invulnerability_s: f32,
     pub crouch_speed_h_s: f32,
     /// Damage multiplier for hits from the front while Cover is held.
     pub cover_damage_taken_multiplier: f32,

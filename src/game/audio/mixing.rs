@@ -214,6 +214,7 @@ pub(super) fn gameplay_effects_muted(screen: GameScreen) -> bool {
             | GameScreen::Settings
             | GameScreen::Controls
             | GameScreen::MainMenu
+            | GameScreen::Difficulty
             | GameScreen::Dead
             | GameScreen::Complete
     )
@@ -228,6 +229,7 @@ mod tests {
     fn gameplay_audio_fades_outside_active_gameplay() {
         for screen in [
             GameScreen::MainMenu,
+            GameScreen::Difficulty,
             GameScreen::Paused,
             GameScreen::Settings,
             GameScreen::Controls,

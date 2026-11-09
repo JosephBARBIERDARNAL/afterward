@@ -7,7 +7,7 @@ Afterward is a single-player, offline, 2D action roguelike pixel-art platformer.
 - Rooms are multi-level arenas (Dead Cells style) built from solid platforms at several heights, reachable by the player and by enemies. A platform is solid on every side: it holds up a body landing on its top, stops one walking into its side, and stops one jumping into its underside, so a level is reached by going around it. Platforms stop shots too, so they are also the only cover. Everything else a room shows is a decoration panel or the background. The player walks in from the left; the exit is on the right.
 - Clearing a room lays a bonus item on the room's `bonus` spot, in one of the five bonus categories, picked at random. Touching it opens a choice of two random bonuses of that category (never one already owned, with a few rerolls per run), and choosing one unlocks the exit door. Bonuses build a temporary run build. Death ends the run and nothing carries over: no currency, unlocks, or meta-progression.
 - Health persists between rooms and healing is scarce, so taking damage matters.
-- Combat is fast, mobile, and skill-based. The player's only weapon is a gun (magazine and reload); movement includes jump, dash, crouch, and cover. There is no wall slide, wall jump, or ledge mantle: a platform's side stops a body, it is never held onto or climbed. The player never receives knockback; only bosses do.
+- Combat is fast, mobile, and skill-based. The player's only weapon is a gun (magazine and reload); movement includes jump, crouch, and cover. There is no wall slide, wall jump, or ledge mantle: a platform's side stops a body, it is never held onto or climbed. The player never receives knockback; only bosses do.
 - Enemies stay idle until they see the player — near enough, at their own height, on the side they face (the `facing` of their room spawn, left by default), with no platform in between — or until a shot wakes them, then chase across levels (jumping, dropping, mantling). They deal damage only through attack hitboxes or projectiles, never by contact, and attacks are telegraphed by a readable wind-up.
 - `H`, the height of the player's collision box, is the unit for every distance and speed. The visible world is a fixed 16:9 viewport, 13.5 H tall (24 H wide), scaled to fit any window without revealing more of the room.
 - Every player action has a dedicated animation. Audio is placeholder for now: missing audio must never prevent the game from running.
@@ -102,8 +102,8 @@ Every hit area is data, in H: the player's hurtbox in `config/gameplay.yaml` (`p
 
 ### Menus
 
-Every row of every menu — main, pause, settings, controls, and the two
-end-of-run screens — is a button, and so are the bonus screen's boxes. The
+Every row of every menu — main, difficulty, pause, settings, controls, and the
+two end-of-run screens — is a button, and so are the bonus screen's boxes. The
 mouse points at one and clicks it, the arrows walk to it, the confirm key
 presses the one the focus stands on, and the letter on a row's badge still
 presses it from anywhere on that screen.
@@ -117,9 +117,16 @@ presses it from anywhere on that screen.
   `menus/input.rs` walks it, so what is on show and what the arrows reach can
   never disagree. Adding a button means adding it there and giving it a row in
   `MenuState::row`.
-- `MenuFocus` holds the button the player is on. A menu opens on its first
-  button, which is why Enter still resumes a paused run and still begins one
-  from the main menu.
+- `MenuFocus` holds the button the player is on. A menu opens on the button
+  `menus/input.rs` hands `MenuFocus::settle`, which is its first — why Enter
+  still resumes a paused run and still begins one from the main menu — except
+  the difficulty screen, which opens on the choice already made.
+- Begin does not start a run: it asks how hard it should be. The difficulty
+  screen (`GameScreen::Difficulty`) offers Easy, Normal and Hard, each box
+  edged in its own colour from `difficulty:` of `config/gameplay.yaml` and
+  dimmed until the focus stands on it (`MenuEdge`). Choosing one writes
+  `RunSession::difficulty` and opens the run. Nothing reads that choice yet: it
+  outlives a run so the next one opens on it, and changes nothing else.
 - `menus/input.rs` decides *which* button and *that* it was pressed; it leaves
   a `MenuPressed`, which `screens::handle_screen_input` carries out beside the
   letter shortcuts, so a click and a shortcut run the same code.
@@ -135,7 +142,7 @@ presses it from anywhere on that screen.
 
 Two kinds of shader, both WGSL under `src/assets/shaders/`, both tuned from `effects:` in `config/gameplay.yaml`:
 
-- `src/game/shaders/` holds the 2D materials, drawn on `Mesh2d` quads sized by their transform (one shared unit square, `ShadedQuad`). `menu_water.wgsl` is the water the main menu sits on: a cellular field whose borders light up where two cells meet, bent by slow waves and quantized to a pixel grid and to four tones, so it reads as pixel art. Its quad is laid at startup, kept under the camera and only shown on the main menu, which is the one menu drawn without the blur, since the water is pixel art and must stay crisp. `city_lights.wgsl` draws every background layer: a pixel that stands brighter than the four around it *and* sits on a dark surround is a lit window or a star, and breathes at a pace its own position seeds — the dark-surround test is what keeps a dithered bright sky out of it. `glow.wgsl` is the pool of light behind anything the player should walk towards; give an entity `Glowing { color, radius_h }` and `attach_glows` hangs the quad behind it as a child, so it follows and dies with it.
+- `src/game/shaders/` holds the 2D materials, drawn on `Mesh2d` quads sized by their transform (one shared unit square, `ShadedQuad`). `flood.wgsl` is the water the main menu sits on: a cellular field whose borders light up where two cells meet, bent by slow waves and quantized to a pixel grid and to four tones, so it reads as pixel art. Its quad is laid at startup, kept under the camera and shown on the screens that stand over no room at all — the main menu, the difficulty it opens, the settings and controls reached from it, and the screen a run ends on (`SettingsReturn::over_the_flood`). Those are the menus drawn without the blur, since the water is pixel art and must stay crisp. `city_lights.wgsl` draws every background layer: a pixel that stands brighter than the four around it *and* sits on a dark surround is a lit window or a star, and breathes at a pace its own position seeds — the dark-surround test is what keeps a dithered bright sky out of it. `glow.wgsl` is the pool of light behind anything the player should walk towards; give an entity `Glowing { color, radius_h }` and `attach_glows` hangs the quad behind it as a child, so it follows and dies with it.
 - `src/game/pause_blur.rs` is the full-screen pass behind a menu, a `Core2d` post-process rather than a material.
 - `src/game/ripple.rs` is the droplet that falls on a button the moment it is touched — hovered, reached with an arrow, or clicked — and the one shader drawn through the UI pipeline (`UiMaterial` on a `MaterialNode`) rather than on a `Mesh2d` quad, which is why it sits beside `src/game/shaders/` instead of inside it. `ripple.wgsl` drops the bead in, flashes where it lands and sends rings out, quantized to a pixel grid and to two tones like the flood. Anything that wants one writes a `Splash`: `Spot::Pointer` for exactly where the mouse touched, `Spot::Middle` for the middle of a button an arrow walked to. They stack in their own layer above the menus and die once they have played out.
 
@@ -145,7 +152,7 @@ Shaders are plain `.wgsl`, not Bevy's own `.wesl`: a material's fragment shader 
 
 Nothing is generated: every sound in the game is a real recording. A `SoundCue` plays the file `config/gameplay.yaml` lists for it under `audio.recorded_effects` and stays silent when there is none, and the music is one of the tracks in `audio.music_tracks`. Most cues have no sound yet; leave them silent until a recording exists rather than synthesizing a placeholder. `src/game/audio.rs` plays it all through `ManagedAudio`, whose class decides which volume setting applies (music or sound effects) and how `audio/mixing.rs` fades it per screen.
 
-- The game opens on `audio.intro_music`: it plays from launch, carries the main menu and the opening room, and fades out over `audio.intro_music_fade_out_s` as the run leaves room 0 — the chapter track takes over when room 1 opens. Returning to the main menu starts it again.
+- The game opens on `audio.intro_music`: it plays from launch, carries the main menu and the opening room, and fades out over `audio.intro_music_fade_out_s` as the run leaves room 0 — the chapter track takes over when room 1 opens. Returning to the main menu starts it again, and so does dying: the screen a run ends on takes down what the run was playing and opens the game's own music again under the same water.
 - `audio.ambience` is the city under the whole run: it rises over `audio.ambience_fade_in_s` on the first room a run enters and plays to the end. Its gain is what to turn to hear more or less of the street.
 - Those two, the chapter track and the typing under the prologue are layers rather than cues: one entity each, carrying `ManagedAudio` and, while they come or go, an `AudioFade` the mixer multiplies in and despawns the layer with.
 - One track, picked at random when the run enters its first room with a chapter, plays until the run ends. It is a `MusicStream` (`audio/music.rs`): it loops itself and runs through a low-pass filter the mixer opens and closes, so the music sounds muffled, as if played in another room, while the game is paused (`audio.paused_music_muffle`). It must play with `PlaybackSettings::ONCE` — Bevy's own looping buffers the decoded source, which would freeze the filter after the first play-through.

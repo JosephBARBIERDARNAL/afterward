@@ -7,8 +7,8 @@ use bevy::{
 };
 
 use crate::data::{
-    Aim, EnemyAttackConfig, EnemyDetectionConfig, EnemyMaterial, EnemyTypeId, FootstepSound,
-    GameData, PLAYER_COLLISION_WIDTH_H,
+    Aim, DifficultyColors, EnemyAttackConfig, EnemyDetectionConfig, EnemyMaterial, EnemyTypeId,
+    FootstepSound, GameData, HexColor, PLAYER_COLLISION_WIDTH_H,
 };
 
 mod ammo_hud;
@@ -63,7 +63,7 @@ use player::{PlayerAction, PlayerBody, Reload};
 use prologue::Prologue;
 use random::RandomState;
 use room_pan::RoomPan;
-use session::RunSession;
+use session::{Difficulty, RunSession};
 use settings::{AudioSettings, PreferencesDir, SettingsReturn};
 use shaders::{CityLightsMaterial, Glowing, ShaderAssets};
 use sprites::{AnimatedSprite, SpriteSheet, SpriteSheetSpec, SpriteSheets, set_animation};
@@ -202,7 +202,11 @@ impl Plugin for GamePlugin {
             )
             .add_systems(
                 OnEnter(GameScreen::Dead),
-                (world::cleanup_room, audio::stop_run_audio),
+                (
+                    world::cleanup_room,
+                    audio::stop_run_audio,
+                    audio::start_intro_music,
+                ),
             )
             .add_systems(
                 OnEnter(GameScreen::Complete),
@@ -333,6 +337,8 @@ impl Plugin for GamePlugin {
 enum GameScreen {
     #[default]
     MainMenu,
+    /// Choosing how hard the run should be, on the way out of the main menu.
+    Difficulty,
     /// Room entrance: the player walks in, then the enemies appear.
     RoomIntro,
     Playing,

@@ -13,7 +13,7 @@ camera:
 player:
   max_health: 100
   # Where enemy strikes and projectiles hit the player: centered on the body,
-  # from the feet up. F3 in debug builds draws every hitbox.
+  # from the feet up. B in debug builds draws every hitbox.
   hurtbox_h: { width: 0.4, height: 0.75 }
   max_speed_h_s: 6
   air_max_speed_h_s: 6
@@ -26,11 +26,7 @@ player:
   # Releasing jump while rising multiplies the upward velocity by this factor,
   # so a tap gives a short hop and holding the button gives the full jump.
   jump_release_velocity_multiplier: 0.5
-  dash_distance_h: 5
-  dash_duration_s: 0.2
-  dash_cooldown_s: 0.8
   damage_invulnerability_s: 0.55
-  dash_invulnerability_s: 0.12
   # Holding Down on the ground crouches; the crouch walk is slower.
   crouch_speed_h_s: 3
   # Holding Cover on the ground raises a guard: the player can neither move
@@ -137,6 +133,14 @@ prologue:
     - ONE HUNDRED PLACES, EACH WORSE THAN THE LAST.
     - ONE WAY IN. NO WAY OUT.
     - THE ONLY EXIT IS AT THE END.
+
+# The difficulty asked for on the way into a run, between the main menu and
+# room 0. Nothing reads the choice yet: it is remembered and changes nothing.
+# Each box on that screen is edged in its own colour, easiest first.
+difficulty:
+  easy: "#58AD68"
+  normal: "#4F8FD6"
+  hard: "#D74444"
 
 # The 2D material shaders (`src/game/shaders/`). Everything here is meant to be
 # felt rather than noticed: turn a number up to see what it does, then back.
@@ -278,7 +282,6 @@ controls:
   navigate_up: [ArrowUp]
   navigate_down: [ArrowDown]
   jump: [Space]
-  dash: [ShiftLeft]
   shoot: [KeyJ]
   aim_up: [KeyW, ArrowUp]
   reload: [KeyR]

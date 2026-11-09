@@ -191,20 +191,11 @@ fn a_platform_in_the_way_stops_a_body_walking_into_its_side() {
         .add_systems(Update, player::update_player);
     app.update();
 
-    // Walking, then dashing, into the slab both end against its left side.
+    // Walking into the slab ends against its left side.
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
         .press(KeyCode::KeyD);
-    for _ in 0..60 {
-        app.update();
-        let mut keys = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
-        keys.clear();
-        keys.press(KeyCode::KeyD);
-    }
-    app.world_mut()
-        .resource_mut::<ButtonInput<KeyCode>>()
-        .press(KeyCode::ShiftLeft);
-    for _ in 0..60 {
+    for _ in 0..120 {
         app.update();
         let mut keys = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
         keys.clear();

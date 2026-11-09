@@ -4,7 +4,7 @@ use std::{path::Path, time::Duration};
 use bevy::{prelude::MinimalPlugins, state::app::StatesPlugin, time::TimeUpdateStrategy};
 
 #[test]
-fn default_controls_move_jump_and_dash_the_player() {
+fn default_controls_move_and_jump_the_player() {
     let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
     let mut data = GameData::load(&asset_root).expect("Chapter 1 data should load");
     // The floor below is spawned by hand under this spawn point, so the test
@@ -185,32 +185,9 @@ fn default_controls_move_jump_and_dash_the_player() {
         "player_jump"
     );
 
-    let before_dashing_x = after_jumping.x;
     {
         let mut keys = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
         keys.release(KeyCode::Space);
-        keys.clear();
-        keys.press(KeyCode::ShiftLeft);
-    }
-    app.update();
-    let after_dashing_x = app
-        .world()
-        .get::<Transform>(player)
-        .expect("player should remain spawned")
-        .translation
-        .x;
-    assert!(after_dashing_x > before_dashing_x + 50.0);
-    assert!(
-        app.world()
-            .get::<PlayerBody>(player)
-            .expect("player should remain spawned")
-            .dash_timer
-            > 0.0
-    );
-
-    {
-        let mut keys = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
-        keys.release(KeyCode::ShiftLeft);
         keys.clear();
     }
     for _ in 0..3 {
@@ -244,9 +221,15 @@ fn default_controls_move_jump_and_dash_the_player() {
         "airborne movement should reach the configured maximum horizontal speed"
     );
 
+    let before_moving_left_x = app
+        .world()
+        .get::<Transform>(player)
+        .expect("player should remain spawned")
+        .translation
+        .x;
     {
         let mut keys = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
-        keys.release(KeyCode::ShiftLeft);
+        keys.release(KeyCode::KeyA);
         keys.clear();
         keys.press(KeyCode::KeyQ);
     }
@@ -262,7 +245,7 @@ fn default_controls_move_jump_and_dash_the_player() {
         .expect("player should remain spawned")
         .translation;
     assert!(
-        after_moving_left.x < after_dashing_x,
+        after_moving_left.x < before_moving_left_x,
         "the configured AZERTY left input should move the player"
     );
 }

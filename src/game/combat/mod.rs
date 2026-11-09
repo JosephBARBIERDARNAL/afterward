@@ -69,10 +69,7 @@ fn apply_player_damage(
         transform,
         attacker_x,
     } = target;
-    if player.dying_s.is_some()
-        || player.invulnerability_timer > 0.0
-        || player.dash_invulnerability_timer > 0.0
-    {
+    if player.dying_s.is_some() || player.invulnerability_timer > 0.0 {
         return;
     }
     if session.has_bonus("room_ward") && !session.room_ward_used {
