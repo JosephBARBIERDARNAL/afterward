@@ -53,13 +53,7 @@ fn default_controls_move_and_jump_the_player() {
             Startup,
             |mut commands: Commands, data: Res<GameData>, sheets: Res<SpriteSheets>| {
                 let room = &data.rooms[&1];
-                world::spawn_player(
-                    &mut commands,
-                    room,
-                    &data,
-                    &sheets,
-                    data.gameplay.player.gun.magazine_size,
-                );
+                world::spawn_player(&mut commands, room, &data, &sheets);
                 let width = room.size.width_h * H_WORLD_UNITS;
                 commands.spawn(PlatformSurface {
                     left: 0.0,
@@ -74,8 +68,7 @@ fn default_controls_move_and_jump_the_player() {
             Update,
             (
                 player::update_player,
-                combat::player_gun,
-                combat::update_player_bullets,
+                combat::player_melee,
                 assets::animate_sprites,
             )
                 .chain(),
@@ -131,7 +124,7 @@ fn default_controls_move_and_jump_the_player() {
         keys.clear();
         keys.press(KeyCode::KeyJ);
     }
-    // The gun fires after movement, so its clip shows from the next frame.
+    // Attack runs after movement, so the blow's clip shows from the next frame.
     app.update();
     app.update();
     assert_eq!(
@@ -139,8 +132,8 @@ fn default_controls_move_and_jump_the_player() {
             .get::<AnimatedSprite>(player)
             .expect("player animation should remain available")
             .sheet,
-        "player_run_shooting",
-        "firing straight while jogging plays the run-shooting cycle"
+        "player_strike_1",
+        "Attack throws the chain's first blow, whatever the player is doing"
     );
 
     {

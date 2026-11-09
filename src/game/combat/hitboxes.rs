@@ -2,6 +2,7 @@
 //! these, so the overlay draws exactly what hits.
 
 use super::*;
+use crate::data::MeleeComboStep;
 
 /// Where enemy strikes and projectiles hit the player whose body is centered
 /// on `center` (half an H above the feet).
@@ -24,6 +25,26 @@ impl EnemyBody {
         Rect::from_corners(
             feet - Vec2::new(self.hurtbox_size.x / 2.0, 0.0),
             feet + Vec2::new(self.hurtbox_size.x / 2.0, self.hurtbox_size.y),
+        )
+    }
+}
+
+impl MeleeComboStep {
+    /// Where this blow of the player's chain lands: measured from `feet` (in
+    /// world units) with `x` pointing the way they face, and stretched out by
+    /// `reach`.
+    pub(crate) fn hitbox_at(&self, feet: Vec2, facing: f32, reach: f32) -> Rect {
+        let hitbox = self.hitbox_h;
+        let (near, far) = if facing < 0.0 {
+            (-(hitbox.x + hitbox.width) * reach, -hitbox.x * reach)
+        } else {
+            (hitbox.x * reach, (hitbox.x + hitbox.width) * reach)
+        };
+        Rect::new(
+            feet.x + near * H_WORLD_UNITS,
+            feet.y + hitbox.y * H_WORLD_UNITS,
+            feet.x + far * H_WORLD_UNITS,
+            feet.y + (hitbox.y + hitbox.height) * H_WORLD_UNITS,
         )
     }
 }

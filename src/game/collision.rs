@@ -158,6 +158,20 @@ impl<'a> Platforms<'a> {
         blocked
     }
 
+    /// Whether a platform's side stands against a body at `x` whose feet are
+    /// at `feet_y`, on the side `direction` points to: the wall a body in
+    /// mid-air clings to and pushes off.
+    pub(super) fn wall_beside(&self, x: f32, feet_y: f32, direction: f32) -> bool {
+        self.0.iter().any(|platform| {
+            platform.blocks_body_at(feet_y)
+                && if direction < 0.0 {
+                    (x - HALF_BODY_WIDTH - platform.right).abs() <= CONTACT_TOLERANCE
+                } else {
+                    (platform.left - x - HALF_BODY_WIDTH).abs() <= CONTACT_TOLERANCE
+                }
+        })
+    }
+
     /// Whether anything holds up a body at `x` whose feet are at `feet_y`: the
     /// platform it stands on, or one further down it would land on. Nothing
     /// means a bottomless gap, which a body falls out of the room through.

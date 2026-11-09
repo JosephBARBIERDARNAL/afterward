@@ -75,16 +75,6 @@ impl RunSession {
             1.0
         }
     }
-
-    /// Rounds a full magazine holds, with Extended Magazine.
-    pub(crate) fn magazine_capacity(&self, data: &GameData) -> u32 {
-        let extra = if self.has_bonus("extended_magazine") {
-            data.bonus_effect("extended_magazine", "extra_magazine_rounds") as u32
-        } else {
-            0
-        };
-        data.gameplay.player.gun.magazine_size + extra
-    }
 }
 
 impl Default for RunSession {

@@ -53,13 +53,7 @@ fn a_player_who_falls_below_the_room_dies_at_once() {
         .add_systems(
             Startup,
             |mut commands: Commands, data: Res<GameData>, sheets: Res<SpriteSheets>| {
-                world::spawn_player(
-                    &mut commands,
-                    &data.rooms[&1],
-                    &data,
-                    &sheets,
-                    data.gameplay.player.gun.magazine_size,
-                );
+                world::spawn_player(&mut commands, &data.rooms[&1], &data, &sheets);
                 // A ledge ending at 8 H, with nothing beyond it.
                 commands.spawn(PlatformSurface {
                     left: 0.0,
@@ -150,13 +144,7 @@ next_room_id: 4
             |mut commands: Commands, data: Res<GameData>, sheets: Res<SpriteSheets>| {
                 let room = &data.rooms[&3];
                 world::spawn_room_platforms(&mut commands, room, &data);
-                world::spawn_player(
-                    &mut commands,
-                    room,
-                    &data,
-                    &sheets,
-                    data.gameplay.player.gun.magazine_size,
-                );
+                world::spawn_player(&mut commands, room, &data, &sheets);
                 world::spawn_enemies(&mut commands, room, &data, &sheets);
             },
         )

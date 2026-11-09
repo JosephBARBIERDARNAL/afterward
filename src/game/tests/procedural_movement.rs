@@ -58,13 +58,7 @@ next_room_id: 2
              mut session: ResMut<RunSession>,
              sheets: Res<SpriteSheets>| {
                 let room = &data.rooms[&1];
-                world::spawn_player(
-                    &mut commands,
-                    room,
-                    &data,
-                    &sheets,
-                    data.gameplay.player.gun.magazine_size,
-                );
+                world::spawn_player(&mut commands, room, &data, &sheets);
                 world::spawn_enemies(&mut commands, room, &data, &sheets);
                 session.world_loaded = true;
             },

@@ -275,8 +275,6 @@ mod tests {
             ambience: sound(),
             ambience_fade_in_s: 2.0,
             recorded_effects: RecordedEffects {
-                gun_shot: sound(),
-                reload: sound(),
                 door_open: sound(),
                 bonus_chosen: sound(),
                 bonus_reroll: sound(),

@@ -34,8 +34,7 @@ pub(super) fn spawn_room(
     pan.came_through_a_door = false;
     let room = &data.rooms[&session.room_id];
     draw_room(&mut commands, room, &data, &asset_server, &mut shaders);
-    let ammo = session.magazine_capacity(&data);
-    spawn_player(&mut commands, room, &data, &sheets, ammo);
+    spawn_player(&mut commands, room, &data, &sheets);
     spawn_enemies(&mut commands, room, &data, &sheets);
     spawn_exit_door(&mut commands, room, &data, &sheets);
     spawn_entry_door(&mut commands, room, &data, &sheets);
@@ -116,6 +115,7 @@ pub(super) fn draw_room(
     }
 
     spawn_room_platforms(commands, room, data);
+    water::spawn_room_water(commands, &room.water, data, shaders);
     room_art::draw(commands, room, data, asset_server);
 }
 
@@ -203,7 +203,6 @@ pub(super) fn spawn_player(
     room: &RoomConfig,
     data: &GameData,
     sheets: &SpriteSheets,
-    ammo: u32,
 ) {
     let animations = &data.player_animations;
     let key = "player_idle";
@@ -240,7 +239,7 @@ pub(super) fn spawn_player(
             timer: Timer::from_seconds(1.0 / sheet.fps, TimerMode::Repeating),
             looping: true,
         },
-        PlayerBody { ammo, ..default() },
+        PlayerBody::default(),
         RoomEntity,
     ));
 }

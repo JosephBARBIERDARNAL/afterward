@@ -237,8 +237,7 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
                     }
                 },
                 player::update_player,
-                combat::player_gun,
-                combat::update_player_bullets,
+                combat::player_melee,
                 combat::update_enemy_ai,
                 combat::update_enemy_platform_physics,
                 combat::update_projectiles,
@@ -519,13 +518,7 @@ fn spawn_test_room(
     }
     let room = &data.rooms[&session.room_id];
     world::spawn_room_platforms(&mut commands, room, &data);
-    world::spawn_player(
-        &mut commands,
-        room,
-        &data,
-        &sheets,
-        data.gameplay.player.gun.magazine_size,
-    );
+    world::spawn_player(&mut commands, room, &data, &sheets);
     world::spawn_enemies(&mut commands, room, &data, &sheets);
     world::spawn_exit_door(&mut commands, room, &data, &sheets);
     session.world_loaded = true;

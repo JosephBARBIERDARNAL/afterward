@@ -51,13 +51,7 @@ fn a_platform_stops_a_jump_from_below_and_never_lets_the_player_drop_through() {
         .add_systems(
             Startup,
             |mut commands: Commands, data: Res<GameData>, sheets: Res<SpriteSheets>| {
-                world::spawn_player(
-                    &mut commands,
-                    &data.rooms[&1],
-                    &data,
-                    &sheets,
-                    data.gameplay.player.gun.magazine_size,
-                );
+                world::spawn_player(&mut commands, &data.rooms[&1], &data, &sheets);
                 // A cellar floor, the floor the player stands on, and a plank
                 // 1.75 H above their head at the spawn (2.5, 1).
                 for (left, bottom, right, top) in [
@@ -169,13 +163,7 @@ fn a_platform_in_the_way_stops_a_body_walking_into_its_side() {
         .add_systems(
             Startup,
             |mut commands: Commands, data: Res<GameData>, sheets: Res<SpriteSheets>| {
-                world::spawn_player(
-                    &mut commands,
-                    &data.rooms[&1],
-                    &data,
-                    &sheets,
-                    data.gameplay.player.gun.magazine_size,
-                );
+                world::spawn_player(&mut commands, &data.rooms[&1], &data, &sheets);
                 // A floor, and a tall slab standing on it right of the spawn.
                 for (left, bottom, right, top) in [(0.0, 0.0, 32.0, 1.0), (4.0, 1.0, 5.0, 13.0)] {
                     commands.spawn(PlatformSurface {

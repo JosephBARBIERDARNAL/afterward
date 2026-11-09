@@ -62,13 +62,7 @@ next_room_id: 2
             |mut commands: Commands, data: Res<GameData>, sheets: Res<SpriteSheets>| {
                 let room = &data.rooms[&1];
                 world::spawn_room_platforms(&mut commands, room, &data);
-                world::spawn_player(
-                    &mut commands,
-                    room,
-                    &data,
-                    &sheets,
-                    data.gameplay.player.gun.magazine_size,
-                );
+                world::spawn_player(&mut commands, room, &data, &sheets);
                 world::spawn_enemies(&mut commands, room, &data, &sheets);
             },
         )
@@ -98,8 +92,7 @@ next_room_id: 2
                     keys.press(KeyCode::KeyJ);
                 },
                 player::update_player,
-                combat::player_gun,
-                combat::update_player_bullets,
+                combat::player_melee,
                 combat::update_enemy_ai,
                 combat::update_projectiles,
             )

@@ -110,30 +110,75 @@ impl GameData {
                  and the death hold nonnegative",
             ));
         }
-        let gun = &player.gun;
-        let bursts = [&gun.muzzle_flash, &gun.impact_burst];
-        if gun.magazine_size == 0
-            || [
-                gun.damage,
-                gun.fire_interval_s,
-                gun.reload_s,
-                gun.bullet_speed_h_s,
-                gun.bullet_range_h,
-                gun.bullet_size_h.width,
-                gun.bullet_size_h.height,
-            ]
-            .iter()
-            .chain(
-                bursts
-                    .iter()
-                    .flat_map(|burst| [&burst.radius_h, &burst.duration_s]),
-            )
-            .any(|value| !value.is_finite() || *value <= 0.0)
-            || !(0.0..90.0).contains(&gun.diagonal_angle_degrees)
+        let melee = &player.melee;
+        if melee.steps.is_empty()
+            || melee.combo_window_s <= 0.0
+            || [&melee.impact_burst.radius_h, &melee.impact_burst.duration_s]
+                .into_iter()
+                .any(|value| !value.is_finite() || *value <= 0.0)
         {
             return Err(InvalidGameData::from(
-                "the gun needs a magazine, positive damage, timings, bullet and burst sizes, \
-                 and a diagonal angle below 90 degrees",
+                "the melee chain needs at least one blow, a positive combo window, \
+                 and a positive impact burst",
+            ));
+        }
+        for step in &melee.steps {
+            let hitbox = &step.hitbox_h;
+            if step.damage <= 0.0
+                || !step.damage.is_finite()
+                || step.contact_s < 0.0
+                || step.contact_s > step.strike.clip(&self.player_animations.clips).duration_s()
+                || !step.lunge_h_s.is_finite()
+                || !(hitbox.width > 0.0 && hitbox.height > 0.0)
+                || !(hitbox.x.is_finite() && hitbox.y.is_finite())
+            {
+                return Err(InvalidGameData::from(format!(
+                    "melee step {:?} needs positive damage, a hitbox with a positive size, \
+                     and a contact time within its clip",
+                    step.strike
+                )));
+            }
+            if let Some(bonus) = &step.requires_bonus
+                && !self.bonuses.bonuses.iter().any(|offer| &offer.id == bonus)
+            {
+                return Err(InvalidGameData::from(format!(
+                    "melee step {:?} requires the unknown bonus {bonus}",
+                    step.strike
+                )));
+            }
+        }
+        let wall = &player.wall;
+        if [
+            wall.slide_speed_h_s,
+            wall.jump_impulse_h_s,
+            wall.jump_push_h_s,
+        ]
+        .iter()
+        .any(|value| !value.is_finite() || *value <= 0.0)
+            || !(wall.control_lock_s.is_finite() && wall.control_lock_s >= 0.0)
+        {
+            return Err(InvalidGameData::from(
+                "wall sliding and the push off a wall need positive speeds and a \
+                 nonnegative control lock",
+            ));
+        }
+        let water = &player.water;
+        if [
+            water.swim_speed_h_s,
+            water.rise_speed_h_s,
+            water.sink_speed_h_s,
+            water.drag_h_s2,
+            water.dive_speed_h_s,
+            water.exit_impulse_h_s,
+            water.submerged_depth_h,
+        ]
+        .iter()
+        .any(|value| !value.is_finite() || *value <= 0.0)
+            || !(0.0..=1.0).contains(&water.opacity)
+        {
+            return Err(InvalidGameData::from(
+                "swimming needs positive speeds, drag, dive threshold and depth, \
+                 and an opacity within 0..=1",
             ));
         }
         let animations = &self.player_animations;
@@ -144,20 +189,10 @@ impl GameData {
             || !(animations.jog_speed_fraction > 0.0 && animations.jog_speed_fraction <= 1.0)
             || !(0.0..=1.0).contains(&animations.wounded_health_fraction)
             || !(animations.idle_fidget_after_s.is_finite() && animations.idle_fidget_after_s > 0.0)
-            || !(animations.aim_hold_s.is_finite() && animations.aim_hold_s >= 0.0)
-            || animations.run_shooting_shot_frame >= animations.clips.run_shooting.frames
         {
             return Err(InvalidGameData::from(
-                "player sprite body heights, feet row, speed and health fractions, fidget delay, \
-                 or run-shooting shot frame are out of range",
-            ));
-        }
-        if Aim::ALL.iter().any(|aim| {
-            let clips = animations.shooting.get(*aim);
-            clips.shot.is_empty() || clips.shot.len() != clips.aim.len()
-        }) {
-            return Err(InvalidGameData::from(
-                "each aim direction needs at least one shot clip and one aim pose per shot clip",
+                "player sprite body heights, feet row, speed and health fractions, \
+                 or the fidget delay are out of range",
             ));
         }
         for (key, clip) in animations.keyed() {
@@ -247,9 +282,7 @@ impl GameData {
             &controls.navigate_up,
             &controls.navigate_down,
             &controls.jump,
-            &controls.shoot,
-            &controls.aim_up,
-            &controls.reload,
+            &controls.attack,
             &controls.cover,
             &controls.interact,
             &controls.pause,
@@ -552,8 +585,6 @@ impl GameData {
 
         let recorded = &self.gameplay.audio.recorded_effects;
         let sounds = [
-            &recorded.gun_shot,
-            &recorded.reload,
             &recorded.door_open,
             &recorded.damage_neutral,
             &recorded.damage_metal,

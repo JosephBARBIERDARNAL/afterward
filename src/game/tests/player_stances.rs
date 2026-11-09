@@ -58,13 +58,7 @@ fn crouching_slows_cover_blocks_frontal_hits_and_death_plays_out_before_the_run_
             Startup,
             |mut commands: Commands, data: Res<GameData>, sheets: Res<SpriteSheets>| {
                 let room = &data.rooms[&1];
-                world::spawn_player(
-                    &mut commands,
-                    room,
-                    &data,
-                    &sheets,
-                    data.gameplay.player.gun.magazine_size,
-                );
+                world::spawn_player(&mut commands, room, &data, &sheets);
                 let width = room.size.width_h * H_WORLD_UNITS;
                 commands.spawn(PlatformSurface {
                     left: 0.0,
@@ -79,7 +73,7 @@ fn crouching_slows_cover_blocks_frontal_hits_and_death_plays_out_before_the_run_
             Update,
             (
                 player::update_player,
-                combat::player_gun,
+                combat::player_melee,
                 combat::update_projectiles,
                 combat::update_player_death,
                 assets::animate_sprites,

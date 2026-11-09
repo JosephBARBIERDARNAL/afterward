@@ -7,11 +7,10 @@ use bevy::{
 };
 
 use crate::data::{
-    Aim, DifficultyColors, EnemyAttackConfig, EnemyDetectionConfig, EnemyMaterial, EnemyTypeId,
+    DifficultyColors, EnemyAttackConfig, EnemyDetectionConfig, EnemyMaterial, EnemyTypeId,
     FootstepSound, GameData, HexColor, PLAYER_COLLISION_WIDTH_H,
 };
 
-mod ammo_hud;
 mod assets;
 mod audio;
 mod bonus_pickup;
@@ -42,6 +41,7 @@ mod shaders;
 mod sprites;
 mod ui_style;
 mod visual_walkthrough;
+mod water;
 mod world;
 
 pub use visual_walkthrough::VisualWalkthroughPlugin;
@@ -59,13 +59,13 @@ use combat::{
 use controls::{ControlBindings, GameAction};
 use flow::PhaseTimer;
 use menus::{MenuAction, MenuFocus, VolumeChannel};
-use player::{PlayerAction, PlayerBody, Reload};
+use player::{PlayerAction, PlayerBody, Strike};
 use prologue::Prologue;
 use random::RandomState;
 use room_pan::RoomPan;
 use session::{Difficulty, RunSession};
 use settings::{AudioSettings, PreferencesDir, SettingsReturn};
-use shaders::{CityLightsMaterial, Glowing, ShaderAssets};
+use shaders::{CityLightsMaterial, Glowing, ShaderAssets, flood_material};
 use sprites::{AnimatedSprite, SpriteSheet, SpriteSheetSpec, SpriteSheets, set_animation};
 use world::{EntryDoor, ExitDoor, RoomEntity};
 
@@ -135,7 +135,6 @@ impl Plugin for GamePlugin {
                 (
                     camera::spawn_camera,
                     interface::spawn_interface,
-                    ammo_hud::spawn_ammo_hud,
                     bonus_screen::spawn_bonus_screen,
                     menus::spawn_menu,
                     prologue::spawn_prologue_text,
@@ -231,7 +230,6 @@ impl Plugin for GamePlugin {
                     bonus_screen::update_bonus_screen,
                     camera::update_background_parallax,
                     interface::update_hud,
-                    ammo_hud::update_ammo_hud,
                     shaders::attach_glows,
                     shaders::show_the_flood,
                 ),
@@ -240,7 +238,7 @@ impl Plugin for GamePlugin {
                 Update,
                 (camera::follow_camera, player::update_player)
                     .chain()
-                    .before(combat::player_gun)
+                    .before(combat::player_melee)
                     .run_if(
                         in_state(GameScreen::Playing)
                             .or_else(in_state(GameScreen::RoomClear))
@@ -250,8 +248,7 @@ impl Plugin for GamePlugin {
             .add_systems(
                 Update,
                 (
-                    combat::player_gun,
-                    combat::update_player_bullets,
+                    combat::player_melee,
                     combat::update_enemy_ai,
                     combat::update_enemy_platform_physics,
                     combat::update_falls,

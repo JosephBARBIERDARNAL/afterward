@@ -24,14 +24,10 @@ impl PlayerSprite<'_> {
         set_animation(self.sprite, self.animation, self.sheets, key, looping);
     }
 
-    /// Plays `key` from `frame`, even when it already plays.
-    fn restart(&mut self, key: &str, looping: bool, frame: usize) {
+    /// Plays `key` from its first frame, even when it already plays.
+    fn restart(&mut self, key: &str, looping: bool) {
         self.animation.sheet.clear();
         self.play(key, looping);
-        self.animation.frame = frame.min(self.animation.frames.saturating_sub(1));
-        if let Some(atlas) = self.sprite.texture_atlas.as_mut() {
-            atlas.index = self.animation.frame;
-        }
     }
 
     /// Whether `key` plays and has reached its last frame.
@@ -39,9 +35,9 @@ impl PlayerSprite<'_> {
         self.animation.sheet == key && self.animation.frame + 1 >= self.animation.frames
     }
 
-    /// Picks the clip for the player's current state. One-shot actions (shots,
-    /// hits, landings, turns) play over the movement clips until they end;
-    /// dying and Cover override everything.
+    /// Picks the clip for the player's current state. One-shot actions (blows
+    /// of the melee chain, hits, landings, wall pushes, the dive) play over
+    /// the movement clips until they end; dying and Cover override everything.
     pub(super) fn update(
         &mut self,
         player: &mut PlayerBody,
@@ -59,27 +55,35 @@ impl PlayerSprite<'_> {
             return;
         }
         if let Some(action) = player.action {
-            let (key, looping, frame) = match action {
-                PlayerAction::Shot { running: true, .. } => (
-                    String::from("player_run_shooting"),
-                    true,
-                    animations.run_shooting_shot_frame,
-                ),
-                PlayerAction::Shot { aim, variant, .. } => (
-                    format!("player_shoot_{}_{}", aim.name(), variant + 1),
-                    false,
-                    0,
-                ),
-                PlayerAction::Hit => (String::from("player_hit"), false, 0),
-                PlayerAction::Land => (String::from("player_land"), false, 0),
-                PlayerAction::Turn { running: true } => (String::from("player_turn_run"), false, 0),
-                PlayerAction::Turn { running: false } => (String::from("player_turn"), false, 0),
+            let key = match action {
+                PlayerAction::Strike { strike, .. } => strike.clip_key(),
+                PlayerAction::Hit => "player_hit",
+                PlayerAction::Land => "player_land",
+                PlayerAction::WallJump => "player_wall_jump",
+                PlayerAction::Dive => "player_dive",
             };
             if restart {
-                self.restart(&key, looping, frame);
+                self.restart(key, false);
+                // A chain sped up by a bonus plays its blow that much faster.
+                if let PlayerAction::Strike { strike, speed } = action
+                    && let Some(sheet) = self.sheets.0.get(strike.clip_key())
+                {
+                    self.animation.timer = Timer::from_seconds(
+                        (1.0 / (sheet.fps * speed)).max(f32::EPSILON),
+                        TimerMode::Repeating,
+                    );
+                }
             } else {
-                self.play(&key, looping);
+                self.play(key, false);
             }
+            return;
+        }
+        if player.swimming {
+            self.play("player_swim", true);
+            return;
+        }
+        if player.wall_cling.is_some() {
+            self.play("player_wall_slide", true);
             return;
         }
         if !player.grounded {
@@ -104,45 +108,13 @@ impl PlayerSprite<'_> {
         } else {
             player.idle_s = 0.0;
         }
-        if let Some(reload) = player.reload.filter(|_| !state.moving) {
-            if self.animation.sheet != "player_reload" {
-                // Fit the clip to the reload, from how far it already got.
-                let frames = self
-                    .sheets
-                    .0
-                    .get("player_reload")
-                    .map_or(1, |sheet| sheet.frames);
-                let progress = 1.0 - reload.remaining_s / reload.duration_s;
-                self.restart("player_reload", false, (progress * frames as f32) as usize);
-                self.animation.timer = Timer::from_seconds(
-                    (reload.duration_s / frames as f32).max(f32::EPSILON),
-                    TimerMode::Repeating,
-                );
-            }
-            return;
-        }
-        if player.aim_hold_timer > 0.0 && !player.crouching {
-            let variants = animations.shooting.get(player.aim).aim.len();
-            let variant = (player.shot_variant + variants - 1) % variants;
-            if !state.moving {
-                self.play(
-                    &format!("player_aim_{}_{}", player.aim.name(), variant + 1),
-                    false,
-                );
-                return;
-            }
-            if player.aim == Aim::Straight && speed >= state.jog_speed {
-                self.play("player_run_shooting", true);
-                return;
-            }
-        }
         if player.crouching {
             let key = if state.moving {
                 "player_crouch_walk"
             } else {
                 "player_crouch"
             };
-            self.play(key, true);
+            self.play(key, false);
             return;
         }
         if state.moving {

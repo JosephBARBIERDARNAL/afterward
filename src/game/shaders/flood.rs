@@ -6,7 +6,10 @@
 //! the screens standing over no room at all.
 
 use super::*;
-use crate::{data::HexColor, game::prologue::Prologue};
+use crate::{
+    data::{FloodConfig, HexColor},
+    game::prologue::Prologue,
+};
 
 pub(super) const SHADER_PATH: &str = "shaders/flood.wgsl";
 /// Behind everything else the camera draws.
@@ -54,28 +57,24 @@ impl Material2d for FloodMaterial {
     }
 }
 
-/// Lays the flood the main menu is drawn over, hidden until that menu is up.
-pub(super) fn spawn_the_flood(
-    mut commands: Commands,
-    data: Res<GameData>,
-    mut assets: ShaderAssets,
-) {
-    let config = &data.gameplay.effects.flood;
+/// The same water at any size: a quad `size_h` across shows that much of the
+/// field, so a room's pool and the whole menu viewport are cut from one cloth.
+pub(in crate::game) fn flood_material(
+    config: &FloodConfig,
+    size_h: Vec2,
+    opacity: f32,
+) -> FloodMaterial {
     let tone = |color: HexColor| LinearRgba::from(Color::from(color)).to_vec4();
-    let viewport_h = Vec2::new(
-        data.gameplay.viewport_width_h(),
-        data.gameplay.viewport.height_h,
-    );
-    let material = assets.flood.add(FloodMaterial {
+    FloodMaterial {
         settings: FloodSettings {
             depth: tone(config.depth_color),
             cell: tone(config.cell_color),
             crest: tone(config.crest_color),
             foam: tone(config.foam_color),
             grid: Vec4::new(
-                viewport_h.x * config.pixels_per_h,
-                viewport_h.y * config.pixels_per_h,
-                viewport_h.y / config.cell_h,
+                size_h.x * config.pixels_per_h,
+                size_h.y * config.pixels_per_h,
+                size_h.y / config.cell_h,
                 config.dither,
             ),
             flow: Vec4::new(
@@ -84,9 +83,26 @@ pub(super) fn spawn_the_flood(
                 config.wobble,
                 0.0,
             ),
-            lines: Vec4::new(config.web_width, config.vein_width, 1.0, 0.0),
+            lines: Vec4::new(config.web_width, config.vein_width, opacity, 0.0),
         },
-    });
+    }
+}
+
+/// Lays the flood the main menu is drawn over, hidden until that menu is up.
+pub(super) fn spawn_the_flood(
+    mut commands: Commands,
+    data: Res<GameData>,
+    mut assets: ShaderAssets,
+) {
+    let viewport_h = Vec2::new(
+        data.gameplay.viewport_width_h(),
+        data.gameplay.viewport.height_h,
+    );
+    let material = assets.flood.add(flood_material(
+        &data.gameplay.effects.flood,
+        viewport_h,
+        1.0,
+    ));
     commands.spawn((
         Mesh2d(assets.quad.0.clone()),
         MeshMaterial2d(material),

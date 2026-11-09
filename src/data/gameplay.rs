@@ -1,8 +1,8 @@
-//! Gameplay tuning from `config/gameplay.yaml`: viewport, player, gun, room flow, audio, and controls.
+//! Gameplay tuning from `config/gameplay.yaml`: viewport, player, melee, room flow, audio, and controls.
 
 use serde::Deserialize;
 
-use super::{HexColor, ImageSizeConfig, PerAim};
+use super::{HexColor, ImageSizeConfig, MeleeStrike, RectH};
 
 /// Width of the player's (and every enemy's) collision box, in H. Its height
 /// is 1 H by definition.
@@ -70,8 +70,6 @@ pub struct AudioConfig {
 /// yet and stay silent.
 #[derive(Debug, Deserialize)]
 pub struct RecordedEffects {
-    pub gun_shot: AudioAsset,
-    pub reload: AudioAsset,
     pub door_open: AudioAsset,
     /// A hit on the player, or on an enemy of polymer.
     pub damage_neutral: AudioAsset,
@@ -102,9 +100,7 @@ pub struct ControlsConfig {
     pub navigate_up: Vec<String>,
     pub navigate_down: Vec<String>,
     pub jump: Vec<String>,
-    pub shoot: Vec<String>,
-    pub aim_up: Vec<String>,
-    pub reload: Vec<String>,
+    pub attack: Vec<String>,
     pub cover: Vec<String>,
     pub interact: Vec<String>,
     pub pause: Vec<String>,
@@ -152,25 +148,75 @@ pub struct PlayerConfig {
     pub cover_damage_taken_multiplier: f32,
     /// Seconds the last death frame holds before the run ends.
     pub death_hold_s: f32,
-    pub gun: GunConfig,
+    pub melee: MeleeConfig,
+    pub wall: WallConfig,
+    pub water: WaterConfig,
 }
 
-/// The player's only weapon: a gun firing visible bullets from a magazine.
+/// The player's only weapon: a melee chain. Each press lands the next blow of
+/// `steps`; letting `combo_window_s` lapse after one ends drops the chain back
+/// to its first step.
 #[derive(Debug, Deserialize)]
-pub struct GunConfig {
-    pub damage: f32,
-    pub fire_interval_s: f32,
-    pub magazine_size: u32,
-    pub reload_s: f32,
-    pub bullet_speed_h_s: f32,
-    pub bullet_range_h: f32,
-    pub bullet_size_h: SizeH,
-    pub diagonal_angle_degrees: f32,
+pub struct MeleeConfig {
+    pub combo_window_s: f32,
+    /// Knockback a blow gives the boss, the only body the player can shove.
     pub boss_knockback_h_s: f32,
-    /// Bullet origin from the body center, facing right.
-    pub muzzle_offset_h: PerAim<PointH>,
-    pub muzzle_flash: BurstConfig,
+    pub steps: Vec<MeleeComboStep>,
+    /// The burst drawn where a blow lands.
     pub impact_burst: BurstConfig,
+}
+
+/// One blow of the chain.
+#[derive(Debug, Deserialize)]
+pub struct MeleeComboStep {
+    /// Which blow it is, and so which clip it plays.
+    pub strike: MeleeStrike,
+    pub damage: f32,
+    /// Where the blow lands, from the player's feet: `x` points the way they
+    /// face (negative reaches behind), `y` up.
+    pub hitbox_h: RectH,
+    /// How far into the clip the blow connects.
+    pub contact_s: f32,
+    /// Forward shove the blow gives the player, so the chain carries them in.
+    pub lunge_h_s: f32,
+    /// Part of the chain only while this bonus is owned.
+    #[serde(default)]
+    pub requires_bonus: Option<String>,
+}
+
+/// Clinging to a platform's side and pushing off it.
+#[derive(Debug, Deserialize)]
+pub struct WallConfig {
+    /// How fast the player slides down a wall they are pressed against.
+    pub slide_speed_h_s: f32,
+    /// Upward part of the push off a wall.
+    pub jump_impulse_h_s: f32,
+    /// Sideways part, away from the wall.
+    pub jump_push_h_s: f32,
+    /// Seconds after a wall jump during which movement input is ignored, so
+    /// the player actually leaves the wall instead of sticking to it.
+    pub control_lock_s: f32,
+}
+
+/// The flood standing in a room's `water` rectangles.
+#[derive(Debug, Deserialize)]
+pub struct WaterConfig {
+    pub swim_speed_h_s: f32,
+    /// Rise while Jump is held, and the sink without it.
+    pub rise_speed_h_s: f32,
+    pub sink_speed_h_s: f32,
+    /// How fast the player's speed is dragged to the water's own, so falling
+    /// in is slowed rather than stopped.
+    pub drag_h_s2: f32,
+    /// Entering at least this fast downward plays the dive.
+    pub dive_speed_h_s: f32,
+    /// The hop out of the water given by Jump at the surface.
+    pub exit_impulse_h_s: f32,
+    /// How deep under the surface the body's center sits before the room's
+    /// water counts as over the player's head.
+    pub submerged_depth_h: f32,
+    /// How solidly the water is drawn over the swimmer behind it.
+    pub opacity: f32,
 }
 
 /// A fiery burst: a swelling, fading core and embers flying outward.
@@ -180,12 +226,6 @@ pub struct BurstConfig {
     pub duration_s: f32,
     pub embers: u8,
     pub ember_speed_h_s: f32,
-}
-
-#[derive(Debug, Clone, Copy, Deserialize)]
-pub struct PointH {
-    pub x: f32,
-    pub y: f32,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Deserialize)]

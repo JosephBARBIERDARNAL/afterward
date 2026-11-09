@@ -8,7 +8,6 @@ mod enemy_shield;
 mod enemy_vision;
 mod falling;
 mod gameplay_controls;
-mod gun;
 mod platform_movement;
 mod player_controls;
 mod player_stances;

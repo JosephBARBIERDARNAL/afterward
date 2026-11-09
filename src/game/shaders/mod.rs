@@ -17,6 +17,7 @@ mod glow;
 pub(super) use city_lights::CityLightsMaterial;
 #[cfg(test)]
 pub(super) use flood::Flood;
+pub(in crate::game) use flood::flood_material;
 pub(super) use flood::show_the_flood;
 #[cfg(test)]
 pub(super) use glow::GlowAttached;
@@ -53,7 +54,7 @@ pub(super) struct ShaderAssets<'w> {
     pub(super) quad: Res<'w, ShadedQuad>,
     pub(super) city_lights: ResMut<'w, Assets<CityLightsMaterial>>,
     glows: ResMut<'w, Assets<glow::GlowMaterial>>,
-    flood: ResMut<'w, Assets<flood::FloodMaterial>>,
+    pub(in crate::game) flood: ResMut<'w, Assets<flood::FloodMaterial>>,
 }
 
 #[cfg(test)]

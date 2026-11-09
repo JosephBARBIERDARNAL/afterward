@@ -5,12 +5,12 @@ use std::{path::Path, time::Duration};
 use bevy::{prelude::MinimalPlugins, state::app::StatesPlugin, time::TimeUpdateStrategy};
 
 #[test]
-fn a_metal_enemys_shield_soaks_one_shot_and_shatters_before_its_health_drops() {
+fn a_metal_enemys_shield_soaks_one_blow_and_shatters_before_its_health_drops() {
     let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
     let mut data = GameData::load(&asset_root).expect("Chapter 1 data should load");
     // A fixed layout, independent of the authored rooms: a flat floor with the
-    // player on the left, a metal blade_unit in front of it, and a stalker of
-    // polymer further off to stand for the unshielded case.
+    // player on the left, a metal blade_unit within arm's reach of it, and a
+    // stalker of polymer further off to stand for the unshielded case.
     *data.rooms.get_mut(&1).expect("room 1 should exist") = yaml_serde::from_str(
         "
 room_id: 1
@@ -21,7 +21,7 @@ player_spawn: { x_h: 2.5, y_h: 1 }
 platforms:
   - { material: city_pavement, rect_h: { x: 0, y: 0, width: 48, height: 1 } }
 enemy_spawns:
-  - { type_id: blade_unit, position_h: { x: 10, y: 1 } }
+  - { type_id: blade_unit, position_h: { x: 3.5, y: 1 } }
   - { type_id: stalker_unit, position_h: { x: 20, y: 1 } }
 bonus: { x_h: 43, y_h: 1 }
 exit: { x_h: 45, y_h: 1 }
@@ -91,13 +91,7 @@ next_room_id: 2
             |mut commands: Commands, data: Res<GameData>, sheets: Res<SpriteSheets>| {
                 let room = &data.rooms[&1];
                 world::spawn_room_platforms(&mut commands, room, &data);
-                world::spawn_player(
-                    &mut commands,
-                    room,
-                    &data,
-                    &sheets,
-                    data.gameplay.player.gun.magazine_size,
-                );
+                world::spawn_player(&mut commands, room, &data, &sheets);
                 world::spawn_enemies(&mut commands, room, &data, &sheets);
             },
         )
@@ -105,8 +99,7 @@ next_room_id: 2
             Update,
             (
                 player::update_player,
-                combat::player_gun,
-                combat::update_player_bullets,
+                combat::player_melee,
                 combat::update_enemy_shields,
             )
                 .chain(),
@@ -146,8 +139,8 @@ next_room_id: 2
         "only the metal enemy carries a shield icon"
     );
 
-    // Hold the trigger: the first round that lands breaks the shield without
-    // touching the enemy's health, and only later rounds wound it.
+    // Throw the chain: the first blow that lands breaks the shield without
+    // touching the enemy's health, and only later blows wound it.
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
         .press(KeyCode::KeyJ);
@@ -166,7 +159,7 @@ next_room_id: 2
     assert_eq!(
         health_when_shield_broke,
         Some(full_health),
-        "the shot that breaks the shield costs the enemy no health"
+        "the blow that breaks the shield costs the enemy no health"
     );
     assert!(
         body(&app, metal).1 < full_health,

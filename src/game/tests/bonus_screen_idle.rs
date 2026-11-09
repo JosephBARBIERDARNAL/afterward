@@ -52,7 +52,7 @@ fn behind_the_bonus_screen_the_player_lands_and_idles_without_taking_input() {
             Startup,
             |mut commands: Commands, data: Res<GameData>, sheets: Res<SpriteSheets>| {
                 let room = &data.rooms[&1];
-                world::spawn_player(&mut commands, room, &data, &sheets, 10);
+                world::spawn_player(&mut commands, room, &data, &sheets);
                 let width = room.size.width_h * H_WORLD_UNITS;
                 commands.spawn(PlatformSurface {
                     left: 0.0,

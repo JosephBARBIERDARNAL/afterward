@@ -2,45 +2,6 @@ use serde::Deserialize;
 
 use super::ImageSizeConfig;
 
-/// Where the gun points: straight ahead, or diagonally down or up.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub enum Aim {
-    #[default]
-    Straight,
-    Down,
-    Up,
-}
-
-impl Aim {
-    pub const ALL: [Self; 3] = [Self::Straight, Self::Down, Self::Up];
-
-    pub(crate) fn name(self) -> &'static str {
-        match self {
-            Self::Straight => "straight",
-            Self::Down => "down",
-            Self::Up => "up",
-        }
-    }
-}
-
-/// One value per aim direction.
-#[derive(Debug, Deserialize)]
-pub struct PerAim<T> {
-    pub straight: T,
-    pub down: T,
-    pub up: T,
-}
-
-impl<T> PerAim<T> {
-    pub(crate) fn get(&self, aim: Aim) -> &T {
-        match aim {
-            Aim::Straight => &self.straight,
-            Aim::Down => &self.down,
-            Aim::Up => &self.up,
-        }
-    }
-}
-
 /// Player sprite sheets and how their frames map onto the collision box.
 #[derive(Debug, Deserialize)]
 pub struct PlayerAnimations {
@@ -51,23 +12,11 @@ pub struct PlayerAnimations {
     pub jog_speed_fraction: f32,
     pub wounded_health_fraction: f32,
     pub idle_fidget_after_s: f32,
-    pub aim_hold_s: f32,
     pub clips: PlayerAnimationClips,
-    pub run_shooting_shot_frame: usize,
-    pub shooting: PerAim<AimClips>,
-}
-
-/// The shot clips of one aim direction and the aim pose held after each.
-#[derive(Debug, Deserialize)]
-pub struct AimClips {
-    pub shot: Vec<AnimationClip>,
-    pub aim: Vec<AnimationClip>,
 }
 
 impl PlayerAnimations {
-    /// Every clip with the sprite-sheet key gameplay code refers to it by;
-    /// shot variant `n` (from 1) of an aim is `player_shoot_{aim}_{n}`, and
-    /// its aim pose `player_aim_{aim}_{n}`.
+    /// Every clip with the sprite-sheet key gameplay code refers to it by.
     pub(crate) fn keyed(&self) -> Vec<(String, &AnimationClip)> {
         let clips = &self.clips;
         [
@@ -80,30 +29,24 @@ impl PlayerAnimations {
             ("player_jog", &clips.jog),
             ("player_crouch", &clips.crouch),
             ("player_crouch_walk", &clips.crouch_walk),
-            ("player_turn", &clips.turn),
-            ("player_turn_run", &clips.turn_run),
             ("player_jump", &clips.jump),
             ("player_ascend", &clips.ascend),
             ("player_descend", &clips.descend),
             ("player_land", &clips.land),
-            ("player_reload", &clips.reload),
+            ("player_wall_slide", &clips.wall_slide),
+            ("player_wall_jump", &clips.wall_jump),
+            ("player_dive", &clips.dive),
+            ("player_swim", &clips.swim),
             ("player_cover", &clips.cover),
             ("player_hit", &clips.hit),
             ("player_death", &clips.death),
-            ("player_run_shooting", &clips.run_shooting),
+            ("player_strike_1", &clips.strike_1),
+            ("player_strike_2", &clips.strike_2),
+            ("player_kick", &clips.kick),
+            ("player_fire_kick", &clips.fire_kick),
         ]
         .into_iter()
         .map(|(key, clip)| (key.to_string(), clip))
-        .chain(Aim::ALL.into_iter().flat_map(|aim| {
-            let clips = self.shooting.get(aim);
-            let shots = clips.shot.iter().enumerate().map(move |(index, clip)| {
-                (format!("player_shoot_{}_{}", aim.name(), index + 1), clip)
-            });
-            let poses = clips.aim.iter().enumerate().map(move |(index, clip)| {
-                (format!("player_aim_{}_{}", aim.name(), index + 1), clip)
-            });
-            shots.chain(poses)
-        }))
         .collect()
     }
 }
@@ -119,17 +62,55 @@ pub struct PlayerAnimationClips {
     pub jog: AnimationClip,
     pub crouch: AnimationClip,
     pub crouch_walk: AnimationClip,
-    pub turn: AnimationClip,
-    pub turn_run: AnimationClip,
     pub jump: AnimationClip,
     pub ascend: AnimationClip,
     pub descend: AnimationClip,
     pub land: AnimationClip,
-    pub reload: AnimationClip,
+    pub wall_slide: AnimationClip,
+    pub wall_jump: AnimationClip,
+    pub dive: AnimationClip,
+    pub swim: AnimationClip,
     pub cover: AnimationClip,
     pub hit: AnimationClip,
     pub death: AnimationClip,
-    pub run_shooting: AnimationClip,
+    pub strike_1: AnimationClip,
+    pub strike_2: AnimationClip,
+    pub kick: AnimationClip,
+    pub fire_kick: AnimationClip,
+}
+
+/// Which blow a step of the melee combo lands, and so which clip it plays.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
+pub enum MeleeStrike {
+    #[serde(rename = "strike_1")]
+    Strike1,
+    #[serde(rename = "strike_2")]
+    Strike2,
+    #[serde(rename = "kick")]
+    Kick,
+    #[serde(rename = "fire_kick")]
+    FireKick,
+}
+
+impl MeleeStrike {
+    /// The sprite-sheet key the strike's clip is loaded under.
+    pub(crate) fn clip_key(self) -> &'static str {
+        match self {
+            Self::Strike1 => "player_strike_1",
+            Self::Strike2 => "player_strike_2",
+            Self::Kick => "player_kick",
+            Self::FireKick => "player_fire_kick",
+        }
+    }
+
+    pub(crate) fn clip(self, clips: &PlayerAnimationClips) -> &AnimationClip {
+        match self {
+            Self::Strike1 => &clips.strike_1,
+            Self::Strike2 => &clips.strike_2,
+            Self::Kick => &clips.kick,
+            Self::FireKick => &clips.fire_kick,
+        }
+    }
 }
 
 #[derive(Debug, Deserialize)]

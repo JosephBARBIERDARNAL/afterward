@@ -1,6 +1,7 @@
-//! The player body: movement, gun, and bonus-timer state.
+//! The player body: movement, the melee chain, and bonus-timer state.
 
 use super::*;
+use crate::data::MeleeStrike;
 
 #[derive(Component)]
 pub(crate) struct PlayerBody {
@@ -10,21 +11,26 @@ pub(crate) struct PlayerBody {
     pub(crate) jumps_used: u8,
     /// Rising from a jump whose button is still held; releasing it cuts the rise.
     pub(crate) jump_held: bool,
-    /// Seconds until the gun can fire again.
-    pub(crate) fire_cooldown: f32,
-    /// Rounds left in the magazine.
-    pub(crate) ammo: u32,
-    pub(crate) reload: Option<Reload>,
-    /// Shot variant the next shot plays; consecutive shots alternate.
-    pub(crate) shot_variant: usize,
-    /// Direction of the last shot, held by the aim pose.
-    pub(crate) aim: Aim,
-    /// Seconds the aim pose keeps holding after a shot.
-    pub(crate) aim_hold_timer: f32,
-    /// Health Vampiric Rounds restored from the current magazine.
-    pub(crate) magazine_healing: f32,
+    /// The blow being thrown, if any.
+    pub(crate) strike: Option<Strike>,
+    /// Which step of the melee chain the next press throws.
+    pub(crate) combo_step: usize,
+    /// What is left of the window to ask for the chain's next blow; at zero
+    /// the chain drops back to its first step.
+    pub(crate) combo_window_s: f32,
+    /// Health Lifesteal has restored in this room.
+    pub(crate) lifesteal_healing: f32,
     pub(crate) crouching: bool,
     pub(crate) covering: bool,
+    /// Swimming: inside one of the room's water pools, where the stroke
+    /// replaces walking and jumping.
+    pub(crate) swimming: bool,
+    /// Clinging to a platform's side in mid-air, and which way that wall lies
+    /// (-1 for a wall on the player's left).
+    pub(crate) wall_cling: Option<f32>,
+    /// Seconds left of the lock a wall jump puts on movement input, so the
+    /// push actually carries the player off the wall.
+    pub(crate) wall_control_lock_s: f32,
     /// Seconds spent standing idle, for the hand fidgets.
     pub(crate) idle_s: f32,
     /// The next fidget uses the right hand.
@@ -53,15 +59,15 @@ impl Default for PlayerBody {
             grounded: true,
             jumps_used: 0,
             jump_held: false,
-            fire_cooldown: 0.0,
-            ammo: 0,
-            reload: None,
-            shot_variant: 0,
-            aim: Aim::Straight,
-            aim_hold_timer: 0.0,
-            magazine_healing: 0.0,
+            strike: None,
+            combo_step: 0,
+            combo_window_s: 0.0,
+            lifesteal_healing: 0.0,
             crouching: false,
             covering: false,
+            swimming: false,
+            wall_cling: None,
+            wall_control_lock_s: 0.0,
             idle_s: 0.0,
             fidget_right: false,
             dying_s: None,
@@ -87,25 +93,27 @@ impl PlayerBody {
     }
 }
 
+/// A blow of the melee chain being thrown.
+#[derive(Clone, Copy, Debug)]
+pub(crate) struct Strike {
+    /// Which step of the chain it is.
+    pub(crate) step: usize,
+    /// Seconds until it connects; once past zero it already has.
+    pub(crate) contact_in_s: f32,
+}
+
 /// A one-shot player animation played over the movement clips.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(crate) enum PlayerAction {
-    /// Firing; a straight shot while running plays the run-shooting cycle.
-    Shot {
-        aim: Aim,
-        variant: usize,
-        running: bool,
+    /// A blow of the melee chain, played at `speed` times its clip's rate.
+    Strike {
+        strike: MeleeStrike,
+        speed: f32,
     },
     Hit,
     Land,
-    Turn {
-        running: bool,
-    },
-}
-
-/// A magazine refill under way.
-#[derive(Clone, Copy, Debug)]
-pub(crate) struct Reload {
-    pub(crate) remaining_s: f32,
-    pub(crate) duration_s: f32,
+    /// Pushing off a wall.
+    WallJump,
+    /// Breaking the water's surface from above.
+    Dive,
 }

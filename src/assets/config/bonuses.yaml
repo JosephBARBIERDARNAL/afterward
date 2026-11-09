@@ -37,30 +37,36 @@ rarities:
 # Every category holds enough bonuses that a whole chapter of pickups, rerolls
 # included, can never run it dry (`GameData::validate` checks it).
 bonuses:
-  - id: hollow_points
-    name: Hollow Points
-    description: Increase bullet damage by 20%.
+  - id: heavy_hands
+    name: Heavy Hands
+    description: Increase strike damage by 20%.
     category: combat
     rarity: uncommon
-    effects: { bullet_damage_multiplier: 1.2 }
-  - id: last_round
-    name: Last Round
-    description: The last bullet of each magazine deals 50% more damage.
+    effects: { strike_damage_multiplier: 1.2 }
+  - id: finisher
+    name: Finisher
+    description: The chain's last blow deals 50% more damage.
     category: combat
     rarity: uncommon
-    effects: { last_round_damage_multiplier: 1.5 }
-  - id: hair_trigger
-    name: Hair Trigger
-    description: Increase fire rate by 15%.
+    effects: { finisher_damage_multiplier: 1.5 }
+  - id: quick_hands
+    name: Quick Hands
+    description: The chain throws its blows 15% faster.
     category: combat
     rarity: uncommon
-    effects: { fire_rate_multiplier: 1.15 }
-  - id: extended_magazine
-    name: Extended Magazine
-    description: Increase magazine size by 4 rounds.
+    effects: { combo_speed_multiplier: 1.15 }
+  - id: long_reach
+    name: Long Reach
+    description: Blows reach 25% further.
     category: combat
     rarity: rare
-    effects: { extra_magazine_rounds: 4 }
+    effects: { strike_reach_multiplier: 1.25 }
+  - id: fire_kick
+    name: Fire Kick
+    description: Adds a blazing fourth blow to the chain, dealing 45 damage.
+    category: combat
+    rarity: epic
+    effects: { adds_combo_step: 1 }
   - id: thick_skin
     name: Thick Skin
     description: Reduce damage taken by 10%.
@@ -105,101 +111,101 @@ bonuses:
     effects: { extra_midair_jumps: 1, extra_jump_impulse_factor: 0.8 }
   - id: marked_prey
     name: Marked Prey
-    description: Bullet hits mark an enemy for 2 seconds; further bullets on it deal 15% more damage.
+    description: A blow marks an enemy for 2 seconds; further blows on it deal 15% more damage.
     category: intelligence
     rarity: rare
-    effects: { mark_duration_s: 2, marked_bullet_damage_multiplier: 1.15 }
+    effects: { mark_duration_s: 2, marked_strike_damage_multiplier: 1.15 }
   - id: rhythm_training
     name: Rhythm Training
-    description: Hits within 1.5 seconds increase fire rate by 4%, up to 16%.
+    description: Blows landing within 1.5 seconds of each other speed the chain by 4%, up to 16%.
     category: intelligence
     rarity: rare
-    effects: { hit_window_s: 1.5, fire_rate_step: 0.04, fire_rate_max_bonus: 0.16 }
+    effects: { hit_window_s: 1.5, combo_speed_step: 0.04, combo_speed_max_bonus: 0.16 }
   - id: chain_reaction
     name: Chain Reaction
     description: Killing an enemy increases damage by 15% for 2 seconds.
     category: intelligence
     rarity: rare
     effects: { kill_damage_bonus: 0.15, kill_damage_duration_s: 2 }
-  - id: speed_loader
-    name: Speed Loader
-    description: Reload 30% faster.
+  - id: deep_breath
+    name: Deep Breath
+    description: The window to chain the next blow lasts 30% longer.
     category: intelligence
     rarity: uncommon
-    effects: { reload_speed_multiplier: 1.3 }
-  - id: vampiric_rounds
-    name: Vampiric Rounds
-    description: Bullet hits restore 1 health, up to 5 health per magazine.
+    effects: { combo_window_multiplier: 1.3 }
+  - id: lifesteal
+    name: Lifesteal
+    description: Landing a blow restores 1 health, up to 5 health per room.
     category: combined
     rarity: legendary
-    effects: { bullet_hit_healing: 1, magazine_healing_cap: 5 }
-  - id: aerial_gunner
-    name: Aerial Gunner
-    description: Deal 20% more bullet damage while airborne.
+    effects: { strike_hit_healing: 1, room_healing_cap: 5 }
+  - id: aerial_assault
+    name: Aerial Assault
+    description: Deal 20% more strike damage while airborne.
     category: combined
     rarity: rare
-    effects: { airborne_bullet_damage_multiplier: 1.2 }
+    effects: { airborne_strike_damage_multiplier: 1.2 }
   - id: sated_fury
     name: Sated Fury
-    description: Healing pickups increase fire rate by 15% for 3 seconds.
+    description: Healing pickups speed the chain by 15% for 3 seconds.
     category: combined
     rarity: uncommon
-    effects: { healing_pickup_fire_rate_multiplier: 1.15, healing_pickup_fire_rate_duration_s: 3 }
+    effects: { healing_pickup_combo_speed_multiplier: 1.15, healing_pickup_combo_speed_duration_s: 3 }
 
   # Placeholders, so every category has enough bonuses to fill a chapter of
   # pickups. They are named and described, but no code reads their effects
   # yet: picking one changes nothing until it is wired up.
-  - id: piercing_rounds
-    name: Piercing Rounds
-    description: Bullets pass through one extra enemy.
+  - id: cleave
+    name: Cleave
+    description: Blows carry through one extra enemy standing behind the first.
     category: combat
     rarity: epic
-    effects: { pierce_count: 1 }
-  - id: heavy_caliber
-    name: Heavy Caliber
-    description: Increase bullet damage by 10%.
+    effects: { cleave_count: 1 }
+  - id: iron_knuckles
+    name: Iron Knuckles
+    description: Increase strike damage by 10%.
     category: combat
     rarity: common
-    effects: { bullet_damage_multiplier: 1.1 }
-  - id: quick_draw
-    name: Quick Draw
-    description: The first shot after a reload deals 30% more damage.
+    effects: { strike_damage_multiplier: 1.1 }
+  - id: opener
+    name: Opener
+    description: The chain's first blow deals 30% more damage.
     category: combat
     rarity: uncommon
-    effects: { first_shot_damage_multiplier: 1.3 }
-  - id: steady_aim
-    name: Steady Aim
-    description: Standing still increases bullet damage by 12%.
+    effects: { first_strike_damage_multiplier: 1.3 }
+  - id: planted
+    name: Planted
+    description: Standing still increases strike damage by 12%.
     category: combat
     rarity: common
     effects: { standing_damage_multiplier: 1.12 }
-  - id: point_blank
-    name: Point Blank
-    description: Shots that land within 3 H deal 25% more damage.
+  - id: follow_through
+    name: Follow Through
+    description: A blow landed while advancing deals 25% more damage.
     category: combat
     rarity: uncommon
-    effects: { point_blank_range_h: 3, point_blank_damage_multiplier: 1.25 }
-  - id: long_shot
-    name: Long Shot
-    description: Shots that travel more than 8 H deal 20% more damage.
+    effects: { advancing_damage_multiplier: 1.25 }
+  - id: lunge
+    name: Lunge
+    description: The chain shoves you 40% further forward.
     category: combat
     rarity: uncommon
-    effects: { long_shot_range_h: 8, long_shot_damage_multiplier: 1.2 }
-  - id: double_tap
-    name: Double Tap
-    description: Every fifth shot fires a second bullet.
+    effects: { lunge_multiplier: 1.4 }
+  - id: double_strike
+    name: Double Strike
+    description: Every fifth blow lands twice.
     category: combat
     rarity: epic
-    effects: { double_tap_every: 5 }
-  - id: hot_barrel
-    name: Hot Barrel
-    description: Each shot in a magazine adds 1% damage, up to 10%.
+    effects: { double_strike_every: 5 }
+  - id: warmed_up
+    name: Warmed Up
+    description: Each blow of a chain adds 1% damage, up to 10%.
     category: combat
     rarity: common
-    effects: { barrel_damage_step: 0.01, barrel_damage_max: 0.1 }
-  - id: armor_piercing
-    name: Armor Piercing
-    description: A shot that breaks a shield still wounds the enemy behind it.
+    effects: { chain_damage_step: 0.01, chain_damage_max: 0.1 }
+  - id: shield_breaker
+    name: Shield Breaker
+    description: A blow that breaks a shield still wounds the enemy behind it.
     category: combat
     rarity: rare
     effects: { shield_pierce: 1 }
@@ -353,54 +359,54 @@ bonuses:
     category: intelligence
     rarity: uncommon
     effects: { mark_duration_bonus_s: 1 }
-  - id: focus_fire
-    name: Focus Fire
-    description: After three hits on the same enemy, deal 20% more damage to it.
+  - id: focus
+    name: Focus
+    description: After three blows on the same enemy, deal 20% more damage to it.
     category: intelligence
     rarity: rare
     effects: { focus_hits: 3, focus_damage_multiplier: 1.2 }
-  - id: preparation
-    name: Preparation
-    description: Start each room with a full magazine.
+  - id: fresh_start
+    name: Fresh Start
+    description: Each room begins with the chain's last blow ready.
     category: intelligence
     rarity: uncommon
-    effects: { refill_magazine_each_room: 1 }
-  - id: efficiency
-    name: Efficiency
-    description: Every third reload is instant.
+    effects: { chain_starts_at_finisher: 1 }
+  - id: second_nature
+    name: Second Nature
+    description: Every third blow leaves you free to act at once.
     category: intelligence
     rarity: rare
-    effects: { instant_reload_every: 3 }
+    effects: { instant_recovery_every: 3 }
   - id: foresight
     name: Foresight
     description: Gain one extra reroll.
     category: intelligence
     rarity: epic
     effects: { extra_rerolls: 1 }
-  - id: composure
-    name: Composure
-    description: Reload 10% faster.
+  - id: poise
+    name: Poise
+    description: The window to chain the next blow lasts 10% longer.
     category: intelligence
     rarity: common
-    effects: { reload_speed_multiplier: 1.1 }
+    effects: { combo_window_multiplier: 1.1 }
   - id: weak_point
     name: Weak Point
     description: Deal 10% more damage to shielded enemies.
     category: intelligence
     rarity: common
     effects: { shielded_damage_multiplier: 1.1 }
-  - id: study
-    name: Study
-    description: Killing an enemy loads 2 rounds back into the magazine.
+  - id: killer_instinct
+    name: Killer Instinct
+    description: Killing an enemy keeps the chain where it is instead of dropping it.
     category: intelligence
     rarity: rare
-    effects: { kill_reload_rounds: 2 }
-  - id: momentum_shot
-    name: Momentum Shot
-    description: Deal 10% more bullet damage while moving.
+    effects: { kill_keeps_chain: 1 }
+  - id: footwork
+    name: Footwork
+    description: Deal 10% more strike damage while moving.
     category: combined
     rarity: common
-    effects: { moving_bullet_damage_multiplier: 1.1 }
+    effects: { moving_strike_damage_multiplier: 1.1 }
   - id: bloodrush
     name: Bloodrush
     description: Killing an enemy increases movement speed by 15% for 2 seconds.
@@ -419,30 +425,30 @@ bonuses:
     category: combined
     rarity: uncommon
     effects: { unaware_damage_multiplier: 1.2 }
-  - id: second_magazine
-    name: Second Magazine
-    description: Increase magazine size by 2 rounds.
+  - id: steady_hands
+    name: Steady Hands
+    description: Blows reach 10% further.
     category: combined
     rarity: common
-    effects: { extra_magazine_rounds: 2 }
+    effects: { strike_reach_multiplier: 1.1 }
   - id: balance
     name: Balance
-    description: Increase jump height and bullet damage by 8%.
+    description: Increase jump height and strike damage by 8%.
     category: combined
     rarity: uncommon
-    effects: { jump_height_multiplier: 1.08, bullet_damage_multiplier: 1.08 }
+    effects: { jump_height_multiplier: 1.08, strike_damage_multiplier: 1.08 }
   - id: scrapper
     name: Scrapper
-    description: Health pickups also load 2 rounds back into the magazine.
+    description: Health pickups also ready the chain's last blow.
     category: combined
     rarity: uncommon
-    effects: { pickup_reload_rounds: 2 }
+    effects: { pickup_readies_finisher: 1 }
   - id: resolve
     name: Resolve
-    description: Taking damage increases fire rate by 20% for 2 seconds.
+    description: Taking damage speeds the chain by 20% for 2 seconds.
     category: combined
     rarity: rare
-    effects: { hurt_fire_rate_multiplier: 1.2, hurt_fire_rate_duration_s: 2 }
+    effects: { hurt_combo_speed_multiplier: 1.2, hurt_combo_speed_duration_s: 2 }
   - id: lucky_find
     name: Lucky Find
     description: Increase health pickup drop chance by 15% relative to its base chance.
@@ -451,7 +457,7 @@ bonuses:
     effects: { health_drop_chance_multiplier: 1.15 }
   - id: brace
     name: Brace
-    description: Standing still reduces damage taken by 10% and adds 5% bullet damage.
+    description: Standing still reduces damage taken by 10% and adds 5% strike damage.
     category: combined
     rarity: common
     effects: { standing_damage_taken_multiplier: 0.9, standing_damage_multiplier: 1.05 }

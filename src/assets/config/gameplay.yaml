@@ -30,36 +30,69 @@ player:
   # Holding Down on the ground crouches; the crouch walk is slower.
   crouch_speed_h_s: 3
   # Holding Cover on the ground raises a guard: the player can neither move
-  # nor shoot, and damage from enemies in front is multiplied by this.
+  # nor strike, and damage from enemies in front is multiplied by this.
   cover_damage_taken_multiplier: 0.5
   # Dying plays the death animation, then holds its last frame this long
   # before the run ends.
   death_hold_s: 0.6
-  gun:
-    damage: 20
-    # Holding the trigger keeps firing at this interval.
-    fire_interval_s: 0.2
-    magazine_size: 10
-    # An empty magazine reloads automatically; Reload refills it early.
-    reload_s: 0.9
-    bullet_speed_h_s: 18
-    bullet_range_h: 12
-    bullet_size_h: { width: 0.3, height: 0.08 }
-    # Up or Down while firing tilts the shot this far from horizontal.
-    diagonal_angle_degrees: 45
+  # The player's only weapon: a melee chain. Each press of Attack lands the
+  # next blow of `steps`; once a blow ends there is `combo_window_s` to ask
+  # for the next, and letting that lapse drops the chain back to its first
+  # step. `hitbox_h` is measured from the player's feet, `x` pointing the way
+  # they face, like an enemy attack's (B in debug builds draws them all).
+  melee:
+    combo_window_s: 0.55
     boss_knockback_h_s: 2.5
-    # Where bullets leave the gun, from the collision-box center with the
-    # player facing right, per aim direction.
-    muzzle_offset_h:
-      straight: { x: 0.4, y: 0.05 }
-      down: { x: 0.4, y: -0.15 }
-      up: { x: 0.3, y: 0.3 }
-    # Fiery bursts drawn at the muzzle on every shot and where a bullet hits
-    # an enemy: a hot core that swells and fades while embers fly outward.
-    muzzle_flash:
-      { radius_h: 0.18, duration_s: 0.12, embers: 4, ember_speed_h_s: 3 }
+    steps:
+      - strike: strike_1
+        damage: 18
+        hitbox_h: { x: 0.15, y: 0.2, width: 0.8, height: 0.5 }
+        contact_s: 0.12
+        lunge_h_s: 1.5
+      - strike: strike_2
+        damage: 20
+        hitbox_h: { x: 0.15, y: 0.2, width: 0.85, height: 0.55 }
+        contact_s: 0.14
+        lunge_h_s: 1.5
+      - strike: kick
+        damage: 30
+        hitbox_h: { x: 0.2, y: 0.15, width: 1, height: 0.5 }
+        contact_s: 0.11
+        lunge_h_s: 2.5
+      # The chain's fourth blow only exists while Fire Kick is owned.
+      - strike: fire_kick
+        damage: 45
+        hitbox_h: { x: 0.15, y: 0.2, width: 1.1, height: 0.55 }
+        contact_s: 0.19
+        lunge_h_s: 3
+        requires_bonus: fire_kick
+    # The burst drawn where a blow lands: a hot core that swells and fades
+    # while embers fly outward.
     impact_burst:
       { radius_h: 0.32, duration_s: 0.24, embers: 7, ember_speed_h_s: 4.5 }
+  # Clinging to a platform's side and pushing off it, Mario style: a player
+  # pressed into a wall in mid-air slides down it instead of falling, and Jump
+  # throws them up and away. The lock keeps movement input off them for a
+  # moment so they actually leave the wall.
+  wall:
+    slide_speed_h_s: 3
+    jump_impulse_h_s: 12
+    jump_push_h_s: 7
+    control_lock_s: 0.18
+  # The flood standing in a room's `water` rectangles. Falling in fast enough
+  # plays the dive; inside, gravity gives way to a stroke that goes up while
+  # Jump is held and sinks slowly without it, and Jump at the surface hops the
+  # player out.
+  water:
+    swim_speed_h_s: 3.5
+    rise_speed_h_s: 3
+    sink_speed_h_s: 1.5
+    drag_h_s2: 40
+    dive_speed_h_s: 4
+    exit_impulse_h_s: 11
+    submerged_depth_h: 0.5
+    # How solidly the water is drawn over the swimmer behind it.
+    opacity: 0.7
 
 # The healing a dying enemy sometimes leaves behind: the medical cross of
 # `sprite`, drawn `size_h` tall where the enemy fell.
@@ -269,8 +302,6 @@ audio:
   # cue with no file here stays silent. Paths are under src/assets/; gain
   # multiplies the sound-effects volume setting.
   recorded_effects:
-    gun_shot: { asset: audio/sfx/gun-shot.wav, gain: 0.5 }
-    reload: { asset: audio/sfx/reload.wav, gain: 0.45 }
     door_open: { asset: audio/sfx/door-open.wav, gain: 0.3 }
     damage_neutral: { asset: audio/sfx/damage-neutral.wav, gain: 0.45 }
     damage_metal: { asset: audio/sfx/damage-metal.wav, gain: 0.45 }
@@ -285,9 +316,7 @@ controls:
   navigate_up: [ArrowUp]
   navigate_down: [ArrowDown]
   jump: [Space]
-  shoot: [KeyJ]
-  aim_up: [KeyW, ArrowUp]
-  reload: [KeyR]
+  attack: [KeyJ]
   cover: [KeyL]
   interact: [KeyE, Enter]
   pause: [Escape]

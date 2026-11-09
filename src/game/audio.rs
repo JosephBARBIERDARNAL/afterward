@@ -34,10 +34,11 @@ pub(super) enum SoundCue {
     Jump,
     Landing,
     Footstep(FootstepSound),
-    GunShot,
-    BulletHit,
-    LastRoundHit,
-    Reload,
+    /// A blow of the melee chain being thrown, and one connecting.
+    MeleeSwing,
+    MeleeHit,
+    /// Breaking the water's surface.
+    Splash,
     CoverBlock,
     ProjectileEnvironmentHit,
     /// A hit landing, on the player or an enemy, by what it lands on.
@@ -171,8 +172,6 @@ pub(super) fn initialize_sound_bank(
 ) {
     let recorded = &data.gameplay.audio.recorded_effects;
     for (cue, effect) in [
-        (SoundCue::GunShot, &recorded.gun_shot),
-        (SoundCue::Reload, &recorded.reload),
         (SoundCue::DoorOpen, &recorded.door_open),
         (
             SoundCue::Damage(DamageSound::Neutral),

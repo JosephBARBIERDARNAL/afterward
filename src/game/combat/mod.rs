@@ -1,6 +1,5 @@
 use super::*;
 
-mod bullets;
 mod cleanup;
 mod components;
 mod damage;
@@ -10,16 +9,13 @@ mod enemy_jumps;
 mod falls;
 mod feedback;
 mod hitboxes;
-mod player_gun;
+mod player_melee;
 mod projectiles;
 mod shield;
 mod vision;
 
-pub(super) use bullets::update_player_bullets;
 pub(super) use cleanup::clear_room_combat_effects;
-pub(super) use components::{
-    CombatProjectile, DamageNumber, HealthPickup, ImpactEffect, PlayerBullet,
-};
+pub(super) use components::{CombatProjectile, DamageNumber, HealthPickup, ImpactEffect};
 use damage::{set_enemy_animation, spawn_damage_number};
 pub(super) use enemy_ai::{update_enemy_ai, update_enemy_platform_physics};
 pub(super) use enemy_body::{
@@ -35,7 +31,7 @@ pub(super) use feedback::{
     update_impact_effects,
 };
 pub(super) use hitboxes::player_hurtbox;
-pub(super) use player_gun::player_gun;
+pub(super) use player_melee::player_melee;
 pub(super) use projectiles::update_projectiles;
 pub(super) use shield::{SHIELD_SHEET, update_enemy_shields};
 

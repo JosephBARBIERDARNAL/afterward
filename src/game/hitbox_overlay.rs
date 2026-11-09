@@ -1,9 +1,10 @@
 //! Debug hitbox overlay (debug builds only): B draws every hit area in play,
 //! computed by the same code combat uses. Sizes live in `gameplay.yaml`
-//! (`player.hurtbox_h`) and `enemies/enemy_types.yaml`.
+//! (`player.hurtbox_h` and the `player.melee` steps) and
+//! `enemies/enemy_types.yaml`.
 
 use super::*;
-use crate::game::combat::{CombatProjectile, PlayerBullet, player_hurtbox};
+use crate::game::combat::{CombatProjectile, player_hurtbox};
 
 const PLAYER_HURTBOX_COLOR: Color = Color::srgb(0.3, 1.0, 0.45);
 const ENEMY_HURTBOX_COLOR: Color = Color::srgb(1.0, 0.9, 0.2);
@@ -12,7 +13,6 @@ const STRIKE_COLOR: Color = Color::srgb(1.0, 0.2, 0.3);
 /// The attack an enemy will use next, where it would land.
 const NEXT_STRIKE_COLOR: Color = Color::srgba(1.0, 0.2, 0.3, 0.35);
 const PROJECTILE_COLOR: Color = Color::srgb(1.0, 0.55, 0.15);
-const BULLET_COLOR: Color = Color::srgb(0.3, 0.9, 1.0);
 
 #[derive(Resource, Default)]
 pub(super) struct HitboxOverlay {
@@ -32,10 +32,9 @@ pub(super) fn draw_hitbox_overlay(
     mut gizmos: Gizmos,
     overlay: Res<HitboxOverlay>,
     data: Res<GameData>,
-    players: Query<&Transform, With<PlayerBody>>,
+    players: Query<(&PlayerBody, &Transform)>,
     enemies: Query<(&EnemyBody, &Transform, &Sprite)>,
     projectiles: Query<(&Transform, &CombatProjectile)>,
-    bullets: Query<(&Transform, &PlayerBullet)>,
 ) {
     if !overlay.visible {
         return;
@@ -43,11 +42,25 @@ pub(super) fn draw_hitbox_overlay(
     let mut outline = |rect: Rect, color: Color| {
         gizmos.rect_2d(rect.center(), rect.size(), color);
     };
-    for transform in &players {
+    let melee = &data.gameplay.player.melee;
+    for (player, transform) in &players {
         outline(
             player_hurtbox(transform.translation, &data),
             PLAYER_HURTBOX_COLOR,
         );
+        // The blow being thrown, or faintly the one the next press would
+        // throw, drawn where it would land.
+        let (step, color) = match player.strike {
+            Some(strike) => (melee.steps.get(strike.step), STRIKE_COLOR),
+            None => (melee.steps.get(player.combo_step), NEXT_STRIKE_COLOR),
+        };
+        if let Some(step) = step {
+            let feet = Vec2::new(
+                transform.translation.x,
+                transform.translation.y - H_WORLD_UNITS / 2.0,
+            );
+            outline(step.hitbox_at(feet, player.facing, 1.0), color);
+        }
     }
     for (enemy, transform, sprite) in &enemies {
         if enemy.health <= 0.0 {
@@ -71,12 +84,6 @@ pub(super) fn draw_hitbox_overlay(
         outline(
             Rect::from_center_half_size(transform.translation.truncate(), projectile.half_size),
             PROJECTILE_COLOR,
-        );
-    }
-    for (transform, bullet) in &bullets {
-        outline(
-            Rect::from_center_half_size(transform.translation.truncate(), bullet.half_size),
-            BULLET_COLOR,
         );
     }
 }
