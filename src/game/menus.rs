@@ -186,7 +186,7 @@ impl MenuState<'_> {
         let key = |action| self.controls.primary_label(action);
         let row = |badge: String, label: &str| MenuRow::action(badge, label, action);
         match action {
-            MenuAction::BeginRun => row(key(GameAction::Interact), "Begin run"),
+            MenuAction::BeginRun => row(key(GameAction::Interact), "Begin"),
             // The prologue draws this one itself, under the words it writes.
             MenuAction::EnterTheCity => row(String::from("ENTER"), "Enter Afterward"),
             MenuAction::Continue => row(String::from("ENTER"), "Continue"),
