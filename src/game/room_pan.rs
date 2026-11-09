@@ -32,12 +32,16 @@ pub(super) struct DepartureResources<'w> {
     pan: ResMut<'w, RoomPan>,
 }
 
+/// Everything the room being left is made of. A platform's collider is drawn
+/// by nothing and so carries no `Transform`: it is displaced by nothing and
+/// still has to be marked, or it would outlive its room as an invisible wall
+/// in the next one.
 type DepartingEntities<'w, 's> = Query<
     'w,
     's,
     (
         Entity,
-        &'static mut Transform,
+        Option<&'static mut Transform>,
         Option<&'static mut BackgroundParallax>,
     ),
     (With<RoomEntity>, Without<Camera2d>),
@@ -56,13 +60,15 @@ pub(super) fn send_off_the_departing_room(
     let DepartureResources { data, mut pan } = resources;
     let gap_h = data.gameplay.room_flow.room_gap_h;
     let shift = -(pan.departing_width_h + gap_h) * H_WORLD_UNITS;
-    for (entity, mut transform, parallax) in &mut entities {
+    for (entity, transform, parallax) in &mut entities {
         if players.contains(entity) {
             commands.entity(entity).despawn();
             continue;
         }
         commands.entity(entity).insert(DepartingRoom);
-        transform.translation.x += shift;
+        if let Some(mut transform) = transform {
+            transform.translation.x += shift;
+        }
         if let Some(mut parallax) = parallax {
             parallax.base_x += shift;
         }

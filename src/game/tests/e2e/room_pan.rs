@@ -1,5 +1,5 @@
 use super::*;
-use crate::game::{interface::HealthBarFrame, room_pan::DepartingRoom};
+use crate::game::{collision::PlatformSurface, interface::HealthBarFrame, room_pan::DepartingRoom};
 
 /// A door is crossed in the open: the room being left stays on screen while
 /// the camera slides right into the next one, where the player steps out of
@@ -94,6 +94,13 @@ fn the_camera_slides_into_the_next_room_and_the_entry_door_goes_once_it_lands() 
 
     game.wait_for_screen(GameScreen::Playing, 5.0);
     assert_eq!(
+        game.platform_colliders(),
+        game.data().rooms[&1].platforms.len(),
+        "the room being played is the only one the player can walk into: a \
+         platform of the room left behind would stand in this one as an \
+         invisible wall"
+    );
+    assert_eq!(
         game.entry_door_frames().len(),
         0,
         "once the player is in, the door they came through is gone"
@@ -130,6 +137,15 @@ impl HeadlessGame {
             .filter_map(|sprite| sprite.texture_atlas.as_ref())
             .map(|atlas| atlas.index)
             .collect()
+    }
+
+    /// How many platforms the player can walk into, drawn or not.
+    fn platform_colliders(&mut self) -> usize {
+        let world = self.app.world_mut();
+        world
+            .query_filtered::<Entity, With<PlatformSurface>>()
+            .iter(world)
+            .count()
     }
 
     /// How much of the crossing is left to run.
