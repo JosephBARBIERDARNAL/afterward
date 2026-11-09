@@ -46,8 +46,29 @@ fn a_reroll_replaces_both_offers_and_the_keyboard_picks_the_second() {
     let animation_s = game.data().gameplay.room_flow.bonus_reroll_animation_s;
     game.run_seconds(animation_s + 0.1);
     game.tap(KeyCode::ArrowDown);
+    let droplets = |game: &mut HeadlessGame| {
+        game.app
+            .world_mut()
+            .query_filtered::<Entity, With<Ripple>>()
+            .iter(game.app.world())
+            .count()
+    };
+    let walking_there = droplets(&mut game);
     game.tap(KeyCode::Enter);
-    assert_eq!(game.screen(), GameScreen::Playing);
+    // The choice holds the screen up for a moment, with a droplet falling on
+    // the box that was pressed; it goes with the screen.
+    assert_eq!(game.screen(), GameScreen::Bonus);
+    assert_eq!(
+        droplets(&mut game),
+        walking_there + 1,
+        "a droplet falls on the chosen bonus"
+    );
+    game.wait_for_screen(GameScreen::Playing, 2.0);
+    assert_eq!(
+        droplets(&mut game),
+        0,
+        "and none is left hanging over the room"
+    );
     assert_eq!(
         game.session().owned_bonuses.last(),
         second_pair.get(1),

@@ -105,6 +105,7 @@ impl Plugin for RipplePlugin {
         app.add_plugins(UiMaterialPlugin::<RippleMaterial>::default())
             .add_message::<Splash>()
             .add_systems(Startup, spawn_ripple_layer)
+            .add_systems(OnExit(GameScreen::Bonus), dry_the_ripples)
             .add_systems(Update, (open_splashes, age_ripples).chain());
     }
 }
@@ -198,6 +199,14 @@ fn open_splashes(mut commands: Commands, mut splashes: MessageReader<Splash>, wa
             Ripple { elapsed_s: 0.0 },
             ChildOf(layer),
         ));
+    }
+}
+
+/// Takes every droplet away with the screen it fell on, so none is left
+/// hanging over the room the bonus screen hands back.
+fn dry_the_ripples(mut commands: Commands, falling: Query<Entity, With<Ripple>>) {
+    for ripple in &falling {
+        commands.entity(ripple).despawn();
     }
 }
 

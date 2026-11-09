@@ -208,6 +208,9 @@ pub struct HealthPickupConfig {
 pub struct RoomFlowConfig {
     pub clear_animation_s: f32,
     pub bonus_reroll_animation_s: f32,
+    /// How long the bonus screen holds after a choice, for the droplet to land
+    /// on the box that was pressed.
+    pub bonus_chosen_hold_s: f32,
     pub boss_intro_duration_s: f32,
     pub room_transition_duration_s: f32,
     pub room_intro: RoomIntroConfig,

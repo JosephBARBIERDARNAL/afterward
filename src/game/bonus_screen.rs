@@ -47,6 +47,7 @@ pub(super) struct BonusSpan {
 #[derive(Clone, Copy)]
 enum BonusSpanKind {
     Category,
+    Rarity,
     Name,
     Description,
 }
@@ -115,6 +116,7 @@ pub(super) fn spawn_bonus_screen(mut commands: Commands) {
                                     .with_children(|parent| {
                                         for (kind, font_size) in [
                                             (BonusSpanKind::Category, 16.0),
+                                            (BonusSpanKind::Rarity, 16.0),
                                             (BonusSpanKind::Name, 26.0),
                                             (BonusSpanKind::Description, 19.0),
                                         ] {
@@ -217,16 +219,18 @@ pub(super) fn update_bonus_screen(
             .and_then(|id| data.bonuses.bonuses.iter().find(|bonus| bonus.id == *id))
             .filter(|_| !rerolling)
     };
-    let category_color = |index: usize| {
-        offer(index)
-            .and_then(|bonus| data.bonuses.categories.get(&bonus.category))
-            .map_or(MUTED, |category| Color::from(category.color))
+    // A bonus is painted by how rare it is, and by nothing else: its category
+    // is said in words beside it rather than in a colour.
+    let rarity_color = |index: usize| {
+        offer(index).map_or(MUTED, |bonus| {
+            Color::from(data.bonuses.rarities[bonus.rarity].color)
+        })
     };
 
     for (choice, mut border, mut background) in &mut boxes {
         let enabled = matches!(choice, BonusChoice::Offer(_)) || can_reroll;
         *border = BorderColor::all(match choice {
-            BonusChoice::Offer(index) => category_color(*index),
+            BonusChoice::Offer(index) => rarity_color(*index),
             BonusChoice::Reroll if can_reroll => ACTIVE_BORDER,
             BonusChoice::Reroll => MUTED,
         });
@@ -271,10 +275,14 @@ pub(super) fn update_bonus_screen(
                     .map(|category| category.icon.to_string())
                     .unwrap_or_default();
                 (
-                    format!("{icon} {}\n", bonus.category.to_uppercase()),
-                    category_color(span.index),
+                    format!("{icon} {}   ", bonus.category.to_uppercase()),
+                    MUTED,
                 )
             }
+            (Some(bonus), BonusSpanKind::Rarity) => (
+                format!("{}\n", bonus.rarity.to_string().to_uppercase()),
+                rarity_color(span.index),
+            ),
             (Some(bonus), BonusSpanKind::Name) => (format!("{}\n", bonus.name), Color::WHITE),
             (Some(bonus), BonusSpanKind::Description) => {
                 (bonus.description.clone(), DESCRIPTION_COLOR)

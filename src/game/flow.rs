@@ -93,6 +93,16 @@ pub(super) fn handle_bonus_input(
                 .map(|(_, choice)| (*choice, click.pointer.position))
         })
         .last();
+    // A bonus has been chosen and the screen is only still up for the droplet
+    // to land on the box that was pressed; nothing else is listened to.
+    if session.bonus_chosen_hold_remaining_s > 0.0 {
+        session.bonus_chosen_hold_remaining_s =
+            (session.bonus_chosen_hold_remaining_s - time.delta_secs().min(0.05)).max(0.0);
+        if session.bonus_chosen_hold_remaining_s <= 0.0 {
+            next_screen.set(GameScreen::Playing);
+        }
+        return;
+    }
     let was_animating = session.bonus_reroll_animation_remaining_s > 0.0;
     session.bonus_reroll_animation_remaining_s =
         (session.bonus_reroll_animation_remaining_s - time.delta_secs().min(0.05)).max(0.0);
@@ -131,6 +141,19 @@ pub(super) fn handle_bonus_input(
         );
     }
 
+    // Pressing a box drops a droplet on it too: a click already dropped one
+    // exactly where it landed, so this is the one a key press owes the box.
+    let mut droplet_on = |choice: BonusChoice| {
+        if clicked.is_none() {
+            splashes.write_batch(
+                choices
+                    .iter()
+                    .find(|(_, pressed)| **pressed == choice)
+                    .map(|(entity, _)| Splash(Spot::Middle(entity))),
+            );
+        }
+    };
+
     let chosen = if let Some((choice, _)) = clicked {
         choice
     } else if controls.just_pressed(GameAction::RerollBonus, &keys) {
@@ -150,6 +173,7 @@ pub(super) fn handle_bonus_input(
             return;
         }
         session.rerolls -= 1;
+        droplet_on(BonusChoice::Reroll);
         sounds.push(SoundCue::BonusRerolled);
         session.offered_bonuses =
             draw_bonus_pair(&data, &session, &mut random, &session.previous_offers);
@@ -164,6 +188,7 @@ pub(super) fn handle_bonus_input(
         return;
     };
     session.owned_bonuses.push(chosen_id.clone());
+    droplet_on(chosen);
     sounds.push(SoundCue::BonusSelected);
     if let Some(bonus) = data
         .bonuses
@@ -190,7 +215,10 @@ pub(super) fn handle_bonus_input(
     }
     session.door_open = true;
     sounds.push(SoundCue::DoorAppear);
-    next_screen.set(GameScreen::Playing);
+    session.bonus_chosen_hold_remaining_s = data.gameplay.room_flow.bonus_chosen_hold_s;
+    if session.bonus_chosen_hold_remaining_s <= 0.0 {
+        next_screen.set(GameScreen::Playing);
+    }
 }
 
 pub(super) fn reroll_available(session: &RunSession, data: &GameData) -> bool {
@@ -338,16 +366,71 @@ pub(super) fn draw_bonus_pair(
     random: &mut RandomState,
     excluded: &BTreeSet<String>,
 ) -> Vec<String> {
-    let mut eligible = eligible_bonuses(data, session, excluded)
-        .map(|bonus| bonus.id.clone())
-        .collect::<Vec<_>>();
+    let mut eligible = eligible_bonuses(data, session, excluded).collect::<Vec<_>>();
     let mut offers = Vec::with_capacity(2);
+    // A rarer bonus weighs less in the draw, so commons come up often and
+    // legendaries rarely.
+    let weight = |bonus: &crate::data::BonusConfig| data.bonuses.rarities[bonus.rarity].weight;
     while offers.len() < 2 && !eligible.is_empty() {
-        let index = random.index(eligible.len());
-        offers.push(eligible.swap_remove(index));
+        let total = eligible.iter().copied().map(weight).sum::<u32>() as usize;
+        let mut drawn = random.index(total.max(1)) as u32;
+        let index = eligible
+            .iter()
+            .copied()
+            .position(|bonus| {
+                let weight = weight(bonus);
+                let landed = drawn < weight;
+                drawn -= if landed { 0 } else { weight };
+                landed
+            })
+            .unwrap_or(0);
+        offers.push(eligible.swap_remove(index).id.clone());
     }
     offers
 }
 
 #[derive(Resource)]
 pub(crate) struct PhaseTimer(pub(crate) Timer);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::data::BonusRarity;
+    use std::path::Path;
+
+    #[test]
+    fn the_draw_offers_two_different_bonuses_and_leans_on_the_common_ones() {
+        let data = GameData::load(&Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets"))
+            .expect("the game data should be valid");
+        let session = RunSession {
+            bonus_category: Some("combat".to_owned()),
+            ..default()
+        };
+        let mut random = RandomState(12345);
+        let mut drawn = BTreeMap::<String, usize>::new();
+        for _ in 0..500 {
+            let pair = draw_bonus_pair(&data, &session, &mut random, &BTreeSet::new());
+            assert_eq!(pair.len(), 2);
+            assert_ne!(pair[0], pair[1], "a pair never offers the same bonus twice");
+            for id in pair {
+                let rarity = data
+                    .bonuses
+                    .bonuses
+                    .iter()
+                    .find(|bonus| bonus.id == id)
+                    .expect("an offered bonus exists")
+                    .rarity;
+                *drawn.entry(rarity.to_string()).or_default() += 1;
+            }
+        }
+        let count = |rarity: BonusRarity| drawn.get(&rarity.to_string()).copied().unwrap_or(0);
+        assert!(
+            count(BonusRarity::Common) > count(BonusRarity::Rare),
+            "commons come up more often than rares: {drawn:?}"
+        );
+        assert!(
+            count(BonusRarity::Rare) > count(BonusRarity::Epic),
+            "rares come up more often than epics: {drawn:?}"
+        );
+    }
+}

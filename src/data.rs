@@ -187,6 +187,7 @@ impl GameData {
         }
         if self.gameplay.room_flow.clear_animation_s <= 0.0
             || self.gameplay.room_flow.bonus_reroll_animation_s <= 0.0
+            || self.gameplay.room_flow.bonus_chosen_hold_s < 0.0
             || self.gameplay.room_flow.boss_intro_duration_s <= 0.0
             || self.gameplay.room_flow.room_transition_duration_s <= 0.0
             || self.gameplay.room_flow.room_pan_speed_h_s <= 0.0
@@ -357,6 +358,14 @@ impl GameData {
         {
             return Err(InvalidGameData::from(
                 "a bonus references an unknown category",
+            ));
+        }
+        if BonusRarity::ALL
+            .iter()
+            .any(|rarity| self.bonuses.rarities[*rarity].weight == 0)
+        {
+            return Err(InvalidGameData::from(
+                "every bonus rarity needs a draw weight above zero",
             ));
         }
         // Every room lays out one bonus item, and the player owns one bonus per

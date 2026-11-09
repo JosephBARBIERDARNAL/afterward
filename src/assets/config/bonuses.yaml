@@ -23,6 +23,17 @@ categories:
     icon: knot
     pickup: pickups/combined.png
 
+# A bonus wears its rarity's colour, and nothing else's: white for common,
+# green for uncommon, blue for rare, purple for epic and orange for legendary.
+# The weight is how heavily a bonus of that rarity weighs in the draw against
+# the others still on offer, so commons come up often and legendaries rarely.
+rarities:
+  common: { color: "#E4E4EE", weight: 40 }
+  uncommon: { color: "#58AD68", weight: 25 }
+  rare: { color: "#4F8FD6", weight: 12 }
+  epic: { color: "#9A5FD0", weight: 5 }
+  legendary: { color: "#E8843F", weight: 2 }
+
 # Every category holds enough bonuses that a whole chapter of pickups, rerolls
 # included, can never run it dry (`GameData::validate` checks it).
 bonuses:
@@ -30,91 +41,109 @@ bonuses:
     name: Hollow Points
     description: Increase bullet damage by 20%.
     category: combat
+    rarity: uncommon
     effects: { bullet_damage_multiplier: 1.2 }
   - id: last_round
     name: Last Round
     description: The last bullet of each magazine deals 50% more damage.
     category: combat
+    rarity: uncommon
     effects: { last_round_damage_multiplier: 1.5 }
   - id: hair_trigger
     name: Hair Trigger
     description: Increase fire rate by 15%.
     category: combat
+    rarity: uncommon
     effects: { fire_rate_multiplier: 1.15 }
   - id: extended_magazine
     name: Extended Magazine
     description: Increase magazine size by 4 rounds.
     category: combat
+    rarity: rare
     effects: { extra_magazine_rounds: 4 }
   - id: thick_skin
     name: Thick Skin
     description: Reduce damage taken by 10%.
     category: defense
+    rarity: uncommon
     effects: { damage_taken_multiplier: 0.9 }
   - id: room_ward
     name: Room Ward
     description: Negate the first damage event in each room.
     category: defense
+    rarity: epic
     effects: { negate_first_damage_each_room: true }
   - id: vitality
     name: Vitality
     description: Increase maximum health by 15 and restore 15 health.
     category: defense
+    rarity: rare
     effects: { max_health_increase: 15, restore_health: 15 }
   - id: scavenger
     name: Scavenger
     description: Increase health pickup drop chance by 25% relative to its base chance.
     category: defense
+    rarity: uncommon
     effects: { health_drop_chance_multiplier: 1.25 }
   - id: fleet_feet
     name: Fleet Feet
     description: Increase movement speed by 10%.
     category: agility
+    rarity: uncommon
     effects: { movement_speed_multiplier: 1.1 }
   - id: high_jump
     name: High Jump
     description: Increase jump height by 15%.
     category: agility
+    rarity: uncommon
     effects: { jump_height_multiplier: 1.15 }
   - id: double_jump
     name: Double Jump
     description: Gain one additional mid-air jump at 80% of normal jump impulse.
     category: agility
+    rarity: legendary
     effects: { extra_midair_jumps: 1, extra_jump_impulse_factor: 0.8 }
   - id: marked_prey
     name: Marked Prey
     description: Bullet hits mark an enemy for 2 seconds; further bullets on it deal 15% more damage.
     category: intelligence
+    rarity: rare
     effects: { mark_duration_s: 2, marked_bullet_damage_multiplier: 1.15 }
   - id: rhythm_training
     name: Rhythm Training
     description: Hits within 1.5 seconds increase fire rate by 4%, up to 16%.
     category: intelligence
+    rarity: rare
     effects: { hit_window_s: 1.5, fire_rate_step: 0.04, fire_rate_max_bonus: 0.16 }
   - id: chain_reaction
     name: Chain Reaction
     description: Killing an enemy increases damage by 15% for 2 seconds.
     category: intelligence
+    rarity: rare
     effects: { kill_damage_bonus: 0.15, kill_damage_duration_s: 2 }
   - id: speed_loader
     name: Speed Loader
     description: Reload 30% faster.
     category: intelligence
+    rarity: uncommon
     effects: { reload_speed_multiplier: 1.3 }
   - id: vampiric_rounds
     name: Vampiric Rounds
     description: Bullet hits restore 1 health, up to 5 health per magazine.
     category: combined
+    rarity: legendary
     effects: { bullet_hit_healing: 1, magazine_healing_cap: 5 }
   - id: aerial_gunner
     name: Aerial Gunner
     description: Deal 20% more bullet damage while airborne.
     category: combined
+    rarity: rare
     effects: { airborne_bullet_damage_multiplier: 1.2 }
   - id: sated_fury
     name: Sated Fury
     description: Healing pickups increase fire rate by 15% for 3 seconds.
     category: combined
+    rarity: uncommon
     effects: { healing_pickup_fire_rate_multiplier: 1.15, healing_pickup_fire_rate_duration_s: 3 }
 
   # Placeholders, so every category has enough bonuses to fill a chapter of
@@ -124,259 +153,311 @@ bonuses:
     name: Piercing Rounds
     description: Bullets pass through one extra enemy.
     category: combat
+    rarity: epic
     effects: { pierce_count: 1 }
   - id: heavy_caliber
     name: Heavy Caliber
     description: Increase bullet damage by 10%.
     category: combat
+    rarity: common
     effects: { bullet_damage_multiplier: 1.1 }
   - id: quick_draw
     name: Quick Draw
     description: The first shot after a reload deals 30% more damage.
     category: combat
+    rarity: uncommon
     effects: { first_shot_damage_multiplier: 1.3 }
   - id: steady_aim
     name: Steady Aim
     description: Standing still increases bullet damage by 12%.
     category: combat
+    rarity: common
     effects: { standing_damage_multiplier: 1.12 }
   - id: point_blank
     name: Point Blank
     description: Shots that land within 3 H deal 25% more damage.
     category: combat
+    rarity: uncommon
     effects: { point_blank_range_h: 3, point_blank_damage_multiplier: 1.25 }
   - id: long_shot
     name: Long Shot
     description: Shots that travel more than 8 H deal 20% more damage.
     category: combat
+    rarity: uncommon
     effects: { long_shot_range_h: 8, long_shot_damage_multiplier: 1.2 }
   - id: double_tap
     name: Double Tap
     description: Every fifth shot fires a second bullet.
     category: combat
+    rarity: epic
     effects: { double_tap_every: 5 }
   - id: hot_barrel
     name: Hot Barrel
     description: Each shot in a magazine adds 1% damage, up to 10%.
     category: combat
+    rarity: common
     effects: { barrel_damage_step: 0.01, barrel_damage_max: 0.1 }
   - id: armor_piercing
     name: Armor Piercing
     description: A shot that breaks a shield still wounds the enemy behind it.
     category: combat
+    rarity: rare
     effects: { shield_pierce: 1 }
   - id: executioner
     name: Executioner
     description: Deal 30% more damage to enemies below 30% health.
     category: combat
+    rarity: rare
     effects: { execute_health_fraction: 0.3, execute_damage_multiplier: 1.3 }
   - id: iron_guard
     name: Iron Guard
     description: Reduce damage taken by 8%.
     category: defense
+    rarity: common
     effects: { damage_taken_multiplier: 0.92 }
   - id: second_wind
     name: Second Wind
     description: Restore 20 health when a room is cleared.
     category: defense
+    rarity: rare
     effects: { room_clear_healing: 20 }
   - id: bulwark
     name: Bulwark
     description: Taking cover reduces damage by a further 15%.
     category: defense
+    rarity: uncommon
     effects: { cover_damage_taken_multiplier: 0.85 }
   - id: steadfast
     name: Steadfast
     description: Increase maximum health by 10.
     category: defense
+    rarity: common
     effects: { max_health_increase: 10 }
   - id: field_dressing
     name: Field Dressing
     description: Health pickups restore 50% more.
     category: defense
+    rarity: uncommon
     effects: { health_pickup_multiplier: 1.5 }
   - id: adrenaline
     name: Adrenaline
     description: Below 30% health, reduce damage taken by 20%.
     category: defense
+    rarity: rare
     effects: { low_health_fraction: 0.3, low_health_damage_taken_multiplier: 0.8 }
   - id: deflector
     name: Deflector
     description: Negate the first projectile that would hit you in each room.
     category: defense
+    rarity: rare
     effects: { negate_first_projectile_each_room: 1 }
   - id: thick_plating
     name: Thick Plating
     description: Reduce projectile damage by 15%.
     category: defense
+    rarity: common
     effects: { projectile_damage_taken_multiplier: 0.85 }
   - id: recovery
     name: Recovery
     description: Restore 1 health per second while no enemy is engaged.
     category: defense
+    rarity: epic
     effects: { idle_regeneration_per_s: 1 }
   - id: last_stand
     name: Last Stand
     description: Once per run, survive an otherwise fatal hit at 1 health.
     category: defense
+    rarity: legendary
     effects: { survive_fatal_hits: 1 }
   - id: air_control
     name: Air Control
     description: Increase airborne movement speed by 15%.
     category: agility
+    rarity: uncommon
     effects: { air_speed_multiplier: 1.15 }
   - id: tailwind
     name: Tailwind
     description: Increase movement speed by 8%.
     category: agility
+    rarity: common
     effects: { movement_speed_multiplier: 1.08 }
   - id: springheel
     name: Springheel
     description: Increase jump height by 8%.
     category: agility
+    rarity: common
     effects: { jump_height_multiplier: 1.08 }
   - id: kick_off
     name: Kick Off
     description: A mid-air jump is as strong as one from the ground.
     category: agility
+    rarity: rare
     effects: { extra_jump_impulse_factor: 1 }
   - id: float
     name: Float
     description: Holding Jump at the top of a jump hangs there for 0.3 seconds.
     category: agility
+    rarity: rare
     effects: { hang_duration_s: 0.3 }
   - id: low_crawl
     name: Low Crawl
     description: Increase crouch speed by 60%.
     category: agility
+    rarity: uncommon
     effects: { crouch_speed_multiplier: 1.6 }
   - id: quick_crouch
     name: Quick Crouch
     description: Increase crouch speed by 30%.
     category: agility
+    rarity: common
     effects: { crouch_speed_multiplier: 1.3 }
   - id: hang_time
     name: Hang Time
     description: Fall 20% slower.
     category: agility
+    rarity: uncommon
     effects: { fall_gravity_multiplier: 0.8 }
   - id: momentum
     name: Momentum
     description: Keep 20% more speed when landing.
     category: agility
+    rarity: common
     effects: { landing_speed_retention: 1.2 }
   - id: nimble
     name: Nimble
     description: Increase movement speed by 6%.
     category: agility
+    rarity: common
     effects: { movement_speed_multiplier: 1.06 }
   - id: quick_turn
     name: Quick Turn
     description: Turning around no longer costs speed.
     category: agility
+    rarity: uncommon
     effects: { turn_speed_retention: 1 }
   - id: cold_read
     name: Cold Read
     description: Enemy wind-ups last 10% longer.
     category: intelligence
+    rarity: uncommon
     effects: { enemy_windup_multiplier: 1.1 }
   - id: opening_move
     name: Opening Move
     description: The first enemy hit in a room takes 20% more damage.
     category: intelligence
+    rarity: common
     effects: { first_enemy_damage_multiplier: 1.2 }
   - id: analysis
     name: Analysis
     description: A mark lasts 1 second longer.
     category: intelligence
+    rarity: uncommon
     effects: { mark_duration_bonus_s: 1 }
   - id: focus_fire
     name: Focus Fire
     description: After three hits on the same enemy, deal 20% more damage to it.
     category: intelligence
+    rarity: rare
     effects: { focus_hits: 3, focus_damage_multiplier: 1.2 }
   - id: preparation
     name: Preparation
     description: Start each room with a full magazine.
     category: intelligence
+    rarity: uncommon
     effects: { refill_magazine_each_room: 1 }
   - id: efficiency
     name: Efficiency
     description: Every third reload is instant.
     category: intelligence
+    rarity: rare
     effects: { instant_reload_every: 3 }
   - id: foresight
     name: Foresight
     description: Gain one extra reroll.
     category: intelligence
+    rarity: epic
     effects: { extra_rerolls: 1 }
   - id: composure
     name: Composure
     description: Reload 10% faster.
     category: intelligence
+    rarity: common
     effects: { reload_speed_multiplier: 1.1 }
   - id: weak_point
     name: Weak Point
     description: Deal 10% more damage to shielded enemies.
     category: intelligence
+    rarity: common
     effects: { shielded_damage_multiplier: 1.1 }
   - id: study
     name: Study
     description: Killing an enemy loads 2 rounds back into the magazine.
     category: intelligence
+    rarity: rare
     effects: { kill_reload_rounds: 2 }
   - id: momentum_shot
     name: Momentum Shot
     description: Deal 10% more bullet damage while moving.
     category: combined
+    rarity: common
     effects: { moving_bullet_damage_multiplier: 1.1 }
   - id: bloodrush
     name: Bloodrush
     description: Killing an enemy increases movement speed by 15% for 2 seconds.
     category: combined
+    rarity: uncommon
     effects: { kill_speed_bonus: 0.15, kill_speed_duration_s: 2 }
   - id: survivor
     name: Survivor
     description: Each bonus you own adds 1 maximum health.
     category: combined
+    rarity: rare
     effects: { max_health_per_bonus: 1 }
   - id: opportunist
     name: Opportunist
     description: Deal 20% more damage to enemies that have not noticed you.
     category: combined
+    rarity: uncommon
     effects: { unaware_damage_multiplier: 1.2 }
   - id: second_magazine
     name: Second Magazine
     description: Increase magazine size by 2 rounds.
     category: combined
+    rarity: common
     effects: { extra_magazine_rounds: 2 }
   - id: balance
     name: Balance
     description: Increase jump height and bullet damage by 8%.
     category: combined
+    rarity: uncommon
     effects: { jump_height_multiplier: 1.08, bullet_damage_multiplier: 1.08 }
   - id: scrapper
     name: Scrapper
     description: Health pickups also load 2 rounds back into the magazine.
     category: combined
+    rarity: uncommon
     effects: { pickup_reload_rounds: 2 }
   - id: resolve
     name: Resolve
     description: Taking damage increases fire rate by 20% for 2 seconds.
     category: combined
+    rarity: rare
     effects: { hurt_fire_rate_multiplier: 1.2, hurt_fire_rate_duration_s: 2 }
   - id: lucky_find
     name: Lucky Find
     description: Increase health pickup drop chance by 15% relative to its base chance.
     category: combined
+    rarity: common
     effects: { health_drop_chance_multiplier: 1.15 }
   - id: brace
     name: Brace
     description: Standing still reduces damage taken by 10% and adds 5% bullet damage.
     category: combined
+    rarity: common
     effects: { standing_damage_taken_multiplier: 0.9, standing_damage_multiplier: 1.05 }
   - id: clean_sweep
     name: Clean Sweep
     description: Clearing a room without taking damage restores 10 health.
     category: combined
+    rarity: rare
     effects: { flawless_room_healing: 10 }

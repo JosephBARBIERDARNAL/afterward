@@ -52,6 +52,9 @@ pub(crate) struct RunSession {
     pub(crate) previous_offers: BTreeSet<String>,
     pub(crate) selected_choice: bonus_screen::BonusChoice,
     pub(crate) bonus_reroll_animation_remaining_s: f32,
+    /// What is left of the hold the bonus screen keeps after a bonus is
+    /// chosen, so the droplet lands on the box before the room comes back.
+    pub(crate) bonus_chosen_hold_remaining_s: f32,
     /// Every enemy is down, so the room's bonus item may be laid out.
     pub(crate) room_cleared: bool,
     pub(crate) door_open: bool,
@@ -98,6 +101,7 @@ impl Default for RunSession {
             previous_offers: BTreeSet::new(),
             selected_choice: bonus_screen::BonusChoice::Offer(0),
             bonus_reroll_animation_remaining_s: 0.0,
+            bonus_chosen_hold_remaining_s: 0.0,
             room_cleared: false,
             door_open: false,
             room_ward_used: false,
