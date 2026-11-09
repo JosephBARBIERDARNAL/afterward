@@ -1,16 +1,44 @@
 use super::*;
-use crate::game::{collision::PlatformSurface, interface::HealthBarFrame, room_pan::DepartingRoom};
+use crate::game::{
+    collision::PlatformSurface,
+    interface::HealthBarFrame,
+    room_pan::{CrossingPortal, DepartingRoom},
+};
 
-/// A door is crossed in the open: the room being left stays on screen while
-/// the camera slides right into the next one, where the player steps out of
-/// the door they came in through and it closes behind them.
+/// A door is crossed in the open: the player dissolves into the portal that
+/// turns over the door they walk into, the room being left stays on screen
+/// while the camera slides right into the next one, and they form back out of
+/// the portal over the door they came in through before it closes behind them.
 #[test]
 fn the_camera_slides_into_the_next_room_and_the_entry_door_goes_once_it_lands() {
     let mut game = HeadlessGame::new();
     game.begin_run();
     game.take_bonus();
     game.tap(KeyCode::Digit1);
-    game.leave_through_the_door();
+
+    // The door is walked into by hand rather than through
+    // `leave_through_the_door`, so the leaving itself can be watched.
+    game.step_toward_exit();
+    game.key(KeyCode::KeyD, ButtonState::Pressed);
+    game.wait_for_screen(GameScreen::Transitioning, 3.0);
+    game.key(KeyCode::KeyD, ButtonState::Released);
+    game.run_seconds(0.1);
+    assert_eq!(
+        game.portals(),
+        1,
+        "walking into the door turns a portal over it"
+    );
+    assert_eq!(
+        game.player_clip(),
+        "player_dissolve",
+        "and the hero comes apart into its swirls"
+    );
+    assert_eq!(
+        game.player_opacity(),
+        1.0,
+        "rather than fading out of the room"
+    );
+    game.skip_any_prologue();
 
     game.wait_for_screen(GameScreen::Panning, 3.0);
     assert!(
@@ -55,7 +83,7 @@ fn the_camera_slides_into_the_next_room_and_the_entry_door_goes_once_it_lands() 
     // crossing left to run, the door is already open and the player already on
     // their way out of it.
     let early_start_s = game.data().gameplay.room_flow.room_intro.early_start_s;
-    while game.screen() == GameScreen::Panning && game.crossing_left_s() > early_start_s / 2.0 {
+    while game.screen() == GameScreen::Panning && game.crossing_left_s() > early_start_s * 0.9 {
         game.app.update();
     }
     assert_eq!(
@@ -66,6 +94,17 @@ fn the_camera_slides_into_the_next_room_and_the_entry_door_goes_once_it_lands() 
     assert!(
         game.player_opacity() > 0.0,
         "with the player stepping out of the door to meet it"
+    );
+    assert_eq!(
+        game.player_clip(),
+        "player_materialize",
+        "forming out of the portal's swirls rather than fading in"
+    );
+    assert_eq!(
+        game.portals(),
+        2,
+        "one portal turning over each doorway: the one walked into, carried \
+         off with the room behind, and the one being stepped out of"
     );
     assert!(
         game.entry_door_frames()
@@ -80,6 +119,11 @@ fn the_camera_slides_into_the_next_room_and_the_entry_door_goes_once_it_lands() 
         game.departing_room_pieces(),
         0,
         "the room behind is let go the moment the camera lands"
+    );
+    assert_eq!(
+        game.portals(),
+        1,
+        "and the portal it was left through goes with it"
     );
     assert_eq!(
         game.entry_door_frames().len(),
@@ -103,6 +147,11 @@ fn the_camera_slides_into_the_next_room_and_the_entry_door_goes_once_it_lands() 
         game.entry_door_frames().len(),
         0,
         "once the player is in, the door they came through is gone"
+    );
+    assert_eq!(
+        game.portals(),
+        0,
+        "and the portal over it has closed and gone with it"
     );
     assert_eq!(game.players(), 1, "and they are the one standing there");
 }
@@ -170,6 +219,26 @@ impl HeadlessGame {
             .expect("a room holds one player")
             .color
             .alpha()
+    }
+
+    /// The clip the player is drawn from.
+    fn player_clip(&mut self) -> String {
+        let world = self.app.world_mut();
+        world
+            .query_filtered::<&AnimatedSprite, With<PlayerBody>>()
+            .single(world)
+            .expect("a room holds one player")
+            .sheet
+            .clone()
+    }
+
+    /// How many portals are turning over doorways.
+    fn portals(&mut self) -> usize {
+        let world = self.app.world_mut();
+        world
+            .query_filtered::<Entity, With<CrossingPortal>>()
+            .iter(world)
+            .count()
     }
 
     fn players(&mut self) -> usize {

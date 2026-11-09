@@ -30,7 +30,7 @@ pub(super) fn spawn_room(
         return;
     }
     // Until the slide says otherwise, this room is walked into from nowhere:
-    // the player fades in rather than stepping out of a door.
+    // its entrance starts over rather than carrying on from a crossing.
     pan.came_through_a_door = false;
     let room = &data.rooms[&session.room_id];
     draw_room(&mut commands, room, &data, &asset_server, &mut shaders);

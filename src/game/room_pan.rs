@@ -5,10 +5,16 @@
 //! way out is displaced — and it is despawned the moment the camera lands.
 //!
 //! The player does not travel with the camera: they walk into the opening door
-//! and fade out of the room they are leaving, and `room_intro` walks them out
-//! of the entry door standing on the far side.
+//! and dissolve into the portal turning over it, and `room_intro` forms them
+//! back out of the portal over the entry door standing on the far side.
 
 use super::*;
+
+/// The portal turning over a doorway while a crossing is happening. It hangs
+/// as a child of the door, so it stands where the door stands, is carried off
+/// with the room the door belongs to, and goes the moment the door does.
+#[derive(Component)]
+pub(super) struct CrossingPortal;
 
 /// The room being left behind, drawn to the left of the one being entered
 /// until the camera has finished crossing.
@@ -151,12 +157,12 @@ pub(super) fn update_room_pan(
     next_screen.set(GameScreen::RoomIntro);
 }
 
-/// Walks the player the last step into the opening door and fades them out of
-/// the room, so it stands empty by the time the camera slides off it.
+/// Walks the player the last step into the opening door and dissolves them
+/// into the portal turning over it, so the room stands empty by the time the
+/// camera slides off it.
 pub(super) fn step_into_the_door(
     time: Res<Time>,
     data: Res<GameData>,
-    timer: Res<PhaseTimer>,
     sheets: Res<SpriteSheets>,
     doors: Query<&Transform, (With<ExitDoor>, Without<PlayerBody>)>,
     mut players: Query<
@@ -181,8 +187,46 @@ pub(super) fn step_into_the_door(
     body.velocity = Vec2::ZERO;
     body.facing = 1.0;
     sprite.flip_x = false;
-    sprite.color = Color::WHITE.with_alpha(1.0 - timer.0.fraction().clamp(0.0, 1.0));
-    set_animation(&mut sprite, &mut animation, &sheets, "player_walk", true);
+    // The body comes apart into swirls rather than fading out of the room: the
+    // clip is played once and holds on its last frame, with nothing left of the
+    // hero by the time the slide takes the room away.
+    sprite.color = Color::WHITE;
+    set_animation(
+        &mut sprite,
+        &mut animation,
+        &sheets,
+        "player_dissolve",
+        false,
+    );
+}
+
+/// Turns a portal over `door`, playing its frames once. Both sides of a
+/// crossing call it: `flow::handle_door_touch` for the door being walked into,
+/// `room_intro::open_the_entry_door` for the one being stepped out of.
+pub(super) fn hang_a_portal(commands: &mut Commands, door: Entity, sheets: &SpriteSheets) {
+    let Some(sheet) = sheets.0.get(PORTAL_SHEET) else {
+        return;
+    };
+    let mut sprite = Sprite::from_atlas_image(
+        sheet.image.clone(),
+        TextureAtlas {
+            layout: sheet.layout.clone(),
+            index: 0,
+        },
+    );
+    sprite.custom_size = Some(Vec2::splat(PORTAL_SPAN_H * H_WORLD_UNITS));
+    commands.entity(door).with_child((
+        sprite,
+        Transform::from_xyz(0.0, 0.0, PORTAL_Z_OFFSET),
+        AnimatedSprite {
+            sheet: PORTAL_SHEET.to_string(),
+            frame: 0,
+            frames: sheet.frames,
+            timer: Timer::from_seconds(1.0 / sheet.fps, TimerMode::Repeating),
+            looping: false,
+        },
+        CrossingPortal,
+    ));
 }
 
 /// Behind the platforms and the decorations of both rooms, in front of the
@@ -193,3 +237,10 @@ const GAP_Z: f32 = -5.0;
 const EASING_SLACK: f32 = 1.5;
 /// However short the crossing, it is still a move rather than a cut.
 const SHORTEST_PAN_S: f32 = 0.25;
+/// The clip the portal is drawn from: it opens and closes over its own frames.
+const PORTAL_SHEET: &str = "effect_portal";
+/// How tall the portal stands over a doorway, in H. A door is 1.5 H, and the
+/// swirl needs room to turn around it.
+const PORTAL_SPAN_H: f32 = 2.25;
+/// In front of the door it hangs over, behind the body stepping through it.
+const PORTAL_Z_OFFSET: f32 = 1.0;

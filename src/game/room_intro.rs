@@ -82,15 +82,17 @@ pub(super) fn update_room_intro(
     }
 }
 
-/// Opens the door the player steps out of when a room opens, then sends it
-/// away once they are standing in the room. It stays shut while the camera is
-/// still crossing into the room.
+/// Opens the door the player steps out of when a room opens, turns the portal
+/// they come through over it, then sends both away once they are standing in
+/// the room. It stays shut while the camera is still crossing into the room.
 pub(super) fn open_the_entry_door(
     mut commands: Commands,
     screen: Res<State<GameScreen>>,
     timer: Res<PhaseTimer>,
     data: Res<GameData>,
+    sheets: Res<SpriteSheets>,
     mut doors: Query<(Entity, &mut Sprite), With<EntryDoor>>,
+    portals: Query<&ChildOf, With<room_pan::CrossingPortal>>,
 ) {
     let intro = &data.gameplay.room_flow.room_intro;
     let elapsed_s = entrance_elapsed_s(*screen.get(), &timer, intro.early_start_s);
@@ -111,6 +113,11 @@ pub(super) fn open_the_entry_door(
             atlas.index = frame;
         }
         sprite.color = Color::WHITE.with_alpha(1.0 - faded);
+        // The portal turns as the door swings: it is hung the frame the
+        // entrance begins, and goes with the door once the player is clear.
+        if elapsed_s > 0.0 && !portals.iter().any(|portal| portal.parent() == entity) {
+            room_pan::hang_a_portal(&mut commands, entity, &sheets);
+        }
         if faded >= 1.0 {
             commands.entity(entity).despawn();
         }
@@ -190,13 +197,32 @@ pub(super) fn pose_room_intro(
         player.velocity = Vec2::ZERO;
         player.facing = 1.0;
         sprite.flip_x = false;
-        sprite.color = Color::WHITE.with_alpha((elapsed_s / intro.player_fade_in_s).min(1.0));
-        let key = if walk < 1.0 {
-            "player_walk"
-        } else {
-            "player_idle_alert"
-        };
-        set_animation(&mut sprite, &mut animation, &sheets, key, true);
+        // Nobody stands in the room until the portal gives them back: the hero
+        // forms out of its swirls over `player_fade_in_s`, on their way out of
+        // the door, and walks in once they are whole. The clip is set only
+        // after the entrance has begun, so it starts on its first frame rather
+        // than playing itself out while the camera is still crossing.
+        sprite.color = Color::WHITE.with_alpha(if elapsed_s > 0.0 { 1.0 } else { 0.0 });
+        if elapsed_s > 0.0 {
+            let forming = elapsed_s < intro.player_fade_in_s;
+            let key = if forming {
+                "player_materialize"
+            } else if walk < 1.0 {
+                "player_walk"
+            } else {
+                "player_idle_alert"
+            };
+            let fresh = animation.sheet != key;
+            set_animation(&mut sprite, &mut animation, &sheets, key, !forming);
+            // The swirls are spread over the window the hero is given back in,
+            // rather than played at the sheet's own pace.
+            if fresh && forming {
+                animation.timer = Timer::from_seconds(
+                    (intro.player_fade_in_s / animation.frames as f32).max(f32::EPSILON),
+                    TimerMode::Repeating,
+                );
+            }
+        }
     }
 
     let mut appearances = BTreeMap::new();

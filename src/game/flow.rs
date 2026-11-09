@@ -270,20 +270,42 @@ fn eligible_bonuses<'a>(
         .filter(|bonus| !excluded.contains(&bonus.id))
 }
 
+/// What the door being touched reads and writes, beside the two bodies that
+/// have to meet for it to happen.
+#[derive(SystemParam)]
+pub(super) struct DoorTouchResources<'w> {
+    session: Res<'w, RunSession>,
+    data: Res<'w, GameData>,
+    sheets: Res<'w, SpriteSheets>,
+    timer: ResMut<'w, PhaseTimer>,
+    next_screen: ResMut<'w, NextState<GameScreen>>,
+    sounds: ResMut<'w, SoundQueue>,
+}
+
+/// The door out of the room, which the portal is turned over once the player
+/// walks into it.
+type ExitDoors<'w, 's> =
+    Query<'w, 's, (Entity, &'static Transform), (With<ExitDoor>, Without<PlayerBody>)>;
+
 pub(super) fn handle_door_touch(
+    mut commands: Commands,
+    resources: DoorTouchResources,
     player: Query<&Transform, (With<PlayerBody>, Without<ExitDoor>)>,
-    doors: Query<&Transform, (With<ExitDoor>, Without<PlayerBody>)>,
-    session: Res<RunSession>,
-    data: Res<GameData>,
-    mut timer: ResMut<PhaseTimer>,
-    mut next_screen: ResMut<NextState<GameScreen>>,
-    mut sounds: ResMut<SoundQueue>,
+    doors: ExitDoors,
 ) {
+    let DoorTouchResources {
+        session,
+        data,
+        sheets,
+        mut timer,
+        mut next_screen,
+        mut sounds,
+    } = resources;
     // The door stays locked until a bonus is picked.
     if !session.door_open {
         return;
     }
-    let (Ok(player), Ok(door)) = (player.single(), doors.single()) else {
+    let (Ok(player), Ok((door_entity, door))) = (player.single(), doors.single()) else {
         return;
     };
     if (player.translation.x - door.translation.x).abs() > H_WORLD_UNITS * 0.65
@@ -295,6 +317,10 @@ pub(super) fn handle_door_touch(
         data.gameplay.room_flow.room_transition_duration_s / 2.0,
         TimerMode::Once,
     );
+    // The way out turns open as it is touched. This only runs while the room
+    // is being played, which the same frame leaves, so one portal is hung and
+    // it rides the door off with the room.
+    room_pan::hang_a_portal(&mut commands, door_entity, &sheets);
     sounds.push(SoundCue::DoorOpen);
     next_screen.set(GameScreen::Transitioning);
 }
