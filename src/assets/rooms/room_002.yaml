@@ -41,6 +41,10 @@ platforms:
   - label: the walkway the shaft comes out on
     material: city_plating
     rect_h: { x: 46, y: 10.5, width: 8, height: 0.5 }
+  - color: "#1C1A2E"
+    rect_h: { x: 6, y: 4, width: 1, height: 5 }
+  - color: "#1C1A2E"
+    rect_h: { x: 9, y: 4, width: 1, height: 5 }
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
 # Water: not solid, but a body inside it swims instead of walking.
@@ -48,14 +52,6 @@ water:
   - label: the flooded stretch - its surface stands half an H over the street
     rect_h: { x: 22, y: 0.5, width: 14, height: 2 }
 enemy_spawns:
-  - label: first blood, on the open street
-    type_id: blade_unit
-    position_h: { x: 10, y: 2 }
-    facing: left
-  - label: a rifle to make the crossing hurry
-    type_id: rifle_unit
-    position_h: { x: 17, y: 2 }
-    facing: left
   - label: waiting on the far bank
     type_id: stalker_unit
     position_h: { x: 38.5, y: 2 }

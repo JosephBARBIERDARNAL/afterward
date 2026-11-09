@@ -7,7 +7,7 @@ description: "The Threshold: the run's first steps. One viewport of bare ledge u
 size:
   width_h: 34
   height_h: 16
-background_profile: drowned_city
+background_profile: city_night_stars
 player_spawn:
   x_h: 4.25
   y_h: 2
@@ -43,7 +43,7 @@ platforms:
   - color: "#1C1A2E"
     rect_h: { x: 25.5, y: 7.25, width: 2.5, height: 0.25 }
   - color: "#1C1A2E"
-    rect_h: { x: 29.5, y: 9, width: 1.5, height: 0.25 }
+    rect_h: { x: 30, y: 9, width: 1, height: 0.25 }
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
 enemy_spawns: []
