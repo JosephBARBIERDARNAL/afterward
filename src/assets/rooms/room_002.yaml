@@ -7,7 +7,7 @@ description: "Two things the city teaches, in a row: fists on the open street, t
 size:
   width_h: 72
   height_h: 27
-background_profile: drowned_city
+background_profile: city_pink_dusk
 player_spawn:
   x_h: 3
   y_h: 2

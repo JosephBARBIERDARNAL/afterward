@@ -7,7 +7,7 @@ description: "The first street: a long ledge under the morning skyline, one rais
 size:
   width_h: 48
   height_h: 16
-background_profile: drowned_city
+background_profile: city_night_stars
 player_spawn:
   x_h: 2.25
   y_h: 2
