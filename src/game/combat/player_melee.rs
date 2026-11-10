@@ -94,6 +94,8 @@ pub(in crate::game) fn player_melee(
                 pierces_shields: false,
                 flinch_s: 0.32,
                 finisher: false,
+                punch: usize::MAX,
+                whiffs: false,
             },
             &mut enemies,
         );
@@ -128,6 +130,8 @@ pub(in crate::game) fn player_melee(
                     // The chain has already stepped on, so one that wrapped
                     // back to its first step means this blow was its last.
                     finisher: player.combo_step == 0,
+                    punch: index,
+                    whiffs: true,
                 }
             }
             Thrown::Charged => Blow {
@@ -136,6 +140,8 @@ pub(in crate::game) fn player_melee(
                 pierces_shields: true,
                 flinch_s: 0.5,
                 finisher: false,
+                punch: usize::MAX,
+                whiffs: true,
             },
         };
         land_the_blow(

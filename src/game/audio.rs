@@ -12,7 +12,7 @@ pub(super) use mixing::{AudioFade, update_audio_volume};
 pub(super) use music::{MusicStream, MusicStreamLoader};
 
 #[derive(Resource, Default)]
-pub(super) struct SoundQueue(Vec<SoundCue>);
+pub(super) struct SoundQueue(pub(super) Vec<SoundCue>);
 
 impl SoundQueue {
     pub fn push(&mut self, cue: SoundCue) {
@@ -34,9 +34,12 @@ pub(super) enum SoundCue {
     Jump,
     Landing,
     Footstep(FootstepSound),
-    /// A blow of the melee chain being thrown, and one connecting.
+    /// A blow of the melee chain being thrown.
     MeleeSwing,
-    MeleeHit,
+    /// A blow connecting, by which of `recorded_effects.punch_hits` it plays.
+    MeleeHit(usize),
+    /// A blow arriving on nobody.
+    MeleeMiss,
     CoverBlock,
     ProjectileEnvironmentHit,
     /// A hit landing, on the player or an enemy, by what it lands on.
@@ -182,7 +185,16 @@ pub(super) fn initialize_sound_bank(
         ),
         (SoundCue::BonusSelected, &recorded.bonus_chosen),
         (SoundCue::BonusRerolled, &recorded.bonus_reroll),
-    ] {
+        (SoundCue::MeleeMiss, &recorded.punch_missed),
+    ]
+    .into_iter()
+    .chain(
+        recorded
+            .punch_hits
+            .iter()
+            .enumerate()
+            .map(|(punch, effect)| (SoundCue::MeleeHit(punch), effect)),
+    ) {
         bank.cues
             .insert(cue, (asset_server.load(effect.asset.clone()), effect.gain));
     }

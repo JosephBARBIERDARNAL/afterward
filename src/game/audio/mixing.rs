@@ -281,6 +281,8 @@ mod tests {
                 damage_neutral: sound(),
                 damage_metal: sound(),
                 damage_metal_armor: sound(),
+                punch_hits: Vec::new(),
+                punch_missed: sound(),
             },
         }
     }

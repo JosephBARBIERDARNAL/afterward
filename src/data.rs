@@ -601,8 +601,10 @@ impl GameData {
             &recorded.damage_metal_armor,
             &recorded.bonus_chosen,
             &recorded.bonus_reroll,
+            &recorded.punch_missed,
         ]
         .into_iter()
+        .chain(&recorded.punch_hits)
         .chain(&self.gameplay.audio.music_tracks)
         .chain([
             &self.gameplay.audio.intro_music,

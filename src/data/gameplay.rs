@@ -81,6 +81,11 @@ pub struct RecordedEffects {
     pub bonus_chosen: AudioAsset,
     /// Spending a reroll on the bonus screen.
     pub bonus_reroll: AudioAsset,
+    /// The chain's blows landing on an enemy, in the chain's order. A blow
+    /// past the end of the list plays the last.
+    pub punch_hits: Vec<AudioAsset>,
+    /// A blow that reached nobody.
+    pub punch_missed: AudioAsset,
 }
 
 /// A sound file and how loud it plays relative to its volume setting.

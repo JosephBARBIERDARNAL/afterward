@@ -335,6 +335,15 @@ audio:
     damage_metal_armor: { asset: audio/sfx/damage-metal-armor.wav, gain: 0.5 }
     bonus_chosen: { asset: audio/sfx/bonus-chosen.wav, gain: 0.22 }
     bonus_reroll: { asset: audio/sfx/bonus-reroll.wav, gain: 0.22 }
+    # The chain's blows as they land on an enemy, in the chain's own order:
+    # its first step plays the first, and so on. A blow past the end of the
+    # list (a finisher, the charged blow, the slam) plays the last.
+    punch_hits:
+      - { asset: audio/sfx/punch-1.wav, gain: 0.4 }
+      - { asset: audio/sfx/punch-2.wav, gain: 0.4 }
+      - { asset: audio/sfx/punch-3.wav, gain: 0.45 }
+    # A blow of the chain, or the charged one, that reached nobody.
+    punch_missed: { asset: audio/sfx/punch-missed.wav, gain: 0.35 }
 
 controls:
   move_left: [KeyA, KeyQ, ArrowLeft]

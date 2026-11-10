@@ -29,6 +29,12 @@ pub(super) struct Blow {
     pub(super) flinch_s: f32,
     /// The chain's last blow, which the Finisher bonus pays for.
     pub(super) finisher: bool,
+    /// Which of `audio.recorded_effects.punch_hits` it lands with; one past
+    /// the end of that list lands with the last.
+    pub(super) punch: usize,
+    /// Heard cutting the air when it reaches nobody. The slam is not: it
+    /// lands on the floor either way.
+    pub(super) whiffs: bool,
 }
 
 pub(super) struct LandingResources<'a, 'w, 's> {
@@ -192,6 +198,9 @@ pub(super) fn land_the_blow(
     }
 
     if !connected {
+        if blow.whiffs {
+            sounds.push(SoundCue::MeleeMiss);
+        }
         return;
     }
     spawn_fire_burst(
@@ -201,7 +210,10 @@ pub(super) fn land_the_blow(
         Vec2::new(-player.facing, 0.0),
         &data.gameplay.player.melee.impact_burst,
     );
-    sounds.push(SoundCue::MeleeHit);
+    let punches = data.gameplay.audio.recorded_effects.punch_hits.len();
+    sounds.push(SoundCue::MeleeHit(
+        blow.punch.min(punches.saturating_sub(1)),
+    ));
     if session.has_bonus("rhythm_training") {
         if player.rhythm_timer > 0.0 {
             let maximum = data.bonus_effect("rhythm_training", "combo_speed_max_bonus");
