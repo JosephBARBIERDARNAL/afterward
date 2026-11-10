@@ -5,60 +5,117 @@ room_id: 2
 chapter_id: 1
 description: "Two things the city teaches, in a row: fists on the open street, then the shaft whose walls are the only way up. The slab at x 44 seals the street, so the shaft is not a detour."
 size:
-  width_h: 72
-  height_h: 27
-background_profile: city_pink_dusk
+  width_h: 48
+  height_h: 16
+background_profile: city_peach_sunset
 player_spawn:
   x_h: 3
   y_h: 2
 # Solid platforms: land on their top, stop against their sides, bump
 # your head on their underside. They stop shots too.
 platforms:
-  - label: the street the room opens on, run end to end
-    material: city_pavement
-    rect_h: { x: -2, y: 0, width: 76, height: 2 }
-  - label: west wall
-    material: city_plating
-    rect_h: { x: -2, y: 2, width: 2, height: 25 }
-  - label: east wall
-    material: city_plating
-    rect_h: { x: 72, y: 2, width: 2, height: 25 }
-  - label: roofline
-    material: city_plating
-    rect_h: { x: -2, y: 27, width: 76, height: 2 }
-  - label: shaft, the near wall - hangs clear of the street, so it is walked under
-    material: city_plating
-    rect_h: { x: 41, y: 4.5, width: 1.5, height: 6.5 }
-  - label: shaft, the far wall - this is what seals the street
-    material: city_plating
-    rect_h: { x: 44.5, y: 2, width: 1.5, height: 9 }
-  - label: the walkway the shaft comes out on
-    material: city_plating
-    rect_h: { x: 46, y: 10.5, width: 8, height: 0.5 }
+  - label: the ledge the whole room stands on
+    color: "#1C1A2E"
+    rect_h: { x: 1, y: 0, width: 14, height: 2 }
+  - label: the ledge the whole room stands on
+    color: "#1C1A2E"
+    rect_h: { x: 47, y: 0, width: 1, height: 16 }
+  - label: the ledge the whole room stands on
+    color: "#1C1A2E"
+    rect_h: { x: 0, y: 0, width: 1, height: 16 }
+  - label: the ledge the whole room stands on
+    color: "#1C1A2E"
+    rect_h: { x: 1, y: 13, width: 2, height: 0.25 }
   - color: "#1C1A2E"
-    rect_h: { x: 6, y: 4, width: 1, height: 5 }
+    rect_h: { x: 9, y: 9, width: 4, height: 2 }
   - color: "#1C1A2E"
-    rect_h: { x: 9, y: 4, width: 1, height: 5 }
+    rect_h: { x: 1, y: 10, width: 4, height: 1 }
+  - color: "#1C1A2E"
+    rect_h: { x: 40, y: 1, width: 3, height: 8 }
+  - color: "#1C1A2E"
+    rect_h: { x: 40, y: 0, width: 7, height: 1 }
+  - label: the ledge the whole room stands on
+    color: "#1C1A2E"
+    rect_h: { x: 34, y: 8, width: 6, height: 1 }
+  - color: "#1C1A2E"
+    rect_h: { x: 15, y: 0, width: 9, height: 4 }
+  - color: "#1C1A2E"
+    rect_h: { x: 5, y: 4, width: 1, height: 7 }
+  - color: "#1C1A2E"
+    rect_h: { x: 8, y: 2, width: 1, height: 9 }
+  - color: "#1C1A2E"
+    rect_h: { x: 9, y: 6.75, width: 4.25, height: 0.25 }
+  - color: "#1C1A2E"
+    rect_h: { x: 9, y: 4.5, width: 3, height: 0.25 }
+  - color: "#1C1A2E"
+    rect_h: { x: 24, y: 0, width: 1, height: 12 }
+  - color: "#1C1A2E"
+    rect_h: { x: 19, y: 5, width: 3, height: 7 }
+  - label: the ledge the whole room stands on
+    color: "#1C1A2E"
+    rect_h: { x: 25, y: 11, width: 2, height: 1 }
+  - label: the ledge the whole room stands on
+    color: "#1C1A2E"
+    rect_h: { x: 29, y: 0, width: 9, height: 1 }
+  - label: the ledge the whole room stands on
+    color: "#1C1A2E"
+    rect_h: { x: 31, y: 2.75, width: 5, height: 0.25 }
+  - label: the ledge the whole room stands on
+    color: "#1C1A2E"
+    rect_h: { x: 29.25, y: 9.25, width: 5, height: 0.25 }
+    rotation_deg: -15
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
 enemy_spawns:
-  - label: waiting down the street
-    type_id: stalker_unit
-    position_h: { x: 38.5, y: 2 }
+  - type_id: blade_unit
+    position_h: { x: 1.75, y: 11 }
+    facing: right
+    stat_overrides: { health: 100, armor_layers: 0 }
+  - type_id: blade_unit
+    position_h: { x: 2.25, y: 13.25 }
+    facing: right
+    stat_overrides: { health: 100, armor_layers: 0 }
+  - type_id: blade_unit
+    position_h: { x: 11, y: 7 }
+    facing: right
+    stat_overrides: { health: 100, armor_layers: 0 }
+  - type_id: rifle_unit
+    position_h: { x: 9.75, y: 2 }
+    facing: right
+    stat_overrides: { health: 100, armor_layers: 0 }
+  - type_id: rifle_unit
+    position_h: { x: 10.25, y: 4.75 }
+    facing: right
+    stat_overrides: { health: 100, armor_layers: 1 }
+  - type_id: rifle_unit
+    position_h: { x: 40.5, y: 9 }
     facing: left
-  - label: on the walkway, met on the way out of the shaft
-    type_id: blade_unit
-    position_h: { x: 50, y: 11 }
+    stat_overrides: { health: 100, armor_layers: 1 }
+  - type_id: blade_unit
+    position_h: { x: 17.25, y: 4 }
     facing: left
-  - label: the last of them, between the shaft and the door
-    type_id: stalker_unit
-    position_h: { x: 60, y: 2 }
+    stat_overrides: { health: 100, armor_layers: 0 }
+  - type_id: blade_unit
+    position_h: { x: 19.5, y: 12 }
+    facing: right
+    stat_overrides: { health: 100, armor_layers: 0 }
+  - type_id: rifle_unit
+    position_h: { x: 26.25, y: 12 }
     facing: left
+    stat_overrides: { health: 100, armor_layers: 1 }
+  - type_id: heavy_unit
+    position_h: { x: 37, y: 1 }
+    facing: left
+    stat_overrides: { health: 100, attack_damage: 10, armor_layers: 3 }
+  - type_id: rifle_unit
+    position_h: { x: 11.25, y: 11 }
+    facing: left
+    stat_overrides: { health: 100, armor_layers: 0 }
 # The bonus item, lying beside the door once every enemy is down.
 bonus:
-  x_h: 67
-  y_h: 2
+  x_h: 44.75
+  y_h: 1
 exit:
-  x_h: 69
-  y_h: 2
+  x_h: 46.25
+  y_h: 1
 next_room_id: 3
