@@ -32,7 +32,9 @@ pub(super) enum Field {
     Speed,
     Damage,
     Armor,
-    // Hitboxes, shared by every enemy of a type or by the player (hitboxes.rs).
+    // Shared by every enemy of a type or by the player, in every room
+    // (hitboxes.rs): the size the player is drawn at, then the hitboxes.
+    BodyHeight,
     HurtboxWidth,
     HurtboxHeight,
     Attack,
@@ -98,9 +100,13 @@ impl Field {
                 Self::HitboxWidth,
                 Self::HitboxHeight,
             ],
-            Some(EditorItem::PlayerSpawn) => {
-                &[Self::X, Self::Y, Self::HurtboxWidth, Self::HurtboxHeight]
-            }
+            Some(EditorItem::PlayerSpawn) => &[
+                Self::X,
+                Self::Y,
+                Self::BodyHeight,
+                Self::HurtboxWidth,
+                Self::HurtboxHeight,
+            ],
             Some(EditorItem::Exit | EditorItem::Bonus) => &[Self::X, Self::Y],
         }
     }
@@ -125,6 +131,7 @@ impl Field {
             Self::Speed => "Speed (H/s)",
             Self::Damage => "Attack damage",
             Self::Armor => "Armor layers",
+            Self::BodyHeight => "Body height (H)",
             Self::HurtboxWidth => "Hurtbox width (H)",
             Self::HurtboxHeight => "Hurtbox height (H)",
             Self::Attack => "Attack",
@@ -267,7 +274,8 @@ impl Field {
                     (None, None) => String::from("-"),
                 }
             }
-            Self::HurtboxWidth
+            Self::BodyHeight
+            | Self::HurtboxWidth
             | Self::HurtboxHeight
             | Self::Attack
             | Self::HitboxX
@@ -450,6 +458,7 @@ impl Field {
             Self::Room
             | Self::Description
             | Self::Label
+            | Self::BodyHeight
             | Self::HurtboxWidth
             | Self::HurtboxHeight
             | Self::Attack

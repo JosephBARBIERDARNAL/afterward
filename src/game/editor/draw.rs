@@ -10,6 +10,8 @@ const DECORATION_COLOR: Color = Color::srgb(0.75, 0.5, 0.95);
 const MARQUEE_COLOR: Color = Color::srgb(0.4, 0.8, 1.0);
 const PLATFORM_COLOR: Color = Color::srgb(0.95, 0.65, 0.3);
 const PLAYER_COLOR: Color = Color::srgb(0.35, 0.95, 0.5);
+/// How tall the selected player spawn's body is drawn (`body_height_h`).
+const PLAYER_BODY_COLOR: Color = Color::srgb(0.95, 0.95, 1.0);
 const EXIT_COLOR: Color = Color::srgb(0.35, 0.8, 1.0);
 const ENEMY_COLOR: Color = Color::srgb(1.0, 0.35, 0.45);
 const BONUS_COLOR: Color = Color::srgb(1.0, 0.78, 0.3);
@@ -115,6 +117,18 @@ pub(super) fn draw_overlay(mut gizmos: Gizmos, editor: Res<RoomEditor>, data: Re
     match editor.selected.as_slice() {
         [EditorItem::PlayerSpawn] => {
             let feet = Vec2::new(room.player_spawn.x_h, room.player_spawn.y_h) * H_WORLD_UNITS;
+            // How tall the body is drawn, as wide as the collision box.
+            let body = Vec2::new(
+                PLAYER_COLLISION_WIDTH_H,
+                data.player_animations.body_height_h,
+            ) * H_WORLD_UNITS;
+            world_outline(
+                Rect::from_corners(
+                    feet - Vec2::new(body.x / 2.0, 0.0),
+                    feet + Vec2::new(body.x / 2.0, body.y),
+                ),
+                PLAYER_BODY_COLOR,
+            );
             world_outline(
                 crate::game::combat::player_hurtbox(
                     (feet + Vec2::Y * H_WORLD_UNITS / 2.0).extend(0.0),
@@ -258,7 +272,9 @@ pub(super) fn update_panels(
     {
         lines.push(match editor.selected_enemy_type(&data) {
             Some(type_id) => format!("Hitboxes are shared by every {type_id} (enemy_types.yaml)"),
-            None => String::from("The player's hurtbox (gameplay.yaml)"),
+            None => String::from(
+                "The player's drawn size (animations.yaml) and hurtbox (gameplay.yaml)",
+            ),
         });
     }
     if let Some(hovered) = editor

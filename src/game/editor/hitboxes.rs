@@ -1,10 +1,12 @@
 //! Hitbox editing: the player's hurtbox and each enemy type's hurtbox, attack
-//! hitboxes, and projectile sizes. They live in `config/gameplay.yaml` and
-//! `enemies/enemy_types.yaml`, not in a room, so an edit applies to every
-//! room. Saving rewrites only their lines, which keeps the files' comments.
+//! hitboxes, and projectile sizes — and, riding with them, the size the
+//! player is drawn at. They live in `config/gameplay.yaml`,
+//! `enemies/enemy_types.yaml` and `player/animations.yaml`, not in a room, so
+//! an edit applies to every room. Saving rewrites only their lines, which
+//! keeps the files' comments.
 
 use super::*;
-use crate::data::{EnemyTypeConfig, EnemyTypes, GameplayConfig, RectH, SizeH};
+use crate::data::{EnemyTypeConfig, EnemyTypes, GameplayConfig, PlayerAnimations, RectH, SizeH};
 use std::{fs, path::Path};
 
 /// Every hitbox the editor can change: an undo step, and the saved state
@@ -12,6 +14,8 @@ use std::{fs, path::Path};
 #[derive(Clone, PartialEq)]
 pub(super) struct Hitboxes {
     player: SizeH,
+    /// How tall the player's body is drawn, in H (`body_height_h`).
+    player_body_height_h: f32,
     enemies: BTreeMap<EnemyTypeId, EnemyHitboxes>,
 }
 
@@ -26,6 +30,7 @@ impl Hitboxes {
     pub(super) fn of(data: &GameData) -> Self {
         Self {
             player: data.gameplay.player.hurtbox_h,
+            player_body_height_h: data.player_animations.body_height_h,
             enemies: Self::enemies_of(&data.enemies),
         }
     }
@@ -53,6 +58,7 @@ impl Hitboxes {
     /// Puts these hitboxes into `data`.
     pub(super) fn apply(&self, data: &mut GameData) {
         data.gameplay.player.hurtbox_h = self.player;
+        data.player_animations.body_height_h = self.player_body_height_h;
         for (type_id, enemy) in &mut data.enemies.types {
             let Some(saved) = self.enemies.get(type_id) else {
                 continue;
@@ -71,23 +77,39 @@ impl Hitboxes {
     pub(super) fn save(&self, asset_root: &Path) -> Result<(), String> {
         let gameplay_path = asset_root.join("config/gameplay.yaml");
         let enemies_path = asset_root.join("enemies/enemy_types.yaml");
+        let animations_path = asset_root.join("player/animations.yaml");
         let read = |path: &Path| {
             fs::read_to_string(path).map_err(|error| format!("{}: {error}", path.display()))
         };
         let gameplay = self.rewrite_gameplay(&read(&gameplay_path)?);
         let enemies = self.rewrite_enemy_types(&read(&enemies_path)?);
+        // `animations.yaml` with its one `body_height_h` line replaced.
+        let animations = Self::rewrite_lines(&read(&animations_path)?, |indent, key| {
+            key.starts_with("body_height_h:")
+                .then(|| format!("{indent}body_height_h: {}", self.player_body_height_h))
+        });
         let player = yaml_serde::from_str::<GameplayConfig>(&gameplay)
             .map(|gameplay| gameplay.player.hurtbox_h)
             .map_err(|error| error.to_string())?;
         let enemy_hitboxes = yaml_serde::from_str::<EnemyTypes>(&enemies)
             .map(|enemies| Self::enemies_of(&enemies))
             .map_err(|error| error.to_string())?;
-        if player != self.player || enemy_hitboxes != self.enemies {
+        let body_height_h = yaml_serde::from_str::<PlayerAnimations>(&animations)
+            .map(|animations| animations.body_height_h)
+            .map_err(|error| error.to_string())?;
+        if player != self.player
+            || body_height_h != self.player_body_height_h
+            || enemy_hitboxes != self.enemies
+        {
             return Err(String::from(
                 "a hitbox line is missing from the YAML files, so it can't be rewritten",
             ));
         }
-        for (path, text) in [(gameplay_path, gameplay), (enemies_path, enemies)] {
+        for (path, text) in [
+            (gameplay_path, gameplay),
+            (enemies_path, enemies),
+            (animations_path, animations),
+        ] {
             fs::write(&path, text).map_err(|error| format!("{}: {error}", path.display()))?;
         }
         Ok(())
@@ -160,7 +182,8 @@ impl Field {
     pub(super) fn is_hitbox(self) -> bool {
         matches!(
             self,
-            Self::HurtboxWidth
+            Self::BodyHeight
+                | Self::HurtboxWidth
                 | Self::HurtboxHeight
                 | Self::Attack
                 | Self::HitboxX
@@ -193,6 +216,7 @@ impl Field {
         let projectile = strike.and_then(|strike| strike.projectile_size_h);
         let shown = |value: Option<f32>| value.map_or_else(|| String::from("-"), |v| v.to_string());
         match self {
+            Self::BodyHeight => data.player_animations.body_height_h.to_string(),
             Self::HurtboxWidth => hurtbox.width.to_string(),
             Self::HurtboxHeight => hurtbox.height.to_string(),
             Self::Attack => strike.map_or_else(
@@ -218,7 +242,7 @@ impl Field {
     }
 
     /// Steps the field for every enemy of `type_id` (the player's hurtbox
-    /// without one); `attack` picks which of the type's attacks. Width and
+    /// and drawn size without one); `attack` picks which of the type's attacks. Width and
     /// height of a projectile attack size its projectile.
     pub(super) fn adjust_hitbox(
         self,
@@ -233,6 +257,7 @@ impl Field {
         let Some(type_id) = type_id else {
             let hurtbox = &mut data.gameplay.player.hurtbox_h;
             match self {
+                Self::BodyHeight => size(&mut data.player_animations.body_height_h),
                 Self::HurtboxWidth => size(&mut hurtbox.width),
                 Self::HurtboxHeight => size(&mut hurtbox.height),
                 _ => {}
@@ -290,7 +315,11 @@ mod tests {
             .parse::<EnemyTypeId>()
             .expect("a valid type ID");
 
-        // The player's hurtbox, a type's hurtbox, the boss's second attack.
+        // The player's size and hurtbox, a type's hurtbox, the boss's second
+        // attack.
+        Field::BodyHeight.adjust_hitbox(&mut data, None, 0, 3.0);
+        let body_height_h = data.player_animations.body_height_h;
+        assert!((body_height_h - original.player_body_height_h - 0.15).abs() < 1e-5);
         Field::HurtboxWidth.adjust_hitbox(&mut data, None, 0, 2.0);
         Field::HurtboxHeight.adjust_hitbox(&mut data, Some(&blade_unit), 0, -4.0);
         Field::HitboxX.adjust_hitbox(&mut data, Some(&boss), 1, 1.0);
@@ -318,7 +347,11 @@ mod tests {
             .duration_since(std::time::UNIX_EPOCH)
             .map_or(0, |elapsed| elapsed.as_nanos());
         let copy = std::env::temp_dir().join(format!("afterward-hitboxes-{nanos}"));
-        for file in ["config/gameplay.yaml", "enemies/enemy_types.yaml"] {
+        for file in [
+            "config/gameplay.yaml",
+            "enemies/enemy_types.yaml",
+            "player/animations.yaml",
+        ] {
             fs::create_dir_all(copy.join(file).parent().expect("a folder"))
                 .expect("the temp folder is writable");
             fs::copy(asset_root.join(file), copy.join(file)).expect("the YAML copies");
@@ -336,6 +369,14 @@ mod tests {
             fs::read_to_string(copy.join("config/gameplay.yaml")).expect("the saved file reads");
         let saved = yaml_serde::from_str::<GameplayConfig>(&gameplay).expect("valid YAML");
         assert_eq!(saved.player.hurtbox_h.width, player);
+        let animations =
+            fs::read_to_string(copy.join("player/animations.yaml")).expect("the saved file reads");
+        assert!(
+            animations.contains("# Player sprite sheets"),
+            "comments survive"
+        );
+        let saved = yaml_serde::from_str::<PlayerAnimations>(&animations).expect("valid YAML");
+        assert_eq!(saved.body_height_h, body_height_h);
         fs::remove_dir_all(copy).expect("the temp folder is removable");
     }
 }
