@@ -177,8 +177,8 @@ pub struct MeleeConfig {
     pub steps: Vec<MeleeComboStep>,
     pub slam: SlamConfig,
     pub charge: ChargeConfig,
-    /// The burst drawn where a blow lands.
-    pub impact_burst: BurstConfig,
+    /// The effect played where a blow lands.
+    pub hit_effect: HitEffectConfig,
 }
 
 /// What a landed blow does to the moment: the freeze, the shake and the flare
@@ -283,13 +283,13 @@ pub struct WallConfig {
     pub control_lock_s: f32,
 }
 
-/// A fiery burst: a swelling, fading core and embers flying outward.
+/// How tall the effect a landed blow plays is drawn, by what the blow was:
+/// an ordinary one, a heavy one, and one that kills.
 #[derive(Debug, Deserialize)]
-pub struct BurstConfig {
-    pub radius_h: f32,
-    pub duration_s: f32,
-    pub embers: u8,
-    pub ember_speed_h_s: f32,
+pub struct HitEffectConfig {
+    pub spark_size_h: f32,
+    pub burst_size_h: f32,
+    pub kill_size_h: f32,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Deserialize)]

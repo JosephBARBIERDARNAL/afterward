@@ -1,0 +1,20 @@
+Magic Impacts Pack
+Copyright © 2025 Chris Ball
+
+You are free to use these assets in:
+- Commercial games
+- Non-commercial games
+- Game jams
+- Prototypes
+
+You may:
+- Modify the assets
+- Recolor, resize, or animate them further
+- Use them in any engine or framework
+
+You may NOT:
+- Resell or redistribute the assets as standalone files
+- Include them in asset packs or collections for sale
+- Claim the assets as your own
+
+Credit is not required, but appreciated.

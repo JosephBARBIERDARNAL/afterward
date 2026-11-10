@@ -21,7 +21,7 @@ mod vision;
 
 pub(super) use cleanup::clear_room_combat_effects;
 pub(super) use components::{
-    CombatProjectile, DamageNumber, HealEffect, HealthPickup, ImpactEffect,
+    CombatProjectile, DamageNumber, HealEffect, HealthPickup, HitEffect, ImpactEffect,
 };
 use damage::{set_enemy_animation, spawn_damage_number};
 pub(super) use enemy_ai::{update_enemy_ai, update_enemy_platform_physics};
@@ -31,11 +31,10 @@ pub(super) use enemy_body::{
 };
 use enemy_jumps::{JumpArc, JumpPlan, JumpRoute};
 pub(super) use falls::update_falls;
-use feedback::spawn_fire_burst;
 pub(super) use feedback::{HEALTH_BAR, SHIELDED_HEALTH_BAR};
 pub(super) use feedback::{
     update_damage_numbers, update_dead_enemies, update_healing_over_time, update_health_bars,
-    update_health_pickups, update_impact_effects,
+    update_health_pickups, update_hit_effects, update_impact_effects,
 };
 use hitboxes::blow_area;
 pub(super) use hitboxes::{blow_area as melee_blow_area, player_hurtbox};

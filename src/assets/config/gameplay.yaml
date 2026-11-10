@@ -126,10 +126,12 @@ player:
       hitbox_h: { x: 0.15, y: 0.15, width: 1.1, height: 0.6 }
       contact_s: 0.2
       lunge_h_s: 6
-    # The burst drawn where a blow lands: a hot core that swells and fades
-    # while embers fly outward.
-    impact_burst:
-      { radius_h: 0.32, duration_s: 0.24, embers: 7, ember_speed_h_s: 4.5 }
+    # The effect played where a blow lands, and how tall each is drawn: sparks
+    # thrown the way the blow went for an ordinary one, a burst for a heavy
+    # one (the chain's last blow, the charged blow, the slam), and a ring
+    # opening out of a flash for one that kills. Their sheets and frame rates
+    # are in `src/game/assets/effect_sheets.rs`.
+    hit_effect: { spark_size_h: 0.9, burst_size_h: 1.1, kill_size_h: 1.3 }
   # Down and Jump together on the ground: a forward roll that carries the
   # player clear. Nothing can hurt them between `invulnerable_from_s` and
   # `invulnerable_to_s` of it, which is the only way through a shot.

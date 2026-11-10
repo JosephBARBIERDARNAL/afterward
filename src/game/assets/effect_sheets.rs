@@ -2,7 +2,9 @@ use super::super::{SpriteSheetSpec, UVec2};
 
 /// Loose effect sheets: pixel art that is drawn beside a body rather than
 /// being one, so it belongs to no character's clip list. They are cut from
-/// the same packs as the player's sheets (`player/LICENSE.txt`).
+/// the same packs as the player's sheets (`player/LICENSE.txt`), but for the
+/// three a landed blow plays, which come from the pack of
+/// `effects/LICENSE.txt`.
 pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
     [
         ("effect_portal", "effects/portal.png", 128, 17, 24.0),
@@ -13,6 +15,9 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             6,
             12.0,
         ),
+        ("effect_hit_spark", "effects/hit_spark.png", 32, 6, 30.0),
+        ("effect_hit_burst", "effects/hit_burst.png", 32, 5, 26.0),
+        ("effect_kill_ring", "effects/kill_ring.png", 32, 6, 24.0),
         (
             "effect_light_charge",
             "effects/light_charge.png",

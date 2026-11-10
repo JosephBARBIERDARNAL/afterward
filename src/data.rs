@@ -113,13 +113,17 @@ impl GameData {
         let melee = &player.melee;
         if melee.steps.is_empty()
             || melee.combo_window_s <= 0.0
-            || [&melee.impact_burst.radius_h, &melee.impact_burst.duration_s]
-                .into_iter()
-                .any(|value| !value.is_finite() || *value <= 0.0)
+            || [
+                &melee.hit_effect.spark_size_h,
+                &melee.hit_effect.burst_size_h,
+                &melee.hit_effect.kill_size_h,
+            ]
+            .into_iter()
+            .any(|value| !value.is_finite() || *value <= 0.0)
         {
             return Err(InvalidGameData::from(
                 "the melee chain needs at least one blow, a positive combo window, \
-                 and a positive impact burst",
+                 and positive hit effect sizes",
             ));
         }
         for step in &melee.steps {

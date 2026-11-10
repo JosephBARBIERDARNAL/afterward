@@ -67,52 +67,17 @@ pub(in crate::game) fn update_dead_enemies(
     }
 }
 
-/// Spawns a fiery burst at `position`: a hot core over a wider orange glow,
-/// both swelling as they cool, and embers thrown mostly along `direction`
-/// (a zero `direction` throws them evenly all around).
-pub(super) fn spawn_fire_burst(
-    commands: &mut Commands,
-    random: &mut RandomState,
-    position: Vec2,
-    direction: Vec2,
-    burst: &crate::data::BurstConfig,
+/// Takes away the effect of a landed blow once it has played through.
+pub(in crate::game) fn update_hit_effects(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut effects: Query<(Entity, &mut HitEffect)>,
 ) {
-    let radius = burst.radius_h * H_WORLD_UNITS;
-    let timer = Timer::from_seconds(burst.duration_s, TimerMode::Once);
-    let diamond = Quat::from_rotation_z(std::f32::consts::FRAC_PI_4);
-    for (color, size, growth, z) in [
-        (Color::srgb(1.0, 0.55, 0.12), radius * 1.6, 0.7, 5.9),
-        (Color::srgb(1.0, 0.96, 0.7), radius, 0.4, 6.0),
-    ] {
-        commands.spawn((
-            Sprite::from_color(color, Vec2::splat(size)),
-            Transform::from_translation(position.extend(z)).with_rotation(diamond),
-            ImpactEffect {
-                timer: timer.clone(),
-                velocity: Vec2::ZERO,
-                growth,
-                color,
-            },
-            RoomEntity,
-        ));
-    }
-    let ember_color = Color::srgb(1.0, 0.78, 0.25);
-    for _ in 0..burst.embers {
-        let angle = random.fraction() * std::f32::consts::TAU;
-        let heading =
-            (Vec2::from_angle(angle) + direction * 1.2).normalize_or(Vec2::from_angle(angle));
-        let speed = burst.ember_speed_h_s * H_WORLD_UNITS * (0.5 + 0.5 * random.fraction());
-        commands.spawn((
-            Sprite::from_color(ember_color, Vec2::splat((radius * 0.3).max(2.0))),
-            Transform::from_translation(position.extend(6.1)),
-            ImpactEffect {
-                timer: timer.clone(),
-                velocity: heading * speed,
-                growth: -0.6,
-                color: ember_color,
-            },
-            RoomEntity,
-        ));
+    for (entity, mut effect) in &mut effects {
+        effect.timer.tick(time.delta());
+        if effect.timer.is_finished() {
+            commands.entity(entity).despawn();
+        }
     }
 }
 

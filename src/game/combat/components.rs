@@ -21,6 +21,13 @@ pub(crate) struct ImpactEffect {
     pub(crate) color: Color,
 }
 
+/// The effect a landed blow plays where it landed: one pass through its
+/// sheet, after which it is taken away.
+#[derive(Component)]
+pub(crate) struct HitEffect {
+    pub(crate) timer: Timer,
+}
+
 #[derive(Component)]
 pub(crate) struct DamageNumber {
     pub(crate) timer: Timer,

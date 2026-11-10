@@ -325,7 +325,7 @@ impl Plugin for GamePlugin {
             )
             .add_systems(
                 Update,
-                assets::animate_sprites.run_if(
+                (assets::animate_sprites, combat::update_hit_effects).run_if(
                     in_state(GameScreen::Playing)
                         .or_else(in_state(GameScreen::RoomIntro))
                         .or_else(in_state(GameScreen::Transitioning))
