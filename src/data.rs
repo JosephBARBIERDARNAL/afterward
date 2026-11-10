@@ -191,25 +191,6 @@ impl GameData {
                  nonnegative control lock",
             ));
         }
-        let water = &player.water;
-        if [
-            water.swim_speed_h_s,
-            water.rise_speed_h_s,
-            water.sink_speed_h_s,
-            water.drag_h_s2,
-            water.dive_speed_h_s,
-            water.exit_impulse_h_s,
-            water.submerged_depth_h,
-        ]
-        .iter()
-        .any(|value| !value.is_finite() || *value <= 0.0)
-            || !(0.0..=1.0).contains(&water.opacity)
-        {
-            return Err(InvalidGameData::from(
-                "swimming needs positive speeds, drag, dive threshold and depth, \
-                 and an opacity within 0..=1",
-            ));
-        }
         let animations = &self.player_animations;
         if animations.body_height_px <= 0.0
             || !(animations.body_height_h.is_finite() && animations.body_height_h > 0.0)

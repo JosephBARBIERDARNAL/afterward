@@ -151,7 +151,6 @@ pub struct PlayerConfig {
     pub melee: MeleeConfig,
     pub roll: RollConfig,
     pub wall: WallConfig,
-    pub water: WaterConfig,
 }
 
 /// The player's only weapon: a melee chain. Each press lands the next blow of
@@ -253,27 +252,6 @@ pub struct WallConfig {
     /// Seconds after a wall jump during which movement input is ignored, so
     /// the player actually leaves the wall instead of sticking to it.
     pub control_lock_s: f32,
-}
-
-/// The flood standing in a room's `water` rectangles.
-#[derive(Debug, Deserialize)]
-pub struct WaterConfig {
-    pub swim_speed_h_s: f32,
-    /// Rise while Jump is held, and the sink without it.
-    pub rise_speed_h_s: f32,
-    pub sink_speed_h_s: f32,
-    /// How fast the player's speed is dragged to the water's own, so falling
-    /// in is slowed rather than stopped.
-    pub drag_h_s2: f32,
-    /// Entering at least this fast downward plays the dive.
-    pub dive_speed_h_s: f32,
-    /// The hop out of the water given by Jump at the surface.
-    pub exit_impulse_h_s: f32,
-    /// How deep under the surface the body's center sits before the room's
-    /// water counts as over the player's head.
-    pub submerged_depth_h: f32,
-    /// How solidly the water is drawn over the swimmer behind it.
-    pub opacity: f32,
 }
 
 /// A fiery burst: a swelling, fading core and embers flying outward.

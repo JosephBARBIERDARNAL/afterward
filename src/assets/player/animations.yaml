@@ -44,10 +44,6 @@ clips:
   # Clinging to a wall, then pushing off it.
   wall_slide: { sheet: player/sheets/wall_jump.png, frames: 2, fps: 6 }
   wall_jump: { sheet: player/sheets/wall_jump.png, first_frame: 2, frames: 2, fps: 16 }
-  # Entering water from above, then the stroke that carries the player
-  # through it.
-  dive: { sheet: player/sheets/dive.png, frames: 9, fps: 16 }
-  swim: { sheet: player/sheets/swim.png, frames: 14, fps: 14 }
   # Raising the guard; holds its last frame while Cover is held.
   cover: { sheet: player/sheets/cover.png, frames: 12, fps: 20 }
   hit: { sheet: player/sheets/hit.png, frames: 3, fps: 14 }

@@ -5,7 +5,7 @@ use std::fmt::{self, Display, Formatter};
 
 use super::{
     DecorationConfig, DecorationLayer, EnemySpawnConfig, EnemyStatOverrides, Facing, Fill,
-    PlatformConfig, RectH, RoomConfig, SizeH, WaterPool,
+    PlatformConfig, RectH, RoomConfig, SizeH,
 };
 
 const HEADER: &str = "\
@@ -44,11 +44,6 @@ impl Display for RoomConfig {
             "# Decorations: non-solid panels behind the platforms or in front of the bodies."
         )?;
         write!(formatter, "{}", YamlList("decorations", &self.decorations))?;
-        writeln!(
-            formatter,
-            "# Water: not solid, but a body inside it swims instead of walking."
-        )?;
-        write!(formatter, "{}", YamlList("water", &self.water))?;
         write!(
             formatter,
             "{}",
@@ -113,17 +108,6 @@ impl Display for DecorationConfig {
                 format!("rect_h: {}", self.rect_h),
             ])
             .collect();
-        write!(formatter, "{}", YamlEntry(fields))
-    }
-}
-
-impl Display for WaterPool {
-    fn fmt(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
-        let label = self
-            .label
-            .iter()
-            .map(|label| format!("label: {}", YamlText(label)));
-        let fields = label.chain([format!("rect_h: {}", self.rect_h)]).collect();
         write!(formatter, "{}", YamlEntry(fields))
     }
 }

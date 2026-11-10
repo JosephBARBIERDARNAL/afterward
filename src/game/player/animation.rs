@@ -37,7 +37,7 @@ impl PlayerSprite<'_> {
 
     /// Picks the clip for the player's current state. One-shot actions (blows
     /// of the melee chain, the gather and the charged blow, the slam, the
-    /// roll, hits, landings, wall pushes, the dive) play over the movement
+    /// roll, hits, landings, wall pushes) play over the movement
     /// clips until they end; dying and Cover override everything.
     pub(super) fn update(
         &mut self,
@@ -69,7 +69,6 @@ impl PlayerSprite<'_> {
                 PlayerAction::Hit => "player_hit",
                 PlayerAction::Land => "player_land",
                 PlayerAction::WallJump => "player_wall_jump",
-                PlayerAction::Dive => "player_dive",
             };
             let looping = action == PlayerAction::Charging;
             if restart {
@@ -86,10 +85,6 @@ impl PlayerSprite<'_> {
             } else {
                 self.play(key, looping);
             }
-            return;
-        }
-        if player.swimming {
-            self.play("player_swim", true);
             return;
         }
         if player.wall_cling.is_some() {

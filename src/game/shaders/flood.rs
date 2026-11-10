@@ -58,12 +58,8 @@ impl Material2d for FloodMaterial {
 }
 
 /// The same water at any size: a quad `size_h` across shows that much of the
-/// field, so a room's pool and the whole menu viewport are cut from one cloth.
-pub(in crate::game) fn flood_material(
-    config: &FloodConfig,
-    size_h: Vec2,
-    opacity: f32,
-) -> FloodMaterial {
+/// field, so the menu viewport and the prologue's veil are cut from one cloth.
+fn flood_material(config: &FloodConfig, size_h: Vec2) -> FloodMaterial {
     let tone = |color: HexColor| LinearRgba::from(Color::from(color)).to_vec4();
     FloodMaterial {
         settings: FloodSettings {
@@ -83,7 +79,7 @@ pub(in crate::game) fn flood_material(
                 config.wobble,
                 0.0,
             ),
-            lines: Vec4::new(config.web_width, config.vein_width, opacity, 0.0),
+            lines: Vec4::new(config.web_width, config.vein_width, 1.0, 0.0),
         },
     }
 }
@@ -98,11 +94,9 @@ pub(super) fn spawn_the_flood(
         data.gameplay.viewport_width_h(),
         data.gameplay.viewport.height_h,
     );
-    let material = assets.flood.add(flood_material(
-        &data.gameplay.effects.flood,
-        viewport_h,
-        1.0,
-    ));
+    let material = assets
+        .flood
+        .add(flood_material(&data.gameplay.effects.flood, viewport_h));
     commands.spawn((
         Mesh2d(assets.quad.0.clone()),
         MeshMaterial2d(material),

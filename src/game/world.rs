@@ -115,7 +115,6 @@ pub(super) fn draw_room(
     }
 
     spawn_room_platforms(commands, room, data);
-    water::spawn_room_water(commands, &room.water, data, shaders);
     room_art::draw(commands, room, data, asset_server);
 }
 

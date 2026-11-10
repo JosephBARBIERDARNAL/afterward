@@ -120,20 +120,6 @@ player:
     jump_impulse_h_s: 12
     jump_push_h_s: 7
     control_lock_s: 0.18
-  # The flood standing in a room's `water` rectangles. Falling in fast enough
-  # plays the dive; inside, gravity gives way to a stroke that goes up while
-  # Jump is held and sinks slowly without it, and Jump at the surface hops the
-  # player out.
-  water:
-    swim_speed_h_s: 3.5
-    rise_speed_h_s: 3
-    sink_speed_h_s: 1.5
-    drag_h_s2: 40
-    dive_speed_h_s: 4
-    exit_impulse_h_s: 11
-    submerged_depth_h: 0.5
-    # How solidly the water is drawn over the swimmer behind it.
-    opacity: 0.7
 
 # The healing a dying enemy sometimes leaves behind: the medical cross of
 # `sprite`, drawn `size_h` tall where the enemy fell.

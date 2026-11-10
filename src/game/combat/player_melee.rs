@@ -163,10 +163,7 @@ pub(in crate::game) fn player_melee(
     if player.slamming {
         return;
     }
-    let free_to_strike = !player.covering
-        && !player.swimming
-        && player.wall_cling.is_none()
-        && player.roll_s.is_none();
+    let free_to_strike = !player.covering && player.wall_cling.is_none() && player.roll_s.is_none();
     let attack_held = controls.pressed(GameAction::Attack, &keys) && free_to_strike;
     let attack_tapped = controls.just_pressed(GameAction::Attack, &keys) && free_to_strike;
 

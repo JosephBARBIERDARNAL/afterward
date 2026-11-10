@@ -35,9 +35,6 @@ pub(crate) struct PlayerBody {
     pub(crate) roll_origin: Option<Vec3>,
     pub(crate) crouching: bool,
     pub(crate) covering: bool,
-    /// Swimming: inside one of the room's water pools, where the stroke
-    /// replaces walking and jumping.
-    pub(crate) swimming: bool,
     /// Clinging to a platform's side in mid-air, and which way that wall lies
     /// (-1 for a wall on the player's left).
     pub(crate) wall_cling: Option<f32>,
@@ -83,7 +80,6 @@ impl Default for PlayerBody {
             roll_origin: None,
             crouching: false,
             covering: false,
-            swimming: false,
             wall_cling: None,
             wall_control_lock_s: 0.0,
             idle_s: 0.0,
@@ -200,6 +196,4 @@ pub(crate) enum PlayerAction {
     Land,
     /// Pushing off a wall.
     WallJump,
-    /// Breaking the water's surface from above.
-    Dive,
 }

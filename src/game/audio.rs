@@ -37,8 +37,6 @@ pub(super) enum SoundCue {
     /// A blow of the melee chain being thrown, and one connecting.
     MeleeSwing,
     MeleeHit,
-    /// Breaking the water's surface.
-    Splash,
     CoverBlock,
     ProjectileEnvironmentHit,
     /// A hit landing, on the player or an enemy, by what it lands on.

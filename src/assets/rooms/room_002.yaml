@@ -3,7 +3,7 @@
 # values mark the feet baseline on a platform top.
 room_id: 2
 chapter_id: 1
-description: "Three things the city teaches, in a row: fists on the open street, then the flooded stretch that has to be swum, then the shaft whose walls are the only way up. The slab at x 44 seals the street, so the shaft is not a detour."
+description: "Two things the city teaches, in a row: fists on the open street, then the shaft whose walls are the only way up. The slab at x 44 seals the street, so the shaft is not a detour."
 size:
   width_h: 72
   height_h: 27
@@ -14,15 +14,9 @@ player_spawn:
 # Solid platforms: land on their top, stop against their sides, bump
 # your head on their underside. They stop shots too.
 platforms:
-  - label: the street the room opens on
+  - label: the street the room opens on, run end to end
     material: city_pavement
-    rect_h: { x: -2, y: 0, width: 24, height: 2 }
-  - label: the basin the flood stands in
-    material: city_pavement
-    rect_h: { x: 22, y: 0, width: 14, height: 0.5 }
-  - label: the street on the far bank
-    material: city_pavement
-    rect_h: { x: 36, y: 0, width: 38, height: 2 }
+    rect_h: { x: -2, y: 0, width: 76, height: 2 }
   - label: west wall
     material: city_plating
     rect_h: { x: -2, y: 2, width: 2, height: 25 }
@@ -47,12 +41,8 @@ platforms:
     rect_h: { x: 9, y: 4, width: 1, height: 5 }
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
-# Water: not solid, but a body inside it swims instead of walking.
-water:
-  - label: the flooded stretch - its surface stands half an H over the street
-    rect_h: { x: 22, y: 0.5, width: 14, height: 2 }
 enemy_spawns:
-  - label: waiting on the far bank
+  - label: waiting down the street
     type_id: stalker_unit
     position_h: { x: 38.5, y: 2 }
     facing: left

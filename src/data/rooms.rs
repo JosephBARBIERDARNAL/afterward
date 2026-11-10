@@ -22,10 +22,6 @@ pub struct RoomConfig {
     /// Non-solid panels behind the platforms or in front of the bodies.
     #[serde(default)]
     pub decorations: Vec<DecorationConfig>,
-    /// The flood standing in the room: the player dives into it and swims
-    /// through it, and neither enemies nor their shots enter it.
-    #[serde(default)]
-    pub water: Vec<WaterPool>,
     pub enemy_spawns: Vec<EnemySpawnConfig>,
     /// Where the room's bonus item lies once every enemy is down.
     pub bonus: SpawnPosition,
@@ -84,15 +80,6 @@ impl RectH {
     pub(crate) fn top(&self) -> f32 {
         self.y + self.height
     }
-}
-
-/// A body of water: not solid, but a body inside it swims instead of walking.
-#[derive(Debug, Clone, PartialEq, Deserialize)]
-pub struct WaterPool {
-    /// What the pool is ("the flooded street"), shown in the debug editor.
-    #[serde(default)]
-    pub label: Option<String>,
-    pub rect_h: RectH,
 }
 
 /// A non-solid panel, such as a back wall behind the action or a sign

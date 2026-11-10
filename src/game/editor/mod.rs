@@ -78,9 +78,6 @@ enum EditorItem {
     Enemy(usize),
     Platform(usize),
     Decoration(usize),
-    /// A pool of the flood standing in the room, swum through rather than
-    /// walked on; it is always drawn as the water, so it has no fill.
-    Water(usize),
 }
 
 impl EditorItem {
@@ -105,7 +102,6 @@ impl EditorItem {
                 .decorations
                 .get(index)
                 .map(|decoration| decoration.rect_h),
-            Self::Water(index) => room.water.get(index).map(|pool| pool.rect_h),
         }
     }
 
@@ -119,7 +115,7 @@ impl EditorItem {
                 .enemy_spawns
                 .get(index)
                 .map(|spawn| Vec2::new(spawn.position_h.x_h, spawn.position_h.y_h)),
-            Self::Platform(_) | Self::Decoration(_) | Self::Water(_) => {
+            Self::Platform(_) | Self::Decoration(_) => {
                 self.bounds(room).map(|rect| Vec2::new(rect.x, rect.y))
             }
         }
@@ -135,7 +131,7 @@ impl EditorItem {
                     (spawn.position_h.x_h, spawn.position_h.y_h) = origin.into();
                 }
             }
-            Self::Platform(_) | Self::Decoration(_) | Self::Water(_) => {
+            Self::Platform(_) | Self::Decoration(_) => {
                 if let Some(rect) = self.rect_mut(room) {
                     (rect.x, rect.y) = origin.into();
                 }
@@ -150,13 +146,11 @@ impl EditorItem {
                 .decorations
                 .get_mut(index)
                 .map(|decoration| &mut decoration.rect_h),
-            Self::Water(index) => room.water.get_mut(index).map(|pool| &mut pool.rect_h),
             Self::PlayerSpawn | Self::Exit | Self::Bonus | Self::Enemy(_) => None,
         }
     }
 
-    /// What a platform or decoration is painted with. A pool is always the
-    /// flood, so it is never painted and never a target of the fill palette.
+    /// What a platform or decoration is painted with.
     fn fill(self, room: &RoomConfig) -> Option<&Fill> {
         match self {
             Self::Platform(index) => room.platforms.get(index).map(|block| &block.fill),
@@ -164,7 +158,7 @@ impl EditorItem {
                 .decorations
                 .get(index)
                 .map(|decoration| &decoration.fill),
-            Self::PlayerSpawn | Self::Exit | Self::Bonus | Self::Enemy(_) | Self::Water(_) => None,
+            Self::PlayerSpawn | Self::Exit | Self::Bonus | Self::Enemy(_) => None,
         }
     }
 
@@ -175,7 +169,7 @@ impl EditorItem {
                 .decorations
                 .get_mut(index)
                 .map(|decoration| &mut decoration.fill),
-            Self::PlayerSpawn | Self::Exit | Self::Bonus | Self::Enemy(_) | Self::Water(_) => None,
+            Self::PlayerSpawn | Self::Exit | Self::Bonus | Self::Enemy(_) => None,
         };
         if let Some(slot) = slot {
             slot.clone_from(fill);
@@ -188,10 +182,7 @@ impl EditorItem {
         // Later indices first, so removing one keeps the others valid.
         items.sort_by_key(|item| {
             std::cmp::Reverse(match item {
-                Self::Platform(index)
-                | Self::Enemy(index)
-                | Self::Decoration(index)
-                | Self::Water(index) => *index,
+                Self::Platform(index) | Self::Enemy(index) | Self::Decoration(index) => *index,
                 Self::PlayerSpawn | Self::Exit | Self::Bonus => 0,
             })
         });
@@ -206,9 +197,6 @@ impl EditorItem {
                 Self::Decoration(index) if index < room.decorations.len() => {
                     room.decorations.remove(index);
                 }
-                Self::Water(index) if index < room.water.len() => {
-                    room.water.remove(index);
-                }
                 _ => {}
             }
         }
@@ -219,7 +207,6 @@ impl EditorItem {
         (0..room.platforms.len())
             .map(Self::Platform)
             .chain((0..room.decorations.len()).map(Self::Decoration))
-            .chain((0..room.water.len()).map(Self::Water))
             .chain((0..room.enemy_spawns.len()).map(Self::Enemy))
             .chain([Self::PlayerSpawn, Self::Exit, Self::Bonus])
     }
@@ -246,7 +233,6 @@ impl EditorItem {
                 .decorations
                 .get(index)
                 .and_then(|decoration| decoration.label.as_deref()),
-            Self::Water(index) => room.water.get(index).and_then(|pool| pool.label.as_deref()),
             Self::PlayerSpawn | Self::Exit | Self::Bonus => None,
         };
         let name = match self {
@@ -266,7 +252,6 @@ impl EditorItem {
                 .map_or_else(String::new, |decoration| {
                     format!("decoration #{} ({})", index + 1, decoration.layer)
                 }),
-            Self::Water(index) => format!("water #{}", index + 1),
         };
         match label {
             Some(label) => format!("{name} \"{label}\""),
@@ -274,8 +259,8 @@ impl EditorItem {
         }
     }
 
-    /// The item under `point`: spawns first, then the smallest block,
-    /// decoration or pool.
+    /// The item under `point`: spawns first, then the smallest block or
+    /// decoration.
     fn at(room: &RoomConfig, point: Vec2) -> Option<Self> {
         let contains = |item: &Self| {
             item.bounds(room).is_some_and(|rect| {
@@ -287,8 +272,7 @@ impl EditorItem {
             .chain((0..room.enemy_spawns.len()).rev().map(Self::Enemy));
         let blocks = (0..room.platforms.len())
             .map(Self::Platform)
-            .chain((0..room.decorations.len()).map(Self::Decoration))
-            .chain((0..room.water.len()).map(Self::Water));
+            .chain((0..room.decorations.len()).map(Self::Decoration));
         spawns.into_iter().find(contains).or_else(|| {
             blocks.filter(contains).min_by(|a, b| {
                 let area = |item: &Self| {
@@ -601,7 +585,7 @@ fn enter_editor(
                 String::from("Two-finger scroll, right or middle drag: pan"),
                 String::from("Pinch or wheel: zoom"),
                 String::from("Home: fit the room"),
-                String::from("P / D / E / W: add platform / decoration / enemy / water"),
+                String::from("P / D / E: add platform / decoration / enemy"),
                 String::from("F: viewport frame, at the spawn and at the cursor"),
                 String::from("V: what idle enemies see"),
                 String::from("Click a material or a color: paint the selection"),
@@ -684,60 +668,6 @@ next_room_id: 4
             .map(EditorItem::Platform);
         assert_eq!(EditorItem::at(room, Vec2::new(29.0, 1.0)), step);
         assert_eq!(EditorItem::at(room, Vec2::new(-5.0, -5.0)), None);
-    }
-
-    #[test]
-    fn a_water_pool_moves_resizes_copies_and_is_never_painted() {
-        // A fixed layout, independent of the authored rooms: a floor with a
-        // pool standing on it.
-        let mut room: RoomConfig = yaml_serde::from_str(
-            "
-room_id: 3
-chapter_id: 1
-size: { width_h: 48, height_h: 27 }
-background_profile: clouds_bright_blue
-player_spawn: { x_h: 2.5, y_h: 1 }
-platforms:
-  - { label: floor, material: city_pavement, rect_h: { x: 0, y: 0, width: 48, height: 1 } }
-water:
-  - { label: flooded street, rect_h: { x: 10, y: 1, width: 6, height: 2 } }
-enemy_spawns: []
-bonus: { x_h: 43, y_h: 1 }
-exit: { x_h: 45, y_h: 1 }
-next_room_id: 4
-",
-        )
-        .expect("the test layout should parse");
-        let pool = EditorItem::Water(0);
-
-        assert_eq!(pool.bounds(&room).map(|rect| rect.width), Some(6.0));
-        assert_eq!(pool.describe(&room), "water #1 \"flooded street\"");
-        // The pool is the smallest thing over this point, so a click takes it.
-        assert_eq!(EditorItem::at(&room, Vec2::new(12.0, 2.0)), Some(pool));
-
-        // A pool is always drawn as the flood: the palette never paints it.
-        let paint = room.platforms[0].fill.clone();
-        let before = room.water.clone();
-        assert_eq!(pool.fill(&room), None);
-        pool.set_fill(&mut room, &paint);
-        assert_eq!(room.water, before, "a pool has no fill to paint");
-
-        // It moves and resizes like a block.
-        pool.set_origin(&mut room, Vec2::new(4.0, 2.0));
-        assert_eq!(pool.origin(&room), Some(Vec2::new(4.0, 2.0)));
-        if let Some(rect) = pool.rect_mut(&mut room) {
-            rect.height += SNAP_H;
-        }
-        assert_eq!(pool.bounds(&room).map(|rect| rect.height), Some(2.25));
-
-        // And it copies, pastes and deletes like one.
-        let copied = Clipboard::copy(&room, &[pool]).expect("a pool copies");
-        let pasted = copied.paste(&mut room, copied.origin + Vec2::Y);
-        assert_eq!(pasted, [EditorItem::Water(1)]);
-        assert_eq!(pasted[0].origin(&room), Some(Vec2::new(4.0, 3.0)));
-        EditorItem::remove_all(&mut room, &pasted);
-        assert_eq!(room.water.len(), 1, "only the pasted pool was deleted");
-        assert_eq!(pool.origin(&room), Some(Vec2::new(4.0, 2.0)));
     }
 
     #[test]

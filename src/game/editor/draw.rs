@@ -9,9 +9,6 @@ const GRID_COLOR: Color = Color::srgba(1.0, 1.0, 1.0, 0.06);
 const DECORATION_COLOR: Color = Color::srgb(0.75, 0.5, 0.95);
 const MARQUEE_COLOR: Color = Color::srgb(0.4, 0.8, 1.0);
 const PLATFORM_COLOR: Color = Color::srgb(0.95, 0.65, 0.3);
-/// The flood's own `foam` (`#7FE6E8`): a pool is outlined in the pale cyan
-/// light the water carries.
-const WATER_COLOR: Color = Color::srgb(0.498, 0.902, 0.91);
 const PLAYER_COLOR: Color = Color::srgb(0.35, 0.95, 0.5);
 const EXIT_COLOR: Color = Color::srgb(0.35, 0.8, 1.0);
 const ENEMY_COLOR: Color = Color::srgb(1.0, 0.35, 0.45);
@@ -166,7 +163,6 @@ pub(super) fn draw_overlay(mut gizmos: Gizmos, editor: Res<RoomEditor>, data: Re
             _ if editor.hovered == Some(item) => HOVER_COLOR,
             EditorItem::Platform(_) => PLATFORM_COLOR,
             EditorItem::Decoration(_) => DECORATION_COLOR,
-            EditorItem::Water(_) => WATER_COLOR,
             EditorItem::Enemy(_) => ENEMY_COLOR,
             EditorItem::PlayerSpawn => PLAYER_COLOR,
             EditorItem::Exit => EXIT_COLOR,

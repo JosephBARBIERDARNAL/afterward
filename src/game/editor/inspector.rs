@@ -93,10 +93,6 @@ impl Field {
                 Self::HitboxWidth,
                 Self::HitboxHeight,
             ],
-            // A pool is always the flood: no Fill row, and no Layer either.
-            Some(EditorItem::Water(_)) => {
-                &[Self::Label, Self::X, Self::Y, Self::Width, Self::Height]
-            }
             Some(EditorItem::PlayerSpawn) => {
                 &[Self::X, Self::Y, Self::HurtboxWidth, Self::HurtboxHeight]
             }
@@ -153,9 +149,6 @@ impl Field {
                 .decorations
                 .get(index)
                 .and_then(|decoration| decoration.label.clone()),
-            (Self::Label, Some(EditorItem::Water(index))) => {
-                room.water.get(index).and_then(|pool| pool.label.clone())
-            }
             _ => None,
         }
     }
@@ -178,11 +171,6 @@ impl Field {
             (Self::Label, Some(EditorItem::Decoration(index))) => {
                 if let Some(decoration) = room.decorations.get_mut(index) {
                     decoration.label = text;
-                }
-            }
-            (Self::Label, Some(EditorItem::Water(index))) => {
-                if let Some(pool) = room.water.get_mut(index) {
-                    pool.label = text;
                 }
             }
             _ => {}

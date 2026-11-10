@@ -41,7 +41,6 @@ mod shaders;
 mod sprites;
 mod ui_style;
 mod visual_walkthrough;
-mod water;
 mod world;
 
 pub use visual_walkthrough::VisualWalkthroughPlugin;
@@ -65,7 +64,7 @@ use random::RandomState;
 use room_pan::RoomPan;
 use session::{Difficulty, RunSession};
 use settings::{AudioSettings, PreferencesDir, SettingsReturn};
-use shaders::{CityLightsMaterial, Glowing, ShaderAssets, flood_material};
+use shaders::{CityLightsMaterial, Glowing, ShaderAssets};
 use sprites::{AnimatedSprite, SpriteSheet, SpriteSheetSpec, SpriteSheets, set_animation};
 use world::{EntryDoor, ExitDoor, RoomEntity};
 

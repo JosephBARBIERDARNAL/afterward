@@ -91,7 +91,7 @@ impl GameAction {
             Self::MoveDown => "CROUCH",
             Self::NavigateUp => "MENU UP",
             Self::NavigateDown => "MENU DOWN",
-            Self::Jump => "JUMP / SWIM",
+            Self::Jump => "JUMP",
             Self::Attack => "ATTACK",
             Self::Cover => "COVER",
             Self::Interact => "INTERACT / CONFIRM",
