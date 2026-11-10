@@ -1,6 +1,6 @@
 use super::*;
 
-/// An enemy's health bar, and the gold it wears while its shield still holds.
+/// An enemy's health bar, and the gold it wears while any armor still holds.
 pub(in crate::game) const HEALTH_BAR: Color = Color::srgb(0.8, 0.12, 0.2);
 pub(in crate::game) const SHIELDED_HEALTH_BAR: Color = Color::srgb(0.85, 0.67, 0.13);
 
@@ -238,7 +238,7 @@ pub(in crate::game) fn update_health_bars(
             continue;
         }
         let fraction = (enemy.health / bar.max_health).clamp(0.0, 1.0);
-        sprite.color = if enemy.shielded {
+        sprite.color = if enemy.armor > 0 {
             SHIELDED_HEALTH_BAR
         } else {
             HEALTH_BAR

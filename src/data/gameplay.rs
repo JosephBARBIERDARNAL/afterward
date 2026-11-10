@@ -73,9 +73,9 @@ pub struct RecordedEffects {
     pub door_open: AudioAsset,
     /// A hit on the player, or on an enemy of polymer.
     pub damage_neutral: AudioAsset,
-    /// A hit on a metal enemy whose shield is already gone.
+    /// A hit on the body of a metal enemy.
     pub damage_metal: AudioAsset,
-    /// The hit that breaks a metal enemy's shield.
+    /// The hit that breaks a layer of an enemy's armor.
     pub damage_metal_armor: AudioAsset,
     /// Taking one of the two bonuses on offer.
     pub bonus_chosen: AudioAsset,

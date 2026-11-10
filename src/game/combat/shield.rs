@@ -1,8 +1,9 @@
-//! The shield a metal enemy carries into a room, which soaks its first hit.
+//! The armor an enemy carries into a room, each layer of which soaks one hit.
 //!
-//! The icon rides above the enemy's health bar and watches `EnemyBody` rather
-//! than being told when the shield goes: the frame a shot clears `shielded`,
-//! the break starts here and the icon despawns once it has played out.
+//! One icon per layer rides above the enemy's health bar and watches
+//! `EnemyBody` rather than being told when its layer goes: the frame a blow
+//! takes `armor` below it, the break starts here and the icon despawns once
+//! it has played out.
 
 use super::*;
 
@@ -47,11 +48,11 @@ pub(in crate::game) fn update_enemy_shields(
             commands.entity(icon_entity).despawn();
             continue;
         }
-        transform.translation.x = enemy_transform.translation.x;
+        transform.translation.x = enemy_transform.translation.x + icon.offset_x;
         transform.translation.y =
             enemy_transform.translation.y + enemy.visible_top_offset + SHIELD_OFFSET_Y;
         if icon.breaking.is_none() {
-            if enemy.shielded {
+            if enemy.armor > icon.layer {
                 continue;
             }
             icon.breaking = Some(Timer::from_seconds(
@@ -74,9 +75,25 @@ pub(in crate::game) fn update_enemy_shields(
     }
 }
 
-/// How far above the enemy's health bar the shield icon sits: the bar is six
-/// units tall around its own center, and the icon is sixteen.
-const SHIELD_OFFSET_Y: f32 = 17.0;
+/// How far above the enemy's health bar the shield icons sit: the bar is six
+/// units tall around its own center, and an icon is sixteen.
+pub(in crate::game) const SHIELD_OFFSET_Y: f32 = 17.0;
+/// How far apart the icons of two layers stand: an icon is twenty-one wide.
+const SHIELD_SPACING_X: f32 = 22.0;
+
+impl EnemyShieldIcon {
+    /// The icon of one of an enemy's `layers`, placed so the row they make
+    /// is centered over the health bar.
+    pub(in crate::game) fn of_layer(enemy: Entity, layer: u8, layers: u8) -> Self {
+        Self {
+            enemy,
+            layer,
+            offset_x: (f32::from(layer) - f32::from(layers.saturating_sub(1)) / 2.0)
+                * SHIELD_SPACING_X,
+            breaking: None,
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {

@@ -678,10 +678,47 @@ next_room_id: 4
     }
 
     #[test]
+    fn armor_steps_from_the_type_default_down_to_none_and_clears_back_to_it() {
+        let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
+        let data = GameData::load(&asset_root).expect("Chapter 1 YAML should be valid");
+        let mut room = data.rooms[&1].clone();
+        // Whatever the authored room overrides on it, start from the type.
+        room.enemy_spawns[0].stat_overrides = None;
+        let original = room.clone();
+        let selection = [EditorItem::Enemy(0)];
+        let default_layers = data.enemies.types[&room.enemy_spawns[0].type_id].armor_layers;
+        let layers = |room: &RoomConfig| {
+            room.enemy_spawns[0]
+                .stat_overrides
+                .as_ref()
+                .and_then(|overrides| overrides.armor_layers)
+        };
+
+        Field::Armor.adjust(&mut room, &selection, &data, 1.0);
+        assert_eq!(layers(&room), Some(default_layers + 1));
+
+        for _ in 0..=default_layers + 1 {
+            Field::Armor.adjust(&mut room, &selection, &data, -1.0);
+        }
+        assert_eq!(layers(&room), Some(0), "Left stops at no armor");
+        assert!(
+            Field::Armor
+                .value(&room, &selection, &data, 0)
+                .starts_with("none")
+        );
+
+        Field::Armor.clear(&mut room, selection.last().copied());
+        assert_eq!(room, original);
+    }
+
+    #[test]
     fn stat_overrides_step_from_the_type_default_and_clear_back_to_it() {
         let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
         let data = GameData::load(&asset_root).expect("Chapter 1 YAML should be valid");
         let mut room = data.rooms[&1].clone();
+        // Whatever the authored room overrides on it, start from the type.
+        room.enemy_spawns[0].stat_overrides = None;
+        let original = room.clone();
         let enemy = Some(EditorItem::Enemy(0));
         let default_health = data.enemies.types[&room.enemy_spawns[0].type_id].health;
 
@@ -693,8 +730,7 @@ next_room_id: 4
         assert_eq!(overrides.health, Some(default_health + 10.0));
 
         Field::Health.clear(&mut room, enemy);
-        assert_eq!(room.enemy_spawns[0].stat_overrides, None);
-        assert_eq!(room, data.rooms[&1]);
+        assert_eq!(room, original);
     }
 
     #[test]

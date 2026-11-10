@@ -5,12 +5,14 @@ use std::{path::Path, time::Duration};
 use bevy::{prelude::MinimalPlugins, state::app::StatesPlugin, time::TimeUpdateStrategy};
 
 #[test]
-fn a_metal_enemys_shield_soaks_one_blow_and_shatters_before_its_health_drops() {
+fn each_layer_of_armor_soaks_one_blow_and_keeps_the_enemy_from_being_interrupted() {
     let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
     let mut data = GameData::load(&asset_root).expect("Chapter 1 data should load");
     // A fixed layout, independent of the authored rooms: a flat floor with the
-    // player on the left, a metal blade_unit within arm's reach of it, and a
-    // stalker of polymer further off to stand for the unshielded case.
+    // player on the left, a metal blade_unit within arm's reach of it that
+    // the room gives a second layer of armor (and the health to outlive the
+    // blow that follows them), and a stalker of polymer further off to stand
+    // for the unarmored case.
     *data.rooms.get_mut(&1).expect("room 1 should exist") = yaml_serde::from_str(
         "
 room_id: 1
@@ -21,7 +23,7 @@ player_spawn: { x_h: 2.5, y_h: 1 }
 platforms:
   - { material: city_pavement, rect_h: { x: 0, y: 0, width: 48, height: 1 } }
 enemy_spawns:
-  - { type_id: blade_unit, position_h: { x: 3.5, y: 1 } }
+  - { type_id: blade_unit, position_h: { x: 3.5, y: 1 }, stat_overrides: { health: 500, armor_layers: 2 } }
   - { type_id: stalker_unit, position_h: { x: 20, y: 1 } }
 bonus: { x_h: 43, y_h: 1 }
 exit: { x_h: 45, y_h: 1 }
@@ -121,7 +123,7 @@ next_room_id: 2
             .world()
             .get::<EnemyBody>(entity)
             .expect("the enemy should remain spawned");
-        (enemy.shielded, enemy.health)
+        (enemy.armor, enemy.health)
     };
     let shield_icons = |app: &mut App| {
         app.world_mut()
@@ -130,26 +132,38 @@ next_room_id: 2
             .count()
     };
 
-    let (shielded, full_health) = body(&app, metal);
-    assert!(shielded, "a metal enemy enters the room shielded");
-    assert!(!body(&app, polymer).0, "an enemy of polymer has no shield");
+    let (armor, full_health) = body(&app, metal);
+    assert_eq!(armor, 2, "the room's override sets the layers of armor");
+    assert_eq!(body(&app, polymer).0, 0, "an enemy of polymer has no armor");
     assert_eq!(
         shield_icons(&mut app),
-        1,
-        "only the metal enemy carries a shield icon"
+        2,
+        "the armored enemy carries one icon per layer, the other none"
     );
 
-    // Throw the chain: the first blow that lands breaks the shield without
-    // touching the enemy's health, and only later blows wound it.
+    // Catch the enemy in the middle of a wind-up, then throw the chain: each
+    // of the first two blows breaks a layer without touching its health or
+    // its wind-up, and only the blow after them wounds and interrupts it.
+    const WINDUP_S: f32 = 30.0;
+    app.world_mut()
+        .get_mut::<EnemyBody>(metal)
+        .expect("the enemy should remain spawned")
+        .windup_remaining = WINDUP_S;
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
         .press(KeyCode::KeyJ);
-    let mut health_when_shield_broke = None;
-    for _ in 0..40 {
+    let mut health_as_layers_broke = Vec::new();
+    for _ in 0..80 {
         app.update();
-        let (shielded, health) = body(&app, metal);
-        if !shielded && health_when_shield_broke.is_none() {
-            health_when_shield_broke = Some(health);
+        let (armor, health) = body(&app, metal);
+        if usize::from(2 - armor) > health_as_layers_broke.len() {
+            health_as_layers_broke.push(health);
+            let enemy = app.world().get::<EnemyBody>(metal).expect("still spawned");
+            assert_eq!(
+                (enemy.windup_remaining, enemy.hurt_timer),
+                (WINDUP_S, 0.0),
+                "a blow soaked by armor does not interrupt the enemy"
+            );
         }
         if health < full_health {
             break;
@@ -157,16 +171,21 @@ next_room_id: 2
     }
 
     assert_eq!(
-        health_when_shield_broke,
-        Some(full_health),
-        "the blow that breaks the shield costs the enemy no health"
+        health_as_layers_broke,
+        vec![full_health; 2],
+        "a blow that breaks a layer costs the enemy no health"
+    );
+    let enemy = app.world().get::<EnemyBody>(metal).expect("still spawned");
+    assert!(
+        enemy.health < full_health,
+        "once the armor is gone the enemy takes damage normally"
     );
     assert!(
-        body(&app, metal).1 < full_health,
-        "once the shield is gone the enemy takes damage normally"
+        enemy.windup_remaining == 0.0 && enemy.hurt_timer > 0.0,
+        "a blow on an enemy without armor interrupts it"
     );
 
-    // The break plays out quickly, then the icon goes.
+    // The break plays out quickly, then the last icon goes.
     for _ in 0..20 {
         app.update();
         if shield_icons(&mut app) == 0 {
@@ -176,6 +195,6 @@ next_room_id: 2
     assert_eq!(
         shield_icons(&mut app),
         0,
-        "the icon despawns once the shield has shattered"
+        "the icons despawn once the armor has shattered"
     );
 }

@@ -173,6 +173,10 @@ impl Display for EnemyStatOverrides {
         let set = fields
             .iter()
             .filter_map(|(name, value)| value.map(|value| format!("{name}: {value}")))
+            .chain(
+                self.armor_layers
+                    .map(|layers| format!("armor_layers: {layers}")),
+            )
             .collect::<Vec<_>>();
         write!(formatter, "{{ {} }}", set.join(", "))
     }
@@ -304,7 +308,7 @@ platforms:
   - { material: city_pavement, rect_h: { x: 0, y: 0, width: 24, height: 1 } }
 enemy_spawns:
   - { type_id: blade_unit, position_h: { x: 10, y: 1 }, facing: right }
-  - { type_id: blade_unit, position_h: { x: 14, y: 1 } }
+  - { type_id: blade_unit, position_h: { x: 14, y: 1 }, stat_overrides: { health: 40, armor_layers: 0 } }
 bonus: { x_h: 20, y_h: 1 }
 exit: { x_h: 22, y_h: 1 }
 next_room_id: 4
@@ -319,6 +323,10 @@ next_room_id: 4
         assert!(
             written.contains("facing: right"),
             "every spawn is written with the way it faces: {written}"
+        );
+        assert!(
+            written.contains("stat_overrides: { health: 40, armor_layers: 0 }"),
+            "an override that strips the armor is written, not dropped: {written}"
         );
         let read_back: RoomConfig =
             yaml_serde::from_str(&written).expect("the written room is valid YAML");

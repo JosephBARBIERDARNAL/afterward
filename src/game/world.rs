@@ -299,6 +299,11 @@ pub(super) fn spawn_enemies(
             .as_ref()
             .and_then(|overrides| overrides.movement_speed_h_s)
             .unwrap_or(profile.movement_speed_h_s);
+        let armor = spawn
+            .stat_overrides
+            .as_ref()
+            .and_then(|overrides| overrides.armor_layers)
+            .unwrap_or(profile.armor_layers);
         if let Some(damage) = spawn
             .stat_overrides
             .as_ref()
@@ -353,7 +358,7 @@ pub(super) fn spawn_enemies(
                 EnemyBody {
                     type_id: spawn.type_id.clone(),
                     material: profile.material,
-                    shielded: profile.material.is_shielded(),
+                    armor,
                     health,
                     max_health: health,
                     movement_speed_h_s,
@@ -412,10 +417,9 @@ pub(super) fn spawn_enemies(
             EnemyHealthBarBackground { enemy },
             RoomEntity,
         ));
-        let shielded = profile.material.is_shielded();
         commands.spawn((
             Sprite::from_color(
-                if shielded {
+                if armor > 0 {
                     combat::SHIELDED_HEALTH_BAR
                 } else {
                     combat::HEALTH_BAR
@@ -429,10 +433,11 @@ pub(super) fn spawn_enemies(
             },
             RoomEntity,
         ));
-        if let Some(shield) = shielded
-            .then(|| sheets.0.get(combat::SHIELD_SHEET))
-            .flatten()
-        {
+        let Some(shield) = sheets.0.get(combat::SHIELD_SHEET) else {
+            continue;
+        };
+        for layer in 0..armor {
+            let icon = EnemyShieldIcon::of_layer(enemy, layer, armor);
             commands.spawn((
                 Sprite::from_atlas_image(
                     shield.image.clone(),
@@ -441,11 +446,10 @@ pub(super) fn spawn_enemies(
                         index: 0,
                     },
                 ),
-                Transform::from_translation(bar_position + Vec3::new(0.0, 17.0, 0.0)),
-                EnemyShieldIcon {
-                    enemy,
-                    breaking: None,
-                },
+                Transform::from_translation(
+                    bar_position + Vec3::new(icon.offset_x, combat::SHIELD_OFFSET_Y, 0.0),
+                ),
+                icon,
                 RoomEntity,
             ));
         }

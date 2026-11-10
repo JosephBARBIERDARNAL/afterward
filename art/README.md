@@ -274,8 +274,9 @@ roster stops being a fantasy pack:
 | `evil_wizard` | `emitter_unit` | the Chapter 1 boss; its shots are blasts  |
 
 The `flesh` material is now `polymer`: nothing in this world bleeds, and the
-distinction it actually encodes is armoured chassis versus light frame. `metal`
-keeps its shield; `polymer` does not.
+distinction it actually encodes is armoured chassis versus light frame. Armor
+is its own setting now (`armor_layers`), which the `metal` types carry one
+layer of.
 
 The sprite sheets keep their vendor names and paths
 (`enemies/type1/Swordsman/` and the rest). They name files on disk, not the

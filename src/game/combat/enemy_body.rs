@@ -6,9 +6,9 @@ use super::*;
 pub(crate) struct EnemyBody {
     pub(crate) type_id: EnemyTypeId,
     pub(crate) material: EnemyMaterial,
-    /// Whether the shield a metal enemy starts with is still up, soaking the
-    /// next hit. Always false for enemies of polymer.
-    pub(crate) shielded: bool,
+    /// The layers of armor still up. Each soaks one ordinary blow, and while
+    /// any is left a hit does not interrupt the enemy.
+    pub(crate) armor: u8,
     pub(crate) health: f32,
     pub(crate) max_health: f32,
     pub(crate) movement_speed_h_s: f32,
@@ -110,13 +110,18 @@ pub(crate) struct EnemyHealthBar {
     pub(crate) max_health: f32,
 }
 
-/// The shield above a metal enemy's health bar: frame 0 while it holds, then
-/// the break animation, after which it despawns.
+/// One layer of armor above an enemy's health bar: frame 0 while it holds,
+/// then the break animation, after which it despawns.
 #[derive(Component)]
 pub(crate) struct EnemyShieldIcon {
     pub(crate) enemy: Entity,
-    /// Runs once the enemy's shield is gone, stepping through the break
-    /// frames; the icon despawns when it finishes.
+    /// Which layer it stands for, counted from 0: it holds while the enemy
+    /// has more layers than that, so the last one in the row goes first.
+    pub(crate) layer: u8,
+    /// Where it sits in the row, from the middle of the health bar.
+    pub(crate) offset_x: f32,
+    /// Runs once that layer is gone, stepping through the break frames; the
+    /// icon despawns when it finishes.
     pub(crate) breaking: Option<Timer>,
 }
 

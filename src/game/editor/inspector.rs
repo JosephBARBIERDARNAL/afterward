@@ -8,6 +8,9 @@ use crate::data::{DecorationLayer, EnemyStatOverrides, EnemyTypeConfig, Facing};
 
 /// How far one Left/Right press grows or shrinks the room, in H.
 const ROOM_SIZE_STEP_H: f32 = 0.5;
+/// The most layers of armor Left/Right gives an enemy: more than this and the
+/// row of icons over its health bar outgrows the bar by too much to read.
+const MAX_ARMOR_LAYERS: u8 = 5;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum Field {
@@ -28,6 +31,7 @@ pub(super) enum Field {
     Health,
     Speed,
     Damage,
+    Armor,
     // Hitboxes, shared by every enemy of a type or by the player (hitboxes.rs).
     HurtboxWidth,
     HurtboxHeight,
@@ -85,6 +89,7 @@ impl Field {
                 Self::Health,
                 Self::Speed,
                 Self::Damage,
+                Self::Armor,
                 Self::HurtboxWidth,
                 Self::HurtboxHeight,
                 Self::Attack,
@@ -119,6 +124,7 @@ impl Field {
             Self::Health => "Health",
             Self::Speed => "Speed (H/s)",
             Self::Damage => "Attack damage",
+            Self::Armor => "Armor layers",
             Self::HurtboxWidth => "Hurtbox width (H)",
             Self::HurtboxHeight => "Hurtbox height (H)",
             Self::Attack => "Attack",
@@ -247,6 +253,20 @@ impl Field {
                 overrides.and_then(|overrides| overrides.attack_damage),
                 defaults.and_then(EnemyTypeConfig::attack_damage),
             ),
+            Self::Armor => {
+                let layers = |layers: u8| match layers {
+                    0 => String::from("none"),
+                    layers => layers.to_string(),
+                };
+                match (
+                    overrides.and_then(|overrides| overrides.armor_layers),
+                    defaults.map(|enemy| enemy.armor_layers),
+                ) {
+                    (Some(value), _) => format!("{}  (override)", layers(value)),
+                    (None, Some(default)) => format!("{}  (type default)", layers(default)),
+                    (None, None) => String::from("-"),
+                }
+            }
             Self::HurtboxWidth
             | Self::HurtboxHeight
             | Self::Attack
@@ -403,6 +423,29 @@ impl Field {
                 let current = value.or(default).unwrap_or(0.0);
                 *value = Some((current + steps * step).max(min));
             }
+            Self::Armor => {
+                let Some(EditorItem::Enemy(index)) = item else {
+                    return;
+                };
+                let Some(spawn) = room.enemy_spawns.get_mut(index) else {
+                    return;
+                };
+                let default = data
+                    .enemies
+                    .types
+                    .get(&spawn.type_id)
+                    .map_or(0, |enemy| enemy.armor_layers);
+                let overrides = spawn
+                    .stat_overrides
+                    .get_or_insert_with(EnemyStatOverrides::default);
+                let current = overrides.armor_layers.unwrap_or(default);
+                // Left from none stays at none: no armor is 0 layers.
+                overrides.armor_layers = Some(if steps < 0.0 {
+                    current.saturating_sub(1)
+                } else {
+                    current.saturating_add(1).min(MAX_ARMOR_LAYERS)
+                });
+            }
             // Hitboxes live outside the room: see `Field::adjust_hitbox`.
             Self::Room
             | Self::Description
@@ -434,6 +477,7 @@ impl Field {
                 Self::Health => overrides.health = None,
                 Self::Speed => overrides.movement_speed_h_s = None,
                 Self::Damage => overrides.attack_damage = None,
+                Self::Armor => overrides.armor_layers = None,
                 _ => {}
             }
         }

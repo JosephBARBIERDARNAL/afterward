@@ -70,18 +70,18 @@ pub(super) enum SoundCue {
 pub(super) enum DamageSound {
     /// The player, and enemies of polymer.
     Neutral,
-    /// A metal enemy whose shield is already gone.
+    /// The body of a metal enemy.
     Metal,
-    /// The shield of a metal enemy, as the hit breaks it.
+    /// A layer of armor, as the hit breaks it, whatever is underneath.
     MetalArmor,
 }
 
 impl DamageSound {
-    pub(super) fn of(material: EnemyMaterial, shielded: bool) -> Self {
-        match (material, shielded) {
-            (EnemyMaterial::Metal, true) => Self::MetalArmor,
+    pub(super) fn of(material: EnemyMaterial, armored: bool) -> Self {
+        match (material, armored) {
+            (_, true) => Self::MetalArmor,
             (EnemyMaterial::Metal, false) => Self::Metal,
-            (EnemyMaterial::Polymer, _) => Self::Neutral,
+            (EnemyMaterial::Polymer, false) => Self::Neutral,
         }
     }
 }

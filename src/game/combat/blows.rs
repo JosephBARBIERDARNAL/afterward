@@ -22,8 +22,8 @@ pub(super) type MeleeEnemiesQuery<'w, 's> = Query<
 pub(super) struct Blow {
     pub(super) area: Rect,
     pub(super) damage: f32,
-    /// Goes through a shield rather than being soaked by it, so the hit both
-    /// shatters the shield and wounds what was behind it.
+    /// Goes through armor rather than being soaked by it, so the hit both
+    /// breaks a layer and wounds what was behind it.
     pub(super) pierces_shields: bool,
     /// How long the bodies it hits are held in their flinch.
     pub(super) flinch_s: f32,
@@ -83,13 +83,15 @@ pub(super) fn land_the_blow(
             1.0
         };
         enemy.marked_timer = data.bonus_effect("marked_prey", "mark_duration_s");
-        if enemy.shielded {
-            // The shield soaks an ordinary blow whole: it shatters, and
-            // nothing else about the enemy changes. `shield.rs` picks the
-            // break up from `shielded` going false. A charged blow goes
-            // through it and wounds the body behind as well.
+        // Armor that is up when the blow lands costs it a layer, and keeps
+        // the enemy at what it was doing: no flinch, no knockback, and a
+        // wind-up carries on. An ordinary blow is soaked whole on top of
+        // that; a charged one goes through and wounds the body behind.
+        // `shield.rs` picks the break up from `armor` going down.
+        let armored = enemy.armor > 0;
+        if armored {
             sounds.push(SoundCue::Damage(DamageSound::of(enemy.material, true)));
-            enemy.shielded = false;
+            enemy.armor -= 1;
             if !blow.pierces_shields {
                 continue;
             }
@@ -118,18 +120,22 @@ pub(super) fn land_the_blow(
             * airborne;
         enemy.health = (enemy.health - damage).max(0.0);
         spawn_damage_number(commands, enemy_transform.translation, damage, false);
-        if enemy.type_id == "emitter_unit" {
-            enemy.knockback_velocity =
-                player.facing * data.gameplay.player.melee.boss_knockback_h_s;
-            enemy_transform.translation.y = enemy.home_y;
+        if !armored {
+            if enemy.type_id == "emitter_unit" {
+                enemy.knockback_velocity =
+                    player.facing * data.gameplay.player.melee.boss_knockback_h_s;
+                enemy_transform.translation.y = enemy.home_y;
+            }
+            enemy.windup_remaining = 0.0;
+            enemy.combo_hit_pending = false;
         }
-        enemy.windup_remaining = 0.0;
-        enemy.combo_hit_pending = false;
         let style = audio::EnemySoundStyle::from(&enemy.type_id);
         if enemy.health > 0.0 {
             sounds.push(SoundCue::Damage(DamageSound::of(enemy.material, false)));
-            enemy.hurt_timer = blow.flinch_s;
-            set_enemy_animation(&mut sprite, &mut animation, sheets, &enemy.type_id, "hurt");
+            if !armored {
+                enemy.hurt_timer = blow.flinch_s;
+                set_enemy_animation(&mut sprite, &mut animation, sheets, &enemy.type_id, "hurt");
+            }
         } else {
             sounds.push(SoundCue::EnemyDeath(style));
             set_enemy_animation(&mut sprite, &mut animation, sheets, &enemy.type_id, "dead");

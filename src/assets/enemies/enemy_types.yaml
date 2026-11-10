@@ -31,8 +31,11 @@ jumping:
 #   reaches behind it), y up. The enemy starts the attack once the player's
 #   hurtbox reaches the box's far edge.
 # - a projectile attack's projectile_size_h: the shot's size.
-# material picks the sound a hit on the enemy makes; metal enemies also
-# carry a shield that soaks their first hit. Nothing here is alive: the cast
+# material picks the sound a hit on the enemy's body makes. armor_layers is
+# how many layers of armor it walks in with (none when left out): each soaks
+# one ordinary blow whole, and while any is left a hit does not interrupt the
+# enemy, even the charged blow that wounds it through the armor. A room spawn
+# can change it with stat_overrides.armor_layers. Nothing here is alive: the cast
 # is the machines the drowned city never switched off, so the materials are
 # an armoured chassis (metal) and a light frame (polymer). The sprite sheets
 # they currently wear are placeholders from a fantasy pack and do not match
@@ -42,6 +45,7 @@ types:
     hurtbox_h: { width: 0.6, height: 1 }
     health: 30
     material: metal
+    armor_layers: 1
     movement_speed_h_s: 2.5
     behavior: melee_pursuit
     procedural_movement:
@@ -58,6 +62,7 @@ types:
     hurtbox_h: { width: 0.6, height: 1 }
     health: 24
     material: metal
+    armor_layers: 1
     movement_speed_h_s: 1.5
     behavior: ranged_keep_distance
     preferred_distance_h: { min: 5, max: 8 }
@@ -72,6 +77,7 @@ types:
     hurtbox_h: { width: 0.6, height: 1 }
     health: 45
     material: metal
+    armor_layers: 1
     movement_speed_h_s: 0.8
     behavior: ranged_keep_distance
     preferred_distance_h: { min: 6, max: 10 }

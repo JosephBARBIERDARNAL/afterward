@@ -141,4 +141,6 @@ pub struct EnemyStatOverrides {
     pub health: Option<f32>,
     pub movement_speed_h_s: Option<f32>,
     pub attack_damage: Option<f32>,
+    /// Layers of armor this enemy walks in with, in place of its type's.
+    pub armor_layers: Option<u8>,
 }

@@ -41,7 +41,7 @@ use hitboxes::blow_area;
 pub(super) use hitboxes::{blow_area as melee_blow_area, player_hurtbox};
 pub(super) use player_melee::player_melee;
 pub(super) use projectiles::update_projectiles;
-pub(super) use shield::{SHIELD_SHEET, update_enemy_shields};
+pub(super) use shield::{SHIELD_OFFSET_Y, SHIELD_SHEET, update_enemy_shields};
 
 struct PlayerDamageResources<'a, 'w, 's> {
     commands: &'a mut Commands<'w, 's>,
