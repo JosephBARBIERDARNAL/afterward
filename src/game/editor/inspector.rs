@@ -8,6 +8,8 @@ use crate::data::{DecorationLayer, EnemyStatOverrides, EnemyTypeConfig, Facing};
 
 /// How far one Left/Right press grows or shrinks the room, in H.
 const ROOM_SIZE_STEP_H: f32 = 0.5;
+/// How far one Left/Right press turns a platform, in degrees.
+const ROTATION_STEP_DEG: f32 = 5.0;
 /// The most layers of armor Left/Right gives an enemy: more than this and the
 /// row of icons over its health bar outgrows the bar by too much to read.
 const MAX_ARMOR_LAYERS: u8 = 5;
@@ -28,6 +30,7 @@ pub(super) enum Field {
     Y,
     Width,
     Height,
+    Rotation,
     Health,
     Speed,
     Damage,
@@ -72,6 +75,7 @@ impl Field {
                 Self::Y,
                 Self::Width,
                 Self::Height,
+                Self::Rotation,
             ],
             Some(EditorItem::Decoration(_)) => &[
                 Self::Label,
@@ -127,6 +131,7 @@ impl Field {
             Self::Y => "Y (H)",
             Self::Width => "Width (H)",
             Self::Height => "Height (H)",
+            Self::Rotation => "Rotation (deg)",
             Self::Health => "Health",
             Self::Speed => "Speed (H/s)",
             Self::Damage => "Attack damage",
@@ -248,6 +253,24 @@ impl Field {
             Self::Y => origin.map_or_else(String::new, |origin| origin.y.to_string()),
             Self::Width => rect.map_or_else(String::new, |rect| rect.width.to_string()),
             Self::Height => rect.map_or_else(String::new, |rect| rect.height.to_string()),
+            Self::Rotation => match item {
+                Some(EditorItem::Platform(index)) => {
+                    room.platforms.get(index).map_or_else(String::new, |block| {
+                        // How far its gentler upper face leans, which is what
+                        // decides whether a body walks it.
+                        let lean = block.rotation_deg.abs() % 90.0;
+                        let lean = lean.min(90.0 - lean);
+                        if lean == 0.0 {
+                            block.rotation_deg.to_string()
+                        } else if lean <= data.gameplay.player.walkable_slope_deg {
+                            format!("{}  (a slope to walk)", block.rotation_deg)
+                        } else {
+                            format!("{}  (too steep to walk: a wall)", block.rotation_deg)
+                        }
+                    })
+                }
+                _ => String::new(),
+            },
             Self::Health => stat(
                 overrides.and_then(|overrides| overrides.health),
                 defaults.map(|enemy| enemy.health),
@@ -394,6 +417,17 @@ impl Field {
                     *size = (*size + steps * SNAP_H).max(SNAP_H);
                 }
             }
+            Self::Rotation => {
+                if let Some(EditorItem::Platform(index)) = item
+                    && let Some(block) = room.platforms.get_mut(index)
+                {
+                    // Half a turn brings a rectangle back onto itself, so the
+                    // angle stays within a quarter turn either way. Adding
+                    // 0.0 turns -0.0 into 0.0.
+                    let turned = block.rotation_deg + steps * ROTATION_STEP_DEG;
+                    block.rotation_deg = (turned + 90.0).rem_euclid(180.0) - 90.0 + 0.0;
+                }
+            }
             Self::Health | Self::Speed | Self::Damage => {
                 let Some(EditorItem::Enemy(index)) = item else {
                     return;
@@ -469,10 +503,17 @@ impl Field {
         }
     }
 
-    /// Removes a stat override or a text field.
+    /// Removes a stat override or a text field, or stands a turned platform
+    /// square again.
     pub(super) fn clear(self, room: &mut RoomConfig, item: Option<EditorItem>) {
         if self.is_text() {
             self.set_text(room, item, "");
+            return;
+        }
+        if let (Self::Rotation, Some(EditorItem::Platform(index))) = (self, item)
+            && let Some(block) = room.platforms.get_mut(index)
+        {
+            block.rotation_deg = 0.0;
             return;
         }
         let Some(EditorItem::Enemy(index)) = item else {

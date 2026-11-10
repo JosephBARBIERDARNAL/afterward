@@ -169,9 +169,6 @@ pub(super) fn draw_overlay(mut gizmos: Gizmos, editor: Res<RoomEditor>, data: Re
 
     for item in EditorItem::all(room) {
         let selected = editor.selected.contains(&item);
-        let Some(rect) = item.bounds(room) else {
-            continue;
-        };
         let color = match item {
             _ if selected => SELECTED_COLOR,
             _ if editor.hovered == Some(item) => HOVER_COLOR,
@@ -182,23 +179,24 @@ pub(super) fn draw_overlay(mut gizmos: Gizmos, editor: Res<RoomEditor>, data: Re
             EditorItem::Exit => EXIT_COLOR,
             EditorItem::Bonus => BONUS_COLOR,
         };
-        outline(rect, color);
-        if selected && editor.selected.len() == 1 {
+        if let Some(corners) = item.corners(room) {
+            // Corner to corner and back to the first, so a turned platform
+            // is outlined where it stands.
+            gizmos.linestrip_2d(
+                corners
+                    .into_iter()
+                    .chain([corners[0]])
+                    .map(|corner| corner * H_WORLD_UNITS),
+                color,
+            );
+        }
+        if selected && editor.selected.len() == 1 && !item.is_turned(room) {
             // Corner handles mark the edges a drag resizes.
             let handle_h = 0.16;
-            for (x, y) in [
-                (rect.x, rect.y),
-                (rect.right(), rect.y),
-                (rect.x, rect.top()),
-                (rect.right(), rect.top()),
-            ] {
-                outline(
-                    RectH {
-                        x: x - handle_h / 2.0,
-                        y: y - handle_h / 2.0,
-                        width: handle_h,
-                        height: handle_h,
-                    },
+            for corner in item.corners(room).into_iter().flatten() {
+                gizmos.rect_2d(
+                    corner * H_WORLD_UNITS,
+                    Vec2::splat(handle_h * H_WORLD_UNITS),
                     SELECTED_COLOR,
                 );
             }

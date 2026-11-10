@@ -65,6 +65,7 @@ fn a_platform_stops_a_jump_from_below_and_never_lets_the_player_drop_through() {
                         bottom: bottom * H_WORLD_UNITS,
                         top: top * H_WORLD_UNITS,
                         footstep: FootstepSound::Wood,
+                        tilt: None,
                     });
                 }
             },
@@ -172,6 +173,7 @@ fn a_platform_in_the_way_stops_a_body_walking_into_its_side() {
                         bottom: bottom * H_WORLD_UNITS,
                         top: top * H_WORLD_UNITS,
                         footstep: FootstepSound::Stone,
+                        tilt: None,
                     });
                 }
             },

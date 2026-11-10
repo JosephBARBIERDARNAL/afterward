@@ -2,6 +2,7 @@
 
 use std::path::{Path, PathBuf};
 
+use bevy::math::Vec2;
 use serde::Deserialize;
 
 use super::{EnemyTypeId, Fill};
@@ -61,6 +62,32 @@ pub struct PlatformConfig {
     #[serde(flatten)]
     pub fill: Fill,
     pub rect_h: RectH,
+    /// How far the platform is turned about the middle of `rect_h`, in
+    /// degrees counter-clockwise. Left out, it stands square.
+    #[serde(default)]
+    pub rotation_deg: f32,
+}
+
+impl PlatformConfig {
+    /// The platform's corners in H once it is turned, counter-clockwise from
+    /// the one that is its lower-left while it stands square.
+    pub(crate) fn corners_h(&self) -> [Vec2; 4] {
+        let rect = self.rect_h;
+        let corners = [
+            Vec2::new(rect.x, rect.y),
+            Vec2::new(rect.right(), rect.y),
+            Vec2::new(rect.right(), rect.top()),
+            Vec2::new(rect.x, rect.top()),
+        ];
+        // A platform left square keeps the corners it was authored with,
+        // exactly: turning them by nothing would still round them.
+        if self.rotation_deg == 0.0 {
+            return corners;
+        }
+        let middle = Vec2::new(rect.x + rect.width / 2.0, rect.y + rect.height / 2.0);
+        let turn = Vec2::from_angle(self.rotation_deg.to_radians());
+        corners.map(|corner| middle + turn.rotate(corner - middle))
+    }
 }
 
 /// An axis-aligned rectangle in H; `x`/`y` is its lower-left corner.

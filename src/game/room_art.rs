@@ -4,7 +4,7 @@
 //! platform covers. Drawing only: collision lives in `collision.rs`.
 
 use super::*;
-use crate::data::{DecorationLayer, Fill, PlatformConfig, RectH, RoomConfig};
+use crate::data::{DecorationLayer, Fill, RectH, RoomConfig};
 use bevy::image::{ImageAddressMode, ImageLoaderSettings, ImageSampler, ImageSamplerDescriptor};
 
 /// Depth of the first platform; later platforms stack slightly above it.
@@ -155,48 +155,73 @@ pub(super) fn draw(
             Sprite::from_color(tinted, Vec2::ONE)
         }
     };
-    // `sprite` stretched over `rect`, at depth `z`.
-    let placed = |mut sprite: Sprite, rect: RectH, z: f32| {
+    // `sprite` stretched over `rect`, at depth `z`, turned by `turn` radians
+    // about `pivot`: the middle of the platform it belongs to.
+    let placed = |mut sprite: Sprite, rect: RectH, z: f32, pivot: Vec2, turn: f32| {
         sprite.custom_size = Some(Vec2::new(rect.width, rect.height) * H_WORLD_UNITS);
         let center = Vec2::new(rect.x + rect.width / 2.0, rect.y + rect.height / 2.0);
+        let center = pivot + Vec2::from_angle(turn).rotate(center - pivot);
         (
             sprite,
-            Transform::from_translation((center * H_WORLD_UNITS).extend(z)),
+            Transform::from_translation((center * H_WORLD_UNITS).extend(z))
+                .with_rotation(Quat::from_rotation_z(turn)),
             RoomEntity,
         )
     };
 
+    // Only platforms standing square cover a neighbor's edge: a turned one
+    // lies elsewhere than its `rect_h`, and keeps all four of its own edges.
     let occluders = room
         .platforms
         .iter()
+        .filter(|block| block.rotation_deg == 0.0)
         .map(|block| block.rect_h)
         .collect::<Vec<_>>();
     let edges = &surfaces.edges;
     let outline = Color::from(edges.outline_color).with_alpha(edges.outline_alpha);
     let highlight = Color::from(edges.highlight_color).with_alpha(edges.highlight_alpha);
-    for (index, PlatformConfig { fill, rect_h, .. }) in room.platforms.iter().enumerate() {
+    for (index, block) in room.platforms.iter().enumerate() {
         let z = PLATFORM_Z + index as f32 * BLOCK_Z_STEP;
-        let rect = *rect_h;
-        commands.spawn(placed(painted(fill, rect, Color::WHITE), rect, z));
+        let rect = block.rect_h;
+        let pivot = Vec2::new(rect.x + rect.width / 2.0, rect.y + rect.height / 2.0);
+        let turn = block.rotation_deg.to_radians();
+        let uncovered = |side: Side| {
+            if block.rotation_deg == 0.0 {
+                side.uncovered(&rect, &occluders)
+            } else {
+                side.uncovered(&rect, &[])
+            }
+        };
+        commands.spawn(placed(
+            painted(&block.fill, rect, Color::WHITE),
+            rect,
+            z,
+            pivot,
+            turn,
+        ));
         let below_outline = RectH {
             height: rect.height - edges.outline_px * texel_h,
             ..rect
         };
-        for span in Side::Top.uncovered(&rect, &occluders) {
+        for span in uncovered(Side::Top) {
             let strip = Side::Top.strip(&below_outline, span, edges.highlight_px * texel_h);
             commands.spawn(placed(
                 Sprite::from_color(highlight, Vec2::ONE),
                 strip,
                 z + HIGHLIGHT_Z_OFFSET,
+                pivot,
+                turn,
             ));
         }
         for side in [Side::Top, Side::Bottom, Side::Left, Side::Right] {
-            for span in side.uncovered(&rect, &occluders) {
+            for span in uncovered(side) {
                 let strip = side.strip(&rect, span, edges.outline_px * texel_h);
                 commands.spawn(placed(
                     Sprite::from_color(outline, Vec2::ONE),
                     strip,
                     z + OUTLINE_Z_OFFSET,
+                    pivot,
+                    turn,
                 ));
             }
         }
@@ -211,7 +236,13 @@ pub(super) fn draw(
         let z = base_z + index as f32 * BLOCK_Z_STEP;
         let tint = Color::from(style.tint).with_alpha(style.alpha);
         let rect = decoration.rect_h;
-        commands.spawn(placed(painted(&decoration.fill, rect, tint), rect, z));
+        commands.spawn(placed(
+            painted(&decoration.fill, rect, tint),
+            rect,
+            z,
+            Vec2::ZERO,
+            0.0,
+        ));
     }
 }
 

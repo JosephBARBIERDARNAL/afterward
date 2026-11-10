@@ -21,6 +21,10 @@ player:
   deceleration_h_s2: 48
   jump_height_h: 2.925
   gravity_h_s2: 32
+  # The steepest face of a turned platform (`rotation_deg` in a room file) a
+  # body still walks, the player and the enemies alike. A steeper face is a
+  # wall: it stops a body and lets it slide down.
+  walkable_slope_deg: 40
   jump_impulse_h_s: 13.68
   jumps_per_takeoff: 1
   # Releasing jump while rising multiplies the upward velocity by this factor,

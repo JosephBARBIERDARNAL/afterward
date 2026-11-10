@@ -124,7 +124,7 @@ pub(super) fn handle_pointer(resources: EditorPointerResources) {
     {
         let grab_h = EDGE_GRAB_H * orthographic.scale;
         let only = match editor.selected.as_slice() {
-            [item] if !shift && !item.is_body() => Some(*item),
+            [item] if !shift && !item.is_body() && !item.is_turned(room) => Some(*item),
             _ => None,
         };
         let resize = only
@@ -265,9 +265,8 @@ pub(super) fn handle_pointer(resources: EditorPointerResources) {
                 let area = Rect::from_corners(start, cursor_h);
                 let boxed = EditorItem::all(room)
                     .filter(|item| {
-                        item.bounds(room).is_some_and(|rect| {
-                            area.contains(Vec2::new(rect.x, rect.y))
-                                && area.contains(Vec2::new(rect.right(), rect.top()))
+                        item.corners(room).is_some_and(|corners| {
+                            corners.into_iter().all(|corner| area.contains(corner))
                         })
                     })
                     .collect::<Vec<_>>();

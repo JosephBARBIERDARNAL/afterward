@@ -60,6 +60,7 @@ fn behind_the_bonus_screen_the_player_lands_and_idles_without_taking_input() {
                     bottom: -H_WORLD_UNITS,
                     top: room.player_spawn.y_h * H_WORLD_UNITS,
                     footstep: FootstepSound::Stone,
+                    tilt: None,
                 });
             },
         )

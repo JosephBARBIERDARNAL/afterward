@@ -144,6 +144,8 @@ pub struct PlayerConfig {
     pub deceleration_h_s2: f32,
     pub jump_height_h: f32,
     pub gravity_h_s2: f32,
+    /// The steepest face of a turned platform a body still walks, in degrees.
+    pub walkable_slope_deg: f32,
     pub jump_impulse_h_s: f32,
     pub jumps_per_takeoff: u8,
     pub jump_release_velocity_multiplier: f32,

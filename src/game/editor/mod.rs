@@ -3,7 +3,7 @@
 //! runs the edits right away, and saves them back to `rooms/room_NNN.yaml`.
 
 use super::*;
-use crate::data::{Fill, RectH, RoomConfig};
+use crate::data::{Fill, PlatformConfig, RectH, RoomConfig};
 
 mod clipboard;
 mod draw;
@@ -103,6 +103,30 @@ impl EditorItem {
                 .get(index)
                 .map(|decoration| decoration.rect_h),
         }
+    }
+
+    /// The item's outline in H, corner by corner and counter-clockwise: its
+    /// `bounds`, turned as the room turns it when it is a platform.
+    fn corners(self, room: &RoomConfig) -> Option<[Vec2; 4]> {
+        match self {
+            Self::Platform(index) => room.platforms.get(index).map(PlatformConfig::corners_h),
+            _ => self.bounds(room).map(|rect| {
+                [
+                    Vec2::new(rect.x, rect.y),
+                    Vec2::new(rect.right(), rect.y),
+                    Vec2::new(rect.right(), rect.top()),
+                    Vec2::new(rect.x, rect.top()),
+                ]
+            }),
+        }
+    }
+
+    /// Whether this is a platform its room turned. Its edges no longer lie
+    /// where `bounds` says, so they are not dragged: it is resized from the
+    /// inspector.
+    fn is_turned(self, room: &RoomConfig) -> bool {
+        matches!(self, Self::Platform(index)
+            if room.platforms.get(index).is_some_and(|block| block.rotation_deg != 0.0))
     }
 
     /// The point a drag moves: a block's lower-left corner or a spawn's feet.
@@ -262,9 +286,13 @@ impl EditorItem {
     /// The item under `point`: spawns first, then the smallest block or
     /// decoration.
     fn at(room: &RoomConfig, point: Vec2) -> Option<Self> {
+        // Inside the outline: on the inner side of each of its four edges.
         let contains = |item: &Self| {
-            item.bounds(room).is_some_and(|rect| {
-                Rect::new(rect.x, rect.y, rect.right(), rect.top()).contains(point)
+            item.corners(room).is_some_and(|corners| {
+                (0..4).all(|index| {
+                    let (from, to) = (corners[index], corners[(index + 1) % 4]);
+                    (to - from).perp_dot(point - from) >= 0.0
+                })
             })
         };
         let spawns = [Self::PlayerSpawn, Self::Exit, Self::Bonus]
@@ -668,6 +696,14 @@ next_room_id: 4
             .map(EditorItem::Platform);
         assert_eq!(EditorItem::at(room, Vec2::new(29.0, 1.0)), step);
         assert_eq!(EditorItem::at(room, Vec2::new(-5.0, -5.0)), None);
+
+        // Turned a quarter, the walkway (14 x 1 around 20, 6.5) stands on
+        // end: a click finds it where it is drawn, not where it lay.
+        let mut room = room.clone();
+        room.platforms[1].rotation_deg = 90.0;
+        let walkway = Some(EditorItem::Platform(1));
+        assert_eq!(EditorItem::at(&room, Vec2::new(20.0, 12.0)), walkway);
+        assert_eq!(EditorItem::at(&room, Vec2::new(14.0, 6.5)), None);
     }
 
     #[test]

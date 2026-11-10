@@ -255,10 +255,13 @@ pub(super) fn update_player(
     player.grounded = false;
     let mut grounded_footstep = None;
     let feet = transform.translation.y - H_WORLD_UNITS / 2.0;
+    // A slope carries the player up it as far as they stepped, and holds
+    // them down on it while they walk the other way.
     if player.velocity.y <= 0.0
-        && let Some(platform) = platforms.landing(x, previous_feet, feet)
+        && let Some((platform, floor)) =
+            platforms.landing(x, previous_feet, feet, (x - previous_x).abs(), was_grounded)
     {
-        transform.translation.y = platform.top + H_WORLD_UNITS / 2.0;
+        transform.translation.y = floor + H_WORLD_UNITS / 2.0;
         player.velocity.y = 0.0;
         player.grounded = true;
         grounded_footstep = Some(platform.footstep);

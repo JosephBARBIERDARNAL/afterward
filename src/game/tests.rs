@@ -16,6 +16,7 @@ mod player_stances;
 mod procedural_movement;
 mod punch_sounds;
 mod slam_and_roll;
+mod slopes;
 mod variable_jump;
 mod wall_jump;
 
@@ -28,6 +29,7 @@ fn projectiles_collide_with_platforms_along_their_travel_path() {
         bottom: 0.0,
         top: 20.0,
         footstep: FootstepSound::Stone,
+        tilt: None,
     };
 
     assert!(platform.intersects_projectile(
@@ -57,6 +59,7 @@ fn platforms_hide_what_stands_behind_them() {
         bottom: 0.0,
         top: 50.0,
         footstep: FootstepSound::Stone,
+        tilt: None,
     };
 
     assert!(pillar.blocks_sight(Vec2::new(60.0, 25.0), Vec2::new(160.0, 25.0)));

@@ -76,8 +76,12 @@ impl JumpRoute {
         platforms
             .0
             .iter()
+            // A tilted platform is walked onto, never leapt at: its bounds say
+            // nothing of where its slope could be landed on.
             .filter(|platform| {
-                !std::ptr::eq(**platform, standing) && platform.right - platform.left > 2.0 * inset
+                !std::ptr::eq(**platform, standing)
+                    && platform.tilt.is_none()
+                    && platform.right - platform.left > 2.0 * inset
             })
             .filter_map(|platform| {
                 let rise = platform.top - self.feet.y;
@@ -162,6 +166,7 @@ mod tests {
             bottom: (top - 0.5) * h,
             top: top * h,
             footstep: FootstepSound::Stone,
+            tilt: None,
         };
         // A 0.5 H wide stalagmite, and a ledge 2 H up and 3 H away.
         let standing = block(10.0, 10.5, 1.0);

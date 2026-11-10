@@ -1,5 +1,10 @@
 use super::*;
 
+/// How far an enemy may have stepped along a slope between two frames, in
+/// world units: its walk and its feet are moved by different systems, so the
+/// slope is given this much room to have carried it up or down.
+const SLOPE_STRIDE: f32 = HALF_BODY_WIDTH;
+
 type EnemyAiPlayerQuery<'w, 's> = Query<
     'w,
     's,
@@ -294,8 +299,9 @@ pub(in crate::game) fn update_enemy_ai(
         let rise = mark.feet.y - feet.y;
         let other_level = mark.grounded && rise.abs() > level_change_threshold;
         let standing = surfaces
-            .standing_on(feet.x, feet.y)
-            .filter(|_| enemy.grounded);
+            .standing_on(feet.x, feet.y, SLOPE_STRIDE)
+            .filter(|_| enemy.grounded)
+            .map(|(platform, _)| platform);
         let should_approach = distance_h > maximum_distance || other_level;
         let should_retreat = !other_level && distance_h < minimum_distance;
         let mut direction = if should_approach {
@@ -447,13 +453,13 @@ pub(in crate::game) fn update_enemy_platform_physics(
                 surfaces.blocked_x(transform.translation.x, wanted_x, reach_foot_y);
         }
         let x = transform.translation.x;
-        let standing_platform = surfaces
-            .standing_on(x, previous_foot_y)
+        let standing = surfaces
+            .standing_on(x, previous_foot_y, SLOPE_STRIDE)
             .filter(|_| enemy.vertical_velocity <= 0.0);
 
-        let (next_foot_y, grounded) = if let Some(platform) = standing_platform {
+        let (next_foot_y, grounded) = if let Some((_, floor)) = standing {
             enemy.vertical_velocity = 0.0;
-            (platform.top, true)
+            (floor, true)
         } else {
             // Average velocity over the frame keeps jump arcs exact at any frame rate.
             let launch_velocity = enemy.vertical_velocity;
@@ -472,10 +478,11 @@ pub(in crate::game) fn update_enemy_platform_physics(
                 enemy.vertical_velocity = 0.0;
             }
             if enemy.vertical_velocity <= 0.0
-                && let Some(platform) = surfaces.landing(x, previous_foot_y, next_foot_y)
+                && let Some((_, floor)) =
+                    surfaces.landing(x, previous_foot_y, next_foot_y, SLOPE_STRIDE, false)
             {
                 enemy.vertical_velocity = 0.0;
-                (platform.top, true)
+                (floor, true)
             } else {
                 (next_foot_y, false)
             }

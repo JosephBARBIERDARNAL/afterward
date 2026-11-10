@@ -61,6 +61,7 @@ fn a_player_who_falls_below_the_room_dies_at_once() {
                     bottom: 0.0,
                     top: H_WORLD_UNITS,
                     footstep: FootstepSound::Stone,
+                    tilt: None,
                 });
             },
         )

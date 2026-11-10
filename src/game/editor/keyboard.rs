@@ -283,6 +283,7 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
                     label: None,
                     fill,
                     rect_h,
+                    rotation_deg: 0.0,
                 });
                 EditorItem::Platform(room.platforms.len() - 1)
             });

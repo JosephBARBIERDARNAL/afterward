@@ -61,6 +61,7 @@ fn default_controls_move_and_jump_the_player() {
                     bottom: -H_WORLD_UNITS,
                     top: room.player_spawn.y_h * H_WORLD_UNITS,
                     footstep: FootstepSound::Stone,
+                    tilt: None,
                 });
             },
         )

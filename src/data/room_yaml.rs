@@ -90,6 +90,12 @@ impl Display for PlatformConfig {
                 YamlFill(&self.fill).to_string(),
                 format!("rect_h: {}", self.rect_h),
             ])
+            .chain(
+                // Adding 0.0 turns -0.0 into 0.0, which is no turn at all.
+                Some(self.rotation_deg + 0.0)
+                    .filter(|rotation| *rotation != 0.0)
+                    .map(|rotation| format!("rotation_deg: {rotation}")),
+            )
             .collect();
         write!(formatter, "{}", YamlEntry(fields))
     }
@@ -290,6 +296,38 @@ next_room_id: 4
             written.contains("color: \"#2DE2D5\""),
             "an unquoted #RRGGBB would read back as a YAML comment: {written}"
         );
+        let read_back: RoomConfig =
+            yaml_serde::from_str(&written).expect("the written room is valid YAML");
+        assert_eq!(read_back, room);
+    }
+
+    #[test]
+    fn a_platform_keeps_its_turn_through_a_round_trip() {
+        let room: RoomConfig = yaml_serde::from_str(
+            "
+room_id: 3
+chapter_id: 1
+size: { width_h: 24, height_h: 13.5 }
+background_profile: city_blue_day
+player_spawn: { x_h: 2, y_h: 1 }
+platforms:
+  - { material: city_pavement, rect_h: { x: 0, y: 0, width: 24, height: 1 } }
+  - { material: city_pavement, rect_h: { x: 8, y: 1, width: 6, height: 0.5 }, rotation_deg: -20 }
+enemy_spawns: []
+bonus: { x_h: 20, y_h: 1 }
+exit: { x_h: 22, y_h: 1 }
+next_room_id: 4
+",
+        )
+        .expect("a turned platform parses");
+        assert_eq!(room.platforms[0].rotation_deg, 0.0);
+        let written = room.to_string();
+        assert_eq!(
+            written.matches("rotation_deg").count(),
+            1,
+            "only the turned platform carries it: {written}"
+        );
+        assert!(written.contains("rotation_deg: -20"), "{written}");
         let read_back: RoomConfig =
             yaml_serde::from_str(&written).expect("the written room is valid YAML");
         assert_eq!(read_back, room);

@@ -530,6 +530,15 @@ impl GameData {
                     )));
                 }
             }
+            if room
+                .platforms
+                .iter()
+                .any(|block| !block.rotation_deg.is_finite())
+            {
+                return Err(InvalidGameData::from(format!(
+                    "room {room_id} has a platform turned by something that is not an angle"
+                )));
+            }
             let fills = room
                 .platforms
                 .iter()
