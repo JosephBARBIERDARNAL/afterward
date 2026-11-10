@@ -7,7 +7,7 @@ description: "The first street: a long ledge under the morning skyline, one rais
 size:
   width_h: 48
   height_h: 16
-background_profile: city_night_stars
+background_profile: city_peach_sunset
 player_spawn:
   x_h: 2.25
   y_h: 2
@@ -78,10 +78,11 @@ enemy_spawns:
   - type_id: blade_unit
     position_h: { x: 2.5, y: 9 }
     facing: right
+    stat_overrides: { health: 100, movement_speed_h_s: 3.5, attack_damage: 6, armor_layers: 0 }
   - type_id: blade_unit
     position_h: { x: 16, y: 8 }
     facing: right
-    stat_overrides: { health: 30 }
+    stat_overrides: { health: 100, armor_layers: 0 }
   - type_id: blade_unit
     position_h: { x: 43.25, y: 1 }
     facing: left
@@ -89,22 +90,23 @@ enemy_spawns:
   - type_id: heavy_unit
     position_h: { x: 14.5, y: 12 }
     facing: left
-    stat_overrides: { health: 30 }
+    stat_overrides: { health: 100, armor_layers: 0 }
   - type_id: blade_unit
     position_h: { x: 42.25, y: 7 }
     facing: right
-    stat_overrides: { health: 30 }
-  - type_id: heavy_unit
-    position_h: { x: 39, y: 7 }
-    facing: left
+    stat_overrides: { health: 100, armor_layers: 0 }
+  - type_id: rifle_unit
+    position_h: { x: 36, y: 9.25 }
+    facing: right
+    stat_overrides: { health: 99 }
   - type_id: blade_unit
     position_h: { x: 25, y: 5 }
     facing: left
-    stat_overrides: { health: 30 }
+    stat_overrides: { health: 100, armor_layers: 0 }
   - type_id: blade_unit
     position_h: { x: 27, y: 3 }
     facing: left
-    stat_overrides: { health: 30 }
+    stat_overrides: { health: 100, movement_speed_h_s: 2.5, armor_layers: 0 }
 # The bonus item, lying beside the door once every enemy is down.
 bonus:
   x_h: 45.5

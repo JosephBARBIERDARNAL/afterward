@@ -142,7 +142,7 @@ presses it from anywhere on that screen.
   dimmed until the focus stands on it (`MenuEdge`). Choosing one writes
   `RunSession::difficulty` and opens the run. Nothing reads that choice yet: it
   outlives a run so the next one opens on it, and changes nothing else.
-- `menus/input.rs` decides *which* button and *that* it was pressed; it leaves
+- `menus/input.rs` decides _which_ button and _that_ it was pressed; it leaves
   a `MenuPressed`, which `screens::handle_screen_input` carries out beside the
   letter shortcuts, so a click and a shortcut run the same code.
 - The focus and the volume levels are dressed onto the standing buttons each
@@ -157,7 +157,7 @@ presses it from anywhere on that screen.
 
 Two kinds of shader, both WGSL under `src/assets/shaders/`, both tuned from `effects:` in `config/gameplay.yaml`:
 
-- `src/game/shaders/` holds the 2D materials, drawn on `Mesh2d` quads sized by their transform (one shared unit square, `ShadedQuad`). `flood.wgsl` is the water the main menu sits on: a cellular field whose borders light up where two cells meet, bent by slow waves and quantized to a pixel grid and to four tones, so it reads as pixel art. Its quad is laid at startup, kept under the camera and shown on the screens that stand over no room at all — the main menu, the difficulty it opens, the settings and controls reached from it, and the screen a run ends on (`SettingsReturn::over_the_flood`). Those are the menus drawn without the blur, since the water is pixel art and must stay crisp. `city_lights.wgsl` draws every background layer: a pixel that stands brighter than the four around it *and* sits on a dark surround is a lit window or a star, and breathes at a pace its own position seeds — the dark-surround test is what keeps a dithered bright sky out of it. `glow.wgsl` is the pool of light behind anything the player should walk towards; give an entity `Glowing { color, radius_h }` and `attach_glows` hangs the quad behind it as a child, so it follows and dies with it.
+- `src/game/shaders/` holds the 2D materials, drawn on `Mesh2d` quads sized by their transform (one shared unit square, `ShadedQuad`). `flood.wgsl` is the water the main menu sits on: a cellular field whose borders light up where two cells meet, bent by slow waves and quantized to a pixel grid and to four tones, so it reads as pixel art. Its quad is laid at startup, kept under the camera and shown on the screens that stand over no room at all — the main menu, the difficulty it opens, the settings and controls reached from it, and the screen a run ends on (`SettingsReturn::over_the_flood`). Those are the menus drawn without the blur, since the water is pixel art and must stay crisp. `city_lights.wgsl` draws every background layer: a pixel that stands brighter than the four around it _and_ sits on a dark surround is a lit window or a star, and breathes at a pace its own position seeds — the dark-surround test is what keeps a dithered bright sky out of it. `glow.wgsl` is the pool of light behind anything the player should walk towards; give an entity `Glowing { color, radius_h }` and `attach_glows` hangs the quad behind it as a child, so it follows and dies with it.
 - `src/game/pause_blur.rs` is the full-screen pass behind a menu, a `Core2d` post-process rather than a material.
 - `src/game/ripple.rs` is the droplet that falls on a button the moment it is touched — hovered, reached with an arrow, or clicked — and the one shader drawn through the UI pipeline (`UiMaterial` on a `MaterialNode`) rather than on a `Mesh2d` quad, which is why it sits beside `src/game/shaders/` instead of inside it. `ripple.wgsl` drops the bead in, flashes where it lands and sends rings out, quantized to a pixel grid and to two tones like the flood. Anything that wants one writes a `Splash`: `Spot::Pointer` for exactly where the mouse touched, `Spot::Middle` for the middle of a button an arrow walked to. They stack in their own layer above the menus and die once they have played out.
 
@@ -238,3 +238,7 @@ Every surface texture is drawn in code with [Typst](https://typst.app) instead o
 - `src/game/mod.rs` wires the `GamePlugin` (systems and states) and holds only shared items: `GameScreen`, `StartRoom`, `H_WORLD_UNITS`, small helpers. Components and resources live in the module that owns them (`session.rs` for `RunSession`, `sprites.rs` for sprite-sheet animation, `player/body.rs` for `PlayerBody`, `combat/enemy_body.rs` and `combat/components.rs` for combat entities, and so on) and are re-imported in `mod.rs` when other modules need them.
 - Game modules reach shared items through `use super::*;`; add a `use` in `mod.rs` for a type that several modules need, or a direct `use crate::game::...` for a type only one other module needs.
 - Tests live in `src/game/tests/` (gameplay, driven through a headless `App`) and in `#[cfg(test)]` modules next to the code they cover.
+
+### Important note
+
+Right now the focus in on making the first room feels very good before starting to implement the other ones.

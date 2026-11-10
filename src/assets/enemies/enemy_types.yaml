@@ -42,7 +42,7 @@ jumping:
 # these names yet; see art/README.md.
 types:
   blade_unit:
-    hurtbox_h: { width: 0.6, height: 1 }
+    hurtbox_h: { width: 0.8, height: 0.9 }
     health: 30
     material: metal
     armor_layers: 1

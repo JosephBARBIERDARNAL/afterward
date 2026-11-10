@@ -104,7 +104,7 @@ bonuses:
     effects: { max_health_increase: 15, restore_health: 15 }
   - id: scavenger
     name: Scavenger
-    description: Increase health pickup drop chance by 25% relative to its base chance.
+    description: Increase health pickup drop chance by 25%.
     category: defense
     rarity: uncommon
     effects: { health_drop_chance_multiplier: 1.25 }
@@ -137,7 +137,8 @@ bonuses:
     description: Blows landing within 1.5 seconds of each other speed the chain by 4%, up to 16%.
     category: intelligence
     rarity: rare
-    effects: { hit_window_s: 1.5, combo_speed_step: 0.04, combo_speed_max_bonus: 0.16 }
+    effects:
+      { hit_window_s: 1.5, combo_speed_step: 0.04, combo_speed_max_bonus: 0.16 }
   - id: chain_reaction
     name: Chain Reaction
     description: Killing an enemy increases damage by 15% for 2 seconds.
@@ -167,7 +168,11 @@ bonuses:
     description: Healing pickups speed the chain by 15% for 3 seconds.
     category: combined
     rarity: uncommon
-    effects: { healing_pickup_combo_speed_multiplier: 1.15, healing_pickup_combo_speed_duration_s: 3 }
+    effects:
+      {
+        healing_pickup_combo_speed_multiplier: 1.15,
+        healing_pickup_combo_speed_duration_s: 3,
+      }
 
   # Placeholders, so every category has enough bonuses to fill a chapter of
   # pickups. They are named and described, but no code reads their effects
@@ -267,7 +272,8 @@ bonuses:
     description: Below 30% health, reduce damage taken by 20%.
     category: defense
     rarity: rare
-    effects: { low_health_fraction: 0.3, low_health_damage_taken_multiplier: 0.8 }
+    effects:
+      { low_health_fraction: 0.3, low_health_damage_taken_multiplier: 0.8 }
   - id: deflector
     name: Deflector
     description: Negate the first projectile that would hit you in each room.
@@ -471,10 +477,11 @@ bonuses:
     description: Taking damage speeds the chain by 20% for 2 seconds.
     category: combined
     rarity: rare
-    effects: { hurt_combo_speed_multiplier: 1.2, hurt_combo_speed_duration_s: 2 }
+    effects:
+      { hurt_combo_speed_multiplier: 1.2, hurt_combo_speed_duration_s: 2 }
   - id: lucky_find
     name: Lucky Find
-    description: Increase health pickup drop chance by 15% relative to its base chance.
+    description: Increase health pickup drop chance by 15%.
     category: combined
     rarity: common
     effects: { health_drop_chance_multiplier: 1.15 }
@@ -483,7 +490,11 @@ bonuses:
     description: Standing still reduces damage taken by 10% and adds 5% strike damage.
     category: combined
     rarity: common
-    effects: { standing_damage_taken_multiplier: 0.9, standing_damage_multiplier: 1.05 }
+    effects:
+      {
+        standing_damage_taken_multiplier: 0.9,
+        standing_damage_multiplier: 1.05,
+      }
   - id: clean_sweep
     name: Clean Sweep
     description: Clearing a room without taking damage restores 10 health.
