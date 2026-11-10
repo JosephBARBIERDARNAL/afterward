@@ -175,6 +175,28 @@ next_room_id: 2
         "a chain left to lapse starts over at its first blow"
     );
 
+    // A press made while a blow is still playing is not lost: it is
+    // remembered, and throws the next blow the moment the first has ended.
+    for _ in 0..(combo_window_s / 0.05).ceil() as usize + 2 {
+        frame(&mut app, false);
+    }
+    frame(&mut app, true);
+    for _ in 0..3 {
+        frame(&mut app, false);
+    }
+    frame(&mut app, true);
+    for _ in 0..5 {
+        frame(&mut app, false);
+    }
+    assert_eq!(
+        app.world()
+            .get::<AnimatedSprite>(player)
+            .expect("the player keeps its animation")
+            .sheet,
+        "player_strike_2",
+        "a press made in the middle of a blow asks for the next one"
+    );
+
     // Fire Kick adds a fourth blow, after the kick that used to end it.
     for _ in 0..(combo_window_s / 0.05).ceil() as usize + 2 {
         frame(&mut app, false);

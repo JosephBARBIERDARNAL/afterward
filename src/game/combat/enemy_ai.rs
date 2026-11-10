@@ -65,6 +65,13 @@ pub(in crate::game) fn update_enemy_ai(
     player.invulnerability_timer = (player.invulnerability_timer - dt).max(0.0);
 
     for (mut enemy, mut transform, mut sprite, mut animation) in &mut enemies {
+        // The flare a wound left goes out by itself, on the dead as well.
+        if enemy.flash_s > 0.0 {
+            enemy.flash_s = (enemy.flash_s - dt).max(0.0);
+            if enemy.flash_s == 0.0 {
+                sprite.color = Color::WHITE;
+            }
+        }
         if enemy.health <= 0.0 {
             continue;
         }
@@ -81,7 +88,18 @@ pub(in crate::game) fn update_enemy_ai(
         enemy.hurt_timer = (enemy.hurt_timer - dt).max(0.0);
         enemy.jump_cooldown = (enemy.jump_cooldown - dt).max(0.0);
         if enemy.knockback_velocity.abs() > 0.01 {
-            transform.translation.x += enemy.knockback_velocity * H_WORLD_UNITS * dt;
+            // A shove stops against a platform's side and the room's edge,
+            // as a walk does.
+            let wanted_x =
+                (transform.translation.x + enemy.knockback_velocity * H_WORLD_UNITS * dt).clamp(
+                    HALF_BODY_WIDTH,
+                    data.rooms[&session.room_id].size.width_h * H_WORLD_UNITS - HALF_BODY_WIDTH,
+                );
+            transform.translation.x = surfaces.blocked_x(
+                transform.translation.x,
+                wanted_x,
+                enemy.home_y - enemy.feet_offset,
+            );
             enemy.knockback_velocity = move_towards(enemy.knockback_velocity, 0.0, 14.0 * dt);
         }
         let sees_player =

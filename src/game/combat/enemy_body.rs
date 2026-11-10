@@ -37,6 +37,8 @@ pub(crate) struct EnemyBody {
     pub(crate) active_attack: usize,
     pub(crate) next_attack: usize,
     pub(crate) hurt_timer: f32,
+    /// What is left of the flare a blow that wounded it left on its sprite.
+    pub(crate) flash_s: f32,
     pub(crate) knockback_velocity: f32,
     pub(crate) phase_two: Option<(f32, f32)>,
     pub(crate) phase_two_announced: bool,

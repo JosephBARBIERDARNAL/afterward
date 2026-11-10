@@ -24,6 +24,7 @@ mod editor;
 mod flow;
 #[cfg(debug_assertions)]
 mod hitbox_overlay;
+mod impact;
 mod interface;
 mod menus;
 mod pause_blur;
@@ -272,6 +273,12 @@ impl Plugin for GamePlugin {
                 )
                     .chain()
                     .run_if(in_state(GameScreen::Playing)),
+            )
+            // On every screen, so a freeze a blow began always ends, whatever
+            // the screen has turned to meanwhile.
+            .add_systems(
+                Update,
+                impact::feel_the_impacts.before(camera::follow_camera),
             )
             .add_systems(
                 Update,

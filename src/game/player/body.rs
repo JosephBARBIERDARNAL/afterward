@@ -12,6 +12,10 @@ pub(crate) struct PlayerBody {
     pub(crate) jumps_used: u8,
     /// Rising from a jump whose button is still held; releasing it cuts the rise.
     pub(crate) jump_held: bool,
+    /// What is left of a Jump pressed before it could be obeyed.
+    pub(crate) jump_buffer_s: f32,
+    /// What is left of an Attack pressed before it could be thrown.
+    pub(crate) attack_buffer_s: f32,
     /// The blow being thrown, if any.
     pub(crate) strike: Option<Strike>,
     /// Which step of the melee chain the next press throws.
@@ -69,6 +73,8 @@ impl Default for PlayerBody {
             grounded: true,
             jumps_used: 0,
             jump_held: false,
+            jump_buffer_s: 0.0,
+            attack_buffer_s: 0.0,
             strike: None,
             combo_step: 0,
             combo_window_s: 0.0,

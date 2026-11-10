@@ -105,6 +105,12 @@ pub(super) fn update_player(
     if player.slamming {
         // The slam is a straight drop: nothing steers it.
         player.velocity.x = 0.0;
+    } else if player
+        .strike
+        .is_some_and(|strike| strike.contact_in_s > 0.0)
+    {
+        // A blow on its way in carries the player with it: the lunge
+        // `combat/player_melee.rs` gave them holds until it connects.
     } else if let Some(elapsed_s) = player.roll_s {
         // The roll carries the player the way they already faced, and cannot
         // be steered once it is under way.
@@ -133,21 +139,31 @@ pub(super) fn update_player(
         );
     }
 
-    if tapped(GameAction::Jump)
+    // A Jump that cannot be obeyed yet is remembered for a moment, so one
+    // pressed just before landing, or just before a roll ends, still counts.
+    player.jump_buffer_s = if tapped(GameAction::Jump) {
+        tuning.jump_buffer_s
+    } else {
+        (player.jump_buffer_s - dt).max(0.0)
+    };
+    let jump_asked = controllable && player.jump_buffer_s > 0.0;
+    if jump_asked
         && player.grounded
         && held(GameAction::MoveDown)
         && !player.covering
         && player.roll_s.is_none()
     {
         // Down and Jump together: a roll rather than a hop.
+        player.jump_buffer_s = 0.0;
         player.roll_s = Some(0.0);
         // Decoy leaves a double of the player here: `combat::plant_decoy`
         // takes the spot once the roll has set off from it.
         player.roll_origin = Some(transform.translation);
         player.velocity.x = player.facing * tuning.roll.speed_h_s * H_WORLD_UNITS;
         player.start_action(PlayerAction::Roll, clips.roll.duration_s());
-    } else if tapped(GameAction::Jump) && !player.covering && player.roll_s.is_none() {
+    } else if jump_asked && !player.covering && player.roll_s.is_none() {
         if let Some(wall) = player.wall_cling {
+            player.jump_buffer_s = 0.0;
             // Pushing off a wall throws the player up and away from it, and
             // turns them to face the way they are thrown.
             player.velocity.y = wall_tuning.jump_impulse_h_s * H_WORLD_UNITS;
@@ -175,6 +191,7 @@ pub(super) fn update_player(
                 } else {
                     data.bonus_effect("double_jump", "extra_jump_impulse_factor")
                 };
+                player.jump_buffer_s = 0.0;
                 player.velocity.y = tuning.jump_impulse_h_s * jump_factor * H_WORLD_UNITS;
                 player.jumps_used += 1;
                 player.jump_held = true;

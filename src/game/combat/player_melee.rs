@@ -58,7 +58,16 @@ pub(in crate::game) fn player_melee(
     if player.rhythm_timer == 0.0 {
         player.rhythm_stacks = 0;
     }
+    // An Attack pressed while it cannot be thrown is remembered for a moment
+    // and thrown the instant it can, so a press made while the blow in hand
+    // is still playing asks for the next rather than being lost.
+    player.attack_buffer_s = if controls.just_pressed(GameAction::Attack, &keys) {
+        melee.buffer_s
+    } else {
+        (player.attack_buffer_s - dt).max(0.0)
+    };
     if player.dying_s.is_some() {
+        player.attack_buffer_s = 0.0;
         player.strike = None;
         player.slamming = false;
         player.slam_landed = false;
@@ -90,6 +99,8 @@ pub(in crate::game) fn player_melee(
             &mut player,
             Blow {
                 area: blow_area(melee.slam.hitbox_h, feet, facing, reach, true),
+                from_x: feet.x,
+                heavy: true,
                 damage: melee.slam.damage,
                 pierces_shields: false,
                 flinch_s: 0.32,
@@ -103,39 +114,67 @@ pub(in crate::game) fn player_melee(
 
     // A blow is in the air: it connects at its contact time, then plays itself
     // out, and the window to chain the next one opens as its clip ends.
-    if let Some(mut strike) = player.strike {
-        if !matches!(
+    if player.strike.is_some()
+        && !matches!(
             player.action,
             Some(PlayerAction::Strike { .. } | PlayerAction::ChargedBlow)
-        ) {
-            player.strike = None;
-            player.combo_window_s = melee.combo_window_s
-                * session.bonus_multiplier(&data, "deep_breath", "combo_window_multiplier");
-            return;
-        }
+        )
+    {
+        player.strike = None;
+        player.combo_window_s = melee.combo_window_s
+            * session.bonus_multiplier(&data, "deep_breath", "combo_window_multiplier");
+    }
+    if let Some(mut strike) = player.strike {
         let pending = strike.contact_in_s > 0.0;
         strike.contact_in_s -= dt;
         player.strike = Some(strike);
-        if !pending || strike.contact_in_s > 0.0 {
+        if !pending {
+            return;
+        }
+        let (area, lunge_h_s) = match strike.thrown {
+            Thrown::Step(index) => {
+                let step = chain[index.min(chain.len() - 1)];
+                (step.hitbox_at(feet, player.facing, reach), step.lunge_h_s)
+            }
+            Thrown::Charged => (
+                blow_area(melee.charge.hitbox_h, feet, player.facing, reach, false),
+                melee.charge.lunge_h_s,
+            ),
+        };
+        if strike.contact_in_s > 0.0 {
+            // Still on its way in: it carries the player forward, never
+            // slower than they were already running, until it can reach a
+            // body — a lunge closes the distance, it does not run through.
+            let in_reach = enemies.iter().any(|(_, enemy, enemy_transform, ..)| {
+                enemy.health > 0.0 && !enemy.hurtbox(enemy_transform).intersect(area).is_empty()
+            });
+            player.velocity.x = if in_reach {
+                0.0
+            } else {
+                player.facing * (lunge_h_s * H_WORLD_UNITS).max(player.velocity.x * player.facing)
+            };
             return;
         }
         let blow = match strike.thrown {
             Thrown::Step(index) => {
-                let step = chain[index.min(chain.len() - 1)];
                 Blow {
-                    area: step.hitbox_at(feet, player.facing, reach),
-                    damage: step.damage,
-                    pierces_shields: false,
-                    flinch_s: 0.24,
+                    area,
+                    from_x: feet.x,
                     // The chain has already stepped on, so one that wrapped
                     // back to its first step means this blow was its last.
+                    heavy: player.combo_step == 0,
+                    damage: chain[index.min(chain.len() - 1)].damage,
+                    pierces_shields: false,
+                    flinch_s: 0.24,
                     finisher: player.combo_step == 0,
                     punch: index,
                     whiffs: true,
                 }
             }
             Thrown::Charged => Blow {
-                area: blow_area(melee.charge.hitbox_h, feet, player.facing, reach, false),
+                area,
+                from_x: feet.x,
+                heavy: true,
                 damage: melee.charge.damage,
                 pierces_shields: true,
                 flinch_s: 0.5,
@@ -171,7 +210,10 @@ pub(in crate::game) fn player_melee(
     }
     let free_to_strike = !player.covering && player.wall_cling.is_none() && player.roll_s.is_none();
     let attack_held = controls.pressed(GameAction::Attack, &keys) && free_to_strike;
-    let attack_tapped = controls.just_pressed(GameAction::Attack, &keys) && free_to_strike;
+    let attack_tapped = player.attack_buffer_s > 0.0 && free_to_strike;
+    if attack_tapped {
+        player.attack_buffer_s = 0.0;
+    }
 
     if attack_tapped && !player.grounded && controls.pressed(GameAction::MoveDown, &keys) {
         player.slamming = true;
@@ -207,7 +249,6 @@ pub(in crate::game) fn player_melee(
         player.combo_step = (step_index + 1) % chain.len();
         player.combo_window_s = 0.0;
         player.charge_s = 0.0;
-        player.velocity.x = player.facing * step.lunge_h_s * H_WORLD_UNITS;
         player.start_action(
             PlayerAction::Strike {
                 strike: step.strike,
@@ -241,7 +282,6 @@ pub(in crate::game) fn player_melee(
             thrown: Thrown::Charged,
             contact_in_s: melee.charge.contact_s,
         });
-        player.velocity.x = player.facing * melee.charge.lunge_h_s * H_WORLD_UNITS;
         player.start_action(
             PlayerAction::ChargedBlow,
             data.player_animations.clips.charge_brace.duration_s(),

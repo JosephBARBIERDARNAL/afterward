@@ -393,6 +393,7 @@ pub(super) fn spawn_enemies(
                     active_attack: 0,
                     next_attack: 0,
                     hurt_timer: 0.0,
+                    flash_s: 0.0,
                     knockback_velocity: 0.0,
                     phase_two,
                     phase_two_announced: false,

@@ -147,6 +147,8 @@ pub struct PlayerConfig {
     pub jump_impulse_h_s: f32,
     pub jumps_per_takeoff: u8,
     pub jump_release_velocity_multiplier: f32,
+    /// How long a Jump that cannot be obeyed yet is remembered.
+    pub jump_buffer_s: f32,
     pub damage_invulnerability_s: f32,
     pub crouch_speed_h_s: f32,
     /// Damage multiplier for hits from the front while Cover is held.
@@ -165,13 +167,35 @@ pub struct PlayerConfig {
 #[derive(Debug, Deserialize)]
 pub struct MeleeConfig {
     pub combo_window_s: f32,
-    /// Knockback a blow gives the boss, the only body the player can shove.
+    /// How long an Attack that cannot be thrown yet is remembered.
+    pub buffer_s: f32,
+    /// The shove a blow gives a body with no armor up.
+    pub knockback_h_s: f32,
+    /// The shove it gives the boss instead.
     pub boss_knockback_h_s: f32,
+    pub impact: ImpactConfig,
     pub steps: Vec<MeleeComboStep>,
     pub slam: SlamConfig,
     pub charge: ChargeConfig,
     /// The burst drawn where a blow lands.
     pub impact_burst: BurstConfig,
+}
+
+/// What a landed blow does to the moment: the freeze, the shake and the flare
+/// of `src/game/impact.rs`.
+#[derive(Debug, Deserialize)]
+pub struct ImpactConfig {
+    /// How long the game holds still on a hit, and on one that kills.
+    pub freeze_s: f32,
+    pub kill_freeze_s: f32,
+    /// How far the camera is thrown by an ordinary blow, and by a heavy one.
+    pub shake_h: f32,
+    pub heavy_shake_h: f32,
+    /// How long the camera takes to settle.
+    pub shake_s: f32,
+    /// How long the body that was hit flares, and how much brighter.
+    pub flash_s: f32,
+    pub flash_brightness: f32,
 }
 
 /// Attack with Down held in mid-air: the player is driven at the floor, and
@@ -221,7 +245,7 @@ pub struct MeleeComboStep {
     pub both_sides: bool,
     /// How far into the clip the blow connects.
     pub contact_s: f32,
-    /// Forward shove the blow gives the player, so the chain carries them in.
+    /// The speed the blow carries the player forward at until it connects.
     pub lunge_h_s: f32,
     /// A finisher, thrown only by a run owning this bonus and only in place
     /// of the other finishers: of the ones a run holds, the last listed wins.

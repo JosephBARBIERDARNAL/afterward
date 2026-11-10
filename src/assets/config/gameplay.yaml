@@ -26,6 +26,9 @@ player:
   # Releasing jump while rising multiplies the upward velocity by this factor,
   # so a tap gives a short hop and holding the button gives the full jump.
   jump_release_velocity_multiplier: 0.5
+  # A Jump pressed this long before it can be obeyed (still falling, still
+  # rolling) is remembered and thrown the moment it can.
+  jump_buffer_s: 0.1
   damage_invulnerability_s: 0.55
   # Holding Down on the ground crouches; the crouch walk is slower.
   crouch_speed_h_s: 3
@@ -40,25 +43,48 @@ player:
   # for the next, and letting that lapse drops the chain back to its first
   # step. `hitbox_h` is measured from the player's feet, `x` pointing the way
   # they face, like an enemy attack's (B in debug builds draws them all).
+  # `lunge_h_s` is the speed a blow carries the player forward at until it
+  # connects, and never slower than they were already running: a blow thrown
+  # on the move keeps its momentum. The lunge stops short once the blow can
+  # reach a body, so it closes the distance without running through anyone.
   melee:
     combo_window_s: 0.55
+    # An Attack pressed this long before the next blow can be thrown (the one
+    # in hand still playing, a roll still under way) is remembered and thrown
+    # the moment it can, so mashing never drops a press.
+    buffer_s: 0.2
+    # The shove a blow gives a body with no armor up, away from the player.
+    knockback_h_s: 3.5
     boss_knockback_h_s: 2.5
+    # What a landed blow does to the moment. The whole game holds still for
+    # `freeze_s` (`kill_freeze_s` when the blow kills), the camera is thrown
+    # `shake_h` off its mark (`heavy_shake_h` for the chain's last blow, the
+    # charged blow, the slam and any kill) and settles over `shake_s`, and the
+    # body that was hit flares `flash_brightness` times brighter for `flash_s`.
+    impact:
+      freeze_s: 0.05
+      kill_freeze_s: 0.11
+      shake_h: 0.05
+      heavy_shake_h: 0.12
+      shake_s: 0.18
+      flash_s: 0.07
+      flash_brightness: 3
     steps:
       - strike: strike_1
         damage: 18
         hitbox_h: { x: 0.15, y: 0.2, width: 0.8, height: 0.5 }
         contact_s: 0.12
-        lunge_h_s: 1.5
+        lunge_h_s: 4
       - strike: strike_2
         damage: 20
         hitbox_h: { x: 0.15, y: 0.2, width: 0.85, height: 0.55 }
         contact_s: 0.14
-        lunge_h_s: 1.5
+        lunge_h_s: 4
       - strike: kick
         damage: 30
         hitbox_h: { x: 0.2, y: 0.15, width: 1, height: 0.5 }
         contact_s: 0.11
-        lunge_h_s: 2.5
+        lunge_h_s: 6
       # The finishers. A step naming a bonus is only thrown by a run that
       # owns it, and it is thrown *instead of* nothing rather than alongside
       # the others: a run holding several throws the last of them listed
@@ -67,13 +93,13 @@ player:
         damage: 38
         hitbox_h: { x: 0.15, y: 0.2, width: 1, height: 0.55 }
         contact_s: 0.22
-        lunge_h_s: 4
+        lunge_h_s: 5
         requires_bonus: power_strike
       - strike: fire_kick
         damage: 45
         hitbox_h: { x: 0.15, y: 0.2, width: 1.1, height: 0.55 }
         contact_s: 0.19
-        lunge_h_s: 3
+        lunge_h_s: 5
         requires_bonus: fire_kick
       # The one blow that lands on every side at once, so it is worth less
       # against a single body and far more in the middle of a crowd.
@@ -99,7 +125,7 @@ player:
       damage: 40
       hitbox_h: { x: 0.15, y: 0.15, width: 1.1, height: 0.6 }
       contact_s: 0.2
-      lunge_h_s: 3
+      lunge_h_s: 6
     # The burst drawn where a blow lands: a hot core that swells and fades
     # while embers fly outward.
     impact_burst:

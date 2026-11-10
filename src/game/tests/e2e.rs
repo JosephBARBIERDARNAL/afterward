@@ -43,6 +43,7 @@ mod death;
 mod difficulty;
 mod editor;
 mod hitboxes;
+mod impact;
 mod main_menu;
 mod menus;
 mod opening_room;

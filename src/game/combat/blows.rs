@@ -21,6 +21,12 @@ pub(super) type MeleeEnemiesQuery<'w, 's> = Query<
 /// set the charged blow apart from the chain's own.
 pub(super) struct Blow {
     pub(super) area: Rect,
+    /// Where the player stands, which is what a body it hits is shoved away
+    /// from.
+    pub(super) from_x: f32,
+    /// Shakes the camera harder: the chain's last blow, the charged blow and
+    /// the slam.
+    pub(super) heavy: bool,
     pub(super) damage: f32,
     /// Goes through armor rather than being soaked by it, so the hit both
     /// breaks a layer and wounds what was behind it.
@@ -62,7 +68,9 @@ pub(super) fn land_the_blow(
         sheets,
         sounds,
     } = resources;
+    let melee = &data.gameplay.player.melee;
     let mut connected = false;
+    let mut killed = false;
 
     for (entity, mut enemy, mut enemy_transform, mut sprite, mut animation) in enemies.iter_mut() {
         if enemy.health <= 0.0
@@ -121,10 +129,17 @@ pub(super) fn land_the_blow(
         enemy.health = (enemy.health - damage).max(0.0);
         spawn_damage_number(commands, enemy_transform.translation, damage, false);
         if !armored {
+            // Shoved away from the player, whichever side of them it stood.
+            let away = if enemy_transform.translation.x == blow.from_x {
+                player.facing
+            } else {
+                (enemy_transform.translation.x - blow.from_x).signum()
+            };
             if enemy.type_id == "emitter_unit" {
-                enemy.knockback_velocity =
-                    player.facing * data.gameplay.player.melee.boss_knockback_h_s;
+                enemy.knockback_velocity = away * melee.boss_knockback_h_s;
                 enemy_transform.translation.y = enemy.home_y;
+            } else {
+                enemy.knockback_velocity = away * melee.knockback_h_s;
             }
             enemy.windup_remaining = 0.0;
             enemy.combo_hit_pending = false;
@@ -132,11 +147,20 @@ pub(super) fn land_the_blow(
         let style = audio::EnemySoundStyle::from(&enemy.type_id);
         if enemy.health > 0.0 {
             sounds.push(SoundCue::Damage(DamageSound::of(enemy.material, false)));
+            // A wound flares on the body that survives it; `update_enemy_ai`
+            // puts the flare out.
+            enemy.flash_s = melee.impact.flash_s;
+            sprite.color = Color::srgb(
+                melee.impact.flash_brightness,
+                melee.impact.flash_brightness,
+                melee.impact.flash_brightness,
+            );
             if !armored {
                 enemy.hurt_timer = blow.flinch_s;
                 set_enemy_animation(&mut sprite, &mut animation, sheets, &enemy.type_id, "hurt");
             }
         } else {
+            killed = true;
             sounds.push(SoundCue::EnemyDeath(style));
             set_enemy_animation(&mut sprite, &mut animation, sheets, &enemy.type_id, "dead");
             commands.entity(entity).insert(DeadEnemy {
@@ -209,12 +233,26 @@ pub(super) fn land_the_blow(
         }
         return;
     }
+    // The moment holds and the camera is thrown: longer for a kill, harder
+    // for a heavy blow or a kill. A blow soaked by armor is felt too.
+    commands.spawn(impact::Impact {
+        freeze_s: if killed {
+            melee.impact.kill_freeze_s
+        } else {
+            melee.impact.freeze_s
+        },
+        shake_h: if killed || blow.heavy {
+            melee.impact.heavy_shake_h
+        } else {
+            melee.impact.shake_h
+        },
+    });
     spawn_fire_burst(
         commands,
         random,
         blow.area.center(),
         Vec2::new(-player.facing, 0.0),
-        &data.gameplay.player.melee.impact_burst,
+        &melee.impact_burst,
     );
     let punches = data.gameplay.audio.recorded_effects.punch_hits.len();
     sounds.push(SoundCue::MeleeHit(

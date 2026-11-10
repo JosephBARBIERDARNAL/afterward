@@ -17,6 +17,7 @@ pub(super) fn spawn_camera(mut commands: Commands, data: Res<GameData>) {
             ..default()
         },
         pause_blur::PauseBlur::default(),
+        impact::Shake::default(),
         RoomCamera {
             size_h: Vec2::new(first_room.size.width_h, first_room.size.height_h),
         },
@@ -29,16 +30,17 @@ pub(super) fn spawn_camera(mut commands: Commands, data: Res<GameData>) {
 }
 
 /// Tracks the player horizontally, and vertically once they leave the dead
-/// zone around the screen center; the view never leaves the room.
+/// zone around the screen center; the view never leaves the room, but for the
+/// tremble a landed blow gives it (`impact::Shake`).
 pub(super) fn follow_camera(
     player: Query<&Transform, (With<PlayerBody>, Without<Camera2d>)>,
-    mut camera: Query<(&mut Transform, &RoomCamera), With<Camera2d>>,
+    mut camera: Query<(&mut Transform, &RoomCamera, Option<&impact::Shake>), With<Camera2d>>,
     data: Res<GameData>,
 ) {
     let Ok(player) = player.single() else {
         return;
     };
-    let Ok((mut transform, room_camera)) = camera.single_mut() else {
+    let Ok((mut transform, room_camera, shake)) = camera.single_mut() else {
         return;
     };
     let player_h = player.translation.truncate() / H_WORLD_UNITS;
@@ -48,7 +50,8 @@ pub(super) fn follow_camera(
         player_h.x,
         camera_y_h.clamp(player_h.y - dead_zone_h, player_h.y + dead_zone_h),
     );
-    let center_h = room_camera.clamp_center_h(target_h, &data.gameplay);
+    let center_h = room_camera.clamp_center_h(target_h, &data.gameplay)
+        + shake.map_or(Vec2::ZERO, |shake| shake.offset_h);
     transform.translation.x = center_h.x * H_WORLD_UNITS;
     transform.translation.y = center_h.y * H_WORLD_UNITS;
 }
