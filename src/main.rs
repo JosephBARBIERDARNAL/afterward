@@ -25,7 +25,13 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         })
         .transpose()?
         .unwrap_or_default();
-    let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
+    // A release archive ships `assets/` beside the executable; a build run
+    // from the checkout reads the sources in place.
+    let asset_root = std::env::current_exe()?
+        .parent()
+        .map(|dir| dir.join("assets"))
+        .filter(|dir| dir.is_dir())
+        .unwrap_or_else(|| Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets"));
     let game_data = GameData::load(&asset_root)?;
     if !game_data.rooms.contains_key(&start_room.0) {
         return Err(format!(
