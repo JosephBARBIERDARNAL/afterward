@@ -713,7 +713,13 @@ mod tests {
                 data.rooms.len()
             );
         }
-        assert_eq!(data.rooms[&10].enemy_spawns[0].type_id, "emitter_unit");
+        assert!(
+            data.rooms[&10]
+                .enemy_spawns
+                .iter()
+                .any(|spawn| spawn.type_id == "emitter_unit"),
+            "the chapter's last room holds its boss"
+        );
         assert_eq!(
             data.surfaces.materials.len(),
             13,

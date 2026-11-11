@@ -11,7 +11,7 @@ Afterward is a single-player, offline, 2D action roguelike pixel-art platformer.
 - Movement includes jump, crouch, cover, a dodge roll (Down with Jump, invulnerable through its middle — the melee player's one way through a shot), and the one thing a platform's side allows: a body pressed into a wall in mid-air clings to it and slides, and Jump pushes off it, Mario style. There is still no ledge mantle, and no swimming — the flood is scenery, never entered. The player never receives knockback; a body with no armor up is shoved back by every blow that wounds it.
 - Enemies stay idle until they see the player — near enough, at their own height, on the side they face (the `facing` of their room spawn, left by default), with no platform in between — or until a shot wakes them, then chase across levels (jumping, dropping, mantling). They deal damage only through attack hitboxes or projectiles, never by contact, and attacks are telegraphed by a readable wind-up.
 - `H`, the height of the player's collision box, is the unit for every distance and speed. The visible world is a fixed 16:9 viewport, 13.5 H tall (24 H wide), scaled to fit any window without revealing more of the room.
-- Every player action has a dedicated animation. Audio is placeholder for now: missing audio must never prevent the game from running.
+- Every player action has a dedicated animation.
 
 The details (tuning values, rooms, enemies, bonuses, materials, backgrounds, animations, controls) live in the YAML files under `src/assets/` and in the code, which are the reference. Don't duplicate them here.
 
@@ -45,7 +45,7 @@ Git hooks are managed by [prek](https://prek.j178.dev) from `prek.toml`: file hy
 - Combine `use` statements from one crate into a single `crate::{...}`.
 - No accessor that only returns a field. Widen the field to `pub(crate)` instead of writing a getter around it.
 - Prefer a tailored API over `std::mem::take`. `Option::take`, `Vec::split_off` and `HashMap::remove` name what moves and leave the container usable, where `mem::take` silently swaps in a `Default`.
-- Treat every git change you did not explicitly make as belonging to someone else working on the project simultaneously; preserve it exactly and do not revert, restore, overwrite, format, or otherwise “clean up” that file. When this happens, only git add the files you modified.
+- Treat every git change you did not explicitly make as belonging to someone else working on the project simultaneously; preserve it exactly and do not revert, restore, overwrite, format, or otherwise “clean up” that file. When this happens, only git add the files you modified. You don't have to mention that there are some unrelated changes.
 - Don't add content to README.md; relevant development knowledge lives in AGENTS.md.
 - When you finished implementing a feature or fixing a bug, make sure to commit it with a clear and concise commit message. Don't push to GitHub.
 

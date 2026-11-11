@@ -48,17 +48,17 @@ platforms:
     rect_h: { x: 53.5, y: 8.75, width: 2.5, height: 0.25 }
   - label: the east roof
     color: "#1C1A2E"
-    rect_h: { x: 43, y: 6, width: 7.5, height: 2 }
+    rect_h: { x: 42.92, y: 8.99, width: 7.5, height: 2 }
   - label: the middle roof
     color: "#1C1A2E"
-    rect_h: { x: 31, y: 7, width: 9.5, height: 2 }
+    rect_h: { x: 30.92, y: 9.99, width: 9.5, height: 2 }
   - label: the ramp down from the middle roof to the west roof
     color: "#1C1A2E"
-    rect_h: { x: 25.33, y: 7.76, width: 5.85, height: 0.25 }
+    rect_h: { x: 25.25, y: 10.75, width: 5.85, height: 0.25 }
     rotation_deg: 20
   - label: the west roof
     color: "#1C1A2E"
-    rect_h: { x: 10, y: 6, width: 15.5, height: 1 }
+    rect_h: { x: 9.92, y: 8.99, width: 15.5, height: 1 }
   - label: the door ledge, over the way in
     color: "#1C1A2E"
     rect_h: { x: 1, y: 6, width: 6, height: 2 }
@@ -117,39 +117,39 @@ enemy_spawns:
     facing: left
     stat_overrides: { health: 100, armor_layers: 2 }
   - type_id: blade_unit
-    position_h: { x: 48, y: 8 }
+    position_h: { x: 47.92, y: 10.99 }
     facing: right
     stat_overrides: { health: 100, armor_layers: 0 }
   - type_id: rifle_unit
-    position_h: { x: 45, y: 8 }
+    position_h: { x: 44.92, y: 10.99 }
     facing: right
     stat_overrides: { health: 100, armor_layers: 1 }
   - type_id: blade_unit
-    position_h: { x: 38, y: 9 }
+    position_h: { x: 37.92, y: 11.99 }
     facing: right
     stat_overrides: { health: 100, armor_layers: 0 }
   - type_id: heavy_unit
-    position_h: { x: 35, y: 9 }
+    position_h: { x: 34.92, y: 11.99 }
     facing: right
     stat_overrides: { health: 100, armor_layers: 3 }
   - type_id: rifle_unit
-    position_h: { x: 32.5, y: 9 }
+    position_h: { x: 32.42, y: 11.99 }
     facing: right
     stat_overrides: { health: 100, armor_layers: 2 }
   - type_id: blade_unit
-    position_h: { x: 23, y: 7 }
+    position_h: { x: 22.92, y: 9.99 }
     facing: right
     stat_overrides: { health: 100, armor_layers: 0 }
   - type_id: blade_unit
-    position_h: { x: 20, y: 7 }
+    position_h: { x: 19.92, y: 9.99 }
     facing: right
     stat_overrides: { health: 100, armor_layers: 0 }
   - type_id: heavy_unit
-    position_h: { x: 16, y: 7 }
+    position_h: { x: 15.92, y: 9.99 }
     facing: right
     stat_overrides: { health: 100, armor_layers: 2 }
   - type_id: rifle_unit
-    position_h: { x: 12, y: 7 }
+    position_h: { x: 11.92, y: 9.99 }
     facing: right
     stat_overrides: { health: 100, armor_layers: 1 }
   - type_id: dark_blade_unit
