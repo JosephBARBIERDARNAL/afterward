@@ -66,9 +66,8 @@ clips:
   # from. The charge loops until the key goes.
   charge: { sheet: player/sheets/charge.png, frames: 6, fps: 12 }
   charge_brace: { sheet: player/sheets/charge_brace.png, frames: 10, fps: 16 }
-  # Healing, by where it comes from: a flask off the floor, and the glow of a
-  # bonus that heals a cleared room.
-  drink: { sheet: player/sheets/drink.png, frames: 8, fps: 14 }
+  # Healing: the glow of a health drop taken off the floor, or of a bonus that
+  # heals a cleared room.
   healing: { sheet: player/sheets/healing.png, frames: 8, fps: 14 }
   # Getting up off the floor again, which only Last Stand ever asks for.
   rise: { sheet: player/sheets/rise.png, frames: 8, fps: 10 }

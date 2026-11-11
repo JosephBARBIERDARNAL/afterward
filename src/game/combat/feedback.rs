@@ -243,10 +243,10 @@ pub(in crate::game) fn update_health_pickups(
             * session.bonus_multiplier(&data, "field_dressing", "health_pickup_multiplier");
         session.health = (session.health + healing).min(session.max_health);
         sounds.push(SoundCue::Pickup);
-        // The flask is raised and drunk where it was found.
+        // The healing glow plays where the drop was found.
         player_body.start_action(
-            PlayerAction::Drink,
-            data.player_animations.clips.drink.duration_s(),
+            PlayerAction::Healing,
+            data.player_animations.clips.healing.duration_s(),
         );
         if session.has_bonus("sated_fury") {
             player_body.sated_fury_timer =

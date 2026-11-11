@@ -64,7 +64,6 @@ impl PlayerSprite<'_> {
                 PlayerAction::Roll => "player_roll",
                 PlayerAction::Rise => "player_rise",
                 PlayerAction::Aura(aura) => aura.clip_key(),
-                PlayerAction::Drink => "player_drink",
                 PlayerAction::Healing => "player_healing",
                 PlayerAction::Hit => "player_hit",
                 PlayerAction::Land => "player_land",

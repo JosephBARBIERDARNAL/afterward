@@ -194,9 +194,8 @@ pub(crate) enum PlayerAction {
     Rise,
     /// The glow worn for a moment when a bonus is taken.
     Aura(BonusAura),
-    /// Healing, by where it came from: a flask off the floor, or a bonus
-    /// paying out on a cleared room.
-    Drink,
+    /// Healing: a health drop off the floor, or a bonus paying out on a
+    /// cleared room.
     Healing,
     Hit,
     Land,
