@@ -34,6 +34,28 @@ fn the_empty_opening_room_offers_its_bonus_at_once_and_runs_into_room_one() {
         1,
         "the bonus item is lit by an aura"
     );
+    // Standing on the item does not take it either.
+    let spot = game.data().rooms[&0].bonus;
+    let world = game.app.world_mut();
+    for mut transform in world
+        .query_filtered::<&mut Transform, With<PlayerBody>>()
+        .iter_mut(world)
+    {
+        transform.translation.x = spot.x_h * H_WORLD_UNITS;
+        transform.translation.y = (spot.y_h + 0.5) * H_WORLD_UNITS;
+    }
+    game.run_seconds(0.3);
+    assert_eq!(game.screen(), GameScreen::Playing);
+    let world = game.app.world_mut();
+    assert_eq!(
+        world
+            .query_filtered::<&ChildOf, (With<InteractBadge>, With<Sprite>)>()
+            .iter(world)
+            .filter(|badge| world.get::<BonusPickup>(badge.parent()).is_some())
+            .count(),
+        1,
+        "the item in reach wears the key that takes it"
+    );
     game.take_bonus();
     let offers = game.session().offered_bonuses.clone();
     assert_eq!(offers.len(), 2);
@@ -42,9 +64,28 @@ fn the_empty_opening_room_offers_its_bonus_at_once_and_runs_into_room_one() {
     assert_eq!(game.session().owned_bonuses, offers[..1]);
     assert_eq!(door_frame(&mut game), Some(1), "which unlocks the door");
 
+    // Walking into the unlocked door is not enough: it is used with Interact,
+    // and wears the key while the player stands within reach of it.
+    game.step_toward_exit();
     game.key(KeyCode::KeyD, ButtonState::Pressed);
-    game.wait_for_screen(GameScreen::Transitioning, 10.0);
+    game.run_seconds(0.3);
     game.key(KeyCode::KeyD, ButtonState::Released);
+    assert_eq!(game.screen(), GameScreen::Playing);
+    game.step_toward_exit();
+    game.run_seconds(0.1);
+    let world = game.app.world_mut();
+    let badged = world
+        .query_filtered::<&ChildOf, With<InteractBadge>>()
+        .iter(world)
+        .map(ChildOf::parent)
+        .collect::<Vec<_>>();
+    assert_eq!(badged.len(), 1, "one badge stands in the room");
+    assert!(
+        world.get::<ExitDoor>(badged[0]).is_some(),
+        "and it stands over the door"
+    );
+    game.tap(KeyCode::KeyE);
+    game.wait_for_screen(GameScreen::Transitioning, 3.0);
     game.skip_any_prologue();
     game.wait_for_screen(GameScreen::RoomIntro, 5.0);
     game.wait_for_screen(GameScreen::Playing, 10.0);

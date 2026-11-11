@@ -329,6 +329,7 @@ pub struct RoomFlowConfig {
     pub room_gap_h: f32,
     pub exit_door: ExitDoorConfig,
     pub bonus_pickup: BonusPickupConfig,
+    pub interact: InteractConfig,
     pub bonus_rerolls_per_run: u8,
 }
 
@@ -436,6 +437,8 @@ pub struct GlowConfig {
     pub door_radius_h: f32,
     pub health_color: HexColor,
     pub door_color: HexColor,
+    /// How much brighter the aura of the thing within reach of Interact burns.
+    pub reach_boost: f32,
 }
 
 /// The bonus item lying on the room's `bonus` spot once it is cleared.
@@ -444,8 +447,24 @@ pub struct BonusPickupConfig {
     pub size_h: f32,
     pub bob_height_h: f32,
     pub bob_period_s: f32,
-    /// How close the player must come for the item to be picked up.
-    pub touch_radius_h: f32,
+    /// How close the player must stand for Interact to take the item.
+    pub reach_h: f32,
+}
+
+/// What Interact acts on, and the key badge standing over it.
+#[derive(Debug, Deserialize)]
+pub struct InteractConfig {
+    /// How far to either side of the unlocked door, and above or below its
+    /// middle, the player can use it from.
+    pub door_reach_x_h: f32,
+    pub door_reach_y_h: f32,
+    pub badge_size_h: f32,
+    /// The gap between the top of the thing in reach and its badge.
+    pub badge_gap_h: f32,
+    /// How long the badge takes to grow in.
+    pub pop_s: f32,
+    pub bob_height_h: f32,
+    pub bob_period_s: f32,
 }
 
 /// The exit door's sprite sheet: frame 0 locked, 1 unlocked, then the

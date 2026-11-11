@@ -1,6 +1,6 @@
 //! The bonus item lying on a cleared room's `bonus` spot. Its category is
-//! drawn when it appears; touching it opens the bonus screen, which then
-//! offers two bonuses of that category.
+//! drawn when it appears; Interact pressed within reach of it opens the bonus
+//! screen, which then offers two bonuses of that category.
 
 use super::*;
 use crate::game::ui_style::load_pixel_art;
@@ -47,6 +47,10 @@ pub(super) fn spawn_bonus_pickup(
             base_y,
             bob_phase_s: 0.0,
         },
+        Interactable {
+            reach_h: Vec2::splat(item.reach_h),
+            top_h: item.size_h / 2.0,
+        },
         Glowing {
             color: Color::from(config.color),
             radius_h: data.gameplay.effects.glow.bonus_radius_h,
@@ -60,41 +64,43 @@ pub(super) fn spawn_bonus_pickup(
 pub(super) struct BonusPickupResources<'w> {
     time: Res<'w, Time>,
     data: Res<'w, GameData>,
+    keys: Res<'w, ButtonInput<KeyCode>>,
+    controls: Res<'w, ControlBindings>,
+    in_reach: ResMut<'w, InReach>,
     random: ResMut<'w, RandomState>,
     session: ResMut<'w, RunSession>,
     next_screen: ResMut<'w, NextState<GameScreen>>,
     sounds: ResMut<'w, SoundQueue>,
 }
 
-/// Hovers the item, and opens the bonus screen when the player touches it.
+/// Hovers the item, and opens the bonus screen when Interact is pressed
+/// within reach of it.
 pub(super) fn update_bonus_pickup(
     resources: BonusPickupResources,
     mut commands: Commands,
-    player: Query<&Transform, (With<PlayerBody>, Without<BonusPickup>)>,
     mut pickups: Query<(Entity, &mut Transform, &mut BonusPickup)>,
     mut doors: Query<&mut Sprite, With<ExitDoor>>,
 ) {
     let BonusPickupResources {
         time,
         data,
+        keys,
+        controls,
+        mut in_reach,
         mut random,
         mut session,
         mut next_screen,
         mut sounds,
     } = resources;
     let item = &data.gameplay.room_flow.bonus_pickup;
-    let Ok(player) = player.single() else {
-        return;
-    };
     for (entity, mut transform, mut pickup) in &mut pickups {
         pickup.bob_phase_s = (pickup.bob_phase_s + time.delta_secs()) % item.bob_period_s;
         let turn = std::f32::consts::TAU * pickup.bob_phase_s / item.bob_period_s;
         transform.translation.y = pickup.base_y + turn.sin() * item.bob_height_h * H_WORLD_UNITS;
-        if (transform.translation.truncate() - player.translation.truncate()).length()
-            > item.touch_radius_h * H_WORLD_UNITS
-        {
+        if in_reach.0 != Some(entity) || !controls.just_pressed(GameAction::Interact, &keys) {
             continue;
         }
+        in_reach.0 = None;
         session.bonus_category = Some(pickup.category.clone());
         session.offered_bonuses =
             flow::draw_bonus_pair(&data, &session, &mut random, &BTreeSet::new());

@@ -15,9 +15,8 @@ fn the_city_is_spoken_for_before_the_run_walks_into_it() {
     game.take_bonus();
     game.tap(KeyCode::Digit1);
     game.step_toward_exit();
-    game.key(KeyCode::KeyD, ButtonState::Pressed);
+    game.tap(KeyCode::KeyE);
     game.wait_for_screen(GameScreen::Transitioning, 3.0);
-    game.key(KeyCode::KeyD, ButtonState::Released);
 
     game.wait_for_screen(GameScreen::Prologue, 3.0);
     let lines = game.data().gameplay.prologue.lines.join("\n\n");

@@ -459,6 +459,7 @@ impl GameData {
                 glow.bonus_radius_h,
                 glow.health_radius_h,
                 glow.door_radius_h,
+                glow.reach_boost,
             ]
             .iter()
             .any(|value| !value.is_finite() || *value <= 0.0)
@@ -468,14 +469,33 @@ impl GameData {
             ));
         }
         let pickup = &self.gameplay.room_flow.bonus_pickup;
-        if [pickup.size_h, pickup.bob_period_s, pickup.touch_radius_h]
+        if [pickup.size_h, pickup.bob_period_s, pickup.reach_h]
             .iter()
             .any(|value| !value.is_finite() || *value <= 0.0)
             || !pickup.bob_height_h.is_finite()
             || pickup.bob_height_h < 0.0
         {
             return Err(InvalidGameData::from(
-                "the bonus pickup needs a positive size, bob period and touch radius",
+                "the bonus pickup needs a positive size, bob period and reach",
+            ));
+        }
+        let interact = &self.gameplay.room_flow.interact;
+        if [
+            interact.door_reach_x_h,
+            interact.door_reach_y_h,
+            interact.badge_size_h,
+            interact.pop_s,
+            interact.bob_period_s,
+        ]
+        .iter()
+        .any(|value| !value.is_finite() || *value <= 0.0)
+            || [interact.badge_gap_h, interact.bob_height_h]
+                .iter()
+                .any(|value| !value.is_finite() || *value < 0.0)
+        {
+            return Err(InvalidGameData::from(
+                "the interact prompt needs a positive door reach, badge size, pop time and \
+                 bob period, and a gap and bob height that are not negative",
             ));
         }
 

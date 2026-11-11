@@ -203,14 +203,28 @@ room_flow:
     frames: 14
     height_h: 1.5
   # The bonus item lying on the room's `bonus` spot once every enemy is down.
-  # Its category is drawn at random; touching it within `touch_radius_h` opens
-  # the bonus screen, which then offers two bonuses of that category. It hovers
-  # `bob_height_h` up and down over `bob_period_s`.
+  # Its category is drawn at random; Interact pressed within `reach_h` of it
+  # opens the bonus screen, which then offers two bonuses of that category. It
+  # hovers `bob_height_h` up and down over `bob_period_s`.
   bonus_pickup:
     size_h: 0.5
     bob_height_h: 0.075
     bob_period_s: 3.6
-    touch_radius_h: 0.7
+    reach_h: 0.7
+  # The bonus item and the unlocked door are used with Interact, never by
+  # walking into them. The door is in reach `door_reach_x_h` to either side of
+  # it and `door_reach_y_h` above or below its middle. The nearest thing in
+  # reach wears a badge naming the key Interact is bound to: `badge_size_h`
+  # tall, standing `badge_gap_h` over it, grown in over `pop_s` and hovering
+  # `bob_height_h` up and down over `bob_period_s`.
+  interact:
+    door_reach_x_h: 0.9
+    door_reach_y_h: 1.0
+    badge_size_h: 0.45
+    badge_gap_h: 0.3
+    pop_s: 0.12
+    bob_height_h: 0.04
+    bob_period_s: 1.4
   bonus_rerolls_per_run: 3
 
 # The words the city is entered on, typed out over the water between the
@@ -263,6 +277,8 @@ effects:
     bonus_radius_h: 0.8
     health_radius_h: 0.6
     door_radius_h: 1.2
+    # How much brighter the aura of the thing within reach of Interact burns.
+    reach_boost: 1.6
     # A bonus item lights in its category's colour; these two light in their own.
     health_color: "#4CF07A"
     door_color: "#7FD4FF"

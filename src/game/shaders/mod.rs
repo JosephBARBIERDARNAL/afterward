@@ -34,7 +34,8 @@ impl Plugin for ShaderPlugin {
         .add_systems(
             Startup,
             (initialize_shaded_quads, flood::spawn_the_flood).chain(),
-        );
+        )
+        .add_systems(Update, glow::brighten_what_is_in_reach);
     }
 }
 

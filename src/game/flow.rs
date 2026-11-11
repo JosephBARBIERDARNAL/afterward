@@ -270,33 +270,34 @@ fn eligible_bonuses<'a>(
         .filter(|bonus| !excluded.contains(&bonus.id))
 }
 
-/// What the door being touched reads and writes, beside the two bodies that
-/// have to meet for it to happen.
+/// What using the door reads and writes.
 #[derive(SystemParam)]
 pub(super) struct DoorTouchResources<'w> {
     session: Res<'w, RunSession>,
     data: Res<'w, GameData>,
     sheets: Res<'w, SpriteSheets>,
+    keys: Res<'w, ButtonInput<KeyCode>>,
+    controls: Res<'w, ControlBindings>,
+    in_reach: ResMut<'w, InReach>,
     timer: ResMut<'w, PhaseTimer>,
     next_screen: ResMut<'w, NextState<GameScreen>>,
     sounds: ResMut<'w, SoundQueue>,
 }
 
-/// The door out of the room, which the portal is turned over once the player
-/// walks into it.
-type ExitDoors<'w, 's> =
-    Query<'w, 's, (Entity, &'static Transform), (With<ExitDoor>, Without<PlayerBody>)>;
-
+/// Leaves the room when Interact is pressed within reach of its unlocked
+/// door, turning the portal over it.
 pub(super) fn handle_door_touch(
     mut commands: Commands,
     resources: DoorTouchResources,
-    player: Query<&Transform, (With<PlayerBody>, Without<ExitDoor>)>,
-    doors: ExitDoors,
+    doors: Query<Entity, With<ExitDoor>>,
 ) {
     let DoorTouchResources {
         session,
         data,
         sheets,
+        keys,
+        controls,
+        mut in_reach,
         mut timer,
         mut next_screen,
         mut sounds,
@@ -305,19 +306,18 @@ pub(super) fn handle_door_touch(
     if !session.door_open {
         return;
     }
-    let (Ok(player), Ok((door_entity, door))) = (player.single(), doors.single()) else {
+    let Ok(door_entity) = doors.single() else {
         return;
     };
-    if (player.translation.x - door.translation.x).abs() > H_WORLD_UNITS * 0.65
-        || (player.translation.y - door.translation.y).abs() > H_WORLD_UNITS
-    {
+    if in_reach.0 != Some(door_entity) || !controls.just_pressed(GameAction::Interact, &keys) {
         return;
     }
+    in_reach.0 = None;
     timer.0 = Timer::from_seconds(
         data.gameplay.room_flow.room_transition_duration_s / 2.0,
         TimerMode::Once,
     );
-    // The way out turns open as it is touched. This only runs while the room
+    // The way out turns open as it is used. This only runs while the room
     // is being played, which the same frame leaves, so one portal is hung and
     // it rides the door off with the room.
     room_pan::hang_a_portal(&mut commands, door_entity, &sheets);

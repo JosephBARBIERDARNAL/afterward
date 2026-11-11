@@ -25,6 +25,7 @@ mod flow;
 #[cfg(debug_assertions)]
 mod hitbox_overlay;
 mod impact;
+mod interact;
 mod interface;
 mod menus;
 mod pause_blur;
@@ -60,6 +61,7 @@ use combat::{
 };
 use controls::{ControlBindings, GameAction};
 use flow::PhaseTimer;
+use interact::{InReach, Interactable};
 use menus::{MenuAction, MenuFocus, VolumeChannel};
 use player::{BonusAura, PlayerAction, PlayerBody, Strike};
 use prologue::Prologue;
@@ -126,6 +128,7 @@ impl Plugin for GamePlugin {
             .init_resource::<PreferencesDir>()
             .init_resource::<SettingsReturn>()
             .init_resource::<MenuFocus>()
+            .init_resource::<InReach>()
             .add_message::<menus::MenuPressed>()
             .init_resource::<ControlBindings>()
             .init_resource::<SoundQueue>()
@@ -233,6 +236,7 @@ impl Plugin for GamePlugin {
                     camera::update_background_parallax,
                     interface::update_hud,
                     shaders::attach_glows,
+                    interact::show_the_interact_badge,
                     shaders::show_the_flood,
                 ),
             )
@@ -268,6 +272,7 @@ impl Plugin for GamePlugin {
                     combat::update_healing_over_time,
                     combat::update_player_death,
                     bonus_pickup::spawn_bonus_pickup,
+                    interact::mark_what_is_in_reach,
                     bonus_pickup::update_bonus_pickup,
                     shaders::light_the_unlocked_door,
                     flow::handle_door_touch,

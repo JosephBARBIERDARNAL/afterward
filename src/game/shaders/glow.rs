@@ -74,6 +74,36 @@ pub(in crate::game) fn attach_glows(
     }
 }
 
+/// Turns up the aura of the thing within reach of Interact, and back down
+/// once the player has stepped away from it.
+pub(super) fn brighten_what_is_in_reach(
+    data: Res<GameData>,
+    in_reach: Res<InReach>,
+    mut glows: ResMut<Assets<GlowMaterial>>,
+    glowing: Query<(Entity, &Children), With<GlowAttached>>,
+    auras: Query<&MeshMaterial2d<GlowMaterial>>,
+) {
+    let config = &data.gameplay.effects.glow;
+    for (entity, children) in &glowing {
+        let strength = if in_reach.0 == Some(entity) {
+            config.strength * config.reach_boost
+        } else {
+            config.strength
+        };
+        for aura in children.iter().filter_map(|child| auras.get(child).ok()) {
+            // Only an aura whose brightness has to move is touched, so the
+            // others are not uploaded again every frame.
+            if glows
+                .get(&aura.0)
+                .is_some_and(|glow| glow.settings.color.w != strength)
+                && let Some(mut glow) = glows.get_mut(&aura.0)
+            {
+                glow.settings.color.w = strength;
+            }
+        }
+    }
+}
+
 /// Lights the exit door the moment it unlocks.
 pub(in crate::game) fn light_the_unlocked_door(
     mut commands: Commands,

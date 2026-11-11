@@ -60,6 +60,7 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
         .init_state::<GameScreen>()
         .init_resource::<RunSession>()
         .init_resource::<RoomPan>()
+        .init_resource::<InReach>()
         .init_resource::<StartRoom>()
         .init_resource::<AudioSettings>()
         .insert_resource(RandomState(0x4a75_6572_6e65_7974))
@@ -222,6 +223,8 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
                             room.bonus
                         };
                         let feet_h = player_transform.translation.y / H_WORLD_UNITS - 0.5;
+                        // Asked every frame: it only does anything in reach.
+                        keys.press(KeyCode::KeyE);
                         let exit_below = target.y_h < feet_h - 0.5 && player.grounded;
                         if exit_below {
                             keys.press(KeyCode::KeyS);
@@ -244,6 +247,7 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
                 combat::update_health_pickups,
                 combat::update_player_death,
                 bonus_pickup::spawn_bonus_pickup,
+                interact::mark_what_is_in_reach,
                 bonus_pickup::update_bonus_pickup,
                 flow::handle_door_touch,
                 flow::room_clear_check,

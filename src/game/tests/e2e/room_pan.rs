@@ -19,9 +19,8 @@ fn the_camera_slides_into_the_next_room_and_the_entry_door_goes_once_it_lands() 
     // The door is walked into by hand rather than through
     // `leave_through_the_door`, so the leaving itself can be watched.
     game.step_toward_exit();
-    game.key(KeyCode::KeyD, ButtonState::Pressed);
+    game.tap(KeyCode::KeyE);
     game.wait_for_screen(GameScreen::Transitioning, 3.0);
-    game.key(KeyCode::KeyD, ButtonState::Released);
     game.run_seconds(0.1);
     assert_eq!(
         game.portals(),

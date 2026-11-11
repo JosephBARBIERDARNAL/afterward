@@ -4,14 +4,15 @@
 //!
 //! Scenarios press keys as a player would. Three steps take a shortcut so room
 //! layout edits never break them: `defeat_enemies` finishes a room's enemies,
-//! `take_bonus` steps onto the bonus item it leaves behind, and
-//! `step_toward_exit` puts the player beside the door.
+//! `take_bonus` steps onto the bonus item it leaves behind and takes it, and
+//! `step_toward_exit` puts the player within reach of the door.
 
 use super::super::*;
 use crate::game::{
     audio::{AudioClass, ManagedAudio},
     bonus_pickup::BonusPickup,
     combat::CombatProjectile,
+    interact::InteractBadge,
     menus::{MenuAction, MenuButton},
     ripple::Ripple,
     shaders::{Flood, GlowAttached},
@@ -306,12 +307,11 @@ impl HeadlessGame {
         self.wait_for_screen(GameScreen::Playing, 10.0);
     }
 
-    /// Walks the player into the room's open door and waits for the next room.
+    /// Uses the room's open door and waits for the next room.
     fn leave_through_the_door(&mut self) {
         self.step_toward_exit();
-        self.key(KeyCode::KeyD, ButtonState::Pressed);
+        self.tap(KeyCode::KeyE);
         self.wait_for_screen(GameScreen::Transitioning, 3.0);
-        self.key(KeyCode::KeyD, ButtonState::Released);
         self.skip_any_prologue();
     }
 
@@ -376,6 +376,7 @@ impl HeadlessGame {
             body.velocity = Vec2::ZERO;
             body.grounded = true;
         }
+        self.tap(KeyCode::KeyE);
         self.wait_for_screen(GameScreen::Bonus, 3.0);
     }
 
@@ -387,11 +388,15 @@ impl HeadlessGame {
         }
     }
 
-    /// Shortcut: puts the player on the floor 1 H left of the exit, facing it.
+    /// Shortcut: puts the player on the floor half an H left of the exit,
+    /// within reach of it.
     fn step_toward_exit(&mut self) {
+        // The bonus screen holds a moment after a choice, and a door is only
+        // used from the room itself.
+        self.wait_for_screen(GameScreen::Playing, 3.0);
         let room = &self.data().rooms[&self.session().room_id];
         let position = Vec3::new(
-            (room.exit.x_h - 1.0) * H_WORLD_UNITS,
+            (room.exit.x_h - 0.5) * H_WORLD_UNITS,
             (room.exit.y_h + 0.5) * H_WORLD_UNITS,
             4.0,
         );

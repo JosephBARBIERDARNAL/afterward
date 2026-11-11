@@ -16,6 +16,7 @@ impl Plugin for VisualWalkthroughPlugin {
                 Update,
                 drive_visual_walkthrough
                     .before(flow::handle_bonus_input)
+                    .before(interact::mark_what_is_in_reach)
                     .before(flow::handle_door_touch)
                     .before(flow::update_room_clear)
                     .before(flow::update_boss_intro)
@@ -124,8 +125,8 @@ fn drive_visual_walkthrough(resources: VisualWalkthroughResources) {
     }
     walkthrough.elapsed_s += time.delta_secs().min(0.05);
 
-    // Stand beside whatever the shot is about, so the camera has settled on it
-    // by the time the screenshot is taken.
+    // Stand within reach of whatever the shot is about, so the camera has
+    // settled on it, and it wears its key, by the time the screenshot is taken.
     if scene.screen == GameScreen::Playing
         && (scene.door_open || scene.room_cleared)
         && !walkthrough.capture_completed
@@ -136,7 +137,7 @@ fn drive_visual_walkthrough(resources: VisualWalkthroughResources) {
         } else {
             room.bonus
         };
-        player.translation.x = (spot.x_h - 4.0) * H_WORLD_UNITS;
+        player.translation.x = (spot.x_h - 0.5) * H_WORLD_UNITS;
         player.translation.y = spot.y_h * H_WORLD_UNITS + H_WORLD_UNITS / 2.0;
     }
 
@@ -232,8 +233,11 @@ fn drive_visual_walkthrough(resources: VisualWalkthroughResources) {
                 player.translation.x = room.exit.x_h * H_WORLD_UNITS;
                 player.translation.y = room.exit.y_h * H_WORLD_UNITS + H_WORLD_UNITS / 2.0;
             }
+            keys.release_all();
+            keys.clear();
+            keys.press(KeyCode::KeyE);
         }
-        // The cleared room's bonus item waits to be touched.
+        // The cleared room's bonus item waits to be taken.
         GameScreen::Playing if scene.room_cleared => {
             if let (Some(room), Ok(mut player)) =
                 (data.rooms.get(&scene.room_id), players.single_mut())
@@ -241,6 +245,9 @@ fn drive_visual_walkthrough(resources: VisualWalkthroughResources) {
                 player.translation.x = room.bonus.x_h * H_WORLD_UNITS;
                 player.translation.y = room.bonus.y_h * H_WORLD_UNITS + H_WORLD_UNITS / 2.0;
             }
+            keys.release_all();
+            keys.clear();
+            keys.press(KeyCode::KeyE);
         }
         GameScreen::Playing if !walkthrough.pause_shown => {
             walkthrough.pause_shown = true;

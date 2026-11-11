@@ -135,12 +135,19 @@ pub(super) fn spawn_exit_door(
     data: &GameData,
     sheets: &SpriteSheets,
 ) {
+    let interact = &data.gameplay.room_flow.interact;
     spawn_door(
         commands,
         Vec2::new(room.exit.x_h, room.exit.y_h),
         data,
         sheets,
-        ExitDoor,
+        (
+            ExitDoor,
+            Interactable {
+                reach_h: Vec2::new(interact.door_reach_x_h, interact.door_reach_y_h),
+                top_h: data.gameplay.room_flow.exit_door.height_h / 2.0,
+            },
+        ),
     );
 }
 
@@ -172,7 +179,7 @@ fn spawn_door(
     at_h: Vec2,
     data: &GameData,
     sheets: &SpriteSheets,
-    door: impl Component,
+    door: impl Bundle,
 ) {
     let sheet = &sheets.0[ExitDoor::SHEET];
     let height = data.gameplay.room_flow.exit_door.height_h * H_WORLD_UNITS;
