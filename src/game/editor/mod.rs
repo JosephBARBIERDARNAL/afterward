@@ -589,35 +589,43 @@ fn enter_editor(
         transform.translation.y =
             (room.player_spawn.y_h + data.gameplay.viewport.height_h / 2.0 - 1.0) * H_WORLD_UNITS;
     }
-    let panel_node =
-        |left: Option<Val>, right: Option<Val>, top: Option<Val>, bottom: Option<Val>| Node {
-            position_type: PositionType::Absolute,
-            left: left.unwrap_or(Val::Auto),
-            right: right.unwrap_or(Val::Auto),
-            top: top.unwrap_or(Val::Auto),
-            bottom: bottom.unwrap_or(Val::Auto),
-            padding: UiRect::all(px(10)),
-            ..default()
-        };
     let font = TextFont {
         font_size: bevy::text::FontSize::Px(15.0),
         ..default()
     };
+    // The inspector stands top left, and the shortcuts under it.
+    let column = commands
+        .spawn((
+            Node {
+                position_type: PositionType::Absolute,
+                left: px(12),
+                top: px(12),
+                max_width: px(560),
+                flex_direction: FlexDirection::Column,
+                align_items: AlignItems::FlexStart,
+                row_gap: px(8),
+                ..default()
+            },
+            Pickable::IGNORE,
+            EditorUi,
+        ))
+        .id();
+    let panel_node = Node {
+        padding: UiRect::all(px(10)),
+        ..default()
+    };
     commands.spawn((
-        Node {
-            max_width: px(560),
-            ..panel_node(Some(px(12)), None, Some(px(12)), None)
-        },
+        panel_node.clone(),
         Text::new(""),
         font.clone(),
         TextColor(Color::WHITE),
         BackgroundColor(Color::srgba(0.02, 0.025, 0.05, 0.82)),
         Pickable::IGNORE,
         EditorPanel,
-        EditorUi,
+        ChildOf(column),
     ));
     commands.spawn((
-        panel_node(None, Some(px(12)), None, Some(px(12))),
+        panel_node,
         Text::new(
             [
                 String::from("Drag empty space: box-select (Shift adds)"),
@@ -651,7 +659,7 @@ fn enter_editor(
         Visibility::Hidden,
         Pickable::IGNORE,
         EditorHelp,
-        EditorUi,
+        ChildOf(column),
     ));
     // The playtest settings stand in the middle of the screen.
     commands.spawn((
