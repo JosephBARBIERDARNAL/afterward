@@ -3,55 +3,198 @@
 # values mark the feet baseline on a platform top.
 room_id: 4
 chapter_id: 1
-description: "A bare shell waiting for a layout, tall rather than wide: the room meant to be read from top to bottom."
+description: "The descent: a tower read from top to bottom and back. The door is in sight across the top, but the wall between seals it off, so the way there is down the left side floor by floor, under the wall, and up the right by ledges and a shaft."
 size:
-  width_h: 48
-  height_h: 40.5
-background_profile: drowned_city
+  width_h: 34
+  height_h: 40
+background_profile: city_peach_sunset
 player_spawn:
-  x_h: 3
-  y_h: 2
+  x_h: 2.5
+  y_h: 37
 # Solid platforms: land on their top, stop against their sides, bump
 # your head on their underside. They stop shots too.
 platforms:
-  - label: the floor the room stands on
-    material: city_pavement
-    rect_h: { x: -2, y: 0, width: 52, height: 2 }
-  - label: west wall
-    material: city_plating
-    rect_h: { x: -2, y: 2, width: 2, height: 38.5 }
-  - label: east wall
-    material: city_plating
-    rect_h: { x: 48, y: 2, width: 2, height: 38.5 }
-  - label: roofline
-    material: city_plating
-    rect_h: { x: -2, y: 40.5, width: 52, height: 2 }
+  - label: the ledge the whole room stands on
+    color: "#1C1A2E"
+    rect_h: { x: 1, y: 0, width: 32, height: 1 }
+  - label: the ledge the whole room stands on
+    color: "#1C1A2E"
+    rect_h: { x: 33, y: 0, width: 1, height: 40 }
+  - label: the ledge the whole room stands on
+    color: "#1C1A2E"
+    rect_h: { x: 0, y: 0, width: 1, height: 40 }
+  - color: "#1C1A2E"
+    rect_h: { x: 28, y: 36, width: 5, height: 1 }
+  - color: "#1C1A2E"
+    rect_h: { x: 1, y: 36, width: 5, height: 1 }
+  - label: the wall between the way down and the way up
+    color: "#1C1A2E"
+    rect_h: { x: 20, y: 5, width: 2, height: 35 }
+  - label: "floor A: first landing under the spawn ledge, open on the right"
+    color: "#1C1A2E"
+    rect_h: { x: 1, y: 31, width: 14, height: 1 }
+  - label: cover on floor A
+    color: "#1C1A2E"
+    rect_h: { x: 7, y: 32, width: 1, height: 1.25 }
+  - label: "floor B: open on the left"
+    color: "#1C1A2E"
+    rect_h: { x: 5, y: 25, width: 15, height: 1 }
+  - label: cover on floor B
+    color: "#1C1A2E"
+    rect_h: { x: 14, y: 26, width: 1, height: 1.5 }
+  - label: "floor C: open on the right"
+    color: "#1C1A2E"
+    rect_h: { x: 1, y: 19, width: 11, height: 1 }
+  - label: the step down off floor C
+    color: "#1C1A2E"
+    rect_h: { x: 12, y: 17, width: 4, height: 1.5 }
+  - label: "floor D: open on the left"
+    color: "#1C1A2E"
+    rect_h: { x: 6, y: 12, width: 14, height: 1 }
+  - label: "floor E: the last ledge above the street, with a nook under it"
+    color: "#1C1A2E"
+    rect_h: { x: 1, y: 6, width: 8, height: 1 }
+  - label: way up, step 1
+    color: "#1C1A2E"
+    rect_h: { x: 29, y: 1, width: 4, height: 2 }
+  - label: way up, step 2
+    color: "#1C1A2E"
+    rect_h: { x: 24.5, y: 5, width: 3, height: 0.25 }
+  - label: way up, step 3
+    color: "#1C1A2E"
+    rect_h: { x: 28.5, y: 7.25, width: 3, height: 0.25 }
+  - label: "way up, step 4: under the opening of floor F"
+    color: "#1C1A2E"
+    rect_h: { x: 22, y: 9.5, width: 4, height: 0.25 }
+  - label: "floor F: leads under the pillar into the shaft"
+    color: "#1C1A2E"
+    rect_h: { x: 25, y: 11.5, width: 8, height: 0.5 }
+  - label: the rifle's perch over floor F
+    color: "#1C1A2E"
+    rect_h: { x: 26, y: 14, width: 3, height: 0.25 }
+  - label: "the pillar: its right side and the east wall are the shaft"
+    color: "#1C1A2E"
+    rect_h: { x: 30, y: 14, width: 1, height: 6 }
+  - label: "floor G: the top of the shaft"
+    color: "#1C1A2E"
+    rect_h: { x: 22, y: 20, width: 9, height: 1 }
+  - label: last climb, step 1
+    color: "#1C1A2E"
+    rect_h: { x: 22, y: 21, width: 3, height: 2 }
+  - label: last climb, step 2
+    color: "#1C1A2E"
+    rect_h: { x: 27, y: 24.75, width: 3, height: 0.25 }
+  - label: last climb, step 3
+    color: "#1C1A2E"
+    rect_h: { x: 31, y: 26.75, width: 2, height: 0.25 }
+  - label: last climb, step 4
+    color: "#1C1A2E"
+    rect_h: { x: 26, y: 28.75, width: 3, height: 0.25 }
+  - label: "floor H: the last guard post"
+    color: "#1C1A2E"
+    rect_h: { x: 22, y: 30, width: 2.5, height: 1 }
+  - label: last climb, step 5
+    color: "#1C1A2E"
+    rect_h: { x: 26.5, y: 32.75, width: 1.5, height: 0.25 }
+  - label: "last climb, step 6: the jump to the door"
+    color: "#1C1A2E"
+    rect_h: { x: 22, y: 34.75, width: 3.5, height: 0.25 }
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
 enemy_spawns:
   - type_id: blade_unit
-    position_h: { x: 10, y: 2 }
-  - type_id: stalker_unit
-    position_h: { x: 14, y: 2 }
-  - type_id: rifle_unit
-    position_h: { x: 18, y: 2 }
-  - type_id: rifle_unit
-    position_h: { x: 22, y: 2 }
+    position_h: { x: 9.5, y: 32 }
+    facing: left
+    stat_overrides: { armor_layers: 0 }
   - type_id: blade_unit
-    position_h: { x: 26, y: 2 }
-  - type_id: heavy_unit
-    position_h: { x: 30, y: 2 }
+    position_h: { x: 11.5, y: 32 }
+    facing: left
+    stat_overrides: { armor_layers: 0 }
   - type_id: rifle_unit
-    position_h: { x: 34, y: 2 }
+    position_h: { x: 14, y: 32 }
+    facing: left
+    stat_overrides: { armor_layers: 0 }
   - type_id: heavy_unit
-    position_h: { x: 38, y: 2 }
-  - type_id: stalker_unit
-    position_h: { x: 42, y: 2 }
+    position_h: { x: 10, y: 26 }
+    facing: right
+    stat_overrides: { armor_layers: 2 }
+  - type_id: blade_unit
+    position_h: { x: 12.5, y: 26 }
+    facing: right
+    stat_overrides: { armor_layers: 0 }
+  - type_id: rifle_unit
+    position_h: { x: 6.5, y: 26 }
+    facing: right
+    stat_overrides: { armor_layers: 1 }
+  - type_id: blade_unit
+    position_h: { x: 7.5, y: 20 }
+    facing: left
+    stat_overrides: { armor_layers: 0 }
+  - type_id: blade_unit
+    position_h: { x: 10, y: 20 }
+    facing: left
+    stat_overrides: { armor_layers: 0 }
+  - type_id: rifle_unit
+    position_h: { x: 14.5, y: 18.5 }
+    facing: left
+    stat_overrides: { armor_layers: 1 }
+  - type_id: heavy_unit
+    position_h: { x: 12, y: 13 }
+    facing: right
+    stat_overrides: { armor_layers: 3 }
+  - type_id: blade_unit
+    position_h: { x: 9, y: 13 }
+    facing: right
+    stat_overrides: { armor_layers: 0 }
+  - type_id: blade_unit
+    position_h: { x: 7, y: 7 }
+    facing: left
+    stat_overrides: { armor_layers: 0 }
+  - type_id: blade_unit
+    position_h: { x: 3.5, y: 1 }
+    facing: right
+    stat_overrides: { armor_layers: 0 }
+  - type_id: heavy_unit
+    position_h: { x: 15, y: 1 }
+    facing: left
+    stat_overrides: { armor_layers: 3 }
+  - type_id: rifle_unit
+    position_h: { x: 31, y: 3 }
+    facing: left
+    stat_overrides: { armor_layers: 1 }
+  - type_id: blade_unit
+    position_h: { x: 26, y: 1 }
+    facing: left
+    stat_overrides: { armor_layers: 0 }
+  - type_id: blade_unit
+    position_h: { x: 28, y: 12 }
+    facing: left
+    stat_overrides: { armor_layers: 0 }
+  - type_id: rifle_unit
+    position_h: { x: 27.5, y: 14.25 }
+    facing: left
+    stat_overrides: { armor_layers: 0 }
+  - type_id: heavy_unit
+    position_h: { x: 26.5, y: 21 }
+    facing: right
+    stat_overrides: { armor_layers: 1 }
+  - type_id: blade_unit
+    position_h: { x: 28.5, y: 21 }
+    facing: right
+    stat_overrides: { armor_layers: 0 }
+  - type_id: rifle_unit
+    position_h: { x: 23, y: 31 }
+    facing: right
+    stat_overrides: { armor_layers: 2 }
+  - type_id: rifle_unit
+    position_h: { x: 29, y: 37 }
+    facing: left
+    stat_overrides: { armor_layers: 1 }
 # The bonus item, lying beside the door once every enemy is down.
 bonus:
-  x_h: 43
-  y_h: 2
+  x_h: 30
+  y_h: 37
 exit:
-  x_h: 45
-  y_h: 2
+  x_h: 31.25
+  y_h: 37
 next_room_id: 5
