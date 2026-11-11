@@ -19,9 +19,6 @@ impl Display for RoomConfig {
         formatter.write_str(HEADER)?;
         writeln!(formatter, "room_id: {}", self.room_id)?;
         writeln!(formatter, "chapter_id: {}", self.chapter_id)?;
-        if let Some(description) = &self.description {
-            writeln!(formatter, "description: {}", YamlText(description))?;
-        }
         writeln!(formatter, "size:")?;
         writeln!(formatter, "  width_h: {}", self.size.width_h)?;
         writeln!(formatter, "  height_h: {}", self.size.height_h)?;

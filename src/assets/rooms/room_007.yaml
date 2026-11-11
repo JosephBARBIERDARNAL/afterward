@@ -3,7 +3,6 @@
 # values mark the feet baseline on a platform top.
 room_id: 7
 chapter_id: 1
-description: "A bare shell waiting for a layout, long, with mixed ranged and melee enemies."
 size:
   width_h: 72
   height_h: 30

@@ -11,9 +11,6 @@ use super::{EnemyTypeId, Fill};
 pub struct RoomConfig {
     pub room_id: u16,
     pub chapter_id: u8,
-    /// A short note on the layout's idea, for whoever edits the room.
-    #[serde(default)]
-    pub description: Option<String>,
     pub size: RoomSizeConfig,
     pub background_profile: String,
     pub player_spawn: SpawnPosition,

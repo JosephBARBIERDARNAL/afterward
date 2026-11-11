@@ -72,6 +72,7 @@ pub(super) fn update_bonus_pickup(
     mut commands: Commands,
     player: Query<&Transform, (With<PlayerBody>, Without<BonusPickup>)>,
     mut pickups: Query<(Entity, &mut Transform, &mut BonusPickup)>,
+    mut doors: Query<&mut Sprite, With<ExitDoor>>,
 ) {
     let BonusPickupResources {
         time,
@@ -103,6 +104,18 @@ pub(super) fn update_bonus_pickup(
         session.selected_choice = bonus_screen::BonusChoice::Offer(0);
         sounds.push(SoundCue::Pickup);
         commands.entity(entity).despawn();
+        // A build that already holds everything of this category has nothing
+        // to be offered: the item is simply taken, and the door opens.
+        if session.offered_bonuses.is_empty() {
+            for mut sprite in &mut doors {
+                if let Some(atlas) = sprite.texture_atlas.as_mut() {
+                    atlas.index = ExitDoor::UNLOCKED_FRAME;
+                }
+            }
+            session.door_open = true;
+            sounds.push(SoundCue::DoorAppear);
+            return;
+        }
         next_screen.set(GameScreen::Bonus);
         return;
     }

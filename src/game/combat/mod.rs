@@ -98,7 +98,9 @@ fn apply_player_damage(
     };
     let reduced_damage =
         damage * session.bonus_multiplier(data, "thick_skin", "damage_taken_multiplier") * cover;
-    session.health = (session.health - reduced_damage).max(0.0);
+    if !session.playtest.infinite_health {
+        session.health = (session.health - reduced_damage).max(0.0);
+    }
     player.invulnerability_timer = tuning.damage_invulnerability_s;
     session.damaged_this_room = true;
     spawn_damage_number(commands, transform.translation, reduced_damage, true);

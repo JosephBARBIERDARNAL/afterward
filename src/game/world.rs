@@ -35,7 +35,9 @@ pub(super) fn spawn_room(
     let room = &data.rooms[&session.room_id];
     draw_room(&mut commands, room, &data, &asset_server, &mut shaders);
     spawn_player(&mut commands, room, &data, &sheets);
-    spawn_enemies(&mut commands, room, &data, &sheets);
+    if session.has_enemies(&data) {
+        spawn_enemies(&mut commands, room, &data, &sheets);
+    }
     spawn_exit_door(&mut commands, room, &data, &sheets);
     spawn_entry_door(&mut commands, room, &data, &sheets);
 

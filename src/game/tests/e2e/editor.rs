@@ -54,8 +54,10 @@ fn the_editor_edits_undoes_with_cmd_z_on_azerty_saves_and_playtests() {
     .expect("the saved room is valid YAML");
     assert_eq!(saved.size.width_h, edited);
 
-    // Cmd+R playtests the edited room.
+    // Cmd+R asks how the room should be played, and Enter plays it.
     command_presses(&mut game, KeyCode::KeyR, "r", 1);
+    assert_eq!(game.screen(), GameScreen::Editor);
+    game.tap(KeyCode::Enter);
     game.wait_for_screen(GameScreen::Playing, 10.0);
     assert_eq!(game.session().room_id, 1);
     assert_eq!(width(&game), edited);
@@ -181,36 +183,95 @@ fn the_editor_toggles_the_viewport_and_sight_overlays() {
     // Room 1, which has enemies, so the sight overlay draws its bands and
     // lines for real rather than finding nothing to draw.
     game.tap(KeyCode::PageDown);
-    // The inspector names the overlays that are on, so a toggle is visible
-    // even without a window to draw them in.
+    // The inspector names the overlays that are on, and says nothing of them
+    // while none is, so a toggle is visible even without a window to draw
+    // them in.
     let shown = |game: &mut HeadlessGame| {
         let world = game.app.world_mut();
-        world
-            .query::<&Text>()
-            .iter(world)
-            .find_map(|text| {
-                text.0
-                    .lines()
-                    .find(|line| line.starts_with("Overlays"))
-                    .map(str::to_string)
-            })
-            .expect("the inspector lists the overlays")
+        world.query::<&Text>().iter(world).find_map(|text| {
+            text.0
+                .lines()
+                .find(|line| line.starts_with("Overlays"))
+                .map(str::to_string)
+        })
     };
-    assert!(
-        shown(&mut game).ends_with("off"),
-        "none are on to begin with"
-    );
+    assert_eq!(shown(&mut game), None, "none are on to begin with");
 
     game.tap(KeyCode::KeyF);
-    assert!(shown(&mut game).ends_with("frame"));
+    assert_eq!(shown(&mut game).as_deref(), Some("Overlays: frame"));
     game.tap(KeyCode::KeyV);
-    assert!(shown(&mut game).ends_with("frame, sight"));
+    assert_eq!(shown(&mut game).as_deref(), Some("Overlays: frame, sight"));
 
     // Each key turns its own overlay back off, and the room is never edited.
     let room = game.data().rooms[&1].clone();
     game.tap(KeyCode::KeyF);
-    assert!(shown(&mut game).ends_with("sight"));
+    assert_eq!(shown(&mut game).as_deref(), Some("Overlays: sight"));
     game.tap(KeyCode::KeyV);
-    assert!(shown(&mut game).ends_with("off"));
+    assert_eq!(shown(&mut game), None);
     assert_eq!(game.data().rooms[&1], room, "the toggles edit nothing");
+}
+
+#[test]
+fn a_playtest_is_played_the_way_its_settings_ask() {
+    let mut game = HeadlessGame::with_copied_data();
+    game.tap(KeyCode::KeyD);
+    game.tap(KeyCode::PageDown);
+    assert!(!game.data().rooms[&1].enemy_spawns.is_empty());
+
+    // Cmd+R opens the settings on their first row. Right turns infinite
+    // health on, Down and Right turn the enemies off, and Down and two
+    // Rights ask for every bonus.
+    command_presses(&mut game, KeyCode::KeyR, "r", 1);
+    game.tap(KeyCode::ArrowRight);
+    game.tap(KeyCode::ArrowDown);
+    game.tap(KeyCode::ArrowRight);
+    game.tap(KeyCode::ArrowDown);
+    game.tap(KeyCode::ArrowRight);
+    game.tap(KeyCode::ArrowRight);
+    // Escape puts the settings away without leaving the editor or playing.
+    game.tap(KeyCode::Escape);
+    assert_eq!(game.screen(), GameScreen::Editor);
+
+    // They are remembered, and a second Cmd+R plays the room with them.
+    command_presses(&mut game, KeyCode::KeyR, "r", 2);
+    game.wait_for_screen(GameScreen::Playing, 10.0);
+    assert_eq!(game.session().room_id, 1);
+    assert!(game.enemies().is_empty(), "the room opens empty");
+    assert_eq!(
+        game.session().owned_bonuses.len(),
+        game.data().bonuses.bonuses.len()
+    );
+    let health = game.session().health;
+    game.hit_player(health * 2.0);
+    game.run_seconds(1.0);
+    assert_eq!(game.session().health, health, "a hit costs no health");
+    assert_eq!(game.screen(), GameScreen::Playing);
+}
+
+#[test]
+fn tab_moves_the_selection_to_the_closest_item_of_the_same_kind() {
+    let mut game = HeadlessGame::with_copied_data();
+    game.tap(KeyCode::KeyD);
+    game.tap(KeyCode::PageDown);
+    let enemies = |game: &HeadlessGame| game.data().rooms[&1].enemy_spawns.clone();
+    let authored = enemies(&game).len();
+
+    // Two enemies added on the same spot; the second, left selected, is
+    // given another type so the two can be told apart.
+    game.tap(KeyCode::KeyE);
+    game.tap(KeyCode::KeyE);
+    game.tap(KeyCode::ArrowDown);
+    game.tap(KeyCode::ArrowRight);
+    let (first, second) = (
+        enemies(&game)[authored].clone(),
+        enemies(&game)[authored + 1].clone(),
+    );
+    assert_ne!(first.type_id, second.type_id);
+
+    // Tab leaves the second for the first, the closest enemy there is, so
+    // Delete removes the first and only the first.
+    game.tap(KeyCode::Tab);
+    game.tap(KeyCode::Delete);
+    assert_eq!(enemies(&game).len(), authored + 1);
+    assert_eq!(enemies(&game)[authored], second);
 }

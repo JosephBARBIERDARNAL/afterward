@@ -287,11 +287,64 @@ pub(super) fn update_panels(
             cursor_h.x, cursor_h.y
         ));
     }
-    lines.push(format!("Overlays (F/V): {}", editor.overlays.describe()));
+    // The overlays that are on; the keys that toggle them are in the help.
+    let overlays = [
+        (editor.overlays.viewport, "frame"),
+        (editor.overlays.sight, "sight"),
+    ]
+    .into_iter()
+    .filter_map(|(on, name)| on.then_some(name))
+    .collect::<Vec<_>>();
+    if !overlays.is_empty() {
+        lines.push(format!("Overlays: {}", overlays.join(", ")));
+    }
     lines.push(String::from("\nHold H: shortcuts"));
     for mut text in &mut panel {
         text.0 = lines.join("\n");
     }
+}
+
+/// Shows the playtest settings while they are open, the row Left/Right
+/// changes marked like the inspector's.
+pub(super) fn show_playtest_settings(
+    editor: Res<RoomEditor>,
+    session: Res<RunSession>,
+    mut panel: Query<(&mut Text, &mut Visibility), With<EditorPlaytest>>,
+) {
+    let Ok((mut text, mut visibility)) = panel.single_mut() else {
+        return;
+    };
+    let Some(current) = editor.playtest_row else {
+        visibility.set_if_neq(Visibility::Hidden);
+        return;
+    };
+    visibility.set_if_neq(Visibility::Inherited);
+    let on_off = |on: bool| String::from(if on { "on" } else { "off" });
+    let rows = [
+        ("Infinite health", on_off(session.playtest.infinite_health)),
+        ("Enemies", on_off(!session.playtest.no_enemies)),
+        (
+            "Bonuses",
+            match session.playtest.starting_bonuses {
+                0 => String::from("none"),
+                usize::MAX => String::from("all"),
+                count => format!("{count} at random"),
+            },
+        ),
+    ];
+    let mut lines = vec![format!("Playtest room {}", editor.room_id), String::new()];
+    for (index, (name, value)) in rows.into_iter().enumerate() {
+        lines.push(format!(
+            "{} {name:<18} {value}",
+            if index == current { ">" } else { " " }
+        ));
+    }
+    lines.push(String::new());
+    lines.push(String::from(
+        "Up / Down: setting    Left / Right: change it",
+    ));
+    lines.push(String::from("Enter: play    Esc: back to the editor"));
+    text.0 = lines.join("\n");
 }
 
 /// Shows the shortcuts panel while H is held (by the character it types, so

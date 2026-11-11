@@ -29,7 +29,7 @@ pub(super) fn start_room_intro(
     let intro = &data.gameplay.room_flow.room_intro;
     // Nobody materializes in a room without enemies: it opens as soon as the
     // player has walked in.
-    let duration_s = if data.rooms[&session.room_id].enemy_spawns.is_empty() {
+    let duration_s = if !session.has_enemies(&data) {
         intro.enemies_start_s()
     } else {
         intro.duration_s()
@@ -67,7 +67,7 @@ pub(super) fn update_room_intro(
     mut sounds: ResMut<SoundQueue>,
 ) {
     let enemies_start_s = data.gameplay.room_flow.room_intro.enemies_start_s();
-    let has_enemies = !data.rooms[&session.room_id].enemy_spawns.is_empty();
+    let has_enemies = session.has_enemies(&data);
     let before_s = timer.0.elapsed_secs();
     timer.0.tick(time.delta());
     if has_enemies && before_s < enemies_start_s && timer.0.elapsed_secs() >= enemies_start_s {

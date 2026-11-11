@@ -52,6 +52,10 @@ pub(super) fn handle_pointer(resources: EditorPointerResources) {
         windows,
         mut camera,
     } = resources;
+    // The playtest settings are up: the room behind them is not touched.
+    if editor.playtest_row.is_some() {
+        return;
+    }
     let (Ok(window), Ok((camera, camera_transform, mut transform, mut projection))) =
         (windows.single(), camera.single_mut())
     else {

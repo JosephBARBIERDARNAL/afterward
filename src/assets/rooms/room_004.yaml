@@ -3,7 +3,6 @@
 # values mark the feet baseline on a platform top.
 room_id: 4
 chapter_id: 1
-description: "The descent: a tower read from top to bottom and back. The door is in sight across the top but walled off, so the way there is down four floors on the left, along the street under the wall, and up four on the right. Every floor is left by a shaft two wide, climbed back by its walls, so nothing is a one-way drop."
 size:
   width_h: 34
   height_h: 40

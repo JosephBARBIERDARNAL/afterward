@@ -63,6 +63,7 @@ pub(super) struct EditorKeyResources<'w, 's> {
     data: ResMut<'w, GameData>,
     session: ResMut<'w, RunSession>,
     start_room: ResMut<'w, StartRoom>,
+    random: ResMut<'w, RandomState>,
     next_screen: ResMut<'w, NextState<GameScreen>>,
     camera: Query<'w, 's, (&'static mut Transform, &'static mut Projection), With<Camera2d>>,
 }
@@ -75,6 +76,7 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
         mut data,
         mut session,
         mut start_room,
+        mut random,
         mut next_screen,
         mut camera,
     } = resources;
@@ -115,6 +117,47 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
     if !pressed(KeyCode::Escape) {
         editor.leave_armed = false;
     }
+    if let Some(row) = editor.playtest_row {
+        // The settings Cmd+R opened take every key until they are answered.
+        const ROWS: usize = 3;
+        let playtest = &mut session.playtest;
+        if pressed(KeyCode::Escape) {
+            editor.playtest_row = None;
+        } else if pressed(KeyCode::Enter) || pressed(KeyCode::NumpadEnter) || command && letter('r')
+        {
+            editor.playtest_row = None;
+            *start_room = StartRoom(editor.room_id);
+            next_screen.set(screens::reset_run(
+                &mut session,
+                &data,
+                *start_room,
+                &mut random,
+            ));
+        } else if pressed(KeyCode::ArrowUp) {
+            editor.playtest_row = Some((row + ROWS - 1) % ROWS);
+        } else if pressed(KeyCode::ArrowDown) {
+            editor.playtest_row = Some((row + 1) % ROWS);
+        } else if pressed(KeyCode::ArrowLeft) || pressed(KeyCode::ArrowRight) {
+            match row {
+                0 => playtest.infinite_health = !playtest.infinite_health,
+                1 => playtest.no_enemies = !playtest.no_enemies,
+                _ => {
+                    let choices = STARTING_BONUSES;
+                    let step = if pressed(KeyCode::ArrowLeft) {
+                        choices.len() - 1
+                    } else {
+                        1
+                    };
+                    let at = choices
+                        .iter()
+                        .position(|choice| *choice == playtest.starting_bonuses)
+                        .unwrap_or(0);
+                    playtest.starting_bonuses = choices[(at + step) % choices.len()];
+                }
+            }
+        }
+        return;
+    }
     let room_ids = data.rooms.keys().copied().collect::<Vec<_>>();
     let field = editor.fields().get(editor.field).copied();
     let cursor_h = editor.cursor_h.unwrap_or_default();
@@ -151,8 +194,8 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
             editor.problem = Some(problem.to_string());
             return;
         }
-        *start_room = StartRoom(editor.room_id);
-        next_screen.set(screens::reset_run(&mut session, &data, *start_room));
+        // The room is not played yet: first, how it should be.
+        editor.playtest_row = Some(0);
     } else if command && (letter('y') || shift && letter('z')) {
         let Some(step) = editor.redo.pop() else {
             return;
@@ -311,6 +354,32 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
             added = Some(EditorItem::Enemy(room.enemy_spawns.len() - 1));
         });
         editor.select(added);
+    } else if pressed(KeyCode::Tab) {
+        // From the one item selected to its nearest neighbor of the same
+        // kind, measured middle to middle.
+        let (&[selected], Some(room)) =
+            (editor.selected.as_slice(), data.rooms.get(&editor.room_id))
+        else {
+            return;
+        };
+        let middle = |item: EditorItem| {
+            item.bounds(room)
+                .map(|rect| Vec2::new(rect.x + rect.width / 2.0, rect.y + rect.height / 2.0))
+        };
+        let Some(from) = middle(selected) else {
+            return;
+        };
+        let closest = EditorItem::all(room)
+            .filter(|item| {
+                *item != selected
+                    && std::mem::discriminant(item) == std::mem::discriminant(&selected)
+            })
+            .filter_map(|item| Some((item, middle(item)?.distance_squared(from))))
+            .min_by(|a, b| a.1.total_cmp(&b.1))
+            .map(|(item, _)| item);
+        if closest.is_some() {
+            editor.select(closest);
+        }
     } else if pressed(KeyCode::Delete) || pressed(KeyCode::Backspace) {
         if editor.selected.is_empty() {
             return;

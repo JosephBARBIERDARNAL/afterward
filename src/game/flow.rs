@@ -41,7 +41,7 @@ pub(super) fn room_clear_check(
     }
     // A room authored without enemies (the opening room 0) has nothing to
     // clear: its bonus item is simply there from the start, with no flash.
-    if data.rooms[&session.room_id].enemy_spawns.is_empty() {
+    if !session.has_enemies(&data) {
         return;
     }
     timer.0 = Timer::from_seconds(data.gameplay.room_flow.clear_animation_s, TimerMode::Once);

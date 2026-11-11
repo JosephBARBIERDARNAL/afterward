@@ -31,6 +31,9 @@ const COMMAND_KEY: &str = if cfg!(target_os = "macos") {
     "Ctrl"
 };
 const MAX_ZOOM: f32 = 4.0;
+/// What the playtest settings offer a run to open with: no bonus, a few at
+/// random, or every one of them.
+const STARTING_BONUSES: [usize; 3] = [0, 5, usize::MAX];
 
 pub(super) struct EditorPlugin;
 
@@ -59,6 +62,7 @@ impl Plugin for EditorPlugin {
                     draw::draw_overlay,
                     overlays::draw_overlays,
                     draw::update_panels,
+                    draw::show_playtest_settings,
                     draw::show_help_while_h_is_held,
                     palette::refresh_palette,
                 )
@@ -353,7 +357,7 @@ struct RoomEditor {
     drag: Option<Drag>,
     /// Inspector row Up/Down moves between.
     field: usize,
-    /// Text being typed into a label or the room description.
+    /// Text being typed into a label.
     text_entry: Option<String>,
     /// The typing handled this frame's keys, so shortcuts ignore them.
     keys_consumed: bool,
@@ -379,6 +383,9 @@ struct RoomEditor {
     pointer_over_panel: bool,
     /// The layout overlays that are drawn over the room.
     overlays: Overlays,
+    /// The playtest settings are open, on this row: Cmd+R asks how the room
+    /// should be played before it plays it.
+    playtest_row: Option<usize>,
     /// The editor opened this frame: the key that opened it (D in a menu)
     /// must not also act as an editor shortcut.
     just_opened: bool,
@@ -412,6 +419,7 @@ impl Default for RoomEditor {
             clipboard: None,
             pointer_over_panel: false,
             overlays: Overlays::default(),
+            playtest_row: None,
             just_opened: false,
             problem: None,
             view_dirty: true,
@@ -491,6 +499,7 @@ impl RoomEditor {
         self.drag = None;
         self.field = 0;
         self.text_entry = None;
+        self.playtest_row = None;
         self.view_dirty = true;
         self.leave_armed = false;
     }
@@ -556,6 +565,10 @@ struct EditorPanel;
 #[derive(Component)]
 struct EditorHelp;
 
+/// The playtest settings, shown between Cmd+R and the playtest itself.
+#[derive(Component)]
+struct EditorPlaytest;
+
 /// Every editor panel, despawned when the editor closes.
 #[derive(Component)]
 struct EditorUi;
@@ -617,27 +630,54 @@ fn enter_editor(
                 String::from("F: viewport frame, at the spawn and at the cursor"),
                 String::from("V: what idle enemies see"),
                 String::from("Click a material or a color: paint the selection"),
+                String::from("Tab: select the closest item of the same kind"),
                 String::from("Del: delete"),
                 format!("{COMMAND_KEY}+D: duplicate"),
                 String::from("Up / Down: inspector field"),
                 String::from("Left / Right: change it (Shift: x4)"),
-                String::from("Enter: type a label or description"),
+                String::from("Enter: type a label"),
                 String::from("C: clear the field"),
                 String::from("PgUp / PgDn: previous / next room"),
                 format!("{COMMAND_KEY}+Shift+Z or {COMMAND_KEY}+Y: redo"),
-                format!("{COMMAND_KEY}+R: playtest"),
+                format!("{COMMAND_KEY}+R: playtest, after its settings"),
                 String::from("B (in play): hitbox overlay"),
                 String::from("Esc: deselect, then back to the menu"),
             ]
             .join("\n"),
         ),
-        font,
+        font.clone(),
         TextColor(Color::srgb(0.78, 0.8, 0.86)),
         BackgroundColor(Color::srgba(0.02, 0.025, 0.05, 0.82)),
         Visibility::Hidden,
         Pickable::IGNORE,
         EditorHelp,
         EditorUi,
+    ));
+    // The playtest settings stand in the middle of the screen.
+    commands.spawn((
+        Node {
+            position_type: PositionType::Absolute,
+            width: percent(100),
+            height: percent(100),
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Center,
+            ..default()
+        },
+        Pickable::IGNORE,
+        EditorUi,
+        children![(
+            Node {
+                padding: UiRect::all(px(16)),
+                ..default()
+            },
+            Text::new(""),
+            font,
+            TextColor(Color::WHITE),
+            BackgroundColor(Color::srgba(0.02, 0.025, 0.05, 0.94)),
+            Visibility::Hidden,
+            Pickable::IGNORE,
+            EditorPlaytest,
+        )],
     ));
     palette::spawn_palette(&mut commands, &data, &asset_server);
 }

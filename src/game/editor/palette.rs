@@ -170,7 +170,7 @@ pub(super) fn handle_palette(
     shades: Query<(&RelativeCursorPosition, &ShadeSwatch)>,
 ) {
     editor.pointer_over_panel = panels.iter().any(RelativeCursorPosition::cursor_over);
-    if !mouse.just_pressed(MouseButton::Left) {
+    if !mouse.just_pressed(MouseButton::Left) || editor.playtest_row.is_some() {
         return;
     }
     if let Some((_, HueSwatch(hue))) = hues.iter().find(|(cursor, _)| cursor.cursor_over()) {

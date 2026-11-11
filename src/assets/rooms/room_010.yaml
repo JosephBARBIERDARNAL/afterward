@@ -3,7 +3,6 @@
 # values mark the feet baseline on a platform top.
 room_id: 10
 chapter_id: 1
-description: "A bare shell waiting for a layout, with the chapter's boss alone in it."
 size:
   width_h: 48
   height_h: 22.5

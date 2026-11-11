@@ -20,7 +20,6 @@ pub(super) enum Field {
     RoomWidth,
     RoomHeight,
     Background,
-    Description,
     Label,
     Fill,
     Layer,
@@ -66,7 +65,6 @@ impl Field {
                 Self::RoomWidth,
                 Self::RoomHeight,
                 Self::Background,
-                Self::Description,
             ],
             Some(EditorItem::Platform(_)) => &[
                 Self::Label,
@@ -121,7 +119,6 @@ impl Field {
             Self::RoomWidth => "Room width (H)",
             Self::RoomHeight => "Room height (H)",
             Self::Background => "Background",
-            Self::Description => "Description",
             Self::Label => "Label",
             Self::Fill => "Fill",
             Self::Layer => "Layer",
@@ -148,13 +145,12 @@ impl Field {
     }
 
     pub(super) fn is_text(self) -> bool {
-        matches!(self, Self::Description | Self::Label)
+        self == Self::Label
     }
 
     /// The field's text, for typing into it.
     pub(super) fn text(self, room: &RoomConfig, item: Option<EditorItem>) -> Option<String> {
         match (self, item) {
-            (Self::Description, _) => room.description.clone(),
             (Self::Label, Some(EditorItem::Platform(index))) => room
                 .platforms
                 .get(index)
@@ -175,7 +171,6 @@ impl Field {
     pub(super) fn set_text(self, room: &mut RoomConfig, item: Option<EditorItem>, text: &str) {
         let text = Some(text.trim().to_string()).filter(|text| !text.is_empty());
         match (self, item) {
-            (Self::Description, _) => room.description = text,
             (Self::Label, Some(EditorItem::Platform(index))) => {
                 if let Some(block) = room.platforms.get_mut(index) {
                     block.label = text;
@@ -234,9 +229,7 @@ impl Field {
             Self::RoomWidth => room.size.width_h.to_string(),
             Self::RoomHeight => room.size.height_h.to_string(),
             Self::Background => room.background_profile.clone(),
-            Self::Description | Self::Label => {
-                self.text(room, item).unwrap_or_else(|| String::from("-"))
-            }
+            Self::Label => self.text(room, item).unwrap_or_else(|| String::from("-")),
             Self::Fill => item
                 .and_then(|item| item.fill(room))
                 .map_or_else(String::new, ToString::to_string),
@@ -490,7 +483,6 @@ impl Field {
             }
             // Hitboxes live outside the room: see `Field::adjust_hitbox`.
             Self::Room
-            | Self::Description
             | Self::Label
             | Self::BodyHeight
             | Self::HurtboxWidth

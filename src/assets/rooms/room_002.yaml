@@ -3,7 +3,6 @@
 # values mark the feet baseline on a platform top.
 room_id: 2
 chapter_id: 1
-description: "Two things the city teaches, in a row: fists on the open street, then the shaft whose walls are the only way up. The slab at x 44 seals the street, so the shaft is not a detour."
 size:
   width_h: 48
   height_h: 16

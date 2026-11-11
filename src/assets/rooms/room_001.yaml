@@ -3,7 +3,6 @@
 # values mark the feet baseline on a platform top.
 room_id: 1
 chapter_id: 1
-description: "The first street: a long ledge under the morning skyline, one raised walkway to climb, and a single ninja between the player and the door."
 size:
   width_h: 48
   height_h: 16

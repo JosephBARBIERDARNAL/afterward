@@ -3,7 +3,6 @@
 # values mark the feet baseline on a platform top.
 room_id: 5
 chapter_id: 1
-description: "A bare shell waiting for a layout, wide enough to be flanked by a crowd coming from both sides."
 size:
   width_h: 72
   height_h: 30

@@ -3,7 +3,6 @@
 # values mark the feet baseline on a platform top.
 room_id: 0
 chapter_id: 1
-description: "The Threshold: the run's first steps. One viewport of bare ledge under an open sky, no enemies and nothing to fight for, with the door already standing open at the right."
 size:
   width_h: 34
   height_h: 16

@@ -30,21 +30,6 @@ pub(super) struct Overlays {
     pub(super) sight: bool,
 }
 
-impl Overlays {
-    /// The ones that are on, for the inspector panel.
-    pub(super) fn describe(&self) -> String {
-        let shown = [(self.viewport, "frame"), (self.sight, "sight")]
-            .into_iter()
-            .filter_map(|(on, name)| on.then_some(name))
-            .collect::<Vec<_>>();
-        if shown.is_empty() {
-            String::from("off")
-        } else {
-            shown.join(", ")
-        }
-    }
-}
-
 pub(super) fn draw_overlays(mut gizmos: Gizmos, editor: Res<RoomEditor>, data: Res<GameData>) {
     let Some(room) = data.rooms.get(&editor.room_id) else {
         return;

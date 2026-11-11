@@ -52,6 +52,7 @@ pub(super) struct ScreenInputResources<'w> {
     data: Res<'w, GameData>,
     start_room: Res<'w, StartRoom>,
     session: ResMut<'w, RunSession>,
+    random: ResMut<'w, RandomState>,
     settings: ResMut<'w, AudioSettings>,
     preferences: Res<'w, PreferencesDir>,
     controls: ResMut<'w, ControlBindings>,
@@ -80,6 +81,7 @@ pub(super) fn handle_screen_input(
         data,
         start_room,
         mut session,
+        mut random,
         mut settings,
         preferences,
         mut controls,
@@ -157,7 +159,7 @@ pub(super) fn handle_screen_input(
             }
             MenuAction::ChooseDifficulty(level) => {
                 session.difficulty = level;
-                next_screen.set(reset_run(&mut session, &data, *start_room));
+                next_screen.set(reset_run(&mut session, &data, *start_room, &mut random));
                 sounds.push(SoundCue::UiConfirm);
             }
             MenuAction::EnterTheCity => {
@@ -176,7 +178,7 @@ pub(super) fn handle_screen_input(
                 for entity in &room_entities {
                     commands.entity(entity).despawn();
                 }
-                next_screen.set(reset_run(&mut session, &data, *start_room));
+                next_screen.set(reset_run(&mut session, &data, *start_room, &mut random));
                 sounds.push(SoundCue::RunRestarted);
             }
             MenuAction::OpenSettings => {
@@ -254,12 +256,27 @@ pub(super) fn reset_run(
     session: &mut RunSession,
     data: &GameData,
     start_room: StartRoom,
+    random: &mut RandomState,
 ) -> GameScreen {
     session.room_id = start_room.0;
     session.max_health = data.gameplay.player.max_health;
-    session.health = session.max_health;
     session.rerolls = data.gameplay.room_flow.bonus_rerolls_per_run;
     session.owned_bonuses.clear();
+    // What a playtest asked the run to open with, each paid out as if chosen.
+    let mut pool = data.bonuses.bonuses.iter().collect::<Vec<_>>();
+    let granted = session.playtest.starting_bonuses.min(pool.len());
+    while session.owned_bonuses.len() < granted {
+        let bonus = pool.swap_remove(random.index(pool.len()));
+        session.owned_bonuses.push(bonus.id.clone());
+        if let Some(increase) = bonus
+            .effects
+            .get("max_health_increase")
+            .and_then(yaml_serde::Value::as_f64)
+        {
+            session.max_health += increase as f32;
+        }
+    }
+    session.health = session.max_health;
     session.bonus_category = None;
     session.offered_bonuses.clear();
     session.previous_offers.clear();

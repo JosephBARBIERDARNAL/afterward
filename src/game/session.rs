@@ -35,9 +35,25 @@ impl Difficulty {
     }
 }
 
+/// What the debug editor's playtest asked of the runs that follow it. Like
+/// `StartRoom`, it stays until the editor changes it, so a restart from the
+/// pause menu replays the room the same way.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub(crate) struct Playtest {
+    /// A hit still lands and is still felt, but costs no health. A fall out
+    /// of the room still ends the run: there is no floor to carry on from.
+    pub(crate) infinite_health: bool,
+    /// Rooms open empty, as one authored without enemies does.
+    pub(crate) no_enemies: bool,
+    /// How many bonuses, drawn at random, a run opens with: every one of
+    /// them when there are no more than that.
+    pub(crate) starting_bonuses: usize,
+}
+
 #[derive(Resource, Debug)]
 pub(crate) struct RunSession {
     pub(crate) room_id: u16,
+    pub(crate) playtest: Playtest,
     /// What the player asked for on the difficulty screen; it outlives a run,
     /// so the next one opens on the same choice.
     pub(crate) difficulty: Difficulty,
@@ -74,6 +90,12 @@ impl RunSession {
         self.owned_bonuses.iter().any(|owned| owned == id)
     }
 
+    /// Whether the room being played has anyone to fight. One that does not
+    /// has nothing to clear: its bonus is there from the first frame.
+    pub(crate) fn has_enemies(&self, data: &GameData) -> bool {
+        !self.playtest.no_enemies && !data.rooms[&self.room_id].enemy_spawns.is_empty()
+    }
+
     /// An owned bonus's multiplier effect, or 1 without the bonus.
     pub(crate) fn bonus_multiplier(&self, data: &GameData, id: &str, effect: &str) -> f32 {
         if self.has_bonus(id) {
@@ -88,6 +110,7 @@ impl Default for RunSession {
     fn default() -> Self {
         Self {
             room_id: 0,
+            playtest: Playtest::default(),
             difficulty: Difficulty::default(),
             health: 100.0,
             max_health: 100.0,
