@@ -1,11 +1,15 @@
 mod data;
 mod game;
 
-use std::{error::Error, path::Path};
+use std::{error::Error, path::Path, time::Duration};
 
 use bevy::{
+    app::ScheduleRunnerPlugin,
+    audio::{AudioLoader, AudioPlugin, AudioSource},
     prelude::*,
-    window::{MonitorSelection, WindowMode},
+    render::RenderPlugin,
+    window::{ExitCondition, MonitorSelection, WindowMode},
+    winit::WinitPlugin,
 };
 use data::{GameData, WindowStartMode};
 
@@ -14,6 +18,7 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let visual_walkthrough = arguments
         .iter()
         .any(|argument| argument == "--visual-walkthrough");
+    let room_shot = arguments.iter().any(|argument| argument == "--shot");
     let start_room = arguments
         .iter()
         .position(|argument| argument == "--room")
@@ -41,6 +46,49 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         )
         .into());
     }
+    let asset_plugin = AssetPlugin {
+        file_path: asset_root.to_string_lossy().into_owned(),
+        ..default()
+    };
+
+    let mut app = App::new();
+    app.insert_resource(start_room);
+
+    if room_shot {
+        // A picture of the room and nothing else: no window to open, no sound
+        // to play, and every shader compiled before the frame that needs it.
+        app.insert_resource(game_data)
+            .add_plugins(
+                DefaultPlugins
+                    .set(asset_plugin)
+                    .set(WindowPlugin {
+                        primary_window: None,
+                        exit_condition: ExitCondition::DontExit,
+                        ..default()
+                    })
+                    .set(RenderPlugin {
+                        synchronous_pipeline_compilation: true,
+                        ..default()
+                    })
+                    .disable::<WinitPlugin>()
+                    .disable::<AudioPlugin>(),
+            )
+            .add_plugins(ScheduleRunnerPlugin::run_loop(Duration::from_secs_f64(
+                1.0 / 60.0,
+            )))
+            // The sounds still load, so nothing complains; nothing plays them.
+            .init_asset::<AudioSource>()
+            .init_asset_loader::<AudioLoader>()
+            .add_plugins(game::GamePlugin)
+            .add_plugins(game::RoomShotPlugin {
+                grid: arguments.iter().any(|argument| argument == "--grid"),
+            });
+        return match app.run() {
+            AppExit::Success => Ok(()),
+            AppExit::Error(_) => Err("the room shot failed".into()),
+        };
+    }
+
     let start_mode = game_data.gameplay.window.start_mode;
     let mut window = Window {
         title: "Afterward".to_string(),
@@ -54,22 +102,11 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     };
     window.set_maximized(start_mode == WindowStartMode::Maximized);
 
-    let asset_path = asset_root.to_string_lossy().into_owned();
-
-    let mut app = App::new();
     app.insert_resource(game_data)
-        .insert_resource(start_room)
-        .add_plugins(
-            DefaultPlugins
-                .set(AssetPlugin {
-                    file_path: asset_path,
-                    ..default()
-                })
-                .set(WindowPlugin {
-                    primary_window: Some(window),
-                    ..default()
-                }),
-        )
+        .add_plugins(DefaultPlugins.set(asset_plugin).set(WindowPlugin {
+            primary_window: Some(window),
+            ..default()
+        }))
         .add_plugins(game::GamePlugin);
 
     if visual_walkthrough {

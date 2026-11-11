@@ -14,6 +14,11 @@ boss:
 walkthrough:
     cargo run -- --visual-walkthrough
 
+# Take a picture of whole rooms into target/room-shots, with no window:
+# `just shot 3`, `just shot --grid 3 4` (ruled in H), `just shot` for every room.
+shot *args:
+    @scripts/room_shot.sh {{args}}
+
 # Format all Rust code.
 fmt:
     cargo fmt --all

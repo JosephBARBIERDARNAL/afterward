@@ -11,7 +11,7 @@ pub(in crate::game) struct CityLightsMaterial {
     settings: CityLightsSettings,
     #[texture(1)]
     #[sampler(2)]
-    layer: Handle<Image>,
+    pub(in crate::game) layer: Handle<Image>,
 }
 
 #[derive(Clone, ShaderType)]

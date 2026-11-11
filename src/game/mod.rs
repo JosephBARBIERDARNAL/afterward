@@ -35,6 +35,7 @@ mod ripple;
 mod room_art;
 mod room_intro;
 mod room_pan;
+mod room_shot;
 mod screens;
 mod session;
 mod settings;
@@ -44,6 +45,7 @@ mod ui_style;
 mod visual_walkthrough;
 mod world;
 
+pub use room_shot::RoomShotPlugin;
 pub use visual_walkthrough::VisualWalkthroughPlugin;
 
 #[cfg(test)]
