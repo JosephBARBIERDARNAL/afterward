@@ -34,6 +34,12 @@ platforms:
   - label: the ledge out over the drop
     color: "#1C1A2E"
     rect_h: { x: 16, y: 30.75, width: 3, height: 0.25 }
+  - label: the step up to the north-east block
+    color: "#1C1A2E"
+    rect_h: { x: 21, y: 32.75, width: 2, height: 0.25 }
+  - label: the north-east block, roofing the fire escape
+    color: "#1C1A2E"
+    rect_h: { x: 24, y: 31, width: 9, height: 4 }
   - label: the head of the fire escape
     color: "#1C1A2E"
     rect_h: { x: 20, y: 28.75, width: 2, height: 0.25 }
@@ -48,30 +54,51 @@ platforms:
     color: "#1C1A2E"
     rect_h: { x: 20.66, y: 19.52, width: 9, height: 0.25 }
     rotation_deg: 30
-  - label: the building in the middle, over the tunnel
+  - label: the step down into the west block
     color: "#1C1A2E"
-    rect_h: { x: 12, y: 4, width: 10, height: 11 }
-  - label: the perch on the roof
+    rect_h: { x: 14, y: 27.75, width: 2, height: 0.25 }
+  - label: the chimney stack between the west block and the fire escape
     color: "#1C1A2E"
-    rect_h: { x: 14, y: 17.25, width: 2.5, height: 0.25 }
-  - label: the sniper's block over the west drop
+    rect_h: { x: 16, y: 21, width: 3, height: 5 }
+  - label: west block, the upper corridor's floor
     color: "#1C1A2E"
-    rect_h: { x: 8, y: 19, width: 4, height: 1 }
+    rect_h: { x: 3, y: 24, width: 10, height: 2 }
+  - label: west block, the lower corridor's floor
+    color: "#1C1A2E"
+    rect_h: { x: 6, y: 19, width: 5, height: 2 }
+  - label: west block, the mass on the wall
+    color: "#1C1A2E"
+    rect_h: { x: 1, y: 13, width: 5, height: 8 }
+  - label: the perch between the west block and the roof
+    color: "#1C1A2E"
+    rect_h: { x: 14, y: 18.25, width: 2, height: 0.25 }
+  - label: the building in the middle, west of the hole in its roof
+    color: "#1C1A2E"
+    rect_h: { x: 12, y: 11, width: 4, height: 4 }
+  - label: the building in the middle, east of the hole in its roof
+    color: "#1C1A2E"
+    rect_h: { x: 18, y: 11, width: 4, height: 4 }
+  - label: the building in the middle, between its corridor and the tunnel
+    color: "#1C1A2E"
+    rect_h: { x: 12, y: 4, width: 10, height: 4 }
+  - label: east block, over the corridor
+    color: "#1C1A2E"
+    rect_h: { x: 25, y: 11, width: 8, height: 6 }
+  - label: east block, the corridor's floor
+    color: "#1C1A2E"
+    rect_h: { x: 22, y: 6, width: 8, height: 2 }
   - label: west way down, step 1
     color: "#1C1A2E"
-    rect_h: { x: 7, y: 12.25, width: 3, height: 0.25 }
+    rect_h: { x: 7, y: 12.75, width: 3, height: 0.25 }
   - label: west way down, the balcony on the wall
     color: "#1C1A2E"
     rect_h: { x: 1, y: 8, width: 4, height: 2 }
-  - label: west way down, step 2
+  - label: west way down, the mass hanging over the street
     color: "#1C1A2E"
-    rect_h: { x: 6.5, y: 7.25, width: 3, height: 0.25 }
+    rect_h: { x: 6, y: 3, width: 4, height: 3 }
   - label: west way down, the block on the street
     color: "#1C1A2E"
-    rect_h: { x: 1, y: 1, width: 3.5, height: 4 }
-  - label: west way down, the last step
-    color: "#1C1A2E"
-    rect_h: { x: 4.5, y: 1, width: 2, height: 2 }
+    rect_h: { x: 1, y: 1, width: 3, height: 4 }
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
 enemy_spawns:
@@ -87,41 +114,77 @@ enemy_spawns:
     position_h: { x: 17.5, y: 31 }
     facing: left
     stat_overrides: { health: 100, armor_layers: 1 }
+  - type_id: rifle_unit
+    position_h: { x: 28, y: 35 }
+    facing: left
+    stat_overrides: { health: 100, armor_layers: 2 }
+  - type_id: blade_unit
+    position_h: { x: 9, y: 26 }
+    facing: right
+    stat_overrides: { health: 100, armor_layers: 0 }
+  - type_id: blade_unit
+    position_h: { x: 6, y: 26 }
+    facing: right
+    stat_overrides: { health: 100, armor_layers: 0 }
+  - type_id: heavy_unit
+    position_h: { x: 7, y: 21 }
+    facing: left
+    stat_overrides: { health: 100, armor_layers: 2 }
+  - type_id: blade_unit
+    position_h: { x: 9.5, y: 21 }
+    facing: left
+    stat_overrides: { health: 100, armor_layers: 0 }
   - type_id: heavy_unit
     position_h: { x: 31.75, y: 22 }
     facing: left
     stat_overrides: { health: 100, armor_layers: 2 }
   - type_id: rifle_unit
-    position_h: { x: 10, y: 20 }
-    facing: right
-    stat_overrides: { health: 100, armor_layers: 2 }
+    position_h: { x: 31, y: 17 }
+    facing: left
+    stat_overrides: { health: 100, armor_layers: 1 }
   - type_id: blade_unit
-    position_h: { x: 18, y: 15 }
+    position_h: { x: 19.5, y: 15 }
     facing: right
     stat_overrides: { health: 100, armor_layers: 0 }
   - type_id: blade_unit
-    position_h: { x: 16, y: 15 }
+    position_h: { x: 15, y: 15 }
     facing: right
     stat_overrides: { health: 100, armor_layers: 0 }
   - type_id: heavy_unit
-    position_h: { x: 14, y: 15 }
+    position_h: { x: 13.25, y: 15 }
     facing: right
     stat_overrides: { health: 100, armor_layers: 3 }
   - type_id: blade_unit
-    position_h: { x: 3, y: 10 }
+    position_h: { x: 14, y: 8 }
     facing: right
+    stat_overrides: { health: 100, armor_layers: 0 }
+  - type_id: blade_unit
+    position_h: { x: 20, y: 8 }
+    facing: left
+    stat_overrides: { health: 100, armor_layers: 0 }
+  - type_id: blade_unit
+    position_h: { x: 26, y: 8 }
+    facing: left
     stat_overrides: { health: 100, armor_layers: 0 }
   - type_id: rifle_unit
-    position_h: { x: 8, y: 7.5 }
-    facing: right
-    stat_overrides: { health: 100, armor_layers: 0 }
-  - type_id: blade_unit
-    position_h: { x: 2.5, y: 5 }
-    facing: right
-    stat_overrides: { health: 100, armor_layers: 0 }
-  - type_id: blade_unit
-    position_h: { x: 8, y: 1 }
+    position_h: { x: 28.5, y: 8 }
     facing: left
+    stat_overrides: { health: 100, armor_layers: 1 }
+  - type_id: rifle_unit
+    position_h: { x: 8.5, y: 13 }
+    facing: right
+    stat_overrides: { health: 100, armor_layers: 0 }
+  - type_id: blade_unit
+    position_h: { x: 2.5, y: 10 }
+    facing: right
+    stat_overrides: { health: 100, armor_layers: 0 }
+  - type_id: blade_unit
+    position_h: { x: 8, y: 6 }
+    facing: right
+    stat_overrides: { health: 100, armor_layers: 0 }
+  - type_id: blade_unit
+    position_h: { x: 2, y: 5 }
+    facing: right
     stat_overrides: { health: 100, armor_layers: 0 }
   - type_id: blade_unit
     position_h: { x: 10.5, y: 1 }
