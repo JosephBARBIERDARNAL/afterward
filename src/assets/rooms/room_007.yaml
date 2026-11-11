@@ -4,59 +4,154 @@
 room_id: 7
 chapter_id: 1
 size:
-  width_h: 72
-  height_h: 30
-background_profile: drowned_city
+  width_h: 34
+  height_h: 40
+background_profile: city_teal_evening
 player_spawn:
-  x_h: 3
-  y_h: 2
+  x_h: 2.25
+  y_h: 37
 # Solid platforms: land on their top, stop against their sides, bump
 # your head on their underside. They stop shots too.
 platforms:
-  - label: the floor the room stands on
-    material: city_pavement
-    rect_h: { x: -2, y: 0, width: 76, height: 2 }
-  - label: west wall
-    material: city_plating
-    rect_h: { x: -2, y: 2, width: 2, height: 28 }
+  - label: the ledge the whole room stands on
+    color: "#1C1A2E"
+    rect_h: { x: 1, y: 0, width: 32, height: 1 }
   - label: east wall
-    material: city_plating
-    rect_h: { x: 72, y: 2, width: 2, height: 28 }
-  - label: roofline
-    material: city_plating
-    rect_h: { x: -2, y: 30, width: 76, height: 2 }
+    color: "#1C1A2E"
+    rect_h: { x: 33, y: 0, width: 1, height: 40 }
+  - label: west wall
+    color: "#1C1A2E"
+    rect_h: { x: 0, y: 0, width: 1, height: 40 }
+  - label: the mass under the spawn ledge
+    color: "#1C1A2E"
+    rect_h: { x: 1, y: 29, width: 5, height: 8 }
+  - label: the step down from the spawn ledge
+    color: "#1C1A2E"
+    rect_h: { x: 6, y: 29, width: 2, height: 6 }
+  - label: the balcony under the spawn ledge
+    color: "#1C1A2E"
+    rect_h: { x: 8, y: 31, width: 6, height: 2 }
+  - label: the ledge out over the drop
+    color: "#1C1A2E"
+    rect_h: { x: 16, y: 30.75, width: 3, height: 0.25 }
+  - label: the head of the fire escape
+    color: "#1C1A2E"
+    rect_h: { x: 20, y: 28.75, width: 2, height: 0.25 }
+  - label: fire escape, the ramp down to the east wall
+    color: "#1C1A2E"
+    rect_h: { x: 21.34, y: 26.52, width: 9, height: 0.25 }
+    rotation_deg: -30
+  - label: fire escape, the landing on the east wall
+    color: "#1C1A2E"
+    rect_h: { x: 29, y: 20, width: 4, height: 2 }
+  - label: fire escape, the ramp down to the roof
+    color: "#1C1A2E"
+    rect_h: { x: 20.66, y: 19.52, width: 9, height: 0.25 }
+    rotation_deg: 30
+  - label: the building in the middle, over the tunnel
+    color: "#1C1A2E"
+    rect_h: { x: 12, y: 4, width: 10, height: 11 }
+  - label: the perch on the roof
+    color: "#1C1A2E"
+    rect_h: { x: 14, y: 17.25, width: 2.5, height: 0.25 }
+  - label: the sniper's block over the west drop
+    color: "#1C1A2E"
+    rect_h: { x: 8, y: 19, width: 4, height: 1 }
+  - label: west way down, step 1
+    color: "#1C1A2E"
+    rect_h: { x: 7, y: 12.25, width: 3, height: 0.25 }
+  - label: west way down, the balcony on the wall
+    color: "#1C1A2E"
+    rect_h: { x: 1, y: 8, width: 4, height: 2 }
+  - label: west way down, step 2
+    color: "#1C1A2E"
+    rect_h: { x: 6.5, y: 7.25, width: 3, height: 0.25 }
+  - label: west way down, the block on the street
+    color: "#1C1A2E"
+    rect_h: { x: 1, y: 1, width: 3.5, height: 4 }
+  - label: west way down, the last step
+    color: "#1C1A2E"
+    rect_h: { x: 4.5, y: 1, width: 2, height: 2 }
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
 enemy_spawns:
-  - type_id: stalker_unit
-    position_h: { x: 10, y: 2 }
-  - type_id: breaker_unit
-    position_h: { x: 15, y: 2 }
-  - type_id: rifle_unit
-    position_h: { x: 20.25, y: 2 }
-  - type_id: heavy_unit
-    position_h: { x: 25.25, y: 2 }
-  - type_id: stalker_unit
-    position_h: { x: 30.25, y: 2 }
   - type_id: blade_unit
-    position_h: { x: 35.5, y: 2 }
-  - type_id: scout_unit
-    position_h: { x: 40.5, y: 2 }
-  - type_id: breaker_unit
-    position_h: { x: 45.75, y: 2 }
-  - type_id: rifle_unit
-    position_h: { x: 50.75, y: 2 }
-  - type_id: lancer_unit
-    position_h: { x: 55.75, y: 2 }
+    position_h: { x: 10, y: 33 }
+    facing: left
+    stat_overrides: { health: 100, armor_layers: 0 }
   - type_id: blade_unit
-    position_h: { x: 61, y: 2 }
+    position_h: { x: 12.5, y: 33 }
+    facing: left
+    stat_overrides: { health: 100, armor_layers: 0 }
+  - type_id: rifle_unit
+    position_h: { x: 17.5, y: 31 }
+    facing: left
+    stat_overrides: { health: 100, armor_layers: 1 }
   - type_id: heavy_unit
-    position_h: { x: 66, y: 2 }
+    position_h: { x: 31.75, y: 22 }
+    facing: left
+    stat_overrides: { health: 100, armor_layers: 2 }
+  - type_id: rifle_unit
+    position_h: { x: 10, y: 20 }
+    facing: right
+    stat_overrides: { health: 100, armor_layers: 2 }
+  - type_id: blade_unit
+    position_h: { x: 18, y: 15 }
+    facing: right
+    stat_overrides: { health: 100, armor_layers: 0 }
+  - type_id: blade_unit
+    position_h: { x: 16, y: 15 }
+    facing: right
+    stat_overrides: { health: 100, armor_layers: 0 }
+  - type_id: heavy_unit
+    position_h: { x: 14, y: 15 }
+    facing: right
+    stat_overrides: { health: 100, armor_layers: 3 }
+  - type_id: blade_unit
+    position_h: { x: 3, y: 10 }
+    facing: right
+    stat_overrides: { health: 100, armor_layers: 0 }
+  - type_id: rifle_unit
+    position_h: { x: 8, y: 7.5 }
+    facing: right
+    stat_overrides: { health: 100, armor_layers: 0 }
+  - type_id: blade_unit
+    position_h: { x: 2.5, y: 5 }
+    facing: right
+    stat_overrides: { health: 100, armor_layers: 0 }
+  - type_id: blade_unit
+    position_h: { x: 8, y: 1 }
+    facing: left
+    stat_overrides: { health: 100, armor_layers: 0 }
+  - type_id: blade_unit
+    position_h: { x: 10.5, y: 1 }
+    facing: left
+    stat_overrides: { health: 100, armor_layers: 0 }
+  - type_id: blade_unit
+    position_h: { x: 15, y: 1 }
+    facing: left
+    stat_overrides: { health: 100, armor_layers: 0 }
+  - type_id: blade_unit
+    position_h: { x: 18, y: 1 }
+    facing: left
+    stat_overrides: { health: 100, armor_layers: 0 }
+  - type_id: blade_unit
+    position_h: { x: 23.5, y: 1 }
+    facing: left
+    stat_overrides: { health: 100, armor_layers: 0 }
+  - type_id: heavy_unit
+    position_h: { x: 25.5, y: 1 }
+    facing: left
+    stat_overrides: { health: 100, armor_layers: 3 }
+  - type_id: rifle_unit
+    position_h: { x: 28, y: 1 }
+    facing: left
+    stat_overrides: { health: 100, armor_layers: 1 }
 # The bonus item, lying beside the door once every enemy is down.
 bonus:
-  x_h: 67
-  y_h: 2
+  x_h: 30.75
+  y_h: 1
 exit:
-  x_h: 69
-  y_h: 2
+  x_h: 32
+  y_h: 1
 next_room_id: 8
