@@ -36,7 +36,7 @@ platforms:
     rect_h: { x: 40, y: 0, width: 7, height: 1 }
   - label: the ledge the whole room stands on
     color: "#1C1A2E"
-    rect_h: { x: 34, y: 8, width: 6, height: 1 }
+    rect_h: { x: 34, y: 8, width: 4, height: 1 }
   - color: "#1C1A2E"
     rect_h: { x: 15, y: 0, width: 9, height: 4 }
   - color: "#1C1A2E"
@@ -56,14 +56,19 @@ platforms:
     rect_h: { x: 25, y: 11, width: 2, height: 1 }
   - label: the ledge the whole room stands on
     color: "#1C1A2E"
-    rect_h: { x: 29, y: 0, width: 9, height: 1 }
+    rect_h: { x: 27, y: 0, width: 13, height: 1 }
   - label: the ledge the whole room stands on
     color: "#1C1A2E"
-    rect_h: { x: 31, y: 2.75, width: 5, height: 0.25 }
+    rect_h: { x: 28, y: 2.75, width: 5, height: 0.25 }
   - label: the ledge the whole room stands on
     color: "#1C1A2E"
     rect_h: { x: 29.25, y: 9.25, width: 5, height: 0.25 }
     rotation_deg: -15
+  - color: "#1C1A2E"
+    rect_h: { x: 13, y: 9, width: 3, height: 1 }
+  - label: the ledge the whole room stands on
+    color: "#1C1A2E"
+    rect_h: { x: 37, y: 2, width: 1, height: 6 }
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
 enemy_spawns:
@@ -88,7 +93,7 @@ enemy_spawns:
     facing: right
     stat_overrides: { health: 100, armor_layers: 1 }
   - type_id: rifle_unit
-    position_h: { x: 40.5, y: 9 }
+    position_h: { x: 42.25, y: 9 }
     facing: left
     stat_overrides: { health: 100, armor_layers: 1 }
   - type_id: blade_unit
@@ -104,12 +109,24 @@ enemy_spawns:
     facing: left
     stat_overrides: { health: 100, armor_layers: 1 }
   - type_id: heavy_unit
-    position_h: { x: 37, y: 1 }
+    position_h: { x: 35, y: 1 }
     facing: left
     stat_overrides: { health: 100, attack_damage: 10, armor_layers: 3 }
   - type_id: rifle_unit
     position_h: { x: 11.25, y: 11 }
     facing: left
+    stat_overrides: { health: 100, armor_layers: 0 }
+  - type_id: blade_unit
+    position_h: { x: 28.5, y: 3 }
+    facing: right
+    stat_overrides: { health: 100, armor_layers: 0 }
+  - type_id: blade_unit
+    position_h: { x: 32.5, y: 3 }
+    facing: left
+    stat_overrides: { health: 100, armor_layers: 0 }
+  - type_id: blade_unit
+    position_h: { x: 36.25, y: 9 }
+    facing: right
     stat_overrides: { health: 100, armor_layers: 0 }
 # The bonus item, lying beside the door once every enemy is down.
 bonus:

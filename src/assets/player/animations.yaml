@@ -10,7 +10,7 @@
 frame_size_px: { width: 128, height: 128 }
 body_height_px: 68
 feet_row_px: 128
-body_height_h: 1.1
+body_height_h: 1
 # Grounded movement switches from the walk to the jog cycle at this fraction of
 # the player's maximum speed.
 jog_speed_fraction: 0.6
