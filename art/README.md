@@ -239,8 +239,10 @@ varying only in how far the camera is from the water.
 ### The player
 
 The brightest _cold_ thing on screen. Where the world stops at `#6A6288`, the
-player's lit side goes up to about `#B9C4E8` — so the eye finds them instantly in
-a dark room without a single warm pixel being spent. Cold-neutral clothing, a
+player's lit side goes up to about `#C4E6EA` — so the eye finds them instantly in
+a dark room without a single warm pixel being spent. Their hue is a pale teal
+that nothing else in the room wears, the machines being blue-violet, and their
+far limbs stop at `#24495E` so they never sink into a dark platform. A
 limited palette, a silhouette that reads at 1 H tall. The only warmth they ever
 emit is the gun: muzzle flash, ejected light, the warm flash of taking damage.
 
