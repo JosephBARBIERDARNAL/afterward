@@ -615,6 +615,7 @@ impl GameData {
             &recorded.bonus_chosen,
             &recorded.bonus_reroll,
             &recorded.punch_missed,
+            &recorded.land,
         ]
         .into_iter()
         .chain(&recorded.punch_hits)

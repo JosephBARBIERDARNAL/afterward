@@ -376,6 +376,8 @@ audio:
       - { asset: audio/sfx/punch-3.wav, gain: 0.45 }
     # A blow of the chain, or the charged one, that reached nobody.
     punch_missed: { asset: audio/sfx/punch-missed.wav, gain: 0.35 }
+    # The player touching down, from a jump, a fall or a slam.
+    land: { asset: audio/sfx/land.wav, gain: 0.3 }
 
 controls:
   move_left: [KeyA, KeyQ, ArrowLeft]

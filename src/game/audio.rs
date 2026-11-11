@@ -186,6 +186,7 @@ pub(super) fn initialize_sound_bank(
         (SoundCue::BonusSelected, &recorded.bonus_chosen),
         (SoundCue::BonusRerolled, &recorded.bonus_reroll),
         (SoundCue::MeleeMiss, &recorded.punch_missed),
+        (SoundCue::Landing, &recorded.land),
     ]
     .into_iter()
     .chain(

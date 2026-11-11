@@ -283,6 +283,7 @@ mod tests {
                 damage_metal_armor: sound(),
                 punch_hits: Vec::new(),
                 punch_missed: sound(),
+                land: sound(),
             },
         }
     }

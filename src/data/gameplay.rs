@@ -86,6 +86,8 @@ pub struct RecordedEffects {
     pub punch_hits: Vec<AudioAsset>,
     /// A blow that reached nobody.
     pub punch_missed: AudioAsset,
+    /// The player touching down.
+    pub land: AudioAsset,
 }
 
 /// A sound file and how loud it plays relative to its volume setting.
