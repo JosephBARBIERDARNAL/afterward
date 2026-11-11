@@ -88,6 +88,58 @@ types:
       projectile_speed_h_s: 7
       cooldown_s: 2.2
       windup_s: 0.7
+  # The dark robots: the three chassis above, rebuilt heavier. Each hits
+  # harder, moves faster, winds up sooner and walks in under more armor than
+  # the one it is drawn from, and their sheets are those robots' recoloured
+  # (scripts/darken_robots.py). They are meant to be met one or two to a room,
+  # on these defaults rather than on a spawn's stat_overrides.
+  dark_blade_unit:
+    hurtbox_h: { width: 0.8, height: 0.9 }
+    health: 160
+    material: metal
+    armor_layers: 2
+    movement_speed_h_s: 3.2
+    behavior: melee_pursuit
+    procedural_movement:
+      bob_height_h: 0.06
+      cycles_per_h: 1
+      lean_degrees: 3
+    attack:
+      kind: melee
+      damage: 14
+      hitbox_h: { x: -0.3, y: 0, width: 0.8, height: 0.95 }
+      cooldown_s: 0.9
+      windup_s: 0.3
+  dark_rifle_unit:
+    hurtbox_h: { width: 0.6, height: 1 }
+    health: 140
+    material: metal
+    armor_layers: 2
+    movement_speed_h_s: 2
+    behavior: ranged_keep_distance
+    preferred_distance_h: { min: 5, max: 8 }
+    attack:
+      kind: projectile
+      damage: 12
+      projectile_size_h: { width: 0.3, height: 0.17 }
+      projectile_speed_h_s: 10
+      cooldown_s: 1.1
+      windup_s: 0.35
+  dark_heavy_unit:
+    hurtbox_h: { width: 0.6, height: 1 }
+    health: 200
+    material: metal
+    armor_layers: 4
+    movement_speed_h_s: 1.1
+    behavior: ranged_keep_distance
+    preferred_distance_h: { min: 6, max: 10 }
+    attack:
+      kind: charged_projectile
+      damage: 20
+      projectile_size_h: { width: 0.3, height: 0.17 }
+      projectile_speed_h_s: 9
+      cooldown_s: 1.8
+      windup_s: 0.6
   stalker_unit:
     hurtbox_h: { width: 0.6, height: 1 }
     health: 28

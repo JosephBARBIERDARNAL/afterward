@@ -103,9 +103,9 @@ pub(super) enum EnemySoundStyle {
 impl From<&EnemyTypeId> for EnemySoundStyle {
     fn from(type_id: &EnemyTypeId) -> Self {
         match &**type_id {
-            "blade_unit" => Self::BladeUnit,
-            "rifle_unit" => Self::RifleUnit,
-            "heavy_unit" => Self::HeavyUnit,
+            "blade_unit" | "dark_blade_unit" => Self::BladeUnit,
+            "rifle_unit" | "dark_rifle_unit" => Self::RifleUnit,
+            "heavy_unit" | "dark_heavy_unit" => Self::HeavyUnit,
             "stalker_unit" => Self::StalkerUnit,
             "lancer_unit" => Self::LancerUnit,
             "breaker_unit" => Self::BreakerUnit,

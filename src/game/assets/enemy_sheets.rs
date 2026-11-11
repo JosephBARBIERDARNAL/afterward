@@ -1,7 +1,7 @@
 use super::super::{SpriteSheetSpec, UVec2};
 
 pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
-    vec![
+    let mut sheets = vec![
         // The shield above a metal enemy's health bar: frame 0 holds while it
         // is up, frames 1-5 are the break (art/ui/enemy_shield.typ).
         SpriteSheetSpec {
@@ -321,5 +321,19 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             fps: 2e+01,
             first_cell: UVec2::ZERO,
         },
-    ]
+    ];
+    // The dark robots play the ordinary robots' clips, recoloured frame for
+    // frame by scripts/darken_robots.py into `enemies/type1_dark/`, so each of
+    // their sheets is its ordinary one under a `dark_` key.
+    let dark_robots = sheets
+        .iter()
+        .filter(|sheet| sheet.path.starts_with("enemies/type1/"))
+        .map(|sheet| SpriteSheetSpec {
+            key: sheet.key.replacen("enemy_", "enemy_dark_", 1),
+            path: sheet.path.replacen("type1", "type1_dark", 1),
+            ..*sheet
+        })
+        .collect::<Vec<_>>();
+    sheets.extend(dark_robots);
+    sheets
 }

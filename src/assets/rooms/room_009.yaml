@@ -97,10 +97,9 @@ enemy_spawns:
     position_h: { x: 39.5, y: 2.5 }
     facing: left
     stat_overrides: { health: 100, armor_layers: 1 }
-  - type_id: heavy_unit
+  - type_id: dark_heavy_unit
     position_h: { x: 45, y: 1 }
     facing: left
-    stat_overrides: { health: 100, armor_layers: 3 }
   - type_id: blade_unit
     position_h: { x: 47.5, y: 1 }
     facing: left
@@ -153,10 +152,9 @@ enemy_spawns:
     position_h: { x: 12, y: 7 }
     facing: right
     stat_overrides: { health: 100, armor_layers: 1 }
-  - type_id: blade_unit
+  - type_id: dark_blade_unit
     position_h: { x: 6, y: 8 }
     facing: right
-    stat_overrides: { health: 100, armor_layers: 0 }
   - type_id: heavy_unit
     position_h: { x: 4.75, y: 8 }
     facing: right

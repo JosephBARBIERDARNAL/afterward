@@ -275,6 +275,13 @@ roster stops being a fantasy pack:
 | `dark_ninja`  | `scout_unit`   | fastest, lightest frame                   |
 | `evil_wizard` | `emitter_unit` | the Chapter 1 boss; its shots are blasts  |
 
+The three robots each have a dark twin (`dark_blade_unit`, `dark_rifle_unit`,
+`dark_heavy_unit`): the same chassis taken down to a violet near-black, its warm
+paint turned cold magenta, its cold lights left as bright as they were. They are
+the stronger machines, met one or two to a room, and their sheets are recoloured
+from the ordinary ones by `scripts/darken_robots.py` (`just dark-robots`) into
+`enemies/type1_dark/`.
+
 The `flesh` material is now `polymer`: nothing in this world bleeds, and the
 distinction it actually encodes is armoured chassis versus light frame. Armor
 is its own setting now (`armor_layers`), which the `metal` types carry one

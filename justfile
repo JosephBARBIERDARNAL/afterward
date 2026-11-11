@@ -47,6 +47,11 @@ test filter="":
 art-fmt:
     typstyle -i art
 
+# Recolour the robots' sheets into the dark robots' (enemies/type1_dark/).
+# Needs ImageMagick; the PNGs are committed, so only after a source sheet changes.
+dark-robots:
+    python3 scripts/darken_robots.py
+
 # Render the Typst pixel art in art/ to PNGs at the same path under src/assets/
 # (art/surfaces/textures/wood/planks.typ -> src/assets/surfaces/textures/wood/planks.png).
 # Files starting with `_` are shared libraries, not images.

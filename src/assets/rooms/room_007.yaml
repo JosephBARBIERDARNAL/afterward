@@ -150,10 +150,9 @@ enemy_spawns:
     position_h: { x: 15, y: 15 }
     facing: right
     stat_overrides: { health: 100, armor_layers: 0 }
-  - type_id: heavy_unit
+  - type_id: dark_heavy_unit
     position_h: { x: 13.25, y: 15 }
     facing: right
-    stat_overrides: { health: 100, armor_layers: 3 }
   - type_id: blade_unit
     position_h: { x: 14, y: 8 }
     facing: right
@@ -206,10 +205,9 @@ enemy_spawns:
     position_h: { x: 25.5, y: 1 }
     facing: left
     stat_overrides: { health: 100, armor_layers: 3 }
-  - type_id: rifle_unit
+  - type_id: dark_rifle_unit
     position_h: { x: 28, y: 1 }
     facing: left
-    stat_overrides: { health: 100, armor_layers: 1 }
 # The bonus item, lying beside the door once every enemy is down.
 bonus:
   x_h: 30.75

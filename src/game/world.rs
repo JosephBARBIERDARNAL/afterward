@@ -276,11 +276,10 @@ pub(super) fn spawn_enemies(
         // origin, so it sits mid-body rather than mid-frame for padded sheets.
         let (frame_top_padding_px, frame_bottom_padding_px, origin_above_feet_px) =
             match &*spawn.type_id {
-                "blade_unit" => (61.0, 0.0, sheet.frame_size.y / 2.0),
-                "rifle_unit" => (56.0, 0.0, sheet.frame_size.y / 2.0),
-                "heavy_unit" | "stalker_unit" | "lancer_unit" | "breaker_unit" => {
-                    (51.0, 0.0, sheet.frame_size.y / 2.0)
-                }
+                "blade_unit" | "dark_blade_unit" => (61.0, 0.0, sheet.frame_size.y / 2.0),
+                "rifle_unit" | "dark_rifle_unit" => (56.0, 0.0, sheet.frame_size.y / 2.0),
+                "heavy_unit" | "dark_heavy_unit" | "stalker_unit" | "lancer_unit"
+                | "breaker_unit" => (51.0, 0.0, sheet.frame_size.y / 2.0),
                 "emitter_unit" => (63.0, 83.0, 26.0),
                 "scout_unit" => (15.0, 8.0, 24.0),
                 _ => (0.0, 0.0, sheet.frame_size.y / 2.0),
