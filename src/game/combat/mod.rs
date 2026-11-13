@@ -33,6 +33,7 @@ pub(super) use enemy_body::{
 };
 use enemy_jumps::{JumpArc, JumpPlan, JumpRoute};
 pub(super) use falls::update_falls;
+use feedback::play_effect;
 pub(super) use feedback::{HEALTH_BAR, SHIELDED_HEALTH_BAR};
 pub(super) use feedback::{
     update_damage_numbers, update_dead_enemies, update_healing_over_time, update_health_bars,

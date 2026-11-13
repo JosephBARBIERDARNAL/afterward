@@ -38,6 +38,46 @@ type PickupPlayerQuery<'w, 's> = Query<
     (With<PlayerBody>, Without<HealthPickup>),
 >;
 
+/// Plays the effect sheet `key` once where `at` is, `size_h` tall, and
+/// leaves `update_hit_effects` to take it away. Nothing is drawn for a
+/// sheet that is not loaded.
+pub(super) fn play_effect(
+    commands: &mut Commands,
+    sheets: &SpriteSheets,
+    key: &str,
+    at: Vec3,
+    size_h: f32,
+    flip_x: bool,
+) {
+    let Some(sheet) = sheets.0.get(key) else {
+        return;
+    };
+    let mut sprite = Sprite::from_atlas_image(
+        sheet.image.clone(),
+        TextureAtlas {
+            layout: sheet.layout.clone(),
+            index: 0,
+        },
+    );
+    sprite.custom_size = Some(sheet.frame_size * size_h * H_WORLD_UNITS / sheet.frame_size.y);
+    sprite.flip_x = flip_x;
+    commands.spawn((
+        sprite,
+        Transform::from_translation(at),
+        AnimatedSprite {
+            sheet: key.to_string(),
+            frame: 0,
+            frames: sheet.frames,
+            timer: Timer::from_seconds(1.0 / sheet.fps, TimerMode::Repeating),
+            looping: false,
+        },
+        HitEffect {
+            timer: Timer::from_seconds(sheet.frames as f32 / sheet.fps, TimerMode::Once),
+        },
+        RoomEntity,
+    ));
+}
+
 pub(in crate::game) fn update_damage_numbers(
     mut commands: Commands,
     time: Res<Time>,
@@ -54,13 +94,21 @@ pub(in crate::game) fn update_damage_numbers(
     }
 }
 
+/// How much of a corpse's time is spent fading out of the room.
+const CORPSE_FADE: f32 = 0.35;
+
+/// A corpse lies where it fell, then fades out of the room rather than
+/// blinking out of it.
 pub(in crate::game) fn update_dead_enemies(
     mut commands: Commands,
     time: Res<Time>,
-    mut dead: Query<(Entity, &mut DeadEnemy)>,
+    mut dead: Query<(Entity, &mut DeadEnemy, &mut Sprite)>,
 ) {
-    for (entity, mut dead_enemy) in &mut dead {
+    for (entity, mut dead_enemy, mut sprite) in &mut dead {
         dead_enemy.timer.tick(time.delta());
+        sprite.color = sprite
+            .color
+            .with_alpha((dead_enemy.timer.fraction_remaining() / CORPSE_FADE).min(1.0));
         if dead_enemy.timer.is_finished() {
             commands.entity(entity).despawn();
         }

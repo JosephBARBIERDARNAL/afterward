@@ -12,6 +12,7 @@ pub(in crate::game) struct ProjectileResources<'w> {
     time: Res<'w, Time>,
     data: Res<'w, GameData>,
     session: ResMut<'w, RunSession>,
+    sheets: Res<'w, SpriteSheets>,
     sounds: ResMut<'w, SoundQueue>,
 }
 
@@ -27,6 +28,7 @@ pub(in crate::game) fn update_projectiles(
         time,
         data,
         mut session,
+        sheets,
         mut sounds,
     } = resources;
     let dt = time.delta_secs().min(0.05);
@@ -105,6 +107,15 @@ pub(in crate::game) fn update_projectiles(
             hit = true;
         }
         if hit {
+            // It bursts where it ends, on a body or a wall alike.
+            play_effect(
+                &mut commands,
+                &sheets,
+                "effect_hit_spark",
+                end.extend(6.0),
+                data.gameplay.effects.bolt.flash_size_h,
+                projectile.velocity_x < 0.0,
+            );
             commands.entity(projectile_entity).despawn();
         }
     }

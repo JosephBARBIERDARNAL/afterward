@@ -315,6 +315,24 @@ effects:
     warning_color: "#FF6A2A"
     burn_color: "#FFE2A8"
     pixels_per_h: 16
+  # An enemy's plain shot (`shaders/bolt.wgsl`): a head of `core_color` in a
+  # rim of `tail_color`, and a tail burning out behind it. The streak is
+  # `length` times as long and `thickness` times as thick as what hurts, the
+  # head being the part that does. A flash `flash_size_h` tall is thrown at
+  # the muzzle as it leaves and where it lands.
+  bolt:
+    core_color: "#FFE2A8"
+    tail_color: "#FF5A2E"
+    length: 6
+    thickness: 2
+    pixels_per_h: 16
+    flash_size_h: 0.9
+  # The warning every enemy wears while it winds up, whatever its attack: its
+  # sprite warms toward `color` and is `brightness` times as bright by the
+  # moment it strikes. One cue to read, on every body.
+  telegraph:
+    color: "#FF9A4A"
+    brightness: 1.7
   # The flood the city drowned in, and the water the main menu is drawn over:
   # a web of cold light wandering over deep wine cells, quantized to a pixel
   # grid and to the four tones below.

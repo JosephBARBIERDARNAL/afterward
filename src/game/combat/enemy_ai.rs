@@ -280,11 +280,25 @@ pub(in crate::game) fn update_enemy_ai(
                 animation.hold_frame(&mut sprite, frame as usize);
             }
             // A blink's wind-up is the body fading out of where it stands.
+            // Every other one is worn as a warning: the body warms, and is
+            // at its brightest the moment it strikes.
             if attack.kind == "blink" {
                 sprite.color =
                     Color::WHITE.with_alpha(0.15 + 0.85 * enemy.windup_remaining / attack.windup_s);
+            } else if enemy.flash_s == 0.0 {
+                let warning = &data.gameplay.effects.telegraph;
+                let warm = Color::from(warning.color).to_srgba() * warning.brightness;
+                let nearness = (1.0 - enemy.windup_remaining / attack.windup_s).clamp(0.0, 1.0);
+                sprite.color = Color::srgb(
+                    1.0 + (warm.red - 1.0) * nearness,
+                    1.0 + (warm.green - 1.0) * nearness,
+                    1.0 + (warm.blue - 1.0) * nearness,
+                );
             }
             if enemy.windup_remaining == 0.0 {
+                if enemy.flash_s == 0.0 {
+                    sprite.color = Color::WHITE;
+                }
                 let kind = attack.kind.as_str();
                 // A guard that has been raised is held, until a blow lands
                 // on it or it is lowered; `blows.rs` starts the answer.
@@ -308,6 +322,17 @@ pub(in crate::game) fn update_enemy_ai(
                                 .is_some()
                         });
                     if let Some(x) = landing.filter(|_| mark.grounded) {
+                        // A ring opens where it left and where it returns.
+                        for spot in [transform.translation.x, x] {
+                            play_effect(
+                                &mut commands,
+                                &sheets,
+                                "effect_kill_ring",
+                                Vec3::new(spot, mark.feet.y + 0.5 * H_WORLD_UNITS, 6.0),
+                                1.4,
+                                false,
+                            );
+                        }
                         transform.translation.x = x;
                         enemy.home_y = mark.feet.y + enemy.feet_offset;
                         transform.translation.y = enemy.home_y;
@@ -388,11 +413,17 @@ pub(in crate::game) fn update_enemy_ai(
                     let shot_scale = shot
                         .and(data.enemies.types[&enemy.type_id].sprite)
                         .map_or(1.0, |sprite| sprite.scale);
+                    let muzzle = transform.translation + Vec3::new(direction * 24.0, 0.0, 0.4);
+                    play_effect(
+                        &mut commands,
+                        &sheets,
+                        "effect_hit_spark",
+                        muzzle.with_z(6.0),
+                        data.gameplay.effects.bolt.flash_size_h,
+                        direction < 0.0,
+                    );
                     let mut projectile = commands.spawn((
-                        Transform::from_translation(
-                            transform.translation + Vec3::new(direction * 24.0, 0.0, 0.4),
-                        )
-                        .with_scale(Vec3::splat(shot_scale)),
+                        Transform::from_translation(muzzle).with_scale(Vec3::splat(shot_scale)),
                         CombatProjectile {
                             velocity_x: direction * attack.projectile_speed_h_s * H_WORLD_UNITS,
                             damage: attack.damage,
@@ -422,21 +453,28 @@ pub(in crate::game) fn update_enemy_ai(
                                 looping: true,
                             },
                         )),
-                        None => projectile.insert(Sprite::from_color(
-                            Color::srgb(0.95, 0.3, 0.24),
-                            projectile_size,
+                        None => projectile.insert((
+                            Visibility::default(),
+                            Bolt {
+                                size: projectile_size,
+                                direction,
+                            },
                         )),
                     };
                 } else {
+                    let mut lunge = 0.0;
                     if (kind == "telegraphed_lunge" || kind == "lunge")
                         && distance_h > (attack.reach_h + player_half_width_h)
                     {
-                        transform.translation.x += dx.signum()
-                            * (distance_h - (attack.reach_h + player_half_width_h)).min(1.5)
-                            * H_WORLD_UNITS;
+                        // The blow lands from where the lunge will carry it,
+                        // and the body is thrown there rather than set down:
+                        // the shove slows over exactly that distance.
+                        let dash_h = (distance_h - (attack.reach_h + player_half_width_h)).min(1.5);
+                        lunge = dx.signum() * dash_h * H_WORLD_UNITS;
+                        enemy.knockback_velocity =
+                            dx.signum() * (2.0 * blows::KNOCKBACK_DRAG_H_S2 * dash_h).sqrt();
                     }
-                    // Struck from where the enemy stands now, after any lunge.
-                    let strike_feet = Vec2::new(transform.translation.x, feet.y);
+                    let strike_feet = Vec2::new(transform.translation.x + lunge, feet.y);
                     if attack.hits(strike_feet, dx, mark.hurtbox) {
                         mark.strike(
                             PlayerDamageResources {

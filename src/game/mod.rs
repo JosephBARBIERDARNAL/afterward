@@ -69,7 +69,7 @@ use random::RandomState;
 use room_pan::RoomPan;
 use session::{Difficulty, RunSession};
 use settings::{AudioSettings, PreferencesDir, SettingsReturn};
-use shaders::{CityLightsMaterial, Flame, Glowing, ShaderAssets};
+use shaders::{Bolt, CityLightsMaterial, Flame, Glowing, ShaderAssets};
 use sprites::{AnimatedSprite, SpriteSheet, SpriteSheetSpec, SpriteSheets, set_animation};
 use world::{EntryDoor, ExitDoor, RoomEntity};
 

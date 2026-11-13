@@ -211,6 +211,10 @@ fn drive_visual_walkthrough(resources: VisualWalkthroughResources) {
             GameScreen::Playing if scene.room_cleared => {
                 format!("room_{:03}_bonus-item", scene.room_id)
             }
+            // Each wave keeps its own shot rather than drawing over the last.
+            GameScreen::Playing if scene.wave > 0 => {
+                format!("room_{:03}_combat-wave-{}", scene.room_id, scene.wave)
+            }
             GameScreen::Playing => format!("room_{:03}_combat", scene.room_id),
             GameScreen::Paused => String::from("paused-overlay"),
             GameScreen::Settings => String::from("settings"),

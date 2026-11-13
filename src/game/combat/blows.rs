@@ -434,32 +434,14 @@ pub(super) fn land_the_blow(
     } else {
         ("effect_hit_spark", effect.spark_size_h)
     };
-    if let Some(sheet) = sheets.0.get(key) {
-        let mut sprite = Sprite::from_atlas_image(
-            sheet.image.clone(),
-            TextureAtlas {
-                layout: sheet.layout.clone(),
-                index: 0,
-            },
-        );
-        sprite.custom_size = Some(sheet.frame_size * size_h * H_WORLD_UNITS / sheet.frame_size.y);
-        sprite.flip_x = player.facing < 0.0;
-        commands.spawn((
-            sprite,
-            Transform::from_translation(blow.area.center().extend(6.0)),
-            AnimatedSprite {
-                sheet: key.to_string(),
-                frame: 0,
-                frames: sheet.frames,
-                timer: Timer::from_seconds(1.0 / sheet.fps, TimerMode::Repeating),
-                looping: false,
-            },
-            HitEffect {
-                timer: Timer::from_seconds(sheet.frames as f32 / sheet.fps, TimerMode::Once),
-            },
-            RoomEntity,
-        ));
-    }
+    play_effect(
+        commands,
+        sheets,
+        key,
+        blow.area.center().extend(6.0),
+        size_h,
+        player.facing < 0.0,
+    );
     let punches = data.gameplay.audio.recorded_effects.punch_hits.len();
     sounds.push(SoundCue::MeleeHit(
         blow.punch.min(punches.saturating_sub(1)),

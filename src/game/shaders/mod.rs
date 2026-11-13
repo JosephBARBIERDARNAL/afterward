@@ -10,11 +10,13 @@ use bevy::{
     sprite_render::{AlphaMode2d, Material2d, Material2dPlugin},
 };
 
+mod bolt;
 mod city_lights;
 mod flood;
 mod glow;
 mod vent;
 
+pub(super) use bolt::Bolt;
 pub(super) use city_lights::CityLightsMaterial;
 #[cfg(test)]
 pub(super) use flood::Flood;
@@ -33,6 +35,7 @@ impl Plugin for ShaderPlugin {
             Material2dPlugin::<glow::GlowMaterial>::default(),
             Material2dPlugin::<flood::FloodMaterial>::default(),
             Material2dPlugin::<vent::VentMaterial>::default(),
+            Material2dPlugin::<bolt::BoltMaterial>::default(),
         ))
         .add_systems(
             Startup,
@@ -43,6 +46,7 @@ impl Plugin for ShaderPlugin {
             (
                 glow::brighten_what_is_in_reach,
                 (vent::attach_flames, vent::stoke_the_flames).chain(),
+                bolt::attach_bolts,
             ),
         );
     }
@@ -65,6 +69,7 @@ pub(super) struct ShaderAssets<'w> {
     glows: ResMut<'w, Assets<glow::GlowMaterial>>,
     flood: ResMut<'w, Assets<flood::FloodMaterial>>,
     vents: ResMut<'w, Assets<vent::VentMaterial>>,
+    bolts: ResMut<'w, Assets<bolt::BoltMaterial>>,
 }
 
 #[cfg(test)]
@@ -82,6 +87,7 @@ mod tests {
             flood::SHADER_PATH,
             glow::SHADER_PATH,
             vent::SHADER_PATH,
+            bolt::SHADER_PATH,
             crate::game::ripple::SHADER_PATH,
         ] {
             assert!(

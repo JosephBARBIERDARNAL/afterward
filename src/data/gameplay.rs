@@ -359,6 +359,30 @@ pub struct EffectsConfig {
     pub flood: FloodConfig,
     pub ripple: RippleConfig,
     pub hazard: HazardLookConfig,
+    pub bolt: BoltLookConfig,
+    pub telegraph: TelegraphConfig,
+}
+
+/// How an enemy's plain shot is drawn (`shaders/bolt.wgsl`): its two
+/// colours, how many times longer and thicker than what hurts the whole
+/// streak is, and its grid of art pixels to the H.
+#[derive(Debug, Deserialize)]
+pub struct BoltLookConfig {
+    pub core_color: HexColor,
+    pub tail_color: HexColor,
+    pub length: f32,
+    pub thickness: f32,
+    pub pixels_per_h: f32,
+    /// How tall the flash at the muzzle and the burst where it lands are.
+    pub flash_size_h: f32,
+}
+
+/// The warning every enemy wears while it winds up: its sprite warms toward
+/// `color`, `brightness` times as bright by the moment it strikes.
+#[derive(Debug, Deserialize)]
+pub struct TelegraphConfig {
+    pub color: HexColor,
+    pub brightness: f32,
 }
 
 /// How fire is drawn (`shaders/vent.wgsl`): the colour of its warning embers

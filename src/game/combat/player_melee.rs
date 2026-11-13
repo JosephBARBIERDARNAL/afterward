@@ -93,6 +93,15 @@ pub(in crate::game) fn player_melee(
     // everything standing to either side.
     if player.roll_ended && session.has_bonus("aftershock") {
         let reach = data.bonus_effect("aftershock", "roll_shock_reach_h") * H_WORLD_UNITS;
+        // The shock is seen whether or not it reaches anybody.
+        play_effect(
+            &mut commands,
+            &sheets,
+            "effect_kill_ring",
+            Vec3::new(feet.x, feet.y + 0.4 * H_WORLD_UNITS, 6.0),
+            2.0 * reach / H_WORLD_UNITS,
+            false,
+        );
         let drags = session.has_bonus("riptide");
         land_the_blow(
             LandingResources {
