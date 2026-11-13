@@ -53,6 +53,12 @@ art-fmt:
 dark-robots:
     python3 scripts/darken_robots.py
 
+# Recolour the horror pack's monsters into their other palettes
+# (enemies/horror/drowned/, enemies/horror/ashen/). Needs ImageMagick; the PNGs
+# are committed, so only after a source sheet or a palette changes.
+monsters:
+    python3 scripts/recolour_monsters.py
+
 # Cut the Black Knight's atlas into one strip per clip (enemies/black_knight/).
 # Needs ImageMagick; the PNGs are committed, so only after the atlas or a clip changes.
 black-knight:
