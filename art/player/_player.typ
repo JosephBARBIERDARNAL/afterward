@@ -7,13 +7,14 @@
 #let frame-width = 128
 #let frame-height = 128
 
-// The hero's body: a pale head and chest over four blues, lightest to darkest.
+// The hero's body: a pale head and chest over reds that fall away into
+// purple, lightest to darkest.
 #let body = (
   "h": rgb("#e6ecf5"), // head and chest
-  "l": rgb("#4660a8"), // lit limbs
-  "m": rgb("#3a509a"), // limbs
-  "d": rgb("#2a3a78"), // shaded limbs
-  "s": rgb("#24306a"), // deepest shade
+  "l": rgb("#d23a4e"), // lit limbs
+  "m": rgb("#a82c5c"), // limbs
+  "d": rgb("#6c2c86"), // shaded limbs
+  "s": rgb("#48206a"), // deepest shade
 )
 
 // What the hero's moves throw off: sparks, flames, glows and dust. These are
