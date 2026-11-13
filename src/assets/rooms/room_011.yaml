@@ -6,7 +6,7 @@ chapter_id: 2
 size:
   width_h: 24
   height_h: 13.5
-background_profiles: [city_teal_evening]
+background_profiles: [dead_city_ephemeral]
 player_spawn:
   x_h: 4.25
   y_h: 1
@@ -24,7 +24,19 @@ platforms:
     rect_h: { x: 0, y: 0, width: 1, height: 13.5 }
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
-enemy_spawns: []
+enemy_spawns:
+  - type_id: abomination
+    position_h: { x: 15.25, y: 2.25 }
+    facing: left
+  - type_id: catto
+    position_h: { x: 15.25, y: 2.75 }
+    facing: left
+  - type_id: mad_ghost
+    position_h: { x: 10.25, y: 1 }
+    facing: left
+  - type_id: mage
+    position_h: { x: 14.25, y: 1.25 }
+    facing: left
 # The bonus item, lying beside the door once every enemy is down.
 bonus:
   x_h: 20.75
