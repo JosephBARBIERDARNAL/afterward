@@ -45,3 +45,14 @@ make_preview doors/exit_door.typ exit_door 48 96 80 80 3 3 3 3 3 3 3 3 3 3 3 80
 
 # The shield stays intact, then plays its five-frame break at 30 fps.
 make_preview ui/enemy_shield.typ enemy_shield 21 16 100 3 3 3 3 100
+
+# The hero's sheets, every frame of each at 10 fps. A clip of
+# player/animations.yaml may play only some of a sheet's frames, at its own pace.
+for source in "$repo_root"/art/player/sheets/*.typ; do
+    name="$(basename "$source" .typ)"
+    delays=()
+    for ((frame = 0; frame < $(grep -c '```,' "$source"); frame++)); do
+        delays+=(10)
+    done
+    make_preview "player/sheets/$name.typ" "player_$name" 128 128 "${delays[@]}"
+done

@@ -10,3 +10,7 @@ License: https://craftpix.net/file-licenses/
 Each file here is one animation from those packs, renamed to the clip it
 plays (see `animations.yaml`). The packs' own folders, their PSD sources and
 the animations the game decided against are not kept in the repository.
+
+The sheets in `sheets/` are no longer the packs' own files: each was written
+out as Typst text art in `art/player/sheets/`, which is now their source, and
+the PNGs here are rendered from it (`just art`).

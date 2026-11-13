@@ -1,5 +1,6 @@
-# Player sprite sheets (Craftpix "prototype hero" packs, copied into
-# `player/sheets/`). Every sheet is a grid of equally sized frames. A clip
+# Player sprite sheets (Craftpix "prototype hero" packs, redrawn as Typst text
+# art in `art/player/sheets/` and rendered into `player/sheets/` by `just art`).
+# Every sheet is a grid of equally sized frames. A clip
 # reads `frames` frames from row `row` (default 0) of its sheet, starting at
 # column `first_frame` (default 0), so several clips may share one sheet: the
 # jump's take-off and its rising loop are both cut out of `jump.png`, and the
