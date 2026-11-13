@@ -264,88 +264,118 @@ types:
   # A brute that lashes far ahead of itself: slow, and its reach is the
   # danger. The lash lands on the frame its tendrils are fully out.
   abomination:
-    hurtbox_h: { width: 1.4, height: 1.8 }
+    hurtbox_h: { width: 0.98, height: 1.26 }
     health: 220
     material: polymer
     movement_speed_h_s: 1.4
     behavior: melee_pursuit
-    sprite: { scale: 2, top_padding_px: 0, bottom_padding_px: 0, origin_above_feet_px: 24 }
+    sprite:
+      {
+        scale: 1.4,
+        top_padding_px: 0,
+        bottom_padding_px: 0,
+        origin_above_feet_px: 24,
+      }
     attack:
       kind: melee
       clip: attack
       strike_frame: 4
       damage: 14
-      hitbox_h: { x: 0.4, y: 0, width: 2.9, height: 1.2 }
+      hitbox_h: { x: 0.28, y: 0, width: 2.03, height: 0.84 }
       cooldown_s: 2
       windup_s: 0.6
   # It walks up and calls a ring around itself, which hurts on both sides of
   # it at once: the way out is back, or through with a roll.
   mage:
-    hurtbox_h: { width: 0.6, height: 1.25 }
+    hurtbox_h: { width: 0.42, height: 0.88 }
     health: 90
     material: polymer
     movement_speed_h_s: 1.6
     behavior: melee_pursuit
-    sprite: { scale: 2, top_padding_px: 17, bottom_padding_px: 0, origin_above_feet_px: 15 }
+    sprite:
+      {
+        scale: 1.4,
+        top_padding_px: 17,
+        bottom_padding_px: 0,
+        origin_above_feet_px: 15,
+      }
     attack:
       kind: melee
       clip: attack
       strike_frame: 5
       damage: 12
-      hitbox_h: { x: -2.1, y: 0, width: 4.2, height: 1.7 }
+      hitbox_h: { x: -1.47, y: 0, width: 2.94, height: 1.19 }
       cooldown_s: 2.4
       windup_s: 0.8
   # Small, quick and frail: it sits until it sees the player, runs in and
   # bites.
   catto:
-    hurtbox_h: { width: 0.7, height: 0.6 }
+    hurtbox_h: { width: 0.49, height: 0.42 }
     health: 60
     material: polymer
     movement_speed_h_s: 4
     behavior: melee_pursuit
-    sprite: { scale: 2, top_padding_px: 15, bottom_padding_px: 0, origin_above_feet_px: 7 }
+    sprite:
+      {
+        scale: 1.4,
+        top_padding_px: 15,
+        bottom_padding_px: 0,
+        origin_above_feet_px: 7,
+      }
     attack:
       kind: melee
       clip: attack
       strike_frame: 3
       damage: 6
-      hitbox_h: { x: 0, y: 0, width: 0.85, height: 1.2 }
+      hitbox_h: { x: 0, y: 0, width: 0.59, height: 0.84 }
       cooldown_s: 0.9
       windup_s: 0.3
   # Its wind-up is the claws coming out; the slash is tall, and putting them
   # away again is the opening.
   mad_ghost:
-    hurtbox_h: { width: 0.8, height: 1.45 }
+    hurtbox_h: { width: 0.56, height: 1.01 }
     health: 120
     material: polymer
     movement_speed_h_s: 2.8
     behavior: melee_pursuit
-    sprite: { scale: 2, top_padding_px: 27, bottom_padding_px: 0, origin_above_feet_px: 18 }
+    sprite:
+      {
+        scale: 1.4,
+        top_padding_px: 27,
+        bottom_padding_px: 0,
+        origin_above_feet_px: 18,
+      }
     attack:
       kind: melee
       clip: attack
       strike_frame: 5
       damage: 12
-      hitbox_h: { x: 0, y: 0, width: 1.2, height: 2.2 }
+      hitbox_h: { x: 0, y: 0, width: 0.84, height: 1.54 }
       cooldown_s: 1.4
       windup_s: 0.5
   # It keeps its distance and fires the void ball of its `shot` sheet, let go
   # on the frame the eye clears. It hangs a little off the floor: its
   # bottom_padding_px is 4 px short of the empty rows under it.
   eye_beast:
-    hurtbox_h: { width: 1, height: 1.4 }
+    hurtbox_h: { width: 0.7, height: 0.98 }
     health: 80
     material: polymer
     movement_speed_h_s: 1.8
     behavior: ranged_keep_distance
     preferred_distance_h: { min: 5, max: 8 }
-    sprite: { scale: 2, top_padding_px: 17, bottom_padding_px: 6, origin_above_feet_px: 19 }
+    sprite:
+      {
+        scale: 1.4,
+        top_padding_px: 17,
+        bottom_padding_px: 6,
+        origin_above_feet_px: 19,
+      }
     attack:
       kind: projectile
       clip: attack
       strike_frame: 10
       damage: 8
-      projectile_size_h: { width: 0.6, height: 0.5 }
+      projectile_size_h: { width: 0.42, height: 0.35 }
       projectile_speed_h_s: 6
       cooldown_s: 1.8
       windup_s: 0.7
