@@ -225,6 +225,8 @@ The door out of room 0 leads through the prologue (`src/game/prologue.rs`): the 
 
 `hazards` on a room is its vents: rectangles that warn for `arm_s`, burn for `burn_s`, rest for `rest_s` and start over, `offset_s` into that cycle as the room opens. They are written by hand: the editor draws them and keeps them on save, but does not select them. `combat/hazards.rs` runs them, with the two patches that are not vents and go after one burn: the one a `hazard` attack lays under its mark and the blast a `death_blast` type leaves where it dies. All three carry a `Flame` and are drawn as fire by `vent.wgsl` (see Shaders): what burns is never a bare rectangle.
 
+Room 1 is the reference the other rooms are to be rebuilt to: one screen and a little more (28 H by 13.5 H), a floor, two ledges, a walkway and one block of cover, nine enemies in two waves, everyone in sight from the door. The robots have a role each, set by their health against the chain's blows (18, 20, 30): the `blade_unit` is fodder and falls to the first two, the `rifle_unit` is the shooter and takes three, the `heavy_unit` is the tough one of a wave. Rooms 2 to 9 still have the large layouts they were first drawn with, which are too big for waves.
+
 Chapter 1 as it stands: rooms 1 to 3 are arenas of two or three waves, room 4 is the empty vent run, room 5 the armored duel, room 6 a gauntlet of four small waves, rooms 7 to 9 arenas ending on dark elites, room 10 the boss. Rooms 11 to 15 bring the monsters in one behaviour and one palette at a time, room 12 with vents and room 15 as a gauntlet of every palette.
 
 ### Bonuses that change a move

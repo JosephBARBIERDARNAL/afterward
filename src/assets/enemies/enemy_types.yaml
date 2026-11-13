@@ -62,7 +62,9 @@ jumping:
 types:
   blade_unit:
     hurtbox_h: { width: 0.8, height: 0.9 }
-    health: 100
+    # Fodder: the chain's first two blows (18 and 20) put it down, so a
+    # crowd of them is what makes the player feel strong.
+    health: 36
     material: metal
     movement_speed_h_s: 2.5
     behavior: melee_pursuit
@@ -87,7 +89,8 @@ types:
         windup_s: 0.35
   rifle_unit:
     hurtbox_h: { width: 0.6, height: 1 }
-    health: 100
+    # The shooter: frail once reached, three blows of the chain.
+    health: 60
     material: metal
     movement_speed_h_s: 1.5
     behavior: ranged_keep_distance
@@ -101,7 +104,8 @@ types:
       windup_s: 0.4
   heavy_unit:
     hurtbox_h: { width: 0.6, height: 1 }
-    health: 100
+    # The tough one of a wave: two full chains, or a charged blow and one.
+    health: 140
     material: metal
     movement_speed_h_s: 0.8
     behavior: ranged_keep_distance
