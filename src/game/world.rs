@@ -280,23 +280,29 @@ pub(super) fn spawn_enemies(
         let profile = &data.enemies.types[&spawn.type_id];
         let key = spawn.type_id.idle_sheet();
         let sheet = &sheets.0[key];
-        let scale = match &*spawn.type_id {
-            "emitter_unit" => 1.2,
+        let scale = match (&profile.sprite, &*spawn.type_id) {
+            (Some(sprite), _) => sprite.scale,
+            (None, "emitter_unit") => 1.2,
             // Pixel art, so a whole number: 31 px of knight stand 1.9 H tall.
-            "black_knight" => 3.0,
-            _ => ENEMY_SPRITE_SCALE,
+            (None, "black_knight") => 3.0,
+            (None, _) => ENEMY_SPRITE_SCALE,
         };
         // Source pixels: empty rows above and below the figure, and the height
         // of the entity origin above the feet. Combat and AI measure from that
         // origin, so it sits mid-body rather than mid-frame for padded sheets.
         let (frame_top_padding_px, frame_bottom_padding_px, origin_above_feet_px) =
-            match &*spawn.type_id {
-                "blade_unit" | "dark_blade_unit" => (61.0, 0.0, sheet.frame_size.y / 2.0),
-                "rifle_unit" | "dark_rifle_unit" => (56.0, 0.0, sheet.frame_size.y / 2.0),
-                "heavy_unit" | "dark_heavy_unit" => (51.0, 0.0, sheet.frame_size.y / 2.0),
-                "emitter_unit" => (63.0, 83.0, 26.0),
-                "black_knight" => (31.0, 0.0, 16.0),
-                _ => (0.0, 0.0, sheet.frame_size.y / 2.0),
+            match (&profile.sprite, &*spawn.type_id) {
+                (Some(sprite), _) => (
+                    sprite.top_padding_px,
+                    sprite.bottom_padding_px,
+                    sprite.origin_above_feet_px,
+                ),
+                (None, "blade_unit" | "dark_blade_unit") => (61.0, 0.0, sheet.frame_size.y / 2.0),
+                (None, "rifle_unit" | "dark_rifle_unit") => (56.0, 0.0, sheet.frame_size.y / 2.0),
+                (None, "heavy_unit" | "dark_heavy_unit") => (51.0, 0.0, sheet.frame_size.y / 2.0),
+                (None, "emitter_unit") => (63.0, 83.0, 26.0),
+                (None, "black_knight") => (31.0, 0.0, 16.0),
+                (None, _) => (0.0, 0.0, sheet.frame_size.y / 2.0),
             };
         let attacks = if profile.attacks.is_empty() {
             profile

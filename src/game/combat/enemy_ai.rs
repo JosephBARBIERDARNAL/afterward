@@ -316,11 +316,19 @@ pub(in crate::game) fn update_enemy_ai(
                 if kind.contains("projectile") {
                     let direction = if dx >= 0.0 { 1.0 } else { -1.0 };
                     let projectile_size = attack.projectile_size;
-                    commands.spawn((
-                        Sprite::from_color(Color::srgb(0.95, 0.3, 0.24), projectile_size),
+                    // A type drawn with a shot of its own (`<type>_shot`)
+                    // fires that, at the size its body is drawn at; the
+                    // others fire a plain warm bolt.
+                    let shot_key = format!("{}_shot", enemy.type_id);
+                    let shot = sheets.0.get(&shot_key);
+                    let shot_scale = shot
+                        .and(data.enemies.types[&enemy.type_id].sprite)
+                        .map_or(1.0, |sprite| sprite.scale);
+                    let mut projectile = commands.spawn((
                         Transform::from_translation(
                             transform.translation + Vec3::new(direction * 24.0, 0.0, 0.4),
-                        ),
+                        )
+                        .with_scale(Vec3::splat(shot_scale)),
                         CombatProjectile {
                             velocity_x: direction * attack.projectile_speed_h_s * H_WORLD_UNITS,
                             damage: attack.damage,
@@ -330,6 +338,31 @@ pub(in crate::game) fn update_enemy_ai(
                         },
                         RoomEntity,
                     ));
+                    match shot {
+                        Some(sheet) => projectile.insert((
+                            Sprite {
+                                flip_x: direction < 0.0,
+                                ..Sprite::from_atlas_image(
+                                    sheet.image.clone(),
+                                    TextureAtlas {
+                                        layout: sheet.layout.clone(),
+                                        index: 0,
+                                    },
+                                )
+                            },
+                            AnimatedSprite {
+                                sheet: shot_key,
+                                frame: 0,
+                                frames: sheet.frames,
+                                timer: Timer::from_seconds(1.0 / sheet.fps, TimerMode::Repeating),
+                                looping: true,
+                            },
+                        )),
+                        None => projectile.insert(Sprite::from_color(
+                            Color::srgb(0.95, 0.3, 0.24),
+                            projectile_size,
+                        )),
+                    };
                 } else {
                     if (kind == "telegraphed_lunge" || kind == "lunge")
                         && distance_h > (attack.reach_h + player_half_width_h)
@@ -369,16 +402,16 @@ pub(in crate::game) fn update_enemy_ai(
                             };
                         }
                     }
-                    // A clip with frames left after its last blow plays them
-                    // out before the enemy moves again: its follow-through
-                    // is the opening it leaves.
-                    if attack.strike_frame.is_some() && !enemy.combo_hit_pending {
-                        enemy.stance = Some((
-                            Stance::Clip,
-                            animation.frames.saturating_sub(animation.frame + 1) as f32
-                                * animation.timer.duration().as_secs_f32(),
-                        ));
-                    }
+                }
+                // A clip with frames left after its last blow or its shot
+                // plays them out before the enemy moves again: its
+                // follow-through is the opening it leaves.
+                if attack.strike_frame.is_some() && !enemy.combo_hit_pending {
+                    enemy.stance = Some((
+                        Stance::Clip,
+                        animation.frames.saturating_sub(animation.frame + 1) as f32
+                            * animation.timer.duration().as_secs_f32(),
+                    ));
                 }
             }
             continue;

@@ -86,6 +86,11 @@ impl EnemyTypeId {
             // How it stands before it has noticed anyone, its sword not yet
             // drawn; once it has, it idles in `black_knight_idle`.
             "black_knight" => "black_knight_unarmed_idle",
+            "abomination" => "abomination_idle",
+            "catto" => "catto_idle",
+            "mad_ghost" => "mad_ghost_idle",
+            "mage" => "mage_idle",
+            "eye_beast" => "eye_beast_idle",
             _ => "enemy_swordsman_idle",
         }
     }

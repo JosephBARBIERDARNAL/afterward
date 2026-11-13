@@ -137,6 +137,22 @@ pub struct EnemyTypeConfig {
     pub attacks: Vec<EnemyAttackConfig>,
     pub roll: Option<EnemyRollConfig>,
     pub phase_two: Option<BossPhaseConfig>,
+    /// How the type's sheets are drawn; the older types have theirs in
+    /// `world::spawn_enemies`.
+    pub sprite: Option<EnemySpriteConfig>,
+}
+
+/// How a type's sheets are laid over its body, in source pixels.
+#[derive(Debug, Clone, Copy, Deserialize)]
+pub struct EnemySpriteConfig {
+    /// World units a source pixel is drawn at: a whole number for pixel art.
+    pub scale: f32,
+    /// Empty rows above and below the figure in a frame.
+    pub top_padding_px: f32,
+    pub bottom_padding_px: f32,
+    /// The height of the entity's origin above its feet. Combat and the AI
+    /// measure from that origin, so it sits mid-body.
+    pub origin_above_feet_px: f32,
 }
 
 /// The roll an enemy answers a beating with: wounded `after_wounds` times

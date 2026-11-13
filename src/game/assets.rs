@@ -7,6 +7,7 @@ use crate::{
 mod boss_sheets;
 mod effect_sheets;
 mod enemy_sheets;
+mod monster_sheets;
 mod player_sheets;
 
 pub(super) fn load_sprites(
@@ -19,6 +20,7 @@ pub(super) fn load_sprites(
         .into_iter()
         .chain(enemy_sheets::sprites())
         .chain(boss_sheets::sprites())
+        .chain(monster_sheets::sprites())
         .chain(effect_sheets::sprites())
         .chain([
             exit_door_sheet(&data.gameplay.room_flow.exit_door),
@@ -30,13 +32,16 @@ pub(super) fn load_sprites(
     let mut sheets = BTreeMap::new();
     for spec in specs {
         // Sheets under `ui/`, `pickups/` and `effects/` are pixel art drawn
-        // near 1:1, and the Black Knight is pixel art drawn larger than its
-        // sheet, so they keep their hard pixel edges; the other character
-        // sheets are scaled down and look better with the default filtering.
+        // near 1:1, and the Black Knight and the monsters are pixel art drawn
+        // larger than their sheets, so they keep their hard pixel edges; the
+        // other character sheets are scaled down and look better with the
+        // default filtering.
         let image = if spec.path.starts_with("ui/")
             || spec.path.starts_with("pickups/")
             || spec.path.starts_with("effects/")
             || spec.path.starts_with("enemies/black_knight/")
+            || spec.path.starts_with("enemies/horror/")
+            || spec.path.starts_with("enemies/eye_beast/")
         {
             crate::game::ui_style::load_pixel_art(&asset_server, spec.path)
         } else {
@@ -140,6 +145,7 @@ mod tests {
         let frames = boss_sheets::sprites()
             .into_iter()
             .chain(enemy_sheets::sprites())
+            .chain(monster_sheets::sprites())
             .map(|sheet| (sheet.key, sheet.frames))
             .collect::<BTreeMap<_, _>>();
         for (type_id, enemy) in &data.enemies.types {
@@ -172,6 +178,7 @@ mod tests {
             .into_iter()
             .chain(enemy_sheets::sprites())
             .chain(boss_sheets::sprites())
+            .chain(monster_sheets::sprites())
             .chain(effect_sheets::sprites())
             .chain([
                 exit_door_sheet(&data.gameplay.room_flow.exit_door),

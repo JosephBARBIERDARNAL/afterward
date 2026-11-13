@@ -12,6 +12,7 @@ mod enemy_vision;
 mod falling;
 mod gameplay_controls;
 mod melee_combo;
+mod monsters;
 mod platform_movement;
 mod player_controls;
 mod player_stances;

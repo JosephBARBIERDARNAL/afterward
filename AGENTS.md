@@ -237,6 +237,16 @@ A second boss type, `black_knight` of `enemies/enemy_types.yaml`, beside the `em
 - `roll:` on a type is its way out of the chain: wounded `after_wounds` times with no armor up, it rolls through the player, untouchable for the stretch the block gives.
 - The pack's other clips (three heavy attacks, the weapon art, the unarmed set) are in the atlas and not cut yet.
 
+### The monsters
+
+Five more types of `enemies/enemy_types.yaml`, drawn from two packs and placed in no room yet (the editor's enemy type row places them): `abomination`, `mage`, `catto` and `mad_ghost` from `enemies/horror/`, and `eye_beast` from `enemies/eye_beast/`.
+
+- `assets/monster_sheets.rs` lists their clips. The horror pack ships one row of frames per monster with every clip after the other, so a clip there is a first cell and a count in the same PNG; the eye beast ships one image per frame, which were mirrored (it is drawn looking left, every other sheet looks right) and laid in one strip per clip. All load with nearest sampling.
+- Their sheets are named `<type>_<action>`, as the Black Knight's are, and their one attack names its `clip` and `strike_frame`.
+- `sprite:` on a type is how its sheets are laid over its body — pixel scale, the empty rows above and below the figure, the height of the body's middle above the feet. The monsters have one; the older types still have theirs in `world::spawn_enemies`.
+- A type with a `<type>_shot` sheet fires that instead of the plain bolt, drawn at the type's `sprite.scale` (`combat/enemy_ai.rs`): the eye beast's void ball. A shot, like a blow, now plays its clip's follow-through out before the enemy moves again.
+- Nothing flies: the ghost and the eye beast walk the floor like any other enemy, the eye beast drawn a little above it.
+
 ### Art direction
 
 `art/README.md` is the reference for how the game looks, and every asset — surface,
