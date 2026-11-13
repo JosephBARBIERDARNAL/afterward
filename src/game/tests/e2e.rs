@@ -87,6 +87,7 @@ impl HeadlessGame {
                 "surfaces",
                 "doors",
                 "pickups",
+                "fonts",
             ]
             .map(PathBuf::from),
         );

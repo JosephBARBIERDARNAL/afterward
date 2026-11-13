@@ -18,6 +18,8 @@ pub struct GameplayConfig {
     pub prologue: PrologueConfig,
     pub difficulty: DifficultyColors,
     pub effects: EffectsConfig,
+    /// The font file every text is drawn with, under the asset root.
+    pub font: String,
     pub window: WindowConfig,
     pub audio: AudioConfig,
     pub controls: ControlsConfig,

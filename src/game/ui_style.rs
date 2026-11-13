@@ -7,6 +7,7 @@ use bevy::{
     image::{ImageLoaderSettings, ImageSampler},
     text::FontSize,
 };
+use std::fs;
 
 // The cards are semi-transparent, so the water behind the main menu (and the
 // blurred room behind the other menus) shows through them.
@@ -17,6 +18,24 @@ pub(super) const ACTIVE_BORDER: Color = Color::srgba(0.92, 0.94, 1.0, 0.85);
 pub(super) const MUTED: Color = Color::srgba(0.6, 0.62, 0.7, 0.55);
 pub(super) const DESCRIPTION_COLOR: Color = Color::srgb(0.84, 0.86, 0.92);
 pub(super) const TITLE_FONT_PX: f32 = 32.0;
+
+/// Puts the game's font (`font` of `config/gameplay.yaml`) in the place of
+/// Bevy's built-in one, so every text that names no font is written in it.
+/// It is read here rather than through the asset server because the default
+/// font has to be swapped before the first text is laid out.
+pub(super) fn use_the_game_font(data: Res<GameData>, mut fonts: ResMut<Assets<Font>>) {
+    let path = data.asset_root.join(&data.gameplay.font);
+    let replaced = fs::read(&path)
+        .map_err(|error| error.to_string())
+        .and_then(|bytes| {
+            fonts
+                .insert(AssetId::default(), Font::from_bytes(bytes))
+                .map_err(|error| error.to_string())
+        });
+    if let Err(error) = replaced {
+        error!("the game font {} was not loaded: {error}", path.display());
+    }
+}
 
 /// A full-screen layer that centers its content above the game.
 pub(super) fn overlay_root() -> impl Bundle {

@@ -662,6 +662,13 @@ impl GameData {
             }
         }
 
+        if !asset_root.join(&self.gameplay.font).is_file() {
+            return Err(InvalidGameData::from(format!(
+                "missing font asset: {}",
+                self.gameplay.font
+            )));
+        }
+
         Ok(())
     }
 }

@@ -138,6 +138,7 @@ impl Plugin for GamePlugin {
             .add_systems(
                 Startup,
                 (
+                    ui_style::use_the_game_font,
                     camera::spawn_camera,
                     interface::spawn_interface,
                     bonus_screen::spawn_bonus_screen,

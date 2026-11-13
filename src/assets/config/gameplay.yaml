@@ -341,6 +341,11 @@ effects:
     foam_color: "#A6F6F2"
     foam_opacity: 0.72
 
+# The one font every word in the game is written in: menus, HUD, prologue,
+# damage numbers, the debug editor. It must be monospace, since the prologue
+# holds each character's place before it is typed.
+font: fonts/Eirian-Regular.ttf
+
 window:
   # maximized (a window filling the screen), borderless_fullscreen, or windowed.
   start_mode: maximized
