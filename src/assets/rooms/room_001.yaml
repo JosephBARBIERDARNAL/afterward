@@ -4,7 +4,7 @@
 room_id: 1
 chapter_id: 1
 size:
-  width_h: 28
+  width_h: 24
   height_h: 13.5
 background_profiles: [city_peach_sunset]
 player_spawn:
@@ -15,13 +15,13 @@ player_spawn:
 platforms:
   - label: floor
     color: "#1C1A2E"
-    rect_h: { x: 0, y: 0, width: 28, height: 1 }
+    rect_h: { x: 0, y: 0, width: 24, height: 1 }
   - label: left wall
     color: "#1C1A2E"
     rect_h: { x: 0, y: 1, width: 1, height: 12.5 }
   - label: right wall
     color: "#1C1A2E"
-    rect_h: { x: 27, y: 1, width: 1, height: 12.5 }
+    rect_h: { x: 23, y: 1, width: 1, height: 12.5 }
   - label: left ledge, a jump up from the floor
     color: "#1C1A2E"
     rect_h: { x: 4.5, y: 3, width: 4.5, height: 0.5 }
@@ -47,7 +47,7 @@ enemy_spawns:
     facing: left
   - label: fodder
     type_id: blade_unit
-    position_h: { x: 17, y: 1 }
+    position_h: { x: 16.5, y: 1 }
     facing: left
   - label: shooter on its perch
     type_id: rifle_unit
@@ -65,7 +65,7 @@ enemy_spawns:
     wave: 1
   - label: fodder
     type_id: blade_unit
-    position_h: { x: 19, y: 1 }
+    position_h: { x: 18, y: 1 }
     facing: left
     wave: 1
   - label: shooter on the walkway
@@ -75,15 +75,15 @@ enemy_spawns:
     wave: 1
   - label: the tough one
     type_id: heavy_unit
-    position_h: { x: 24, y: 1 }
+    position_h: { x: 20.25, y: 1 }
     facing: left
     armor_layers: 1
     wave: 1
 # The bonus item, lying beside the door once every enemy is down.
 bonus:
-  x_h: 23.5
+  x_h: 21.5
   y_h: 1
 exit:
-  x_h: 25.5
+  x_h: 22.5
   y_h: 1
 next_room_id: 2
