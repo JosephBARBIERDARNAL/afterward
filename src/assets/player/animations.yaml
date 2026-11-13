@@ -24,9 +24,9 @@ wounded_health_fraction: 0.25
 idle_fidget_after_s: 4
 
 clips:
-  # Standing still: the guard breathing slowly, quicker while enemies are up,
-  # then a held flinch once badly hurt.
-  idle: { sheet: player/sheets/guard.png, frames: 4, fps: 4 }
+  # Standing still: at ease and breathing while the room is quiet, the guard up
+  # while enemies are, then a held flinch once badly hurt.
+  idle: { sheet: player/sheets/idle.png, frames: 4, fps: 3 }
   idle_alert: { sheet: player/sheets/guard.png, frames: 4, fps: 12 }
   idle_wounded: { sheet: player/sheets/hurt.png, first_frame: 4, frames: 1, fps: 1 }
   idle_fidget_left: { sheet: player/sheets/idle_fidget_left.png, frames: 10, fps: 16 }
