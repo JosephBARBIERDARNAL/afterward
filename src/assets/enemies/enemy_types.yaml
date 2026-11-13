@@ -380,8 +380,8 @@ types:
       cooldown_s: 1.8
       windup_s: 0.7
   # The four monsters of the horror pack again, in three other palettes each,
-  # all dark: `rust`, a brown-red body with an amber eye, `gold`, a dark
-  # golden one with a red eye, and `purple`, a dark purple one with a pink
+  # all dark: `rust`, a brown-red body with a cyan eye, `gold`, a dark
+  # golden one with a violet eye, and `purple`, a dark purple one with a pink
   # eye. Only
   # the colours differ — every number is the one of the type it is drawn
   # from, and should stay so — and their sheets are that type's, recoloured
