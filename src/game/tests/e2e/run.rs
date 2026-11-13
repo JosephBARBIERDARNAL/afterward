@@ -70,3 +70,16 @@ fn a_run_goes_from_the_menu_through_combat_the_bonus_and_the_door_to_room_two() 
     let roster = game.data().rooms[&2].enemy_spawns.len();
     assert_eq!(game.enemies().len(), roster, "room 2's roster spawns");
 }
+
+#[test]
+fn clearing_a_room_gives_the_player_all_their_health_back() {
+    let mut game = HeadlessGame::new();
+    game.start_run();
+    game.hit_player(30.0);
+    let wounded = game.session().health;
+    assert!(wounded < game.session().max_health, "the hit wounds");
+
+    game.defeat_enemies();
+    game.wait_for_screen(GameScreen::RoomClear, 1.0);
+    assert_eq!(game.session().health, game.session().max_health);
+}

@@ -79,9 +79,6 @@ pub(crate) struct RunSession {
     pub(crate) idle_healing: f32,
     /// Last Stand is spent once a run, not once a room.
     pub(crate) last_stand_used: bool,
-    /// Whether anything has hurt the player in this room, which Clean Sweep
-    /// pays for going without.
-    pub(crate) damaged_this_room: bool,
     pub(crate) world_loaded: bool,
 }
 
@@ -127,7 +124,6 @@ impl Default for RunSession {
             room_ward_used: false,
             idle_healing: 0.0,
             last_stand_used: false,
-            damaged_this_room: false,
             world_loaded: false,
         }
     }

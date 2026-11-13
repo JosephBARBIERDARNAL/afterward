@@ -22,16 +22,10 @@ pub(super) fn room_clear_check(
     }
     session.room_cleared = true;
     session.offered_bonuses.clear();
-    // What a cleared room pays out, and the glow it is paid out under.
-    let mut healing = 0.0;
-    if session.has_bonus("second_wind") {
-        healing += data.bonus_effect("second_wind", "room_clear_healing");
-    }
-    if session.has_bonus("clean_sweep") && !session.damaged_this_room {
-        healing += data.bonus_effect("clean_sweep", "flawless_room_healing");
-    }
-    if healing > 0.0 {
-        session.health = (session.health + healing).min(session.max_health);
+    // A cleared room gives the player all their health back, under the
+    // healing glow when there was any to give.
+    if session.health < session.max_health {
+        session.health = session.max_health;
         if let Ok(mut player) = players.single_mut() {
             player.start_action(
                 PlayerAction::Healing,
@@ -375,7 +369,6 @@ pub(super) fn update_room_transition(
     session.room_cleared = false;
     session.bonus_category = None;
     session.room_ward_used = false;
-    session.damaged_this_room = false;
     session.room_id = next_room_id;
     next_screen.set(if opening_room {
         GameScreen::Prologue

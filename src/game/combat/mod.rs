@@ -102,7 +102,6 @@ fn apply_player_damage(
         session.health = (session.health - reduced_damage).max(0.0);
     }
     player.invulnerability_timer = tuning.damage_invulnerability_s;
-    session.damaged_this_room = true;
     spawn_damage_number(commands, transform.translation, reduced_damage, true);
     sounds.push(SoundCue::Damage(DamageSound::Neutral));
     // Last Stand spends itself to leave the player on their feet at 1 health:

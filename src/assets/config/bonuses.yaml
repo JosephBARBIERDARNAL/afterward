@@ -238,12 +238,6 @@ bonuses:
     category: defense
     rarity: common
     effects: { damage_taken_multiplier: 0.92 }
-  - id: second_wind
-    name: Second Wind
-    description: Restore 20 health when a room is cleared.
-    category: defense
-    rarity: rare
-    effects: { room_clear_healing: 20 }
   - id: bulwark
     name: Bulwark
     description: Taking cover reduces damage by a further 15%.
@@ -490,9 +484,3 @@ bonuses:
         standing_damage_taken_multiplier: 0.9,
         standing_damage_multiplier: 1.05,
       }
-  - id: clean_sweep
-    name: Clean Sweep
-    description: Clearing a room without taking damage restores 10 health.
-    category: combined
-    rarity: rare
-    effects: { flawless_room_healing: 10 }
