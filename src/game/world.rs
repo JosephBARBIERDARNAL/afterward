@@ -60,11 +60,35 @@ pub(super) fn draw_room(
     asset_server: &AssetServer,
     shaders: &mut ShaderAssets,
 ) {
-    // The first profile gives the sky. Each one after it lays its layers over
-    // that and leaves its own backdrop out, which would hide what is behind.
-    let mut depth = 0;
-    for (profile_index, profile) in room.background_profiles.iter().enumerate() {
-        let profile = &data.backgrounds.profiles[profile];
+    // The profiles are mixed rather than laid one over the other. Their skies
+    // are blended in equal parts, each drawn over the ones before it at the
+    // share that leaves them all even. Their layers are then dealt together
+    // from the furthest to the nearest, by how fast each scrolls, so one
+    // skyline's far towers stand behind the other's near ones.
+    let profiles = room
+        .background_profiles
+        .iter()
+        .map(|profile| &data.backgrounds.profiles[profile])
+        .collect::<Vec<_>>();
+    let skies = profiles.iter().enumerate().map(|(index, profile)| {
+        (
+            *profile,
+            profile.backdrop.as_str(),
+            0.0,
+            1.0 / (index + 1) as f32,
+        )
+    });
+    let mut scenery = profiles
+        .iter()
+        .flat_map(|profile| {
+            profile
+                .layers
+                .iter()
+                .map(|layer| (*profile, layer.asset.as_str(), layer.parallax, 1.0))
+        })
+        .collect::<Vec<_>>();
+    scenery.sort_by(|first, second| first.2.total_cmp(&second.2));
+    for (depth, (profile, asset, parallax, alpha)) in skies.chain(scenery).enumerate() {
         let tile = Vec2::new(profile.tile_width_h(), profile.tile_h) * H_WORLD_UNITS;
         let (first_tile, last_tile) = if profile.repeat_horizontal {
             (
@@ -74,48 +98,36 @@ pub(super) fn draw_room(
         } else {
             (0, 0)
         };
-        let backdrop = (profile_index == 0).then_some((profile.backdrop.as_str(), 0.0));
-        let layers = backdrop.into_iter().chain(
-            profile
-                .layers
-                .iter()
-                .map(|layer| (layer.asset.as_str(), layer.parallax)),
-        );
         let filtering = profile.filtering;
-        for (asset, parallax) in layers {
-            let image = asset_server
-                .load_builder()
-                .with_settings(move |settings: &mut ImageLoaderSettings| {
-                    settings.sampler = filtering.into();
-                })
-                .load(asset.to_string());
-            // One material per layer, so its tiles batch together: it draws
-            // the layer as a sprite would, with its lit windows and stars
-            // breathing.
-            let material = shaders.city_lights.add(CityLightsMaterial::new(
-                image,
-                Color::WHITE,
-                depth,
-                &data.gameplay.effects.city_lights,
+        let image = asset_server
+            .load_builder()
+            .with_settings(move |settings: &mut ImageLoaderSettings| {
+                settings.sampler = filtering.into();
+            })
+            .load(asset.to_string());
+        // One material per layer, so its tiles batch together: it draws the
+        // layer as a sprite would, with its lit windows and stars breathing.
+        let material = shaders.city_lights.add(CityLightsMaterial::new(
+            image,
+            Color::WHITE.with_alpha(alpha),
+            depth,
+            &data.gameplay.effects.city_lights,
+        ));
+        for tile_index in first_tile..=last_tile {
+            let base_x = (tile_index as f32 + 0.5) * tile.x;
+            commands.spawn((
+                Mesh2d(shaders.quad.0.clone()),
+                MeshMaterial2d(material.clone()),
+                // `update_background_parallax` keeps it centered on the
+                // camera vertically.
+                Transform::from_xyz(base_x, 0.0, -80.0 + depth as f32).with_scale(tile.extend(1.0)),
+                BackgroundParallax {
+                    base_x,
+                    factor: parallax,
+                    tile,
+                },
+                RoomEntity,
             ));
-            for tile_index in first_tile..=last_tile {
-                let base_x = (tile_index as f32 + 0.5) * tile.x;
-                commands.spawn((
-                    Mesh2d(shaders.quad.0.clone()),
-                    MeshMaterial2d(material.clone()),
-                    // `update_background_parallax` keeps it centered on the
-                    // camera vertically.
-                    Transform::from_xyz(base_x, 0.0, -80.0 + depth as f32)
-                        .with_scale(tile.extend(1.0)),
-                    BackgroundParallax {
-                        base_x,
-                        factor: parallax,
-                        tile,
-                    },
-                    RoomEntity,
-                ));
-            }
-            depth += 1;
         }
     }
 
