@@ -64,8 +64,8 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
     .flat_map(|(monster, frame, clips)| {
         // Each is drawn three times over: as the pack ships it, and in the
         // two palettes scripts/recolour_monsters.py writes beside it, which
-        // are the types `<monster>_drowned` and `<monster>_ashen`.
-        [("", ""), ("_drowned", "drowned/"), ("_ashen", "ashen/")]
+        // are the types `<monster>_bone` and `<monster>_toxic`.
+        [("", ""), ("_bone", "bone/"), ("_toxic", "toxic/")]
             .into_iter()
             .flat_map(move |(suffix, folder)| {
                 clips

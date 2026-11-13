@@ -15,8 +15,8 @@ fn every_monster_reaches_a_standing_player_and_the_eye_beast_does_it_with_its_vo
         "catto",
         "mad_ghost",
         "eye_beast",
-        "abomination_drowned",
-        "mage_ashen",
+        "abomination_bone",
+        "mage_toxic",
     ] {
         let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
         let mut data = GameData::load(&asset_root).expect("Chapter 1 data should load");

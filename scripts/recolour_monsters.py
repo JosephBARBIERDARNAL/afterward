@@ -18,12 +18,10 @@ from pathlib import Path
 HORROR = Path(__file__).resolve().parent.parent / "src/assets/enemies/horror"
 BODY = "#181425"
 EYE = "#FF0044"
-# Each palette's body and eye, after art/README.md: the flood's crest under
-# its cyan foam, and a pale violet kept under the world's ceiling, with the
-# orange of a wind-up for an eye.
+# Each palette's body and eye.
 PALETTES = {
-    "drowned": ("#4A1F4A", "#7FE6E8"),
-    "ashen": ("#5A5179", "#FF7A2F"),
+    "bone": ("#E4DCC8", "#B0122E"),
+    "toxic": ("#1E5A3A", "#C6FF3D"),
 }
 
 for palette, (body, eye) in PALETTES.items():
