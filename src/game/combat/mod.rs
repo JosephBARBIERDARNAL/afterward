@@ -97,11 +97,21 @@ fn apply_player_damage(
     let cover = if covered {
         sounds.push(SoundCue::CoverBlock);
         tuning.cover_damage_taken_multiplier
+            * session.bonus_multiplier(data, "bulwark", "cover_damage_taken_multiplier")
     } else {
         1.0
     };
-    let reduced_damage =
-        damage * session.bonus_multiplier(data, "thick_skin", "damage_taken_multiplier") * cover;
+    let adrenaline = if session.health / session.max_health
+        < data.bonus_effect("adrenaline", "low_health_fraction")
+    {
+        session.bonus_multiplier(data, "adrenaline", "low_health_damage_taken_multiplier")
+    } else {
+        1.0
+    };
+    let reduced_damage = damage
+        * session.bonus_multiplier(data, "thick_skin", "damage_taken_multiplier")
+        * cover
+        * adrenaline;
     if !session.playtest.infinite_health {
         session.health = (session.health - reduced_damage).max(0.0);
     }

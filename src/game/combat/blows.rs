@@ -117,6 +117,12 @@ pub(super) fn land_the_blow(
             continue;
         }
         connected = true;
+        // Opportunist pays for a blow on a body that had not noticed anyone.
+        let unaware = if enemy.engaged {
+            1.0
+        } else {
+            session.bonus_multiplier(data, "opportunist", "unaware_damage_multiplier")
+        };
         if data.enemies.damage_triggers_combat {
             enemy.engaged = true;
             struck.push(enemy_transform.translation.truncate());
@@ -165,10 +171,19 @@ pub(super) fn land_the_blow(
         if armored {
             sounds.push(SoundCue::Damage(DamageSound::of(enemy.material, true)));
             enemy.armor -= 1;
-            if !blow.pierces_shields {
+            // Shield Breaker lets an ordinary blow through the layer it
+            // broke, as the charged one always goes.
+            if !blow.pierces_shields && !session.has_bonus("shield_breaker") {
                 continue;
             }
         }
+        let executioner = if enemy.health / enemy.max_health
+            < data.bonus_effect("executioner", "execute_health_fraction")
+        {
+            session.bonus_multiplier(data, "executioner", "execute_damage_multiplier")
+        } else {
+            1.0
+        };
         let finisher = if blow.finisher {
             session.bonus_multiplier(data, "finisher", "finisher_damage_multiplier")
         } else {
@@ -190,7 +205,9 @@ pub(super) fn land_the_blow(
             * marked
             * finisher
             * chain_reaction
-            * airborne;
+            * airborne
+            * unaware
+            * executioner;
         enemy.health = (enemy.health - damage).max(0.0);
         spawn_damage_number(commands, enemy_transform.translation, damage, false);
         if !armored {

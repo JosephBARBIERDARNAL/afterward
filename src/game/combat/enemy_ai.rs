@@ -638,7 +638,9 @@ pub(in crate::game) fn update_enemy_ai(
                 enemy.movement_sound_timer = 0.0;
                 enemy.active_attack = chosen;
                 enemy.next_attack = (chosen + 1) % enemy.attacks.len();
-                enemy.windup_remaining = attack.windup_s;
+                // Cold Read gives the player longer to read it.
+                enemy.windup_remaining = attack.windup_s
+                    * session.bonus_multiplier(&data, "cold_read", "enemy_windup_multiplier");
                 let phase_multiplier = enemy
                     .phase_two
                     .filter(|(threshold, _)| enemy.health / enemy.max_health <= *threshold)
@@ -650,7 +652,9 @@ pub(in crate::game) fn update_enemy_ai(
                 let action = match (&attack.clip, attack.kind.as_str()) {
                     (Some(clip), _) => clip,
                     (None, "telegraphed_lunge") => "attack_2",
-                    (None, "jump_slam") => "jump",
+                    // A boss gathers for its leap in the air clip; anything else
+                    // that leaps winds up as it does for a strike.
+                    (None, "jump_slam") if enemy.behavior == "boss" => "jump",
                     _ if enemy.type_id == "emitter_unit" => "attack_1",
                     _ => "attack",
                 };

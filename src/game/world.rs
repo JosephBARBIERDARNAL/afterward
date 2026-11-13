@@ -37,6 +37,7 @@ pub(super) fn spawn_room(
     spawn_player(&mut commands, room, &data, &sheets);
     session.wave = 0;
     session.untouched = true;
+    session.deflector_used = false;
     session.flawless = false;
     session.wave_wait_s = 0.0;
     if session.has_enemies(&data) {

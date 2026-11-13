@@ -67,6 +67,13 @@ pub(in crate::game) fn update_projectiles(
             .intersect(player_hurtbox(player_transform.translation, &data))
             .is_empty()
         {
+            // Deflector turns aside the first shot of each room.
+            if session.has_bonus("deflector") && !session.deflector_used {
+                session.deflector_used = true;
+                sounds.push(SoundCue::CoverBlock);
+                commands.entity(projectile_entity).despawn();
+                continue;
+            }
             apply_player_damage(
                 PlayerDamageResources {
                     commands: &mut commands,

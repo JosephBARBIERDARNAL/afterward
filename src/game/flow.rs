@@ -239,6 +239,9 @@ pub(super) fn handle_bonus_input(
         {
             session.max_health += increase as f32;
         }
+        if let Some(rerolls) = bonus.effects.get("extra_rerolls").and_then(Value::as_u64) {
+            session.rerolls = session.rerolls.saturating_add(rerolls as u8);
+        }
         if let Some(restore) = bonus.effects.get("restore_health").and_then(Value::as_f64) {
             session.health = (session.health + restore as f32).min(session.max_health);
         }

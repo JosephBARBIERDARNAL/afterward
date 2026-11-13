@@ -190,6 +190,8 @@ pub(super) fn update_player(
                     session
                         .bonus_multiplier(&data, "high_jump", "jump_height_multiplier")
                         .sqrt()
+                } else if session.has_bonus("kick_off") {
+                    data.bonus_effect("kick_off", "extra_jump_impulse_factor")
                 } else {
                     data.bonus_effect("double_jump", "extra_jump_impulse_factor")
                 };

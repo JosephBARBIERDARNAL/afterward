@@ -88,6 +88,8 @@ pub(crate) struct RunSession {
     pub(crate) room_cleared: bool,
     pub(crate) door_open: bool,
     pub(crate) room_ward_used: bool,
+    /// Deflector has turned aside its one shot of this room.
+    pub(crate) deflector_used: bool,
     /// The part of a health point Recovery has restored but not yet paid out.
     pub(crate) idle_healing: f32,
     /// Last Stand is spent once a run, not once a room.
@@ -165,6 +167,7 @@ impl Default for RunSession {
             room_cleared: false,
             door_open: false,
             room_ward_used: false,
+            deflector_used: false,
             idle_healing: 0.0,
             last_stand_used: false,
             world_loaded: false,
