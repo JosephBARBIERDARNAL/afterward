@@ -17,12 +17,16 @@ pub(crate) struct AudioMix {
 }
 
 impl AudioMix {
-    fn target(screen: GameScreen, audio: &AudioConfig) -> Self {
+    fn target(screen: GameScreen, settings_return: SettingsReturn, audio: &AudioConfig) -> Self {
+        // The settings and controls screens sound like a pause only when they
+        // stand over one: opened from the main menu, they leave its music be.
+        let over_a_paused_run = matches!(
+            screen,
+            GameScreen::Paused | GameScreen::Settings | GameScreen::Controls
+        ) && !settings_return.over_the_flood(screen);
         Self {
             music: match screen {
-                GameScreen::Paused | GameScreen::Settings | GameScreen::Controls => {
-                    audio.paused_music_volume_multiplier
-                }
+                _ if over_a_paused_run => audio.paused_music_volume_multiplier,
                 GameScreen::RoomClear | GameScreen::Bonus | GameScreen::BossIntro => {
                     audio.room_clear_music_volume_multiplier
                 }
@@ -34,9 +38,7 @@ impl AudioMix {
                 1.0
             },
             muffle: match screen {
-                GameScreen::Paused | GameScreen::Settings | GameScreen::Controls => {
-                    audio.paused_music_muffle
-                }
+                _ if over_a_paused_run => audio.paused_music_muffle,
                 // A door is crossed through the wall between two rooms, and
                 // everything playing is heard through it.
                 GameScreen::Transitioning | GameScreen::RoomLoading | GameScreen::Panning => {
@@ -95,6 +97,7 @@ pub(crate) struct MixInputs<'w> {
     screen: Res<'w, State<GameScreen>>,
     data: Res<'w, GameData>,
     settings: Res<'w, AudioSettings>,
+    settings_return: Res<'w, SettingsReturn>,
     music_streams: Res<'w, Assets<MusicStream>>,
 }
 
@@ -157,7 +160,11 @@ pub fn update_audio_volume(
     mut active_audio: Query<MixedAudio>,
 ) {
     let settings = &inputs.settings;
-    let target = AudioMix::target(*inputs.screen.get(), &inputs.data.gameplay.audio);
+    let target = AudioMix::target(
+        *inputs.screen.get(),
+        *inputs.settings_return,
+        &inputs.data.gameplay.audio,
+    );
     let previous_mix = *audio_mix;
     let next_mix = previous_mix
         .unwrap_or(target)
@@ -293,14 +300,15 @@ mod tests {
     #[test]
     fn pausing_muffles_and_lowers_the_music_without_stopping_it() {
         let audio = tuning();
-        let playing = AudioMix::target(GameScreen::Playing, &audio);
+        let over_a_run = SettingsReturn(GameScreen::Paused);
+        let playing = AudioMix::target(GameScreen::Playing, over_a_run, &audio);
 
         for screen in [
             GameScreen::Paused,
             GameScreen::Settings,
             GameScreen::Controls,
         ] {
-            let paused = AudioMix::target(screen, &audio);
+            let paused = AudioMix::target(screen, over_a_run, &audio);
 
             assert!(paused.music < playing.music, "{screen:?} lowers the music");
             assert!(paused.music > 0.0, "{screen:?} keeps the music playing");
@@ -315,26 +323,43 @@ mod tests {
         );
     }
 
+    /// Opened from the main menu, the settings and controls screens stand over
+    /// no run at all, and the music the menu was playing carries on untouched.
+    #[test]
+    fn settings_opened_from_the_main_menu_leave_the_music_alone() {
+        let audio = tuning();
+        let from_the_menu = SettingsReturn(GameScreen::MainMenu);
+        let menu = AudioMix::target(GameScreen::MainMenu, from_the_menu, &audio);
+
+        for screen in [GameScreen::Settings, GameScreen::Controls] {
+            let settings = AudioMix::target(screen, from_the_menu, &audio);
+
+            assert_eq!(settings.music, menu.music, "{screen:?} keeps it as loud");
+            assert_eq!(settings.muffle, menu.muffle, "{screen:?} keeps it clear");
+        }
+    }
+
     /// Walking through a door is walking through a wall: what is playing is
     /// heard through it, without being turned down or slowed.
     #[test]
     fn crossing_between_rooms_muffles_what_is_playing() {
         let audio = tuning();
-        let playing = AudioMix::target(GameScreen::Playing, &audio);
+        let over_a_run = SettingsReturn(GameScreen::Paused);
+        let playing = AudioMix::target(GameScreen::Playing, over_a_run, &audio);
 
         for screen in [
             GameScreen::Transitioning,
             GameScreen::RoomLoading,
             GameScreen::Panning,
         ] {
-            let crossing = AudioMix::target(screen, &audio);
+            let crossing = AudioMix::target(screen, over_a_run, &audio);
 
             assert!(
                 crossing.muffle > playing.muffle,
                 "{screen:?} muffles what is playing"
             );
             assert!(
-                crossing.muffle < AudioMix::target(GameScreen::Paused, &audio).muffle,
+                crossing.muffle < AudioMix::target(GameScreen::Paused, over_a_run, &audio).muffle,
                 "{screen:?} less than a pause does"
             );
             assert_eq!(crossing.music, playing.music, "{screen:?} keeps it as loud");
@@ -344,14 +369,15 @@ mod tests {
     #[test]
     fn clearing_a_room_lowers_the_music_and_drags_it_down() {
         let audio = tuning();
-        let playing = AudioMix::target(GameScreen::Playing, &audio);
+        let over_a_run = SettingsReturn(GameScreen::Paused);
+        let playing = AudioMix::target(GameScreen::Playing, over_a_run, &audio);
 
         for screen in [
             GameScreen::RoomClear,
             GameScreen::Bonus,
             GameScreen::BossIntro,
         ] {
-            let cleared = AudioMix::target(screen, &audio);
+            let cleared = AudioMix::target(screen, over_a_run, &audio);
 
             assert!(cleared.music < playing.music, "{screen:?} lowers the music");
             assert!(cleared.music > 0.0, "{screen:?} keeps the music playing");
