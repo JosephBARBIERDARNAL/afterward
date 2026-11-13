@@ -39,8 +39,12 @@ pub(super) fn set_enemy_animation(
     sheets: &SpriteSheets,
     type_id: &EnemyTypeId,
     action: &str,
-) {
+) -> bool {
+    // A type whose sheets are named after it and the action (`<type>_<action>`)
+    // needs no line below.
+    let own = format!("{type_id}_{action}");
     let key = match action {
+        _ if sheets.0.contains_key(&own) => own.as_str(),
         "jump" if &**type_id == "emitter_unit" => "boss_jump",
         "fall" if &**type_id == "emitter_unit" => "boss_fall",
         // Without dedicated art, airborne enemies use their movement sheet.
@@ -92,10 +96,10 @@ pub(super) fn set_enemy_animation(
         _ => type_id.idle_sheet(),
     };
     let Some(sheet) = sheets.0.get(key) else {
-        return;
+        return false;
     };
     if animation.sheet == key {
-        return;
+        return false;
     }
     sprite.image = sheet.image.clone();
     sprite.texture_atlas = Some(TextureAtlas {
@@ -105,8 +109,10 @@ pub(super) fn set_enemy_animation(
     animation.sheet = key.to_string();
     animation.frame = 0;
     animation.frames = sheet.frames;
-    animation.looping = matches!(action, "walk" | "idle" | "jump" | "fall") && key != "boss_jump";
+    animation.looping =
+        matches!(action, "walk" | "idle" | "jump" | "fall") && !key.ends_with("_jump");
     animation.timer = Timer::from_seconds(1.0 / sheet.fps, TimerMode::Repeating);
+    true
 }
 
 #[cfg(test)]

@@ -1,6 +1,7 @@
 //! Enemy bodies, their attacks, and their health bars.
 
 use super::*;
+use crate::data::EnemyGuardConfig;
 
 #[derive(Component)]
 pub(crate) struct EnemyBody {
@@ -44,6 +45,45 @@ pub(crate) struct EnemyBody {
     pub(crate) phase_two_announced: bool,
     pub(crate) marked_timer: f32,
     pub(crate) movement_sound_timer: f32,
+    /// What it is held in that is neither an attack nor a flinch, and how
+    /// long is left of it.
+    pub(crate) stance: Option<(Stance, f32)>,
+    /// Its wind-up is the answer to a blow its guard turned aside, rather
+    /// than the attack in hand.
+    pub(crate) countering: bool,
+    /// The blows that have wounded it with no armor up since it last rolled.
+    pub(crate) wounds: u8,
+}
+
+/// What holds an enemy where a boss's extra clips need it held.
+#[derive(Clone, Copy, PartialEq)]
+pub(crate) enum Stance {
+    /// Standing while a clip plays out: the sword drawn, the flare of the
+    /// second phase, a slam landed, a strike followed through, a guard
+    /// lowered unanswered.
+    Clip,
+    /// The guard of a `parry`, up and waiting for a blow.
+    Guard,
+    /// Rolling the way `direction` points.
+    Roll { direction: f32 },
+}
+
+impl EnemyBody {
+    /// Holds the enemy where it stands while `clip` of its own sheets plays
+    /// once. A type drawn without that clip carries on as it was.
+    pub(super) fn play_out(
+        &mut self,
+        clip: &str,
+        sprite: &mut Sprite,
+        animation: &mut AnimatedSprite,
+        sheets: &SpriteSheets,
+    ) {
+        let Some(sheet) = sheets.0.get(&format!("{}_{clip}", self.type_id)) else {
+            return;
+        };
+        self.stance = Some((Stance::Clip, sheet.frames as f32 / sheet.fps));
+        set_enemy_animation(sprite, animation, sheets, &self.type_id, clip);
+    }
 }
 
 #[derive(Clone, Copy)]
@@ -76,6 +116,9 @@ pub(crate) struct EnemyAttack {
     pub(crate) projectile_size: Vec2,
     pub(crate) cooldown_s: f32,
     pub(crate) windup_s: f32,
+    pub(crate) clip: Option<String>,
+    pub(crate) strike_frame: Option<usize>,
+    pub(crate) guard: Option<EnemyGuardConfig>,
 }
 
 impl From<&EnemyAttackConfig> for EnemyAttack {
@@ -97,6 +140,9 @@ impl From<&EnemyAttackConfig> for EnemyAttack {
             }),
             cooldown_s: config.cooldown_s,
             windup_s: config.windup_s,
+            clip: config.clip.clone(),
+            strike_frame: config.strike_frame,
+            guard: config.guard.clone(),
         }
     }
 }

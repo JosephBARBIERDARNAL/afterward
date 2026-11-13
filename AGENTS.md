@@ -218,6 +218,18 @@ Each type in `enemies/enemy_types.yaml` declares a `material`, which decides the
 - `EnemyBody::armor`, the layers left, is the whole state. `combat/shield.rs` watches it rather than being told: the frame it drops below an icon's layer, that icon starts its break and despawns once it has played out. The last icon of the row goes first.
 - The icon is `art/ui/enemy_shield.typ`, a 6-frame sheet (frame 0 is the shield, 1-5 the break) whose `fps` in `assets/enemy_sheets.rs` sets how fast it shatters. Sprite sheets under `ui/` load with nearest sampling, unlike the character sheets.
 
+### The Black Knight
+
+A second boss type, `black_knight` of `enemies/enemy_types.yaml`, beside the `emitter_unit` of room 10. No room holds it yet: place it with the editor's enemy type row.
+
+- Its pack ships one atlas, `enemies/black_knight/source_atlas.png`, whose cells carry a coloured border and whose clips run on from one row into the next. `scripts/slice_black_knight.py` (`just black-knight`, needs ImageMagick) cuts it into one borderless strip per clip beside it, and its `CLIPS` table is where a clip is added or recut; the strips are committed. `assets/boss_sheets.rs` lists them with their frame counts and pace, and they load with nearest sampling, since the knight is pixel art drawn at a whole 3 world units a pixel.
+- Its sheets are named `black_knight_<action>`, and `set_enemy_animation` looks for `<type>_<action>` before its table of older types, so a type named this way needs no line there.
+- An attack may name its `clip` and the `strike_frame` the blow lands on. `update_enemy_ai` then spreads the frames before it over `windup_s`, and holds the enemy until the frames after it have played: the follow-through is the opening.
+- `Stance` on `EnemyBody` (`combat/enemy_body.rs`) is what holds it outside an attack or a flinch: a clip played out (`EnemyBody::play_out` — the sword drawn when it first notices the player, the flare on entering its second phase, a slam landed, a guard lowered), the guard of a `parry`, or a roll. A type without the clip in question skips the stance, which is why the older boss is untouched.
+- `parry` is an attack kind with a `guard:` block. `windup_s` raises the guard and a blow still lands meanwhile; once up, an ordinary blow costs the knight nothing and is answered with the attack's own damage and hitbox, and the answer cannot be interrupted. The charged blow breaks the guard. `combat/blows.rs` decides all of it.
+- `roll:` on a type is its way out of the chain: wounded `after_wounds` times with no armor up, it rolls through the player, untouchable for the stretch the block gives.
+- The pack's other clips (three heavy attacks, the weapon art, the unarmed set) are in the atlas and not cut yet.
+
 ### Art direction
 
 `art/README.md` is the reference for how the game looks, and every asset — surface,

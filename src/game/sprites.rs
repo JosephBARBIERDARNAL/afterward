@@ -23,6 +23,19 @@ pub(crate) struct AnimatedSprite {
     pub(crate) looping: bool,
 }
 
+impl AnimatedSprite {
+    /// Shows `frame` of the clip in hand and holds it there, for a clip
+    /// whose frames are spread over a window rather than played at the
+    /// sheet's own pace. Left alone afterwards, the clip plays on from it.
+    pub(crate) fn hold_frame(&mut self, sprite: &mut Sprite, frame: usize) {
+        self.frame = frame.min(self.frames.saturating_sub(1));
+        if let Some(atlas) = &mut sprite.texture_atlas {
+            atlas.index = self.frame;
+        }
+        self.timer.reset();
+    }
+}
+
 #[derive(Debug)]
 pub(crate) struct SpriteSheetSpec {
     pub(crate) key: String,
@@ -70,6 +83,9 @@ impl EnemyTypeId {
             "dark_rifle_unit" => "enemy_dark_infantry_idle",
             "dark_heavy_unit" => "enemy_dark_destroyer_idle",
             "emitter_unit" => "boss_idle",
+            // How it stands before it has noticed anyone, its sword not yet
+            // drawn; once it has, it idles in `black_knight_idle`.
+            "black_knight" => "black_knight_unarmed_idle",
             _ => "enemy_swordsman_idle",
         }
     }

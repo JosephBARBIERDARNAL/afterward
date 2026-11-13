@@ -52,6 +52,11 @@ art-fmt:
 dark-robots:
     python3 scripts/darken_robots.py
 
+# Cut the Black Knight's atlas into one strip per clip (enemies/black_knight/).
+# Needs ImageMagick; the PNGs are committed, so only after the atlas or a clip changes.
+black-knight:
+    python3 scripts/slice_black_knight.py
+
 # Render the Typst pixel art in art/ to PNGs at the same path under src/assets/
 # (art/surfaces/textures/wood/planks.typ -> src/assets/surfaces/textures/wood/planks.png).
 # Files starting with `_` are shared libraries, not images.

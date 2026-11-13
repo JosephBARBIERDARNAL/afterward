@@ -80,14 +80,6 @@ pub(in crate::game) fn update_enemy_ai(
         if enemy.health <= 0.0 {
             continue;
         }
-        if !enemy.phase_two_announced
-            && enemy
-                .phase_two
-                .is_some_and(|(threshold, _)| enemy.health / enemy.max_health <= threshold)
-        {
-            enemy.phase_two_announced = true;
-            sounds.push(SoundCue::BossPhase);
-        }
         enemy.marked_timer = (enemy.marked_timer - dt).max(0.0);
         enemy.attack_cooldown = (enemy.attack_cooldown - dt).max(0.0);
         enemy.hurt_timer = (enemy.hurt_timer - dt).max(0.0);
@@ -142,7 +134,7 @@ pub(in crate::game) fn update_enemy_ai(
                 "fall"
             };
             set_enemy_animation(&mut sprite, &mut animation, &sheets, &enemy.type_id, action);
-            if enemy.type_id != "emitter_unit" {
+            if !matches!(&*enemy.type_id, "emitter_unit" | "black_knight") {
                 // Without jump art, hold the current walk frame in the air.
                 animation.timer.reset();
             }
@@ -173,6 +165,58 @@ pub(in crate::game) fn update_enemy_ai(
                     attack.damage,
                 );
             }
+            enemy.play_out("land", &mut sprite, &mut animation, &sheets);
+        }
+
+        // The second phase is announced on its feet, and a boss drawn with a
+        // flare for it drops whatever it was doing, a flinch included, to
+        // stand in it.
+        if !enemy.phase_two_announced
+            && enemy
+                .phase_two
+                .is_some_and(|(threshold, _)| enemy.health / enemy.max_health <= threshold)
+        {
+            enemy.phase_two_announced = true;
+            sounds.push(SoundCue::BossPhase);
+            enemy.stance = None;
+            enemy.play_out("buff", &mut sprite, &mut animation, &sheets);
+            if enemy.stance.is_some() {
+                enemy.hurt_timer = 0.0;
+                enemy.windup_remaining = 0.0;
+                enemy.combo_hit_pending = false;
+                enemy.countering = false;
+            }
+        }
+
+        if let Some((stance, left_s)) = enemy.stance {
+            let left_s = left_s - dt;
+            if let Stance::Roll { direction } = stance
+                && let Some(roll) = &data.enemies.types[&enemy.type_id].roll
+            {
+                // It rolls along the floor it stands on, and stops at a wall
+                // or a ledge as a walk does. Its clip is spread over the roll.
+                let next_x = surfaces.blocked_x(
+                    feet.x,
+                    (feet.x + direction * roll.distance_h / roll.duration_s * H_WORLD_UNITS * dt)
+                        .clamp(
+                            HALF_BODY_WIDTH,
+                            data.rooms[&session.room_id].size.width_h * H_WORLD_UNITS
+                                - HALF_BODY_WIDTH,
+                        ),
+                    feet.y,
+                );
+                if surfaces.standing_on(next_x, feet.y, SLOPE_STRIDE).is_some() {
+                    transform.translation.x = next_x;
+                }
+                sprite.flip_x = direction < 0.0;
+                let frame = (1.0 - left_s / roll.duration_s) * animation.frames as f32;
+                animation.hold_frame(&mut sprite, frame as usize);
+            }
+            enemy.stance = (left_s > 0.0).then_some((stance, left_s));
+            if enemy.stance.is_none() && stance == Stance::Guard {
+                enemy.play_out("guard_miss", &mut sprite, &mut animation, &sheets);
+            }
+            continue;
         }
 
         if enemy.hurt_timer > 0.0 {
@@ -184,16 +228,62 @@ pub(in crate::game) fn update_enemy_ai(
             continue;
         }
 
+        // Still standing as it was before it noticed anyone: a type drawn
+        // with a weapon to draw draws it before anything else.
+        if animation.sheet == enemy.type_id.idle_sheet() {
+            enemy.play_out("draw", &mut sprite, &mut animation, &sheets);
+        }
+        // Beaten on for long enough, it rolls through whoever is doing it
+        // and comes up at their back.
+        if let Some(roll) = &data.enemies.types[&enemy.type_id].roll
+            && enemy.wounds >= roll.after_wounds
+        {
+            enemy.wounds = 0;
+            enemy.stance = Some((
+                Stance::Roll {
+                    direction: enemy.facing,
+                },
+                roll.duration_s,
+            ));
+            set_enemy_animation(&mut sprite, &mut animation, &sheets, &enemy.type_id, "roll");
+        }
+        if enemy.stance.is_some() {
+            continue;
+        }
+
         if enemy.windup_remaining > 0.0 {
             if enemy.procedural_movement.is_some() {
                 transform.translation.y = enemy.home_y;
                 transform.rotation = Quat::IDENTITY;
             }
             enemy.windup_remaining = (enemy.windup_remaining - dt).max(0.0);
-            if enemy.windup_remaining == 0.0
-                && let Some(attack) = enemy.attacks.get(enemy.active_attack).cloned()
-            {
+            let Some(attack) = enemy.attacks.get(enemy.active_attack).cloned() else {
+                continue;
+            };
+            // An attack that names the frame its strike lands on spreads the
+            // frames before it over the wind-up, so the telegraph ends
+            // exactly as it hits; the clip plays on by itself from there. A
+            // combo's second blow comes out of that follow-through.
+            let telegraph = match &attack.guard {
+                Some(guard) if enemy.countering => {
+                    Some((guard.counter_strike_frame, guard.counter_windup_s))
+                }
+                _ => attack.strike_frame.map(|frame| (frame, attack.windup_s)),
+            }
+            .filter(|_| !enemy.combo_hit_pending);
+            if let Some((strike_frame, windup_s)) = telegraph {
+                let frame = (1.0 - enemy.windup_remaining / windup_s) * strike_frame as f32;
+                animation.hold_frame(&mut sprite, frame as usize);
+            }
+            if enemy.windup_remaining == 0.0 {
                 let kind = attack.kind.as_str();
+                // A guard that has been raised is held, until a blow lands
+                // on it or it is lowered; `blows.rs` starts the answer.
+                if let Some(guard) = attack.guard.as_ref().filter(|_| !enemy.countering) {
+                    enemy.stance = Some((Stance::Guard, guard.hold_s));
+                    continue;
+                }
+                enemy.countering = false;
                 if kind == "jump_slam" {
                     // Leap at the player; the slam resolves on touchdown.
                     let jump_height = enemy.jump_height_h * H_WORLD_UNITS;
@@ -278,6 +368,16 @@ pub(in crate::game) fn update_enemy_ai(
                                 0.25
                             };
                         }
+                    }
+                    // A clip with frames left after its last blow plays them
+                    // out before the enemy moves again: its follow-through
+                    // is the opening it leaves.
+                    if attack.strike_frame.is_some() && !enemy.combo_hit_pending {
+                        enemy.stance = Some((
+                            Stance::Clip,
+                            animation.frames.saturating_sub(animation.frame + 1) as f32
+                                * animation.timer.duration().as_secs_f32(),
+                        ));
                     }
                 }
             }
@@ -421,19 +521,21 @@ pub(in crate::game) fn update_enemy_ai(
                 sounds.push(SoundCue::EnemyTelegraph(audio::EnemySoundStyle::from(
                     &enemy.type_id,
                 )));
-                let action = match attack.kind.as_str() {
-                    "telegraphed_lunge" => "attack_2",
-                    "jump_slam" => "jump",
+                let action = match (&attack.clip, attack.kind.as_str()) {
+                    (Some(clip), _) => clip,
+                    (None, "telegraphed_lunge") => "attack_2",
+                    (None, "jump_slam") => "jump",
                     _ if enemy.type_id == "emitter_unit" => "attack_1",
                     _ => "attack",
                 };
                 set_enemy_animation(&mut sprite, &mut animation, &sheets, &enemy.type_id, action);
             } else {
                 enemy.movement_sound_timer = 0.0;
-                if animation.sheet != enemy.type_id.idle_sheet() {
+                // Heard as it comes to rest, not for as long as it stands.
+                if set_enemy_animation(&mut sprite, &mut animation, &sheets, &enemy.type_id, "idle")
+                {
                     sounds.push(SoundCue::enemy_idle(&enemy.type_id));
                 }
-                set_enemy_animation(&mut sprite, &mut animation, &sheets, &enemy.type_id, "idle");
             }
         }
     }

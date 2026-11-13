@@ -1,4 +1,5 @@
 use super::*;
+mod black_knight;
 mod bonus_screen_idle;
 mod chapter_one_run;
 mod control_bindings;

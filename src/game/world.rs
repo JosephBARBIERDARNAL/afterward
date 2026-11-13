@@ -282,6 +282,8 @@ pub(super) fn spawn_enemies(
         let sheet = &sheets.0[key];
         let scale = match &*spawn.type_id {
             "emitter_unit" => 1.2,
+            // Pixel art, so a whole number: 31 px of knight stand 1.9 H tall.
+            "black_knight" => 3.0,
             _ => ENEMY_SPRITE_SCALE,
         };
         // Source pixels: empty rows above and below the figure, and the height
@@ -293,6 +295,7 @@ pub(super) fn spawn_enemies(
                 "rifle_unit" | "dark_rifle_unit" => (56.0, 0.0, sheet.frame_size.y / 2.0),
                 "heavy_unit" | "dark_heavy_unit" => (51.0, 0.0, sheet.frame_size.y / 2.0),
                 "emitter_unit" => (63.0, 83.0, 26.0),
+                "black_knight" => (31.0, 0.0, 16.0),
                 _ => (0.0, 0.0, sheet.frame_size.y / 2.0),
             };
         let attacks = if profile.attacks.is_empty() {
@@ -396,6 +399,9 @@ pub(super) fn spawn_enemies(
                     phase_two_announced: false,
                     marked_timer: 0.0,
                     movement_sound_timer: 0.0,
+                    stance: None,
+                    countering: false,
+                    wounds: 0,
                 },
                 room_intro::EnemyEntrance {
                     base_scale: Vec3::splat(scale),

@@ -54,6 +54,11 @@ jumping:
 # preferred_distance_h and fires as soon as its shot is ready, however close
 # the player stands. It only backs away, toward the near end, while the shot
 # cools down.
+# An attack may name the `clip` it plays (the sheet `<type>_<clip>`) and the
+# `strike_frame` of it the blow lands on: the frames before that one are then
+# spread over windup_s, so the telegraph ends exactly as it hits, and the
+# frames after it are played out before the enemy moves again — its
+# follow-through is the opening it leaves.
 types:
   blade_unit:
     hurtbox_h: { width: 0.8, height: 0.9 }
@@ -176,3 +181,73 @@ types:
     phase_two:
       health_fraction_at_or_below: 0.5
       cooldown_multiplier: 0.8
+  # The Black Knight: a second boss, drawn from its own pack
+  # (enemies/black_knight/, cut by scripts/slice_black_knight.py) and placed
+  # in no room yet. It stands unarmed until it notices the player, draws, and
+  # then works through its attacks in order. Its body is 31 px tall in a
+  # sheet drawn at 3 world units a pixel, which is where 1.9 H comes from.
+  black_knight:
+    hurtbox_h: { width: 1, height: 1.9 }
+    health: 450
+    material: metal
+    movement_speed_h_s: 3.2
+    jump_height_h: 2.75
+    behavior: boss
+    attacks:
+      # Two swings out of one clip: the second comes out of the follow-through
+      # of the first.
+      - kind: two_hit_melee_combo
+        clip: combo
+        strike_frame: 9
+        hits: 2
+        damage_per_hit: 10
+        hitbox_h: { x: -0.4, y: 0, width: 2.6, height: 2.4 }
+        cooldown_s: 1.6
+        windup_s: 0.5
+      # windup_s raises the guard, and a blow still lands while it comes up.
+      # Once up it is held for hold_s: an ordinary blow on it costs the knight
+      # nothing and is answered, counter_windup_s later, with this attack's
+      # damage over this hitbox — the burst of counter_clip, which lands on
+      # its counter_strike_frame. The charged blow breaks the guard instead,
+      # so the way past it is to wait it out or to gather one.
+      - kind: parry
+        clip: guard
+        strike_frame: 5
+        damage: 14
+        hitbox_h: { x: -0.6, y: 0, width: 2.8, height: 2.6 }
+        cooldown_s: 1.4
+        windup_s: 0.3
+        guard:
+          hold_s: 1.2
+          counter_clip: counter
+          counter_strike_frame: 2
+          counter_windup_s: 0.35
+      - kind: telegraphed_lunge
+        clip: lunge
+        strike_frame: 5
+        damage: 16
+        hitbox_h: { x: 0, y: 0, width: 2.6, height: 1.3 }
+        cooldown_s: 1.9
+        windup_s: 0.55
+      # Wind-up is the gathering before take-off; damage lands on touchdown.
+      - kind: jump_slam
+        clip: jump
+        strike_frame: 2
+        damage: 18
+        hitbox_h: { x: -2, y: -1, width: 4, height: 3 }
+        cooldown_s: 2.5
+        windup_s: 0.6
+    # What stops the chain from holding it in its flinch for good: wounded
+    # after_wounds times with no armor up, it rolls distance_h through the
+    # player and comes up at their back. No blow reaches it between
+    # invulnerable_from_s and invulnerable_to_s of the roll: from its very
+    # start, or the chain's next blow would stop it before it had moved.
+    roll:
+      after_wounds: 3
+      distance_h: 4.5
+      duration_s: 0.6
+      invulnerable_from_s: 0
+      invulnerable_to_s: 0.5
+    phase_two:
+      health_fraction_at_or_below: 0.5
+      cooldown_multiplier: 0.75

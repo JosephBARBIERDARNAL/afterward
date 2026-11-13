@@ -135,7 +135,21 @@ pub struct EnemyTypeConfig {
     pub attack: Option<EnemyAttackConfig>,
     #[serde(default)]
     pub attacks: Vec<EnemyAttackConfig>,
+    pub roll: Option<EnemyRollConfig>,
     pub phase_two: Option<BossPhaseConfig>,
+}
+
+/// The roll an enemy answers a beating with: wounded `after_wounds` times
+/// with no armor up, it rolls through whoever is hitting it and comes up at
+/// their back.
+#[derive(Debug, Deserialize)]
+pub struct EnemyRollConfig {
+    pub after_wounds: u8,
+    pub distance_h: f32,
+    pub duration_s: f32,
+    /// No blow reaches it between these two moments of the roll.
+    pub invulnerable_from_s: f32,
+    pub invulnerable_to_s: f32,
 }
 
 #[derive(Debug, Deserialize)]
@@ -159,6 +173,26 @@ pub struct EnemyAttackConfig {
     pub projectile_size_h: Option<SizeH>,
     pub cooldown_s: f32,
     pub windup_s: f32,
+    /// The clip the attack plays, named as the type's sheet is
+    /// (`<type>_<clip>`); the type's ordinary attack clip when left out.
+    pub clip: Option<String>,
+    /// The frame of that clip the strike lands on: the frames before it are
+    /// spread over `windup_s`, so the telegraph ends exactly as it hits.
+    pub strike_frame: Option<usize>,
+    /// What a `parry` does once its guard is up.
+    pub guard: Option<EnemyGuardConfig>,
+}
+
+/// The guard a `parry` holds once `windup_s` has raised it. An ordinary blow
+/// landing on it is turned aside and answered with the attack's own damage
+/// and hitbox, `counter_windup_s` later; a blow that goes through armor
+/// breaks the guard instead.
+#[derive(Debug, Clone, Deserialize)]
+pub struct EnemyGuardConfig {
+    pub hold_s: f32,
+    pub counter_clip: String,
+    pub counter_strike_frame: usize,
+    pub counter_windup_s: f32,
 }
 
 #[derive(Debug, Deserialize)]

@@ -106,6 +106,9 @@ mod tests {
             projectile_size: Vec2::ZERO,
             cooldown_s: 1.0,
             windup_s: 0.1,
+            clip: None,
+            strike_frame: None,
+            guard: None,
         };
         let feet = Vec2::new(10.0, 5.0);
         assert_eq!(

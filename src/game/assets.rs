@@ -30,11 +30,13 @@ pub(super) fn load_sprites(
     let mut sheets = BTreeMap::new();
     for spec in specs {
         // Sheets under `ui/`, `pickups/` and `effects/` are pixel art drawn
-        // near 1:1, so they keep their hard pixel edges; the character sheets
-        // are scaled down and look better with the default filtering.
+        // near 1:1, and the Black Knight is pixel art drawn larger than its
+        // sheet, so they keep their hard pixel edges; the other character
+        // sheets are scaled down and look better with the default filtering.
         let image = if spec.path.starts_with("ui/")
             || spec.path.starts_with("pickups/")
             || spec.path.starts_with("effects/")
+            || spec.path.starts_with("enemies/black_knight/")
         {
             crate::game::ui_style::load_pixel_art(&asset_server, spec.path)
         } else {
@@ -130,6 +132,37 @@ pub(super) fn animate_sprites(
 mod tests {
     use super::*;
     use std::{fs, path::Path};
+
+    #[test]
+    fn every_clip_an_enemy_attack_names_is_a_sheet_long_enough_for_its_strike() {
+        let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
+        let data = GameData::load(&asset_root).expect("game data should load");
+        let frames = boss_sheets::sprites()
+            .into_iter()
+            .chain(enemy_sheets::sprites())
+            .map(|sheet| (sheet.key, sheet.frames))
+            .collect::<BTreeMap<_, _>>();
+        for (type_id, enemy) in &data.enemies.types {
+            for attack in enemy.attack.iter().chain(&enemy.attacks) {
+                let strikes = [
+                    attack.clip.as_ref().map(|clip| (clip, attack.strike_frame)),
+                    attack
+                        .guard
+                        .as_ref()
+                        .map(|guard| (&guard.counter_clip, Some(guard.counter_strike_frame))),
+                ];
+                for (clip, strike_frame) in strikes.into_iter().flatten() {
+                    let length = frames.get(&format!("{type_id}_{clip}")).copied();
+                    assert!(
+                        length.is_some_and(|length| strike_frame.unwrap_or(0) < length),
+                        "{type_id} attack {} plays `{clip}`, which is not a sheet \
+                         with a frame {strike_frame:?}",
+                        attack.kind
+                    );
+                }
+            }
+        }
+    }
 
     #[test]
     fn sprite_sheet_layouts_match_their_png_dimensions() {

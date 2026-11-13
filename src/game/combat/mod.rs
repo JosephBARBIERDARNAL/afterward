@@ -27,7 +27,7 @@ use damage::{set_enemy_animation, spawn_damage_number};
 pub(super) use enemy_ai::{update_enemy_ai, update_enemy_platform_physics};
 pub(super) use enemy_body::{
     DeadEnemy, EnemyAttack, EnemyBody, EnemyHealthBar, EnemyHealthBarBackground, EnemyJump,
-    EnemyShieldIcon, ProceduralMovementState,
+    EnemyShieldIcon, ProceduralMovementState, Stance,
 };
 use enemy_jumps::{JumpArc, JumpPlan, JumpRoute};
 pub(super) use falls::update_falls;

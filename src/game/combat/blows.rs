@@ -83,10 +83,47 @@ pub(super) fn land_the_blow(
         {
             continue;
         }
+        // Nothing reaches a body through the middle of its roll.
+        if let Some((Stance::Roll { .. }, left_s)) = enemy.stance
+            && let Some(roll) = &data.enemies.types[&enemy.type_id].roll
+            && (roll.invulnerable_from_s..=roll.invulnerable_to_s)
+                .contains(&(roll.duration_s - left_s))
+        {
+            continue;
+        }
         connected = true;
         if data.enemies.damage_triggers_combat {
             enemy.engaged = true;
             struck.push(enemy_transform.translation.truncate());
+        }
+        // A guard turns an ordinary blow aside, at no cost in health or
+        // armor, and answers it; the answer is not stopped by a second blow
+        // either. Only a blow that goes through armor breaks a guard, and
+        // lands as it would on a body that never raised one.
+        let guarding = matches!(enemy.stance, Some((Stance::Guard, _)));
+        if guarding || enemy.countering {
+            if !blow.pierces_shields {
+                sounds.push(SoundCue::Damage(DamageSound::of(enemy.material, true)));
+                if guarding
+                    && let Some(guard) = enemy
+                        .attacks
+                        .get(enemy.active_attack)
+                        .and_then(|attack| attack.guard.clone())
+                {
+                    enemy.stance = None;
+                    enemy.countering = true;
+                    enemy.windup_remaining = guard.counter_windup_s;
+                    set_enemy_animation(
+                        &mut sprite,
+                        &mut animation,
+                        sheets,
+                        &enemy.type_id,
+                        &guard.counter_clip,
+                    );
+                }
+                continue;
+            }
+            enemy.stance = None;
         }
         let marked = if enemy.marked_timer > 0.0 {
             session.bonus_multiplier(data, "marked_prey", "marked_strike_damage_multiplier")
@@ -138,7 +175,7 @@ pub(super) fn land_the_blow(
             } else {
                 (enemy_transform.translation.x - blow.from_x).signum()
             };
-            if enemy.type_id == "emitter_unit" {
+            if enemy.behavior == "boss" {
                 enemy.knockback_velocity = away * melee.boss_knockback_h_s;
                 enemy_transform.translation.y = enemy.home_y;
             } else {
@@ -146,6 +183,9 @@ pub(super) fn land_the_blow(
             }
             enemy.windup_remaining = 0.0;
             enemy.combo_hit_pending = false;
+            enemy.stance = None;
+            enemy.countering = false;
+            enemy.wounds = enemy.wounds.saturating_add(1);
         }
         let style = audio::EnemySoundStyle::from(&enemy.type_id);
         if enemy.health > 0.0 {

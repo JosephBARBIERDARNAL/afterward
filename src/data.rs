@@ -347,6 +347,18 @@ impl GameData {
                             && hitbox.y.is_finite()
                     })
                 };
+                if (attack.kind == "parry") != attack.guard.is_some()
+                    || attack.guard.as_ref().is_some_and(|guard| {
+                        !guard.hold_s.is_finite()
+                            || guard.hold_s <= 0.0
+                            || !guard.counter_windup_s.is_finite()
+                            || guard.counter_windup_s <= 0.0
+                    })
+                {
+                    return Err(InvalidGameData::from(format!(
+                        "enemy {type_id} needs a guard with positive timings on its parry, and on nothing else"
+                    )));
+                }
                 if !sized {
                     return Err(InvalidGameData::from(format!(
                         "enemy {type_id} attack {} needs a positive {}",
@@ -361,6 +373,18 @@ impl GameData {
             }
         }
         for enemy in self.enemies.types.values() {
+            if enemy.roll.as_ref().is_some_and(|roll| {
+                roll.after_wounds == 0
+                    || !roll.distance_h.is_finite()
+                    || !roll.duration_s.is_finite()
+                    || roll.duration_s <= 0.0
+                    || !(0.0..=roll.invulnerable_to_s).contains(&roll.invulnerable_from_s)
+                    || roll.invulnerable_to_s > roll.duration_s
+            }) {
+                return Err(InvalidGameData::from(
+                    "an enemy roll needs a wound count, a positive duration, and an invulnerable stretch inside it",
+                ));
+            }
             let jump_height_h = enemy.jump_height_h.unwrap_or(jumping.jump_height_h);
             if !jump_height_h.is_finite() || jump_height_h <= 0.0 {
                 return Err(InvalidGameData::from(
