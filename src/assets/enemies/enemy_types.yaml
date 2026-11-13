@@ -49,7 +49,7 @@ jumping:
 # machines the drowned city never switched off, so the materials are an
 # armoured chassis (metal) and a light frame (polymer). The sprite sheets
 # they currently wear are placeholders from a fantasy pack and do not match
-# these names yet; see art/README.md.
+# these names yet
 # A ranged_keep_distance type closes in to the far end of its
 # preferred_distance_h and fires as soon as its shot is ready, however close
 # the player stands. It only backs away, toward the near end, while the shot

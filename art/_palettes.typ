@@ -1,10 +1,3 @@
-// Palettes shared by several families, mixed from the master palette in
-// art/README.md. Keys: "#" outline/seam, "d" shadow, "m" body, "l" light,
-// "r" rivet or brightest highlight.
-//
-// Nothing here goes brighter than #6A6288: the world is dark so the player
-// and the action can be read against it.
-
 // Cold chassis plate, the metal of a city nobody switched off.
 #let steel = (
   "#": rgb("#0d0c16"),

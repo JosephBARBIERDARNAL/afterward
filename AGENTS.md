@@ -273,29 +273,6 @@ Five more types of `enemies/enemy_types.yaml`, drawn from two packs: `abominatio
 - The four horror monsters each come in three more palettes, as types of their own: `<type>_rust` (brown-red, a cyan eye), `<type>_gold` (dark gold, a dark red eye) and `<type>_purple` (dark purple, a pink eye). `scripts/recolour_monsters.py` (`just monsters`, needs ImageMagick) swaps the body and eye colours of the pack's sheets into a folder per palette under `enemies/horror/`, and its `PALETTES` table is where a palette is changed or added; the PNGs are committed. A palette is a warning read before closing in: rust goes off as it dies (`death_blast`), gold walks in armored (`armor_layers` on the type), purple moves and attacks faster. Every other number in their entries is a copy of the type they are drawn from: one changed there should be changed on its three palettes too.
 - Nothing flies: the ghost and the eye beast walk the floor like any other enemy, the eye beast drawn a little above it.
 
-### Art direction
-
-`art/README.md` is the reference for how the game looks, and every asset — surface,
-backdrop, character, UI piece, shader, effect — answers to it. Read it before
-drawing anything or picking a colour, and change it first when the direction
-itself changes. The short version:
-
-- The city drowned after a collapse that left the power on. The flood is
-  wine-dark, stained by what the city leaked into it, and the run is a climb out
-  of it over ten chapters. The enemies are the machines nobody switched off.
-- **The world is cold; only danger and help are warm.** Orange, red and warm
-  white are reserved for attack wind-ups, projectiles, damage and pickups. Never
-  spend them on decoration.
-- **No world pixel goes brighter than `#6A6288`.** The exceptions are declared:
-  light sources, the flood's crests, the player, and anything warm under the
-  first rule.
-- **The flood, or its light, is in every frame.**
-
-Colour belongs in the YAML and in the Typst palettes, not in `art/README.md`:
-the master palette there names the roles, and `art/_palettes.typ`,
-`art/surfaces/textures/*/_*.typ`, `surfaces/materials.yaml` and
-`config/gameplay.yaml` hold the values the game reads.
-
 ### Typst pixel art
 
 Every surface texture is drawn in code with [Typst](https://typst.app) instead of a paint program, as are the HUD pieces in `src/assets/ui/`, the health drop in `src/assets/pickups/`, and the backdrop bands in `src/assets/background/drowned-city/`: the surface families are `city`, `metal`, `carved`, and `wood`. Sources live in `art/`, mirroring their output path under `src/assets/` (`art/surfaces/textures/wood/planks.typ` renders `src/assets/surfaces/textures/wood/planks.png`).

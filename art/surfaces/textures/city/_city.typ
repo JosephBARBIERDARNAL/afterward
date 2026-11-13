@@ -1,5 +1,4 @@
-// Palettes of the city texture family: the grounds of a drowned city, mixed
-// from the master palette in art/README.md.
+
 
 // Poured concrete, for street slabs.
 #let concrete = (
