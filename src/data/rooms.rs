@@ -12,9 +12,8 @@ pub struct RoomConfig {
     pub room_id: u16,
     pub chapter_id: u8,
     pub size: RoomSizeConfig,
-    /// The background profiles drawn behind the room, back to front. The
-    /// first gives the sky; each one after it lays its layers over that,
-    /// without a backdrop of its own.
+    /// The background profiles mixed into the room's backdrop: their skies
+    /// blended, their layers dealt together from the furthest to the nearest.
     pub background_profiles: Vec<String>,
     pub player_spawn: SpawnPosition,
     /// Solid platforms: bodies land on their top, are stopped by their sides,

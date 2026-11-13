@@ -128,7 +128,7 @@ Decoy puts a second body in the room: a roll plants a standing double of the her
 
 ### Backgrounds
 
-A room lists its scenery in `background_profiles`, back to front, each naming a profile of `background/background_profiles.yaml`. The first gives the sky: its `backdrop` and its layers. Every profile after it lays only its layers over that, its own backdrop left out since it would hide what is behind — `[clouds_dusk_mauve, city_peach_sunset]` is that city's towers under the other's sky. `world::draw_room` draws them, each profile at its own tile size and parallax. The inspector's `Background 1` row cycles the first and `Background 2` the second, drawn over it (through `None`); a longer stack is written by hand and left alone by the editor.
+A room lists its scenery in `background_profiles`, each naming a profile of `background/background_profiles.yaml`, and `world::draw_room` mixes them into one backdrop rather than laying one over the other. Their skies (each profile's `backdrop`) are blended in equal parts. Their layers are then dealt together from the furthest to the nearest, by `parallax`, so with two city profiles one skyline's far towers stand behind the other's near ones; each layer keeps its own profile's tile size and scrolling. The order of the list only breaks ties between layers that scroll alike. The inspector's `Background 1` and `Background 2` rows set the first two, the second through `None`; a longer list is written by hand and left alone by the editor.
 
 ### Hitboxes
 
