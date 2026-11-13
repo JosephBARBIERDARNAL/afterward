@@ -15,7 +15,7 @@ Afterward is a single-player, offline, 2D action roguelike pixel-art platformer.
 
 The details (tuning values, rooms, enemies, bonuses, materials, backgrounds, animations, controls) live in the YAML files under `src/assets/` and in the code, which are the reference. Don't duplicate them here.
 
-The game is in development, focused on Chapter 1 (rooms 1–10). Content and systems needed only for later chapters (rooms 11–100) are low priority unless explicitly requested. Rooms 11–100 are placeholders, all alike: one viewport, a floor and two walls, no enemies. They are only there so the run is 100 rooms long (`RoomConfig::LAST_ID`); the door of room 10 leads into them, and the run ends at the door of room 100.
+The game is in development, focused on Chapter 1 (rooms 1–10). Content and systems needed only for later chapters (rooms 11–100) are low priority unless explicitly requested. Rooms 11–15 open Chapter 2 with the monsters of the horror pack and their palettes. Rooms 16–100 are placeholders, all alike: one viewport, a floor and two walls, no enemies. They are only there so the run is 100 rooms long (`RoomConfig::LAST_ID`); the door of room 15 leads into them, and the run ends at the door of room 100.
 
 The project is at an early, experimental stage. Many choices (assets, room layouts and materials, tuning values, editor features, even parts of the core design above) are trials that may be reworked or dropped soon. Expect them to change: prefer simple, easy-to-replace solutions over heavy abstractions or polish, don't treat the current state as a settled design, and when something looks like a placeholder or a half-made decision, ask rather than build on it as final.
 

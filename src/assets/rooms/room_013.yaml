@@ -4,32 +4,108 @@
 room_id: 13
 chapter_id: 2
 size:
-  width_h: 24
-  height_h: 13.5
-background_profiles: [city_teal_evening]
+  width_h: 48
+  height_h: 18
+background_profiles: [dead_city_ephemeral]
 player_spawn:
-  x_h: 4.25
+  x_h: 2.5
   y_h: 1
 # Solid platforms: land on their top, stop against their sides, bump
 # your head on their underside. They stop shots too.
 platforms:
-  - label: placeholder floor
+  - label: the ledge the whole room stands on
     color: "#1C1A2E"
-    rect_h: { x: 1, y: 0, width: 23, height: 1 }
-  - label: placeholder wall
+    rect_h: { x: 1, y: 0, width: 46, height: 1 }
+  - label: east wall
     color: "#1C1A2E"
-    rect_h: { x: 23, y: 0, width: 1, height: 13.5 }
-  - label: placeholder wall
+    rect_h: { x: 47, y: 0, width: 1, height: 18 }
+  - label: west wall
     color: "#1C1A2E"
-    rect_h: { x: 0, y: 0, width: 1, height: 13.5 }
+    rect_h: { x: 0, y: 0, width: 1, height: 18 }
+  - label: the awning over the west mouth of the tunnel
+    color: "#1C1A2E"
+    rect_h: { x: 5, y: 2.75, width: 3, height: 0.25 }
+  - label: ziggurat, first tier, roofing the tunnel
+    color: "#1C1A2E"
+    rect_h: { x: 8, y: 3.5, width: 32, height: 1.5 }
+  - label: ziggurat, second tier
+    color: "#1C1A2E"
+    rect_h: { x: 12, y: 5, width: 24, height: 2 }
+  - label: ziggurat, third tier
+    color: "#1C1A2E"
+    rect_h: { x: 16, y: 7, width: 16, height: 2 }
+  - label: ziggurat, the summit
+    color: "#1C1A2E"
+    rect_h: { x: 20, y: 9, width: 8, height: 2 }
+  - label: the canopy over the summit
+    color: "#1C1A2E"
+    rect_h: { x: 22.5, y: 12.75, width: 3, height: 0.25 }
+  - label: the awning over the east mouth of the tunnel
+    color: "#1C1A2E"
+    rect_h: { x: 40, y: 2.75, width: 3, height: 0.25 }
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
-enemy_spawns: []
+enemy_spawns:
+  - type_id: catto
+    position_h: { x: 11, y: 1 }
+    facing: left
+  - type_id: catto_gold
+    position_h: { x: 14, y: 1 }
+    facing: left
+  - type_id: mad_ghost
+    position_h: { x: 19, y: 1 }
+    facing: left
+  - type_id: mage_gold
+    position_h: { x: 24, y: 1 }
+    facing: left
+  - type_id: mad_ghost_gold
+    position_h: { x: 28, y: 1 }
+    facing: left
+    armor_layers: 1
+  - type_id: catto
+    position_h: { x: 33, y: 1 }
+    facing: left
+  - type_id: abomination
+    position_h: { x: 37, y: 1 }
+    facing: left
+    armor_layers: 1
+  - type_id: mage
+    position_h: { x: 10, y: 5 }
+    facing: left
+  - type_id: mad_ghost
+    position_h: { x: 14, y: 7 }
+    facing: left
+  - type_id: catto_gold
+    position_h: { x: 18, y: 9 }
+    facing: left
+  - type_id: abomination_gold
+    position_h: { x: 25, y: 11 }
+    facing: left
+    armor_layers: 2
+  - type_id: mage_gold
+    position_h: { x: 24, y: 13 }
+    facing: left
+  - type_id: mad_ghost_gold
+    position_h: { x: 30, y: 9 }
+    facing: left
+  - type_id: mage
+    position_h: { x: 34, y: 7 }
+    facing: left
+  - type_id: catto
+    position_h: { x: 38, y: 5 }
+    facing: left
+  - type_id: catto_gold
+    position_h: { x: 41.5, y: 3 }
+    facing: left
+  - type_id: abomination_gold
+    position_h: { x: 44.25, y: 1 }
+    facing: left
+    armor_layers: 1
 # The bonus item, lying beside the door once every enemy is down.
 bonus:
-  x_h: 20.75
+  x_h: 44.75
   y_h: 1
 exit:
-  x_h: 22
+  x_h: 46
   y_h: 1
 next_room_id: 14

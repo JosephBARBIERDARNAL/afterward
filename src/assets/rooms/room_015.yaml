@@ -6,30 +6,90 @@ chapter_id: 2
 size:
   width_h: 24
   height_h: 13.5
-background_profiles: [city_teal_evening]
+background_profiles: [dead_city_ephemeral]
 player_spawn:
-  x_h: 4.25
-  y_h: 1
+  x_h: 2.5
+  y_h: 3
 # Solid platforms: land on their top, stop against their sides, bump
 # your head on their underside. They stop shots too.
 platforms:
-  - label: placeholder floor
+  - label: the ledge the whole room stands on
     color: "#1C1A2E"
-    rect_h: { x: 1, y: 0, width: 23, height: 1 }
-  - label: placeholder wall
+    rect_h: { x: 1, y: 0, width: 22, height: 1 }
+  - label: east wall
     color: "#1C1A2E"
     rect_h: { x: 23, y: 0, width: 1, height: 13.5 }
-  - label: placeholder wall
+  - label: west wall
     color: "#1C1A2E"
     rect_h: { x: 0, y: 0, width: 1, height: 13.5 }
+  - label: the stoop the room is entered on
+    color: "#1C1A2E"
+    rect_h: { x: 1, y: 1, width: 3, height: 2 }
+  - label: the stoop under the door
+    color: "#1C1A2E"
+    rect_h: { x: 20, y: 1, width: 3, height: 2 }
+  - label: the table in the middle of the pit
+    color: "#1C1A2E"
+    rect_h: { x: 10, y: 1, width: 4, height: 2 }
+  - label: west slab
+    color: "#1C1A2E"
+    rect_h: { x: 5.5, y: 4.75, width: 4, height: 0.25 }
+  - label: east slab
+    color: "#1C1A2E"
+    rect_h: { x: 14.5, y: 4.75, width: 4, height: 0.25 }
+  - label: the crown over the table
+    color: "#1C1A2E"
+    rect_h: { x: 10.5, y: 6.75, width: 3, height: 0.25 }
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
-enemy_spawns: []
+enemy_spawns:
+  - type_id: mad_ghost
+    position_h: { x: 7, y: 1 }
+    facing: left
+  - type_id: catto_rust
+    position_h: { x: 8.5, y: 1 }
+    facing: left
+  - type_id: mage_gold
+    position_h: { x: 7.5, y: 5 }
+    facing: left
+    armor_layers: 1
+  - type_id: catto
+    position_h: { x: 11, y: 3 }
+    facing: left
+  - type_id: abomination_purple
+    position_h: { x: 12.5, y: 3 }
+    facing: left
+    armor_layers: 3
+  - type_id: mad_ghost_gold
+    position_h: { x: 12, y: 7 }
+    facing: left
+    armor_layers: 2
+  - type_id: catto_purple
+    position_h: { x: 15, y: 1 }
+    facing: left
+  - type_id: abomination_gold
+    position_h: { x: 16.75, y: 1 }
+    facing: left
+    armor_layers: 2
+  - type_id: mage_rust
+    position_h: { x: 16.5, y: 5 }
+    facing: left
+    armor_layers: 1
+  - type_id: catto_gold
+    position_h: { x: 18.5, y: 1 }
+    facing: left
+  - type_id: mage_purple
+    position_h: { x: 19.25, y: 1 }
+    facing: left
+  - type_id: mad_ghost_purple
+    position_h: { x: 21, y: 3 }
+    facing: left
+    armor_layers: 1
 # The bonus item, lying beside the door once every enemy is down.
 bonus:
   x_h: 20.75
-  y_h: 1
+  y_h: 3
 exit:
   x_h: 22
-  y_h: 1
+  y_h: 3
 next_room_id: 16

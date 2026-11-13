@@ -4,32 +4,104 @@
 room_id: 14
 chapter_id: 2
 size:
-  width_h: 24
-  height_h: 13.5
-background_profiles: [city_teal_evening]
+  width_h: 34
+  height_h: 22
+background_profiles: [dead_city_ephemeral]
 player_spawn:
-  x_h: 4.25
+  x_h: 2.5
   y_h: 1
 # Solid platforms: land on their top, stop against their sides, bump
 # your head on their underside. They stop shots too.
 platforms:
-  - label: placeholder floor
+  - label: the ledge the whole room stands on
     color: "#1C1A2E"
-    rect_h: { x: 1, y: 0, width: 23, height: 1 }
-  - label: placeholder wall
+    rect_h: { x: 1, y: 0, width: 32, height: 1 }
+  - label: east wall
     color: "#1C1A2E"
-    rect_h: { x: 23, y: 0, width: 1, height: 13.5 }
-  - label: placeholder wall
+    rect_h: { x: 33, y: 0, width: 1, height: 22 }
+  - label: west wall
     color: "#1C1A2E"
-    rect_h: { x: 0, y: 0, width: 1, height: 13.5 }
+    rect_h: { x: 0, y: 0, width: 1, height: 22 }
+  - label: first ramp, from the street up to the east landing
+    color: "#1C1A2E"
+    rect_h: { x: 15.48, y: 2.26, width: 8.77, height: 0.25 }
+    rotation_deg: 20
+  - label: the east landing
+    color: "#1C1A2E"
+    rect_h: { x: 24, y: 1, width: 9, height: 3 }
+  - label: the step the second ramp stands on
+    color: "#1C1A2E"
+    rect_h: { x: 21, y: 5.75, width: 3, height: 0.25 }
+  - label: second ramp, back west up to the gallery
+    color: "#1C1A2E"
+    rect_h: { x: 12.5, y: 7.26, width: 8.77, height: 0.25 }
+    rotation_deg: -20
+  - label: the gallery on the west wall
+    color: "#1C1A2E"
+    rect_h: { x: 1, y: 8.5, width: 11.75, height: 0.5 }
+  - label: the step the third ramp stands on
+    color: "#1C1A2E"
+    rect_h: { x: 12.75, y: 10.75, width: 3, height: 0.25 }
+  - label: third ramp, up to the door ledge
+    color: "#1C1A2E"
+    rect_h: { x: 15.48, y: 12.26, width: 8.77, height: 0.25 }
+    rotation_deg: 20
+  - label: the door ledge
+    color: "#1C1A2E"
+    rect_h: { x: 24, y: 13.5, width: 9, height: 0.5 }
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
-enemy_spawns: []
+enemy_spawns:
+  - type_id: catto
+    position_h: { x: 8, y: 1 }
+    facing: left
+  - type_id: mad_ghost
+    position_h: { x: 11, y: 1 }
+    facing: left
+  - type_id: mage_purple
+    position_h: { x: 13.5, y: 1 }
+    facing: left
+  - type_id: mage
+    position_h: { x: 26, y: 4 }
+    facing: left
+  - type_id: abomination
+    position_h: { x: 28.5, y: 4 }
+    facing: left
+    armor_layers: 1
+  - type_id: catto_purple
+    position_h: { x: 31, y: 4 }
+    facing: left
+  - type_id: mad_ghost_purple
+    position_h: { x: 9, y: 9 }
+    facing: right
+    armor_layers: 1
+  - type_id: mage_purple
+    position_h: { x: 6.5, y: 9 }
+    facing: right
+  - type_id: catto
+    position_h: { x: 4.5, y: 9 }
+    facing: right
+  - type_id: catto_purple
+    position_h: { x: 2.5, y: 9 }
+    facing: right
+  - type_id: mage
+    position_h: { x: 14.25, y: 11 }
+    facing: left
+  - type_id: mage_purple
+    position_h: { x: 26, y: 14 }
+    facing: left
+  - type_id: abomination_purple
+    position_h: { x: 28, y: 14 }
+    facing: left
+    armor_layers: 2
+  - type_id: mad_ghost_purple
+    position_h: { x: 29.75, y: 14 }
+    facing: left
 # The bonus item, lying beside the door once every enemy is down.
 bonus:
-  x_h: 20.75
-  y_h: 1
+  x_h: 30.75
+  y_h: 14
 exit:
-  x_h: 22
-  y_h: 1
+  x_h: 32
+  y_h: 14
 next_room_id: 15

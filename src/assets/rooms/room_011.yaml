@@ -4,44 +4,96 @@
 room_id: 11
 chapter_id: 2
 size:
-  width_h: 24
+  width_h: 44
   height_h: 13.5
 background_profiles: [dead_city_ephemeral]
 player_spawn:
-  x_h: 4.25
-  y_h: 1
+  x_h: 2.5
+  y_h: 4
 # Solid platforms: land on their top, stop against their sides, bump
 # your head on their underside. They stop shots too.
 platforms:
-  - label: placeholder floor
+  - label: the ledge the whole room stands on
     color: "#1C1A2E"
-    rect_h: { x: 1, y: 0, width: 23, height: 1 }
-  - label: placeholder wall
+    rect_h: { x: 1, y: 0, width: 42, height: 1 }
+  - label: east wall
     color: "#1C1A2E"
-    rect_h: { x: 23, y: 0, width: 1, height: 13.5 }
-  - label: placeholder wall
+    rect_h: { x: 43, y: 0, width: 1, height: 13.5 }
+  - label: west wall
     color: "#1C1A2E"
     rect_h: { x: 0, y: 0, width: 1, height: 13.5 }
+  - label: the west bank
+    color: "#1C1A2E"
+    rect_h: { x: 1, y: 1, width: 9, height: 3 }
+  - label: the step down into the trench
+    color: "#1C1A2E"
+    rect_h: { x: 10, y: 1, width: 2, height: 1.5 }
+  - label: the west span of the broken bridge
+    color: "#1C1A2E"
+    rect_h: { x: 13, y: 4.75, width: 6, height: 0.25 }
+  - label: the pier in the middle of the trench
+    color: "#1C1A2E"
+    rect_h: { x: 20, y: 1, width: 4, height: 2 }
+  - label: the east span of the broken bridge
+    color: "#1C1A2E"
+    rect_h: { x: 25, y: 4.75, width: 6, height: 0.25 }
+  - label: the step up out of the trench
+    color: "#1C1A2E"
+    rect_h: { x: 30, y: 1, width: 2, height: 1.5 }
+  - label: the east bank
+    color: "#1C1A2E"
+    rect_h: { x: 32, y: 1, width: 11, height: 3 }
+  - label: the kerb on the east bank
+    color: "#1C1A2E"
+    rect_h: { x: 36, y: 4, width: 2, height: 1.5 }
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
 enemy_spawns:
-  - type_id: abomination
-    position_h: { x: 15.25, y: 2.25 }
+  - type_id: catto
+    position_h: { x: 9, y: 4 }
     facing: left
   - type_id: catto
-    position_h: { x: 15.25, y: 2.75 }
-    facing: left
-  - type_id: mad_ghost
-    position_h: { x: 10.25, y: 1 }
+    position_h: { x: 11, y: 2.5 }
     facing: left
   - type_id: mage
-    position_h: { x: 14.25, y: 1.25 }
+    position_h: { x: 15.5, y: 1 }
+    facing: left
+  - type_id: mad_ghost
+    position_h: { x: 16, y: 5 }
+    facing: left
+  - type_id: catto_rust
+    position_h: { x: 18, y: 1 }
+    facing: left
+  - type_id: mad_ghost
+    position_h: { x: 22, y: 3 }
+    facing: left
+  - type_id: mage
+    position_h: { x: 26.5, y: 1 }
+    facing: left
+  - type_id: mad_ghost_rust
+    position_h: { x: 28, y: 5 }
+    facing: left
+  - type_id: abomination
+    position_h: { x: 28.5, y: 1 }
+    facing: left
+  - type_id: catto
+    position_h: { x: 31, y: 2.5 }
+    facing: left
+  - type_id: mage_rust
+    position_h: { x: 34, y: 4 }
+    facing: left
+  - type_id: abomination
+    position_h: { x: 37, y: 5.5 }
+    facing: left
+    armor_layers: 1
+  - type_id: mad_ghost
+    position_h: { x: 39.5, y: 4 }
     facing: left
 # The bonus item, lying beside the door once every enemy is down.
 bonus:
-  x_h: 20.75
-  y_h: 1
+  x_h: 40.75
+  y_h: 4
 exit:
-  x_h: 22
-  y_h: 1
+  x_h: 42
+  y_h: 4
 next_room_id: 12

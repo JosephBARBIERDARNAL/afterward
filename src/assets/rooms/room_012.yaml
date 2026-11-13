@@ -5,31 +5,135 @@ room_id: 12
 chapter_id: 2
 size:
   width_h: 24
-  height_h: 13.5
-background_profiles: [city_teal_evening]
+  height_h: 32
+background_profiles: [dead_city_ephemeral]
 player_spawn:
-  x_h: 4.25
+  x_h: 2.5
   y_h: 1
 # Solid platforms: land on their top, stop against their sides, bump
 # your head on their underside. They stop shots too.
 platforms:
-  - label: placeholder floor
+  - label: the ledge the whole room stands on
     color: "#1C1A2E"
-    rect_h: { x: 1, y: 0, width: 23, height: 1 }
-  - label: placeholder wall
+    rect_h: { x: 1, y: 0, width: 22, height: 1 }
+  - label: east wall
     color: "#1C1A2E"
-    rect_h: { x: 23, y: 0, width: 1, height: 13.5 }
-  - label: placeholder wall
+    rect_h: { x: 23, y: 0, width: 1, height: 32 }
+  - label: west wall
     color: "#1C1A2E"
-    rect_h: { x: 0, y: 0, width: 1, height: 13.5 }
+    rect_h: { x: 0, y: 0, width: 1, height: 32 }
+  - label: the block on the east wall
+    color: "#1C1A2E"
+    rect_h: { x: 19, y: 1, width: 4, height: 2 }
+  - label: first landing
+    color: "#1C1A2E"
+    rect_h: { x: 7, y: 4.5, width: 10, height: 0.5 }
+  - label: west ledge, over the first landing
+    color: "#1C1A2E"
+    rect_h: { x: 1, y: 6.75, width: 4, height: 0.25 }
+  - label: second landing
+    color: "#1C1A2E"
+    rect_h: { x: 7.5, y: 8.5, width: 10.5, height: 0.5 }
+  - label: the stub on the second landing
+    color: "#1C1A2E"
+    rect_h: { x: 12, y: 9, width: 1.5, height: 1.5 }
+  - label: east ledge, over the second landing
+    color: "#1C1A2E"
+    rect_h: { x: 20, y: 10.75, width: 3, height: 0.25 }
+  - label: third landing
+    color: "#1C1A2E"
+    rect_h: { x: 6, y: 12, width: 11.5, height: 1 }
+  - label: west ledge, over the third landing
+    color: "#1C1A2E"
+    rect_h: { x: 1, y: 14.75, width: 3.5, height: 0.25 }
+  - label: fourth landing
+    color: "#1C1A2E"
+    rect_h: { x: 6.5, y: 16.5, width: 9.5, height: 0.5 }
+  - label: the mass on the east wall
+    color: "#1C1A2E"
+    rect_h: { x: 18.5, y: 17, width: 4.5, height: 2 }
+  - label: fifth landing
+    color: "#1C1A2E"
+    rect_h: { x: 8, y: 20.5, width: 8, height: 0.5 }
+  - label: west ledge, under the door
+    color: "#1C1A2E"
+    rect_h: { x: 1, y: 22.75, width: 4.5, height: 0.25 }
+  - label: the door ledge at the top of the well
+    color: "#1C1A2E"
+    rect_h: { x: 8, y: 24, width: 15, height: 1 }
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
-enemy_spawns: []
+enemy_spawns:
+  - type_id: catto
+    position_h: { x: 9, y: 1 }
+    facing: left
+  - type_id: catto_rust
+    position_h: { x: 13, y: 1 }
+    facing: left
+  - type_id: mad_ghost
+    position_h: { x: 17, y: 1 }
+    facing: left
+  - type_id: mage
+    position_h: { x: 21, y: 3 }
+    facing: left
+  - type_id: mage
+    position_h: { x: 14, y: 5 }
+    facing: right
+  - type_id: mad_ghost_rust
+    position_h: { x: 10, y: 5 }
+    facing: right
+  - type_id: catto
+    position_h: { x: 2.5, y: 7 }
+    facing: right
+  - type_id: mage_rust
+    position_h: { x: 10, y: 9 }
+    facing: left
+  - type_id: abomination_rust
+    position_h: { x: 15.5, y: 9 }
+    facing: left
+    armor_layers: 1
+  - type_id: catto_rust
+    position_h: { x: 21.5, y: 11 }
+    facing: left
+  - type_id: mad_ghost_rust
+    position_h: { x: 13, y: 13 }
+    facing: right
+  - type_id: mad_ghost
+    position_h: { x: 9.5, y: 13 }
+    facing: right
+  - type_id: mage
+    position_h: { x: 2.5, y: 15 }
+    facing: right
+  - type_id: catto
+    position_h: { x: 9, y: 17 }
+    facing: left
+  - type_id: abomination
+    position_h: { x: 12.5, y: 17 }
+    facing: left
+    armor_layers: 2
+  - type_id: mage_rust
+    position_h: { x: 21, y: 19 }
+    facing: left
+    armor_layers: 1
+  - type_id: mad_ghost_rust
+    position_h: { x: 12, y: 21 }
+    facing: right
+    armor_layers: 1
+  - type_id: catto_rust
+    position_h: { x: 3, y: 23 }
+    facing: right
+  - type_id: abomination_rust
+    position_h: { x: 15, y: 25 }
+    facing: left
+    armor_layers: 2
+  - type_id: mage
+    position_h: { x: 18.5, y: 25 }
+    facing: left
 # The bonus item, lying beside the door once every enemy is down.
 bonus:
   x_h: 20.75
-  y_h: 1
+  y_h: 25
 exit:
   x_h: 22
-  y_h: 1
+  y_h: 25
 next_room_id: 13
