@@ -62,24 +62,30 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
     ]
     .into_iter()
     .flat_map(|(monster, frame, clips)| {
-        // Each is drawn three times over: as the pack ships it, and in the
-        // two palettes scripts/recolour_monsters.py writes beside it, which
-        // are the types `<monster>_azure` and `<monster>_gold`.
-        [("", ""), ("_azure", "azure/"), ("_gold", "gold/")]
-            .into_iter()
-            .flat_map(move |(suffix, folder)| {
-                clips
-                    .into_iter()
-                    .map(move |(clip, first, frames, fps)| SpriteSheetSpec {
-                        key: format!("{monster}{suffix}_{clip}"),
-                        path: format!("enemies/horror/{folder}{monster}.png"),
-                        frame_width: frame.x,
-                        frame_height: frame.y,
-                        frames,
-                        fps,
-                        first_cell: UVec2::new(first, 0),
-                    })
-            })
+        // Each is drawn four times over: as the pack ships it, and in the
+        // three palettes scripts/recolour_monsters.py writes beside it, which
+        // are the types `<monster>_crimson`, `<monster>_cobalt` and
+        // `<monster>_emerald`.
+        [
+            ("", ""),
+            ("_crimson", "crimson/"),
+            ("_cobalt", "cobalt/"),
+            ("_emerald", "emerald/"),
+        ]
+        .into_iter()
+        .flat_map(move |(suffix, folder)| {
+            clips
+                .into_iter()
+                .map(move |(clip, first, frames, fps)| SpriteSheetSpec {
+                    key: format!("{monster}{suffix}_{clip}"),
+                    path: format!("enemies/horror/{folder}{monster}.png"),
+                    frame_width: frame.x,
+                    frame_height: frame.y,
+                    frames,
+                    fps,
+                    first_cell: UVec2::new(first, 0),
+                })
+        })
     });
     // The eye beast (`enemies/eye_beast/`) ships one image per frame, looking
     // left: each clip is those frames mirrored and laid in a row, the body's

@@ -379,13 +379,13 @@ types:
       projectile_speed_h_s: 6
       cooldown_s: 1.8
       windup_s: 0.7
-  # The four monsters of the horror pack again, in two other palettes each:
-  # `azure`, a night-blue body with a cyan eye, and `gold`, a dark brown
-  # with an amber one. Only the colours differ — every
-  # number is the one of the type it is drawn from, and should stay so —
-  # and their sheets are that type's, recoloured by
-  # scripts/recolour_monsters.py into enemies/horror/<palette>/.
-  abomination_azure:
+  # The four monsters of the horror pack again, in three other palettes each,
+  # all loud: `crimson`, a red body with a yellow eye, `cobalt`, a blue one
+  # with an orange eye, and `emerald`, a green one with a magenta eye. Only
+  # the colours differ — every number is the one of the type it is drawn
+  # from, and should stay so — and their sheets are that type's, recoloured
+  # by scripts/recolour_monsters.py into enemies/horror/<palette>/.
+  abomination_crimson:
     hurtbox_h: { width: 0.98, height: 1.26 }
     health: 220
     material: polymer
@@ -406,7 +406,7 @@ types:
       hitbox_h: { x: 0.28, y: 0, width: 2.03, height: 0.84 }
       cooldown_s: 2
       windup_s: 0.6
-  abomination_gold:
+  abomination_cobalt:
     hurtbox_h: { width: 0.98, height: 1.26 }
     health: 220
     material: polymer
@@ -427,7 +427,28 @@ types:
       hitbox_h: { x: 0.28, y: 0, width: 2.03, height: 0.84 }
       cooldown_s: 2
       windup_s: 0.6
-  mage_azure:
+  abomination_emerald:
+    hurtbox_h: { width: 0.98, height: 1.26 }
+    health: 220
+    material: polymer
+    movement_speed_h_s: 1.4
+    behavior: melee_pursuit
+    sprite:
+      {
+        scale: 1.4,
+        top_padding_px: 0,
+        bottom_padding_px: 0,
+        origin_above_feet_px: 24,
+      }
+    attack:
+      kind: melee
+      clip: attack
+      strike_frame: 4
+      damage: 14
+      hitbox_h: { x: 0.28, y: 0, width: 2.03, height: 0.84 }
+      cooldown_s: 2
+      windup_s: 0.6
+  mage_crimson:
     hurtbox_h: { width: 0.42, height: 0.88 }
     health: 90
     material: polymer
@@ -448,7 +469,7 @@ types:
       hitbox_h: { x: -1.47, y: 0, width: 2.94, height: 1.19 }
       cooldown_s: 2.4
       windup_s: 0.8
-  mage_gold:
+  mage_cobalt:
     hurtbox_h: { width: 0.42, height: 0.88 }
     health: 90
     material: polymer
@@ -469,7 +490,28 @@ types:
       hitbox_h: { x: -1.47, y: 0, width: 2.94, height: 1.19 }
       cooldown_s: 2.4
       windup_s: 0.8
-  catto_azure:
+  mage_emerald:
+    hurtbox_h: { width: 0.42, height: 0.88 }
+    health: 90
+    material: polymer
+    movement_speed_h_s: 1.6
+    behavior: melee_pursuit
+    sprite:
+      {
+        scale: 1.4,
+        top_padding_px: 17,
+        bottom_padding_px: 0,
+        origin_above_feet_px: 15,
+      }
+    attack:
+      kind: melee
+      clip: attack
+      strike_frame: 5
+      damage: 12
+      hitbox_h: { x: -1.47, y: 0, width: 2.94, height: 1.19 }
+      cooldown_s: 2.4
+      windup_s: 0.8
+  catto_crimson:
     hurtbox_h: { width: 0.49, height: 0.42 }
     health: 60
     material: polymer
@@ -490,7 +532,7 @@ types:
       hitbox_h: { x: 0, y: 0, width: 0.59, height: 0.84 }
       cooldown_s: 0.9
       windup_s: 0.3
-  catto_gold:
+  catto_cobalt:
     hurtbox_h: { width: 0.49, height: 0.42 }
     health: 60
     material: polymer
@@ -511,7 +553,28 @@ types:
       hitbox_h: { x: 0, y: 0, width: 0.59, height: 0.84 }
       cooldown_s: 0.9
       windup_s: 0.3
-  mad_ghost_azure:
+  catto_emerald:
+    hurtbox_h: { width: 0.49, height: 0.42 }
+    health: 60
+    material: polymer
+    movement_speed_h_s: 4
+    behavior: melee_pursuit
+    sprite:
+      {
+        scale: 1.4,
+        top_padding_px: 15,
+        bottom_padding_px: 0,
+        origin_above_feet_px: 7,
+      }
+    attack:
+      kind: melee
+      clip: attack
+      strike_frame: 3
+      damage: 6
+      hitbox_h: { x: 0, y: 0, width: 0.59, height: 0.84 }
+      cooldown_s: 0.9
+      windup_s: 0.3
+  mad_ghost_crimson:
     hurtbox_h: { width: 0.56, height: 1.01 }
     health: 120
     material: polymer
@@ -532,7 +595,28 @@ types:
       hitbox_h: { x: 0, y: 0, width: 0.84, height: 1.54 }
       cooldown_s: 1.4
       windup_s: 0.5
-  mad_ghost_gold:
+  mad_ghost_cobalt:
+    hurtbox_h: { width: 0.56, height: 1.01 }
+    health: 120
+    material: polymer
+    movement_speed_h_s: 2.8
+    behavior: melee_pursuit
+    sprite:
+      {
+        scale: 1.4,
+        top_padding_px: 27,
+        bottom_padding_px: 0,
+        origin_above_feet_px: 18,
+      }
+    attack:
+      kind: melee
+      clip: attack
+      strike_frame: 5
+      damage: 12
+      hitbox_h: { x: 0, y: 0, width: 0.84, height: 1.54 }
+      cooldown_s: 1.4
+      windup_s: 0.5
+  mad_ghost_emerald:
     hurtbox_h: { width: 0.56, height: 1.01 }
     health: 120
     material: polymer
