@@ -64,13 +64,13 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
     .flat_map(|(monster, frame, clips)| {
         // Each is drawn four times over: as the pack ships it, and in the
         // three palettes scripts/recolour_monsters.py writes beside it, which
-        // are the types `<monster>_crimson`, `<monster>_cobalt` and
-        // `<monster>_emerald`.
+        // are the types `<monster>_rust`, `<monster>_gold` and
+        // `<monster>_purple`.
         [
             ("", ""),
-            ("_crimson", "crimson/"),
-            ("_cobalt", "cobalt/"),
-            ("_emerald", "emerald/"),
+            ("_rust", "rust/"),
+            ("_gold", "gold/"),
+            ("_purple", "purple/"),
         ]
         .into_iter()
         .flat_map(move |(suffix, folder)| {

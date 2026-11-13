@@ -20,9 +20,9 @@ BODY = "#181425"
 EYE = "#FF0044"
 # Each palette's body and eye.
 PALETTES = {
-    "crimson": ("#E0142A", "#FFE83D"),
-    "cobalt": ("#1447FF", "#FF9A1F"),
-    "emerald": ("#00B84A", "#FF2BD6"),
+    "rust": ("#7A2818", "#FFB84A"),
+    "gold": ("#8F6A10", "#FF2A3D"),
+    "purple": ("#3E1A63", "#FF5CE1"),
 }
 
 for palette, (body, eye) in PALETTES.items():

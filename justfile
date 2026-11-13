@@ -54,7 +54,7 @@ dark-robots:
     python3 scripts/darken_robots.py
 
 # Recolour the horror pack's monsters into their other palettes
-# (enemies/horror/crimson/, cobalt/ and emerald/). Needs ImageMagick; the PNGs
+# (enemies/horror/rust/, gold/ and purple/). Needs ImageMagick; the PNGs
 # are committed, so only after a source sheet or a palette changes.
 monsters:
     python3 scripts/recolour_monsters.py
