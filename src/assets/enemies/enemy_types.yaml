@@ -380,12 +380,12 @@ types:
       cooldown_s: 1.8
       windup_s: 0.7
   # The four monsters of the horror pack again, in two other palettes each:
-  # `bone`, an ivory body with a dark red eye, and `toxic`, a deep green
-  # with a lime one. Only the colours differ — every
+  # `azure`, a night-blue body with a cyan eye, and `gold`, a dark brown
+  # with an amber one. Only the colours differ — every
   # number is the one of the type it is drawn from, and should stay so —
   # and their sheets are that type's, recoloured by
   # scripts/recolour_monsters.py into enemies/horror/<palette>/.
-  abomination_bone:
+  abomination_azure:
     hurtbox_h: { width: 0.98, height: 1.26 }
     health: 220
     material: polymer
@@ -406,7 +406,7 @@ types:
       hitbox_h: { x: 0.28, y: 0, width: 2.03, height: 0.84 }
       cooldown_s: 2
       windup_s: 0.6
-  abomination_toxic:
+  abomination_gold:
     hurtbox_h: { width: 0.98, height: 1.26 }
     health: 220
     material: polymer
@@ -427,7 +427,7 @@ types:
       hitbox_h: { x: 0.28, y: 0, width: 2.03, height: 0.84 }
       cooldown_s: 2
       windup_s: 0.6
-  mage_bone:
+  mage_azure:
     hurtbox_h: { width: 0.42, height: 0.88 }
     health: 90
     material: polymer
@@ -448,7 +448,7 @@ types:
       hitbox_h: { x: -1.47, y: 0, width: 2.94, height: 1.19 }
       cooldown_s: 2.4
       windup_s: 0.8
-  mage_toxic:
+  mage_gold:
     hurtbox_h: { width: 0.42, height: 0.88 }
     health: 90
     material: polymer
@@ -469,7 +469,7 @@ types:
       hitbox_h: { x: -1.47, y: 0, width: 2.94, height: 1.19 }
       cooldown_s: 2.4
       windup_s: 0.8
-  catto_bone:
+  catto_azure:
     hurtbox_h: { width: 0.49, height: 0.42 }
     health: 60
     material: polymer
@@ -490,7 +490,7 @@ types:
       hitbox_h: { x: 0, y: 0, width: 0.59, height: 0.84 }
       cooldown_s: 0.9
       windup_s: 0.3
-  catto_toxic:
+  catto_gold:
     hurtbox_h: { width: 0.49, height: 0.42 }
     health: 60
     material: polymer
@@ -511,7 +511,7 @@ types:
       hitbox_h: { x: 0, y: 0, width: 0.59, height: 0.84 }
       cooldown_s: 0.9
       windup_s: 0.3
-  mad_ghost_bone:
+  mad_ghost_azure:
     hurtbox_h: { width: 0.56, height: 1.01 }
     health: 120
     material: polymer
@@ -532,7 +532,7 @@ types:
       hitbox_h: { x: 0, y: 0, width: 0.84, height: 1.54 }
       cooldown_s: 1.4
       windup_s: 0.5
-  mad_ghost_toxic:
+  mad_ghost_gold:
     hurtbox_h: { width: 0.56, height: 1.01 }
     health: 120
     material: polymer
