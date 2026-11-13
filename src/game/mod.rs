@@ -47,7 +47,7 @@ mod visual_walkthrough;
 mod world;
 
 pub use room_shot::RoomShotPlugin;
-pub use visual_walkthrough::VisualWalkthroughPlugin;
+pub use visual_walkthrough::{VisualWalkthroughPlugin, WalkthroughScope};
 
 #[cfg(test)]
 mod tests;

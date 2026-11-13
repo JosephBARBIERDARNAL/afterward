@@ -6,29 +6,73 @@ use bevy::{
 };
 use std::{fs, path::PathBuf};
 
-pub struct VisualWalkthroughPlugin;
+/// What a walkthrough is asked to look at. The whole run is a hundred rooms
+/// long, so one is never walked from end to end: it is told where to look.
+#[derive(Clone, Copy, Eq, PartialEq)]
+pub enum WalkthroughScope {
+    /// The main menu, the difficulty, and the pause menu with its settings
+    /// and controls, over the start room.
+    Menus,
+    /// The rooms from `first` to `last`, then the way out of `last` up to the
+    /// first frame of the room behind it: what a room leaves standing only
+    /// shows once it is meant to be gone.
+    Rooms { first: u16, last: u16 },
+}
+
+impl std::str::FromStr for WalkthroughScope {
+    type Err = String;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        if value == "menus" {
+            return Ok(Self::Menus);
+        }
+        let (first, last) = value.split_once('-').unwrap_or((value, value));
+        match (first.parse(), last.parse()) {
+            (Ok(first), Ok(last)) if first <= last => Ok(Self::Rooms { first, last }),
+            _ => Err(format!(
+                "--visual-walkthrough expects `menus`, a room ID such as 3, \
+                 or a span of rooms such as 3-5, got {value:?}"
+            )),
+        }
+    }
+}
+
+pub struct VisualWalkthroughPlugin {
+    pub scope: WalkthroughScope,
+}
 
 impl Plugin for VisualWalkthroughPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(VisualWalkthrough::default())
-            .add_systems(Startup, initialize_visual_walkthrough)
-            .add_systems(
-                Update,
-                drive_visual_walkthrough
-                    .before(flow::handle_bonus_input)
-                    .before(interact::mark_what_is_in_reach)
-                    .before(flow::handle_door_touch)
-                    .before(flow::update_room_clear)
-                    .before(flow::update_boss_intro)
-                    .before(flow::update_room_transition)
-                    .before(room_pan::update_room_pan)
-                    .before(flow::update_room_transition_fade_out),
-            );
+        app.insert_resource(VisualWalkthrough {
+            scope: self.scope,
+            output_dir: PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("target/visual-walkthrough"),
+            active_scene: None,
+            elapsed_s: 0.0,
+            capture_requested: false,
+            capture_completed: false,
+            action_started: false,
+            // The pause menu is only opened when the menus were asked for.
+            pause_shown: self.scope != WalkthroughScope::Menus,
+        })
+        .add_systems(Startup, initialize_visual_walkthrough)
+        .add_systems(
+            Update,
+            drive_visual_walkthrough
+                .before(flow::handle_bonus_input)
+                .before(interact::mark_what_is_in_reach)
+                .before(flow::handle_door_touch)
+                .before(flow::update_room_clear)
+                .before(flow::update_boss_intro)
+                .before(flow::update_room_transition)
+                .before(room_pan::update_room_pan)
+                .before(flow::update_room_transition_fade_out),
+        );
     }
 }
 
 #[derive(Resource)]
 struct VisualWalkthrough {
+    scope: WalkthroughScope,
     output_dir: PathBuf,
     active_scene: Option<VisualScene>,
     elapsed_s: f32,
@@ -36,20 +80,6 @@ struct VisualWalkthrough {
     capture_completed: bool,
     action_started: bool,
     pause_shown: bool,
-}
-
-impl Default for VisualWalkthrough {
-    fn default() -> Self {
-        Self {
-            output_dir: PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("target/visual-walkthrough"),
-            active_scene: None,
-            elapsed_s: 0.0,
-            capture_requested: false,
-            capture_completed: false,
-            action_started: false,
-            pause_shown: false,
-        }
-    }
 }
 
 #[derive(Clone, Copy, Eq, PartialEq)]
@@ -202,7 +232,15 @@ fn drive_visual_walkthrough(resources: VisualWalkthroughResources) {
                   mut app_exit: MessageWriter<AppExit>| {
                 save_to_disk(&path)(captured);
                 walkthrough.capture_completed = true;
-                if scene.screen == GameScreen::Complete {
+                // The shot that closes what was asked for: the last menu, or
+                // the first frame of the room behind the last one asked for.
+                let seen = match walkthrough.scope {
+                    WalkthroughScope::Menus => scene.screen == GameScreen::Controls,
+                    WalkthroughScope::Rooms { last, .. } => {
+                        scene.screen == GameScreen::Playing && scene.room_id > last
+                    }
+                };
+                if seen || scene.screen == GameScreen::Complete {
                     app_exit.write(AppExit::Success);
                 }
             },

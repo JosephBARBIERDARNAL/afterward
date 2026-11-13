@@ -81,6 +81,13 @@ Without `just`, pass the flag directly: `cargo run -- --room 7`.
 - It shows the whole room, where the player only ever sees a 24 H by 13.5 H window of it (the editor's F overlay frames that). The picture's long side is 1920 px at most, so a wide room is drawn smaller; the backdrop, which in play is one view tall and follows the camera, is laid flat and enlarged to cover a taller room; there is no HUD.
 - It needs a GPU but no display. A failed shot prints the game's log and exits non-zero.
 
+### Walking through a stretch of the run
+
+`just walkthrough <what>` (`cargo run -- --visual-walkthrough <what>`, `src/game/visual_walkthrough.rs`) plays the game in a window by itself and writes a screenshot of every screen it passes to `target/visual-walkthrough/`. It must be told what to look at, since a whole run is a hundred rooms:
+
+- `just walkthrough menus` — the main menu, the difficulty, and the pause menu with its settings and controls.
+- `just walkthrough 3` or `just walkthrough 3-5` — those rooms: combat, clear, bonus item, bonus screen, door, and the crossing out. It starts in the first room and stops on the first frame of the room behind the last, so what a screen wrongly leaves standing is in the set: read the shots after the one that was changed, not only that one.
+
 ### End-to-end tests
 
 `src/game/tests/e2e.rs` runs the real `GamePlugin` inside Bevy's default plugins, headless (no window, no GPU, no audio device), at a fixed 60 FPS with a fixed random seed. Scenarios in `src/game/tests/e2e/` play it through keyboard events (`tap`, `key`, `typed_key` for other layouts) and check the screen and run state. Run them with `just e2e`; CI runs them on Linux, macOS, and Windows as their own step.

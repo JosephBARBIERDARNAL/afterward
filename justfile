@@ -10,9 +10,10 @@ run room="1":
 boss:
     cargo run -- --room 10
 
-# Capture the visual walkthrough screenshots into target/visual-walkthrough.
-walkthrough:
-    cargo run -- --visual-walkthrough
+# Capture screenshots of part of a run into target/visual-walkthrough:
+# `just walkthrough menus`, `just walkthrough 3`, `just walkthrough 3-5`.
+walkthrough what:
+    cargo run -- --visual-walkthrough {{what}}
 
 # Take a picture of whole rooms into target/room-shots, with no window:
 # `just shot 3`, `just shot --grid 3 4` (ruled in H), `just shot` for every room.

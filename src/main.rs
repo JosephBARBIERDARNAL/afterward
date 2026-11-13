@@ -17,7 +17,17 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let arguments = std::env::args().collect::<Vec<_>>();
     let visual_walkthrough = arguments
         .iter()
-        .any(|argument| argument == "--visual-walkthrough");
+        .position(|argument| argument == "--visual-walkthrough")
+        .map(|index| {
+            arguments
+                .get(index + 1)
+                .ok_or(
+                    "--visual-walkthrough expects what to look at: `menus`, \
+                     a room ID such as 3, or a span of rooms such as 3-5",
+                )?
+                .parse::<game::WalkthroughScope>()
+        })
+        .transpose()?;
     let room_shot = arguments.iter().any(|argument| argument == "--shot");
     let start_room = arguments
         .iter()
@@ -30,6 +40,11 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         })
         .transpose()?
         .unwrap_or_default();
+    // A walkthrough of rooms opens on the first of them.
+    let start_room = match visual_walkthrough {
+        Some(game::WalkthroughScope::Rooms { first, .. }) => game::StartRoom(first),
+        _ => start_room,
+    };
     // A release archive ships `assets/` beside the executable; a build run
     // from the checkout reads the sources in place.
     let asset_root = std::env::current_exe()?
@@ -38,13 +53,18 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         .filter(|dir| dir.is_dir())
         .unwrap_or_else(|| Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets"));
     let game_data = GameData::load(&asset_root)?;
-    if !game_data.rooms.contains_key(&start_room.0) {
-        return Err(format!(
-            "--room {} does not exist; available rooms: {:?}",
-            start_room.0,
-            game_data.rooms.keys().collect::<Vec<_>>()
-        )
-        .into());
+    let last_room = match visual_walkthrough {
+        Some(game::WalkthroughScope::Rooms { last, .. }) => last,
+        _ => start_room.0,
+    };
+    for room in [start_room.0, last_room] {
+        if !game_data.rooms.contains_key(&room) {
+            return Err(format!(
+                "room {room} does not exist; available rooms: {:?}",
+                game_data.rooms.keys().collect::<Vec<_>>()
+            )
+            .into());
+        }
     }
     let asset_plugin = AssetPlugin {
         file_path: asset_root.to_string_lossy().into_owned(),
@@ -109,8 +129,8 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         }))
         .add_plugins(game::GamePlugin);
 
-    if visual_walkthrough {
-        app.add_plugins(game::VisualWalkthroughPlugin);
+    if let Some(scope) = visual_walkthrough {
+        app.add_plugins(game::VisualWalkthroughPlugin { scope });
     }
 
     app.run();
