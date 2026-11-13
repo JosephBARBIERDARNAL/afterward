@@ -21,7 +21,7 @@ EYE = "#FF0044"
 # Each palette's body and eye.
 PALETTES = {
     "rust": ("#7A2818", "#5CE6FF"),
-    "gold": ("#8F6A10", "#A64DFF"),
+    "gold": ("#8F6A10", "#6B0F24"),
     "purple": ("#3E1A63", "#FF5CE1"),
 }
 
