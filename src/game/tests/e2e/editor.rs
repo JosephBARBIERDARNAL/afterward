@@ -35,12 +35,12 @@ fn the_editor_edits_undoes_with_cmd_z_on_azerty_saves_and_playtests() {
     game.tap(KeyCode::ArrowDown);
     game.tap(KeyCode::ArrowDown);
     game.tap(KeyCode::ArrowRight);
-    let background = game.data().rooms[&1].background_profile.clone();
+    let background = game.data().rooms[&1].background_profiles.clone();
 
     // Cmd+Z, typed with AZERTY's Z key (QWERTY's W), undoes both edits.
     command_presses(&mut game, KeyCode::KeyW, "z", 2);
     assert_eq!(width(&game), original, "two Cmd+Z presses undo both edits");
-    assert_ne!(game.data().rooms[&1].background_profile, background);
+    assert_ne!(game.data().rooms[&1].background_profiles, background);
 
     // Cmd+S writes the edited room to the data folder.
     game.tap(KeyCode::ArrowUp);

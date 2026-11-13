@@ -60,59 +60,62 @@ pub(super) fn draw_room(
     asset_server: &AssetServer,
     shaders: &mut ShaderAssets,
 ) {
-    let profile = &data.backgrounds.profiles[&room.background_profile];
-    let tile_h = profile.tile_h;
-    let tile_width_h =
-        tile_h * profile.source_size_px.width as f32 / profile.source_size_px.height as f32;
-    let room_width_h = room.size.width_h;
-    let first_tile = if profile.repeat_horizontal { -2 } else { 0 };
-    let last_tile = if profile.repeat_horizontal {
-        (room_width_h / tile_width_h).ceil() as i32 + 2
-    } else {
-        0
-    };
-    let mut layers = Vec::with_capacity(profile.layers.len() + 1);
-    layers.push((profile.backdrop.as_str(), 0.0));
-    layers.extend(
-        profile
-            .layers
-            .iter()
-            .map(|layer| (layer.asset.as_str(), layer.parallax)),
-    );
-
-    let filtering = profile.filtering;
-    for (layer_index, (asset, parallax)) in layers.into_iter().enumerate() {
-        let image = asset_server
-            .load_builder()
-            .with_settings(move |settings: &mut ImageLoaderSettings| {
-                settings.sampler = filtering.into();
-            })
-            .load(asset.to_string());
-        // One material per layer, so its tiles batch together: it draws the
-        // layer as a sprite would, with its lit windows and stars breathing.
-        let material = shaders.city_lights.add(CityLightsMaterial::new(
-            image,
-            Color::WHITE,
-            layer_index,
-            &data.gameplay.effects.city_lights,
-        ));
-        for tile_index in first_tile..=last_tile {
-            let base_x = (tile_index as f32 + 0.5) * tile_width_h * H_WORLD_UNITS;
-            commands.spawn((
-                Mesh2d(shaders.quad.0.clone()),
-                MeshMaterial2d(material.clone()),
-                // `update_background_parallax` keeps it centered on the camera vertically.
-                Transform::from_xyz(base_x, 0.0, -80.0 + layer_index as f32).with_scale(Vec3::new(
-                    tile_width_h * H_WORLD_UNITS,
-                    tile_h * H_WORLD_UNITS,
-                    1.0,
-                )),
-                BackgroundParallax {
-                    base_x,
-                    factor: parallax,
-                },
-                RoomEntity,
+    // The first profile gives the sky. Each one after it lays its layers over
+    // that and leaves its own backdrop out, which would hide what is behind.
+    let mut depth = 0;
+    for (profile_index, profile) in room.background_profiles.iter().enumerate() {
+        let profile = &data.backgrounds.profiles[profile];
+        let tile = Vec2::new(profile.tile_width_h(), profile.tile_h) * H_WORLD_UNITS;
+        let (first_tile, last_tile) = if profile.repeat_horizontal {
+            (
+                -2,
+                (room.size.width_h * H_WORLD_UNITS / tile.x).ceil() as i32 + 2,
+            )
+        } else {
+            (0, 0)
+        };
+        let backdrop = (profile_index == 0).then_some((profile.backdrop.as_str(), 0.0));
+        let layers = backdrop.into_iter().chain(
+            profile
+                .layers
+                .iter()
+                .map(|layer| (layer.asset.as_str(), layer.parallax)),
+        );
+        let filtering = profile.filtering;
+        for (asset, parallax) in layers {
+            let image = asset_server
+                .load_builder()
+                .with_settings(move |settings: &mut ImageLoaderSettings| {
+                    settings.sampler = filtering.into();
+                })
+                .load(asset.to_string());
+            // One material per layer, so its tiles batch together: it draws
+            // the layer as a sprite would, with its lit windows and stars
+            // breathing.
+            let material = shaders.city_lights.add(CityLightsMaterial::new(
+                image,
+                Color::WHITE,
+                depth,
+                &data.gameplay.effects.city_lights,
             ));
+            for tile_index in first_tile..=last_tile {
+                let base_x = (tile_index as f32 + 0.5) * tile.x;
+                commands.spawn((
+                    Mesh2d(shaders.quad.0.clone()),
+                    MeshMaterial2d(material.clone()),
+                    // `update_background_parallax` keeps it centered on the
+                    // camera vertically.
+                    Transform::from_xyz(base_x, 0.0, -80.0 + depth as f32)
+                        .with_scale(tile.extend(1.0)),
+                    BackgroundParallax {
+                        base_x,
+                        factor: parallax,
+                        tile,
+                    },
+                    RoomEntity,
+                ));
+            }
+            depth += 1;
         }
     }
 
@@ -267,8 +270,6 @@ pub(super) fn spawn_enemies(
         let sheet = &sheets.0[key];
         let scale = match &*spawn.type_id {
             "emitter_unit" => 1.2,
-            // A 32 px character, drawn larger to stand as tall as the others.
-            "scout_unit" => 1.1,
             _ => ENEMY_SPRITE_SCALE,
         };
         // Source pixels: empty rows above and below the figure, and the height
@@ -278,13 +279,11 @@ pub(super) fn spawn_enemies(
             match &*spawn.type_id {
                 "blade_unit" | "dark_blade_unit" => (61.0, 0.0, sheet.frame_size.y / 2.0),
                 "rifle_unit" | "dark_rifle_unit" => (56.0, 0.0, sheet.frame_size.y / 2.0),
-                "heavy_unit" | "dark_heavy_unit" | "stalker_unit" | "lancer_unit"
-                | "breaker_unit" => (51.0, 0.0, sheet.frame_size.y / 2.0),
+                "heavy_unit" | "dark_heavy_unit" => (51.0, 0.0, sheet.frame_size.y / 2.0),
                 "emitter_unit" => (63.0, 83.0, 26.0),
-                "scout_unit" => (15.0, 8.0, 24.0),
                 _ => (0.0, 0.0, sheet.frame_size.y / 2.0),
             };
-        let mut attacks = if profile.attacks.is_empty() {
+        let attacks = if profile.attacks.is_empty() {
             profile
                 .attack
                 .iter()
@@ -297,30 +296,8 @@ pub(super) fn spawn_enemies(
                 .map(EnemyAttack::from)
                 .collect::<Vec<_>>()
         };
-        let health = spawn
-            .stat_overrides
-            .as_ref()
-            .and_then(|overrides| overrides.health)
-            .unwrap_or(profile.health);
-        let movement_speed_h_s = spawn
-            .stat_overrides
-            .as_ref()
-            .and_then(|overrides| overrides.movement_speed_h_s)
-            .unwrap_or(profile.movement_speed_h_s);
-        let armor = spawn
-            .stat_overrides
-            .as_ref()
-            .and_then(|overrides| overrides.armor_layers)
-            .unwrap_or(profile.armor_layers);
-        if let Some(damage) = spawn
-            .stat_overrides
-            .as_ref()
-            .and_then(|overrides| overrides.attack_damage)
-        {
-            for attack in &mut attacks {
-                attack.damage = damage;
-            }
-        }
+        let health = profile.health;
+        let armor = spawn.armor_layers;
         let preferred_distance_h = profile
             .preferred_distance_h
             .as_ref()
@@ -369,7 +346,7 @@ pub(super) fn spawn_enemies(
                     armor,
                     health,
                     max_health: health,
-                    movement_speed_h_s,
+                    movement_speed_h_s: profile.movement_speed_h_s,
                     home_y,
                     feet_offset,
                     visible_top_offset,

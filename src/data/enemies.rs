@@ -20,15 +20,32 @@ pub struct EnemyTypes {
     pub types: BTreeMap<EnemyTypeId, EnemyTypeConfig>,
 }
 
-/// What brings the player into an idle enemy's sight.
+/// What brings the player to an idle enemy's notice.
 #[derive(Debug, Deserialize)]
 pub struct EnemyDetectionConfig {
-    /// How far the enemy sees, between the two hurtbox centers.
+    /// How far the enemy sees on the side it faces, between the two hurtbox
+    /// centers.
     pub range_h: f32,
+    /// How far it sees at its back.
+    pub behind_range_h: f32,
+    /// How far from an enemy that was struck an idle one hears the blow.
+    pub hearing_range_h: f32,
     /// How far above or below its own eyes it still sees the player.
     pub height_h: f32,
     /// Whether an enemy that has seen the player keeps chasing out of sight.
     pub retain_target: bool,
+}
+
+impl EnemyDetectionConfig {
+    /// How far the enemy sees toward something `ahead_h` in front of it:
+    /// less when that is negative, and so at its back.
+    pub(crate) fn reach_h(&self, ahead_h: f32) -> f32 {
+        if ahead_h >= 0.0 {
+            self.range_h
+        } else {
+            self.behind_range_h
+        }
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -37,6 +54,9 @@ pub struct EnemyJumpingConfig {
     pub air_speed_h_s: f32,
     pub cooldown_s: f32,
     pub level_change_threshold_h: f32,
+    /// The deepest drop an enemy steps off a ledge into, after a player
+    /// standing below.
+    pub max_drop_h: f32,
 }
 
 #[derive(Debug, Clone, Eq, Ord, PartialEq, PartialOrd)]
@@ -105,11 +125,6 @@ pub enum EnemyMaterial {
 pub struct EnemyTypeConfig {
     pub health: f32,
     pub material: EnemyMaterial,
-    /// How many layers of armor the enemy walks in with, none when left out.
-    /// Each soaks one ordinary blow whole, and while any is left a hit does
-    /// not interrupt what the enemy is doing. A room spawn may override it.
-    #[serde(default)]
-    pub armor_layers: u8,
     pub movement_speed_h_s: f32,
     pub jump_height_h: Option<f32>,
     pub behavior: String,
@@ -121,18 +136,6 @@ pub struct EnemyTypeConfig {
     #[serde(default)]
     pub attacks: Vec<EnemyAttackConfig>,
     pub phase_two: Option<BossPhaseConfig>,
-}
-
-#[cfg(debug_assertions)]
-impl EnemyTypeConfig {
-    /// Damage of the type's first attack, which a spawn's `attack_damage`
-    /// override replaces on every attack.
-    pub(crate) fn attack_damage(&self) -> Option<f32> {
-        self.attacks
-            .first()
-            .or(self.attack.as_ref())
-            .and_then(|attack| attack.damage.or(attack.damage_per_hit))
-    }
 }
 
 #[derive(Debug, Deserialize)]

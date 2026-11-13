@@ -6,7 +6,7 @@ chapter_id: 1
 size:
   width_h: 34
   height_h: 40
-background_profile: city_teal_evening
+background_profiles: [city_teal_evening]
 player_spawn:
   x_h: 2.25
   y_h: 37
@@ -105,109 +105,93 @@ enemy_spawns:
   - type_id: blade_unit
     position_h: { x: 10, y: 33 }
     facing: left
-    stat_overrides: { health: 100, armor_layers: 0 }
   - type_id: blade_unit
     position_h: { x: 12.5, y: 33 }
     facing: left
-    stat_overrides: { health: 100, armor_layers: 0 }
   - type_id: rifle_unit
     position_h: { x: 17.5, y: 31 }
     facing: left
-    stat_overrides: { health: 100, armor_layers: 1 }
+    armor_layers: 1
   - type_id: rifle_unit
     position_h: { x: 28, y: 35 }
     facing: left
-    stat_overrides: { health: 100, armor_layers: 2 }
+    armor_layers: 2
   - type_id: blade_unit
     position_h: { x: 9, y: 26 }
     facing: right
-    stat_overrides: { health: 100, armor_layers: 0 }
   - type_id: blade_unit
     position_h: { x: 6, y: 26 }
     facing: right
-    stat_overrides: { health: 100, armor_layers: 0 }
   - type_id: heavy_unit
     position_h: { x: 7, y: 21 }
     facing: left
-    stat_overrides: { health: 100, armor_layers: 2 }
+    armor_layers: 2
   - type_id: blade_unit
     position_h: { x: 9.5, y: 21 }
     facing: left
-    stat_overrides: { health: 100, armor_layers: 0 }
   - type_id: heavy_unit
     position_h: { x: 31.75, y: 22 }
     facing: left
-    stat_overrides: { health: 100, armor_layers: 2 }
+    armor_layers: 2
   - type_id: rifle_unit
     position_h: { x: 31, y: 17 }
     facing: left
-    stat_overrides: { health: 100, armor_layers: 1 }
+    armor_layers: 1
   - type_id: blade_unit
     position_h: { x: 19.5, y: 15 }
     facing: right
-    stat_overrides: { health: 100, armor_layers: 0 }
   - type_id: blade_unit
     position_h: { x: 15, y: 15 }
     facing: right
-    stat_overrides: { health: 100, armor_layers: 0 }
   - type_id: dark_heavy_unit
     position_h: { x: 13.25, y: 15 }
     facing: right
+    armor_layers: 4
   - type_id: blade_unit
     position_h: { x: 14, y: 8 }
     facing: right
-    stat_overrides: { health: 100, armor_layers: 0 }
   - type_id: blade_unit
     position_h: { x: 20, y: 8 }
     facing: left
-    stat_overrides: { health: 100, armor_layers: 0 }
   - type_id: blade_unit
     position_h: { x: 26, y: 8 }
     facing: left
-    stat_overrides: { health: 100, armor_layers: 0 }
   - type_id: rifle_unit
     position_h: { x: 28.5, y: 8 }
     facing: left
-    stat_overrides: { health: 100, armor_layers: 1 }
+    armor_layers: 1
   - type_id: rifle_unit
     position_h: { x: 8.5, y: 13 }
     facing: right
-    stat_overrides: { health: 100, armor_layers: 0 }
   - type_id: blade_unit
     position_h: { x: 2.5, y: 10 }
     facing: right
-    stat_overrides: { health: 100, armor_layers: 0 }
   - type_id: blade_unit
     position_h: { x: 8, y: 6 }
     facing: right
-    stat_overrides: { health: 100, armor_layers: 0 }
   - type_id: blade_unit
     position_h: { x: 2, y: 5 }
     facing: right
-    stat_overrides: { health: 100, armor_layers: 0 }
   - type_id: blade_unit
     position_h: { x: 10.5, y: 1 }
     facing: left
-    stat_overrides: { health: 100, armor_layers: 0 }
   - type_id: blade_unit
     position_h: { x: 15, y: 1 }
     facing: left
-    stat_overrides: { health: 100, armor_layers: 0 }
   - type_id: blade_unit
     position_h: { x: 18, y: 1 }
     facing: left
-    stat_overrides: { health: 100, armor_layers: 0 }
   - type_id: blade_unit
     position_h: { x: 23.5, y: 1 }
     facing: left
-    stat_overrides: { health: 100, armor_layers: 0 }
   - type_id: heavy_unit
     position_h: { x: 25.5, y: 1 }
     facing: left
-    stat_overrides: { health: 100, armor_layers: 3 }
+    armor_layers: 3
   - type_id: dark_rifle_unit
     position_h: { x: 28, y: 1 }
     facing: left
+    armor_layers: 2
 # The bonus item, lying beside the door once every enemy is down.
 bonus:
   x_h: 30.75

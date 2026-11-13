@@ -525,13 +525,18 @@ impl GameData {
                     "room {room_id} must be at least one viewport wide and tall"
                 )));
             }
-            if !self
-                .backgrounds
-                .profiles
-                .contains_key(&room.background_profile)
+            if room.background_profiles.is_empty() {
+                return Err(InvalidGameData::from(format!(
+                    "room {room_id} needs at least one background profile"
+                )));
+            }
+            if let Some(unknown) = room
+                .background_profiles
+                .iter()
+                .find(|profile| !self.backgrounds.profiles.contains_key(*profile))
             {
                 return Err(InvalidGameData::from(format!(
-                    "room {room_id} references an unknown background profile"
+                    "room {room_id} references unknown background profile {unknown}"
                 )));
             }
             let rects = room

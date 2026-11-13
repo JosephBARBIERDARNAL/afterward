@@ -76,6 +76,8 @@ pub(super) fn update_background_parallax(
 pub(crate) struct BackgroundParallax {
     pub(crate) base_x: f32,
     pub(crate) factor: f32,
+    /// The size one tile of the layer is drawn at, in world units.
+    pub(crate) tile: Vec2,
 }
 
 /// The room the camera is confined to, in H.

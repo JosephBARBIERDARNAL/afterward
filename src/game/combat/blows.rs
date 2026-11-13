@@ -71,6 +71,8 @@ pub(super) fn land_the_blow(
     let melee = &data.gameplay.player.melee;
     let mut connected = false;
     let mut killed = false;
+    // Where the blow landed, for the idle enemies standing near enough to hear it.
+    let mut struck = Vec::new();
 
     for (entity, mut enemy, mut enemy_transform, mut sprite, mut animation) in enemies.iter_mut() {
         if enemy.health <= 0.0
@@ -84,6 +86,7 @@ pub(super) fn land_the_blow(
         connected = true;
         if data.enemies.damage_triggers_combat {
             enemy.engaged = true;
+            struck.push(enemy_transform.translation.truncate());
         }
         let marked = if enemy.marked_timer > 0.0 {
             session.bonus_multiplier(data, "marked_prey", "marked_strike_damage_multiplier")
@@ -232,6 +235,19 @@ pub(super) fn land_the_blow(
             sounds.push(SoundCue::MeleeMiss);
         }
         return;
+    }
+    // A blow is heard: every idle enemy near one it landed on turns on the
+    // player, whether or not it could have seen them.
+    let hearing_range = data.enemies.detection.hearing_range_h * H_WORLD_UNITS;
+    for (_, mut enemy, transform, _, _) in enemies.iter_mut() {
+        if !enemy.engaged
+            && enemy.health > 0.0
+            && struck
+                .iter()
+                .any(|spot| spot.distance(transform.translation.truncate()) <= hearing_range)
+        {
+            enemy.engaged = true;
+        }
     }
     // The moment holds and the camera is thrown: longer for a kill, harder
     // for a heavy blow or a kill. A blow soaked by armor is felt too.

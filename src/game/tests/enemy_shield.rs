@@ -1,5 +1,4 @@
 use super::super::*;
-use crate::data::EnemyMaterial;
 use std::{path::Path, time::Duration};
 
 use bevy::{prelude::MinimalPlugins, state::app::StatesPlugin, time::TimeUpdateStrategy};
@@ -9,22 +8,21 @@ fn each_layer_of_armor_soaks_one_blow_and_keeps_the_enemy_from_being_interrupted
     let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
     let mut data = GameData::load(&asset_root).expect("Chapter 1 data should load");
     // A fixed layout, independent of the authored rooms: a flat floor with the
-    // player on the left, a metal blade_unit within arm's reach of it that
-    // the room gives a second layer of armor (and the health to outlive the
-    // blow that follows them), and a stalker of polymer further off to stand
-    // for the unarmored case.
+    // player on the left, a blade unit within arm's reach of it that the room
+    // gives two layers of armor, and a second one further off that it gives
+    // none.
     *data.rooms.get_mut(&1).expect("room 1 should exist") = yaml_serde::from_str(
         "
 room_id: 1
 chapter_id: 1
 size: { width_h: 48, height_h: 13.5 }
-background_profile: clouds_bright_blue
+background_profiles: [clouds_bright_blue]
 player_spawn: { x_h: 2.5, y_h: 1 }
 platforms:
   - { material: city_pavement, rect_h: { x: 0, y: 0, width: 48, height: 1 } }
 enemy_spawns:
-  - { type_id: blade_unit, position_h: { x: 3.5, y: 1 }, stat_overrides: { health: 500, armor_layers: 2 } }
-  - { type_id: stalker_unit, position_h: { x: 20, y: 1 } }
+  - { type_id: blade_unit, position_h: { x: 3.5, y: 1 }, armor_layers: 2 }
+  - { type_id: blade_unit, position_h: { x: 20, y: 1 } }
 bonus: { x_h: 43, y_h: 1 }
 exit: { x_h: 45, y_h: 1 }
 next_room_id: 2
@@ -108,16 +106,16 @@ next_room_id: 2
         );
     app.update();
 
-    let enemy_of = |app: &mut App, material: EnemyMaterial| {
+    let enemy_that_is = |app: &mut App, armored: bool| {
         app.world_mut()
             .query::<(Entity, &EnemyBody)>()
             .iter(app.world())
-            .find(|(_, enemy)| enemy.material == material)
+            .find(|(_, enemy)| (enemy.armor > 0) == armored)
             .map(|(entity, _)| entity)
-            .expect("the layout should spawn one enemy of each material")
+            .expect("the layout should spawn one armored enemy and one bare")
     };
-    let metal = enemy_of(&mut app, EnemyMaterial::Metal);
-    let polymer = enemy_of(&mut app, EnemyMaterial::Polymer);
+    let metal = enemy_that_is(&mut app, true);
+    let bare = enemy_that_is(&mut app, false);
     let body = |app: &App, entity: Entity| {
         let enemy = app
             .world()
@@ -133,8 +131,12 @@ next_room_id: 2
     };
 
     let (armor, full_health) = body(&app, metal);
-    assert_eq!(armor, 2, "the room's override sets the layers of armor");
-    assert_eq!(body(&app, polymer).0, 0, "an enemy of polymer has no armor");
+    assert_eq!(armor, 2, "the room's spawn sets the layers of armor");
+    assert_eq!(
+        body(&app, bare).0,
+        0,
+        "an enemy the room gives no armor has none"
+    );
     assert_eq!(
         shield_icons(&mut app),
         2,

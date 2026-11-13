@@ -1,5 +1,9 @@
 use super::*;
 
+/// How far past the nearest spot a climb can start from an enemy is sent to
+/// take off, in world units: its walk there stops within a unit of the spot.
+const TAKEOFF_MARGIN: f32 = 2.0;
+
 /// Launch velocities, in world units per second, for a ballistic jump.
 pub(super) struct JumpArc {
     pub vertical_velocity: f32,
@@ -96,13 +100,21 @@ impl JumpRoute {
                     }
                     // A solid block is climbed at an edge: the enemy takes off
                     // clear of it and lands just inside the edge it comes from,
-                    // instead of rising through its underside.
+                    // instead of rising through its underside. Clear means far
+                    // enough out that its feet are over the top by the time
+                    // its body is over the edge: the leap covers the run-up
+                    // while it rises and the way in once it is above.
                     let from_left = self.feet.x < (platform.left + platform.right) / 2.0;
+                    let apex = (rise + 0.5 * H_WORLD_UNITS).min(self.jump_height);
+                    let rise_time = (2.0 * apex / self.gravity).sqrt();
+                    let over_the_top = (2.0 * (apex - rise) / self.gravity).sqrt();
+                    let run_up = (HALF_BODY_WIDTH + inset) * (rise_time - over_the_top)
+                        / (2.0 * over_the_top).max(f32::EPSILON);
                     let clear_of = |x: f32| {
                         if from_left {
-                            x + HALF_BODY_WIDTH <= platform.left
+                            x + HALF_BODY_WIDTH + run_up <= platform.left
                         } else {
-                            x - HALF_BODY_WIDTH >= platform.right
+                            x - HALF_BODY_WIDTH - run_up >= platform.right
                         }
                     };
                     let landing = Vec2::new(
@@ -122,11 +134,13 @@ impl JumpRoute {
                     }
                     // Walk out from under the block first. A block narrower
                     // than a body has room for one take-off spot only.
+                    // The walk there stops a step short, so the spot is put
+                    // that much further out than it has to be.
                     let takeoff_x = if standing.right - standing.left > 2.0 * inset {
                         if from_left {
-                            platform.left - HALF_BODY_WIDTH
+                            platform.left - HALF_BODY_WIDTH - run_up - TAKEOFF_MARGIN
                         } else {
-                            platform.right + HALF_BODY_WIDTH
+                            platform.right + HALF_BODY_WIDTH + run_up + TAKEOFF_MARGIN
                         }
                         .clamp(standing.left + inset, standing.right - inset)
                     } else {

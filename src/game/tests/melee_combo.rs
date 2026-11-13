@@ -18,13 +18,13 @@ fn the_chain_steps_through_its_blows_catches_two_bodies_and_drops_back_when_the_
 room_id: 1
 chapter_id: 1
 size: { width_h: 48, height_h: 13.5 }
-background_profile: clouds_bright_blue
+background_profiles: [clouds_bright_blue]
 player_spawn: { x_h: 2.5, y_h: 1 }
 platforms:
   - { material: city_pavement, rect_h: { x: 0, y: 0, width: 48, height: 1 } }
 enemy_spawns:
-  - { type_id: stalker_unit, position_h: { x: 3.05, y: 1 } }
-  - { type_id: stalker_unit, position_h: { x: 3.5, y: 1 } }
+  - { type_id: blade_unit, position_h: { x: 3.05, y: 1 } }
+  - { type_id: blade_unit, position_h: { x: 3.5, y: 1 } }
 bonus: { x_h: 43, y_h: 1 }
 exit: { x_h: 45, y_h: 1 }
 next_room_id: 2

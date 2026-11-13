@@ -718,7 +718,7 @@ mod tests {
 room_id: 3
 chapter_id: 1
 size: { width_h: 48, height_h: 27 }
-background_profile: clouds_bright_blue
+background_profiles: [clouds_bright_blue]
 player_spawn: { x_h: 2.5, y_h: 1 }
 platforms:
   - { label: floor, material: city_pavement, rect_h: { x: 0, y: 0, width: 48, height: 1 } }
@@ -762,58 +762,42 @@ next_room_id: 4
     }
 
     #[test]
-    fn armor_steps_from_the_type_default_down_to_none_and_clears_back_to_it() {
+    fn armor_steps_up_from_none_stops_at_none_and_clears_back_to_it() {
         let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
         let data = GameData::load(&asset_root).expect("Chapter 1 YAML should be valid");
         let mut room = data.rooms[&1].clone();
-        // Whatever the authored room overrides on it, start from the type.
-        room.enemy_spawns[0].stat_overrides = None;
+        room.enemy_spawns[0].armor_layers = 0;
         let original = room.clone();
         let selection = [EditorItem::Enemy(0)];
-        let default_layers = data.enemies.types[&room.enemy_spawns[0].type_id].armor_layers;
-        let layers = |room: &RoomConfig| {
-            room.enemy_spawns[0]
-                .stat_overrides
-                .as_ref()
-                .and_then(|overrides| overrides.armor_layers)
-        };
 
         Field::Armor.adjust(&mut room, &selection, &data, 1.0);
-        assert_eq!(layers(&room), Some(default_layers + 1));
+        Field::Armor.adjust(&mut room, &selection, &data, 1.0);
+        assert_eq!(room.enemy_spawns[0].armor_layers, 2);
 
-        for _ in 0..=default_layers + 1 {
+        for _ in 0..3 {
             Field::Armor.adjust(&mut room, &selection, &data, -1.0);
         }
-        assert_eq!(layers(&room), Some(0), "Left stops at no armor");
-        assert!(
-            Field::Armor
-                .value(&room, &selection, &data, 0)
-                .starts_with("none")
-        );
+        assert_eq!(room.enemy_spawns[0].armor_layers, 0, "Left stops at none");
+        assert_eq!(Field::Armor.value(&room, &selection, &data, 0), "none");
 
+        Field::Armor.adjust(&mut room, &selection, &data, 1.0);
         Field::Armor.clear(&mut room, selection.last().copied());
         assert_eq!(room, original);
     }
 
     #[test]
-    fn stat_overrides_step_from_the_type_default_and_clear_back_to_it() {
+    fn a_second_background_is_laid_over_the_first_and_taken_off_again() {
         let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
         let data = GameData::load(&asset_root).expect("Chapter 1 YAML should be valid");
         let mut room = data.rooms[&1].clone();
-        // Whatever the authored room overrides on it, start from the type.
-        room.enemy_spawns[0].stat_overrides = None;
+        room.background_profiles.truncate(1);
         let original = room.clone();
-        let enemy = Some(EditorItem::Enemy(0));
-        let default_health = data.enemies.types[&room.enemy_spawns[0].type_id].health;
 
-        Field::Health.adjust(&mut room, &[EditorItem::Enemy(0)], &data, 2.0);
-        let overrides = room.enemy_spawns[0]
-            .stat_overrides
-            .clone()
-            .unwrap_or_default();
-        assert_eq!(overrides.health, Some(default_health + 10.0));
+        Field::BackgroundOver.adjust(&mut room, &[], &data, 1.0);
+        assert_eq!(room.background_profiles.len(), 2);
+        assert_eq!(room.background_profiles[0], original.background_profiles[0]);
 
-        Field::Health.clear(&mut room, enemy);
+        Field::BackgroundOver.adjust(&mut room, &[], &data, -1.0);
         assert_eq!(room, original);
     }
 

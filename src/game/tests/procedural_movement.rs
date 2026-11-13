@@ -14,7 +14,7 @@ fn blade_unit_bobs_while_walking_and_returns_to_idle_pose() {
 room_id: 1
 chapter_id: 1
 size: { width_h: 48, height_h: 13.5 }
-background_profile: clouds_bright_blue
+background_profiles: [clouds_bright_blue]
 player_spawn: { x_h: 2.5, y_h: 1 }
 platforms:
   - { material: city_pavement, rect_h: { x: 0, y: 0, width: 48, height: 1 } }
@@ -58,6 +58,7 @@ next_room_id: 2
              mut session: ResMut<RunSession>,
              sheets: Res<SpriteSheets>| {
                 let room = &data.rooms[&1];
+                world::spawn_room_platforms(&mut commands, room, &data);
                 world::spawn_player(&mut commands, room, &data, &sheets);
                 world::spawn_enemies(&mut commands, room, &data, &sheets);
                 session.world_loaded = true;

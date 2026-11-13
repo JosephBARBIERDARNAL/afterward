@@ -69,10 +69,6 @@ impl EnemyTypeId {
             "dark_blade_unit" => "enemy_dark_swordsman_idle",
             "dark_rifle_unit" => "enemy_dark_infantry_idle",
             "dark_heavy_unit" => "enemy_dark_destroyer_idle",
-            "stalker_unit" => "enemy_gorgon_1_idle",
-            "lancer_unit" => "enemy_gorgon_2_idle",
-            "breaker_unit" => "enemy_gorgon_3_idle",
-            "scout_unit" => "enemy_dark_ninja_idle",
             "emitter_unit" => "boss_idle",
             _ => "enemy_swordsman_idle",
         }

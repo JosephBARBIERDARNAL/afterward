@@ -4,7 +4,7 @@
 //! together.
 
 use super::*;
-use crate::data::{DecorationLayer, EnemyStatOverrides, EnemyTypeConfig, Facing};
+use crate::data::{DecorationLayer, Facing};
 
 /// How far one Left/Right press grows or shrinks the room, in H.
 const ROOM_SIZE_STEP_H: f32 = 0.5;
@@ -20,6 +20,7 @@ pub(super) enum Field {
     RoomWidth,
     RoomHeight,
     Background,
+    BackgroundOver,
     Label,
     Fill,
     Layer,
@@ -30,9 +31,6 @@ pub(super) enum Field {
     Width,
     Height,
     Rotation,
-    Health,
-    Speed,
-    Damage,
     Armor,
     // Shared by every enemy of a type or by the player, in every room
     // (hitboxes.rs): the size the player is drawn at, then the hitboxes.
@@ -65,6 +63,7 @@ impl Field {
                 Self::RoomWidth,
                 Self::RoomHeight,
                 Self::Background,
+                Self::BackgroundOver,
             ],
             Some(EditorItem::Platform(_)) => &[
                 Self::Label,
@@ -90,9 +89,6 @@ impl Field {
                 Self::EnemyFacing,
                 Self::X,
                 Self::Y,
-                Self::Health,
-                Self::Speed,
-                Self::Damage,
                 Self::Armor,
                 Self::HurtboxWidth,
                 Self::HurtboxHeight,
@@ -119,6 +115,7 @@ impl Field {
             Self::RoomWidth => "Room width (H)",
             Self::RoomHeight => "Room height (H)",
             Self::Background => "Background",
+            Self::BackgroundOver => "Laid over it",
             Self::Label => "Label",
             Self::Fill => "Fill",
             Self::Layer => "Layer",
@@ -129,9 +126,6 @@ impl Field {
             Self::Width => "Width (H)",
             Self::Height => "Height (H)",
             Self::Rotation => "Rotation (deg)",
-            Self::Health => "Health",
-            Self::Speed => "Speed (H/s)",
-            Self::Damage => "Attack damage",
             Self::Armor => "Armor layers",
             Self::BodyHeight => "Body height (H)",
             Self::HurtboxWidth => "Hurtbox width (H)",
@@ -217,18 +211,20 @@ impl Field {
             Some(EditorItem::Enemy(index)) => room.enemy_spawns.get(index),
             _ => None,
         };
-        let overrides = spawn.and_then(|spawn| spawn.stat_overrides.as_ref());
         let defaults = spawn.and_then(|spawn| data.enemies.types.get(&spawn.type_id));
-        let stat = |value: Option<f32>, default: Option<f32>| match (value, default) {
-            (Some(value), _) => format!("{value}  (override)"),
-            (None, Some(default)) => format!("{default}  (type default)"),
-            (None, None) => String::from("-"),
-        };
         match self {
             Self::Room => format!("{:02}", room.room_id),
             Self::RoomWidth => room.size.width_h.to_string(),
             Self::RoomHeight => room.size.height_h.to_string(),
-            Self::Background => room.background_profile.clone(),
+            Self::Background => room
+                .background_profiles
+                .first()
+                .cloned()
+                .unwrap_or_default(),
+            Self::BackgroundOver => match room.background_profiles.get(1..) {
+                Some([]) | None => String::from("nothing"),
+                Some(over) => over.join(", "),
+            },
             Self::Label => self.text(room, item).unwrap_or_else(|| String::from("-")),
             Self::Fill => item
                 .and_then(|item| item.fill(room))
@@ -264,32 +260,11 @@ impl Field {
                 }
                 _ => String::new(),
             },
-            Self::Health => stat(
-                overrides.and_then(|overrides| overrides.health),
-                defaults.map(|enemy| enemy.health),
-            ),
-            Self::Speed => stat(
-                overrides.and_then(|overrides| overrides.movement_speed_h_s),
-                defaults.map(|enemy| enemy.movement_speed_h_s),
-            ),
-            Self::Damage => stat(
-                overrides.and_then(|overrides| overrides.attack_damage),
-                defaults.and_then(EnemyTypeConfig::attack_damage),
-            ),
-            Self::Armor => {
-                let layers = |layers: u8| match layers {
-                    0 => String::from("none"),
-                    layers => layers.to_string(),
-                };
-                match (
-                    overrides.and_then(|overrides| overrides.armor_layers),
-                    defaults.map(|enemy| enemy.armor_layers),
-                ) {
-                    (Some(value), _) => format!("{}  (override)", layers(value)),
-                    (None, Some(default)) => format!("{}  (type default)", layers(default)),
-                    (None, None) => String::from("-"),
-                }
-            }
+            Self::Armor => match spawn.map(|spawn| spawn.armor_layers) {
+                Some(0) => String::from("none"),
+                Some(layers) => layers.to_string(),
+                None => String::new(),
+            },
             Self::BodyHeight
             | Self::HurtboxWidth
             | Self::HurtboxHeight
@@ -333,8 +308,31 @@ impl Field {
             }
             Self::Background => {
                 let profiles = data.backgrounds.profiles.keys().cloned().collect();
-                if let Some(profile) = cycle(profiles, &room.background_profile) {
-                    room.background_profile = profile;
+                if let Some(first) = room.background_profiles.first_mut()
+                    && let Some(profile) = cycle(profiles, first)
+                {
+                    *first = profile;
+                }
+            }
+            // The profile laid over the first: an empty name stands for
+            // nothing, so Left/Right walk through it like any other. Profiles
+            // a hand-written file stacks beyond that are left alone.
+            Self::BackgroundOver => {
+                let profiles = std::iter::once(String::new())
+                    .chain(data.backgrounds.profiles.keys().cloned())
+                    .collect();
+                let current = room.background_profiles.get(1).cloned().unwrap_or_default();
+                match cycle(profiles, &current) {
+                    Some(profile) if profile.is_empty() => {
+                        if room.background_profiles.len() > 1 {
+                            room.background_profiles.remove(1);
+                        }
+                    }
+                    Some(profile) => match room.background_profiles.get_mut(1) {
+                        Some(over) => *over = profile,
+                        None => room.background_profiles.push(profile),
+                    },
+                    None => {}
                 }
             }
             Self::Fill => {
@@ -421,65 +419,17 @@ impl Field {
                     block.rotation_deg = (turned + 90.0).rem_euclid(180.0) - 90.0 + 0.0;
                 }
             }
-            Self::Health | Self::Speed | Self::Damage => {
-                let Some(EditorItem::Enemy(index)) = item else {
-                    return;
-                };
-                let defaults = room
-                    .enemy_spawns
-                    .get(index)
-                    .and_then(|spawn| data.enemies.types.get(&spawn.type_id));
-                let Some(spawn) = room.enemy_spawns.get_mut(index) else {
-                    return;
-                };
-                let overrides = spawn
-                    .stat_overrides
-                    .get_or_insert_with(EnemyStatOverrides::default);
-                let (value, default, step, min) = match self {
-                    Self::Health => (
-                        &mut overrides.health,
-                        defaults.map(|enemy| enemy.health),
-                        5.0,
-                        1.0,
-                    ),
-                    Self::Speed => (
-                        &mut overrides.movement_speed_h_s,
-                        defaults.map(|enemy| enemy.movement_speed_h_s),
-                        0.25,
-                        0.0,
-                    ),
-                    _ => (
-                        &mut overrides.attack_damage,
-                        defaults.and_then(EnemyTypeConfig::attack_damage),
-                        1.0,
-                        0.0,
-                    ),
-                };
-                let current = value.or(default).unwrap_or(0.0);
-                *value = Some((current + steps * step).max(min));
-            }
             Self::Armor => {
-                let Some(EditorItem::Enemy(index)) = item else {
-                    return;
-                };
-                let Some(spawn) = room.enemy_spawns.get_mut(index) else {
-                    return;
-                };
-                let default = data
-                    .enemies
-                    .types
-                    .get(&spawn.type_id)
-                    .map_or(0, |enemy| enemy.armor_layers);
-                let overrides = spawn
-                    .stat_overrides
-                    .get_or_insert_with(EnemyStatOverrides::default);
-                let current = overrides.armor_layers.unwrap_or(default);
-                // Left from none stays at none: no armor is 0 layers.
-                overrides.armor_layers = Some(if steps < 0.0 {
-                    current.saturating_sub(1)
-                } else {
-                    current.saturating_add(1).min(MAX_ARMOR_LAYERS)
-                });
+                if let Some(EditorItem::Enemy(index)) = item
+                    && let Some(spawn) = room.enemy_spawns.get_mut(index)
+                {
+                    // Left from none stays at none: no armor is 0 layers.
+                    spawn.armor_layers = if steps < 0.0 {
+                        spawn.armor_layers.saturating_sub(1)
+                    } else {
+                        spawn.armor_layers.saturating_add(1).min(MAX_ARMOR_LAYERS)
+                    };
+                }
             }
             // Hitboxes live outside the room: see `Field::adjust_hitbox`.
             Self::Room
@@ -495,8 +445,8 @@ impl Field {
         }
     }
 
-    /// Removes a stat override or a text field, or stands a turned platform
-    /// square again.
+    /// Removes a text field, strips an enemy's armor, or stands a turned
+    /// platform square again.
     pub(super) fn clear(self, room: &mut RoomConfig, item: Option<EditorItem>) {
         if self.is_text() {
             self.set_text(room, item, "");
@@ -508,23 +458,10 @@ impl Field {
             block.rotation_deg = 0.0;
             return;
         }
-        let Some(EditorItem::Enemy(index)) = item else {
-            return;
-        };
-        let Some(spawn) = room.enemy_spawns.get_mut(index) else {
-            return;
-        };
-        if let Some(overrides) = &mut spawn.stat_overrides {
-            match self {
-                Self::Health => overrides.health = None,
-                Self::Speed => overrides.movement_speed_h_s = None,
-                Self::Damage => overrides.attack_damage = None,
-                Self::Armor => overrides.armor_layers = None,
-                _ => {}
-            }
-        }
-        if spawn.stat_overrides == Some(EnemyStatOverrides::default()) {
-            spawn.stat_overrides = None;
+        if let (Self::Armor, Some(EditorItem::Enemy(index))) = (self, item)
+            && let Some(spawn) = room.enemy_spawns.get_mut(index)
+        {
+            spawn.armor_layers = 0;
         }
     }
 }

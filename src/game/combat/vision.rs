@@ -1,6 +1,6 @@
 //! What an idle enemy can see. An enemy only starts chasing the player it has
-//! actually spotted: close enough, roughly at its own height, in front of it,
-//! and not behind a platform. The rules and their tuning live in
+//! actually spotted: close enough — nearer still when it stands at the
+//! enemy's back — roughly at its own height, and not behind a platform. The rules and their tuning live in
 //! `enemies/enemy_types.yaml` under `detection:`.
 
 use super::*;
@@ -19,9 +19,8 @@ impl EnemyBody {
         let eyes = self.hurtbox(transform).center();
         let target = player.center();
         let offset = target - eyes;
-        offset.x.abs() <= detection.range_h * H_WORLD_UNITS
+        offset.x.abs() <= detection.reach_h(offset.x * self.facing) * H_WORLD_UNITS
             && offset.y.abs() <= detection.height_h * H_WORLD_UNITS
-            && offset.x * self.facing >= 0.0
             && !platforms.blocks_sight(eyes, target)
     }
 }

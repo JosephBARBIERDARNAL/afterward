@@ -95,18 +95,22 @@ fn draw_sight(gizmos: &mut Gizmos, room: &RoomConfig, data: &GameData, platforms
         let feet = Vec2::new(spawn.position_h.x_h, spawn.position_h.y_h) * H_WORLD_UNITS;
         let eyes = feet + Vec2::Y * enemy.hurtbox_h.height / 2.0 * H_WORLD_UNITS;
         let facing = f32::from(spawn.facing);
-        let far_x = eyes.x + facing * range;
-        for index in 0..=SIGHT_LINES {
-            let target = band_point(eyes, far_x, height, index as f32 / SIGHT_LINES as f32);
-            let seen = eyes.lerp(target, visible_fraction(eyes, target, platforms));
-            gizmos.line_2d(eyes, seen, SIGHT_COLOR);
+        // The band in front of it, and the shorter one at its back.
+        for far_x in [
+            eyes.x + facing * range,
+            eyes.x - facing * detection.behind_range_h * H_WORLD_UNITS,
+        ] {
+            for index in 0..=SIGHT_LINES {
+                let target = band_point(eyes, far_x, height, index as f32 / SIGHT_LINES as f32);
+                let seen = eyes.lerp(target, visible_fraction(eyes, target, platforms));
+                gizmos.line_2d(eyes, seen, SIGHT_COLOR);
+            }
         }
         // The one line that decides whether this enemy wakes on its own: the
         // player standing where they walk in.
         let offset = player - eyes;
-        if offset.x.abs() <= range
+        if offset.x.abs() <= detection.reach_h(offset.x * facing) * H_WORLD_UNITS
             && offset.y.abs() <= height
-            && offset.x * facing >= 0.0
             && !platforms.blocks_sight(eyes, player)
         {
             gizmos.line_2d(eyes, player, SPOTTED_COLOR);
@@ -168,7 +172,7 @@ mod tests {
 room_id: 3
 chapter_id: 1
 size: { width_h: 48, height_h: 27 }
-background_profile: clouds_bright_blue
+background_profiles: [clouds_bright_blue]
 player_spawn: { x_h: 2.5, y_h: 1 }
 platforms:
   - { label: floor, material: city_pavement, rect_h: { x: 0, y: 0, width: 48, height: 1 } }

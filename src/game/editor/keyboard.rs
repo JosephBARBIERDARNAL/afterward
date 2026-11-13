@@ -349,7 +349,7 @@ pub(super) fn handle_editor_keys(resources: EditorKeyResources) {
                 type_id,
                 position_h: SpawnPosition { x_h, y_h },
                 facing: Facing::default(),
-                stat_overrides: None,
+                armor_layers: 0,
             });
             added = Some(EditorItem::Enemy(room.enemy_spawns.len() - 1));
         });

@@ -12,7 +12,10 @@ pub struct RoomConfig {
     pub room_id: u16,
     pub chapter_id: u8,
     pub size: RoomSizeConfig,
-    pub background_profile: String,
+    /// The background profiles drawn behind the room, back to front. The
+    /// first gives the sky; each one after it lays its layers over that,
+    /// without a backdrop of its own.
+    pub background_profiles: Vec<String>,
     pub player_spawn: SpawnPosition,
     /// Solid platforms: bodies land on their top, are stopped by their sides,
     /// and bump their head on their underside. They stop shots too.
@@ -137,7 +140,9 @@ pub struct EnemySpawnConfig {
     /// The way it looks, and so watches, until it spots the player.
     #[serde(default)]
     pub facing: Facing,
-    pub stat_overrides: Option<EnemyStatOverrides>,
+    /// How many layers of armor it walks in with: none when left out.
+    #[serde(default)]
+    pub armor_layers: u8,
 }
 
 /// The way an enemy looks while it idles. It defaults to `Left`, the way the
@@ -158,13 +163,4 @@ impl From<Facing> for f32 {
             Facing::Right => 1.0,
         }
     }
-}
-
-#[derive(Debug, Clone, Default, PartialEq, Deserialize)]
-pub struct EnemyStatOverrides {
-    pub health: Option<f32>,
-    pub movement_speed_h_s: Option<f32>,
-    pub attack_damage: Option<f32>,
-    /// Layers of armor this enemy walks in with, in place of its type's.
-    pub armor_layers: Option<u8>,
 }

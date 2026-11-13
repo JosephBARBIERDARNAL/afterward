@@ -9,14 +9,14 @@ fn ground_enemy_climbs_the_staircase_to_a_player_on_a_higher_platform() {
     let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
     let mut data = GameData::load(&asset_root).expect("Chapter 1 data should load");
     // A fixed layout, independent of the authored rooms: a floor, two plank
-    // steps, and a walkway whose top is 7 H up, with one ground stalker.
+    // steps, and a walkway whose top is 7 H up, with one ground blade unit.
     let room = data.rooms.get_mut(&3).expect("room 3 should exist");
     let layout: RoomConfig = yaml_serde::from_str(
         "
 room_id: 3
 chapter_id: 1
 size: { width_h: 48, height_h: 27 }
-background_profile: clouds_bright_blue
+background_profiles: [clouds_bright_blue]
 player_spawn: { x_h: 2.5, y_h: 1 }
 platforms:
   - { material: city_pavement, rect_h: { x: 0, y: 0, width: 48, height: 1 } }
@@ -24,7 +24,7 @@ platforms:
   - { material: city_plating, rect_h: { x: 6, y: 2.75, width: 3, height: 0.25 } }
   - { material: city_plating, rect_h: { x: 10, y: 4.75, width: 3, height: 0.25 } }
 enemy_spawns:
-  - { type_id: stalker_unit, position_h: { x: 8, y: 1 } }
+  - { type_id: blade_unit, position_h: { x: 8, y: 1 } }
 bonus: { x_h: 43, y_h: 1 }
 exit: { x_h: 45, y_h: 1 }
 next_room_id: 4
@@ -80,7 +80,7 @@ next_room_id: 4
     let mut enemies = app.world_mut().query_filtered::<Entity, With<EnemyBody>>();
     let climber = enemies
         .single(app.world())
-        .expect("the layout should spawn one stalker");
+        .expect("the layout should spawn one blade unit");
     let player_feet_y = 7.0 * H_WORLD_UNITS;
     let mut players = app
         .world_mut()
@@ -101,7 +101,7 @@ next_room_id: 4
         let enemy = app
             .world()
             .get::<EnemyBody>(climber)
-            .expect("the stalker should remain spawned");
+            .expect("the blade unit should remain spawned");
         jumped |= enemy.jump.is_some();
         let feet_y = enemy.home_y - enemy.feet_offset;
         if enemy.grounded && (feet_y - player_feet_y).abs() <= 1.0 {
@@ -109,10 +109,13 @@ next_room_id: 4
             break;
         }
     }
-    assert!(jumped, "the stalker should jump instead of waiting below");
+    assert!(
+        jumped,
+        "the blade unit should jump instead of waiting below"
+    );
     assert!(
         reached_player_level,
-        "the stalker should climb onto the player's platform"
+        "the blade unit should climb onto the player's platform"
     );
 }
 
@@ -127,7 +130,7 @@ fn emitter_unit_jump_slam_damages_the_player_on_landing() {
 room_id: 10
 chapter_id: 1
 size: { width_h: 48, height_h: 22.5 }
-background_profile: clouds_thunderstorm
+background_profiles: [clouds_thunderstorm]
 player_spawn: { x_h: 2.5, y_h: 1 }
 platforms:
   - { material: city_pavement, rect_h: { x: 0, y: 0, width: 48, height: 1 } }

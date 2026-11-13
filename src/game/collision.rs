@@ -337,19 +337,14 @@ impl<'a> Platforms<'a> {
             })
     }
 
-    /// Whether anything holds up a body at `x` whose feet are at `feet_y`: the
-    /// platform it stands on, the slope it is walking up, or one further down
-    /// it would land on. Nothing means a bottomless gap, which a body falls
-    /// out of the room through.
-    pub(super) fn has_ground_below(&self, x: f32, feet_y: f32) -> bool {
-        self.0.iter().any(|platform| match &platform.tilt {
-            None => platform
-                .floor_at(x)
-                .is_some_and(|top| top <= feet_y + CONTACT_TOLERANCE),
-            Some(_) => platform
-                .reach_over(x)
-                .is_some_and(|(underside, _)| underside <= feet_y + CONTACT_TOLERANCE),
-        })
+    /// The highest floor under a body at `x` whose feet are at `feet_y`: where
+    /// it would land if it stepped off what it stands on there.
+    pub(super) fn floor_below(&self, x: f32, feet_y: f32) -> Option<f32> {
+        self.0
+            .iter()
+            .filter_map(|platform| platform.floor_at(x))
+            .filter(|floor| *floor <= feet_y + CONTACT_TOLERANCE)
+            .max_by(f32::total_cmp)
     }
 
     /// The platform a grounded body at `x` stands on, with its feet at

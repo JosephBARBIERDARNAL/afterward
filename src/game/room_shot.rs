@@ -184,17 +184,11 @@ fn frame_the_room(
     }
     // The backdrop is as tall as the player's view and follows it; here it is
     // laid flat over the room, enlarged until it covers the room's height.
-    let profile = &data.backgrounds.profiles[&room.background_profile];
-    let tile = Vec2::new(
-        profile.source_size_px.width as f32 / profile.source_size_px.height as f32,
-        1.0,
-    ) * profile.tile_h
-        * H_WORLD_UNITS;
-    let enlarged = (size.y / tile.y).max(1.0);
     for (mut transform, background) in &mut backgrounds {
+        let enlarged = (size.y / background.tile.y).max(1.0);
         transform.translation.x = background.base_x * enlarged;
         transform.translation.y = size.y / 2.0;
-        transform.scale = (tile * enlarged).extend(1.0);
+        transform.scale = (background.tile * enlarged).extend(1.0);
     }
     // The door the player walks in through is gone by the time they can act.
     for door in &entry_doors {

@@ -6,7 +6,7 @@ chapter_id: 1
 size:
   width_h: 24
   height_h: 13.5
-background_profile: city_teal_evening
+background_profiles: [city_teal_evening]
 player_spawn:
   x_h: 4.25
   y_h: 1
@@ -32,19 +32,19 @@ enemy_spawns:
   - type_id: dark_blade_unit
     position_h: { x: 2.5, y: 3.25 }
     facing: right
-    stat_overrides: { health: 120, armor_layers: 3 }
+    armor_layers: 3
   - type_id: emitter_unit
     position_h: { x: 15.75, y: 1 }
     facing: left
-    stat_overrides: { health: 500, armor_layers: 5 }
+    armor_layers: 5
   - type_id: dark_blade_unit
     position_h: { x: 15, y: 4 }
     facing: left
-    stat_overrides: { health: 120, armor_layers: 3 }
+    armor_layers: 3
   - type_id: dark_blade_unit
     position_h: { x: 17.25, y: 1 }
     facing: left
-    stat_overrides: { health: 120, armor_layers: 3 }
+    armor_layers: 3
 # The bonus item, lying beside the door once every enemy is down.
 bonus:
   x_h: 20.75

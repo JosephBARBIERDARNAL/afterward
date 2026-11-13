@@ -21,6 +21,13 @@ pub struct BackgroundProfile {
     pub layers: Vec<BackgroundLayer>,
 }
 
+impl BackgroundProfile {
+    /// How wide one tile is drawn, keeping the source image's proportions.
+    pub(crate) fn tile_width_h(&self) -> f32 {
+        self.tile_h * self.source_size_px.width as f32 / self.source_size_px.height as f32
+    }
+}
+
 /// How a texture is sampled when drawn larger than its source pixels.
 /// `nearest` keeps upscaled pixel art crisp on large displays; `linear`
 /// smooths it, which blurs low-resolution art.

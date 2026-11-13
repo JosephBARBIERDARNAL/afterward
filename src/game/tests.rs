@@ -6,6 +6,7 @@ mod decoy;
 mod e2e;
 mod enemy_jumping;
 mod enemy_shield;
+mod enemy_tactics;
 mod enemy_vision;
 mod falling;
 mod gameplay_controls;

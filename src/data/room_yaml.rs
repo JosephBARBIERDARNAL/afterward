@@ -4,8 +4,8 @@
 use std::fmt::{self, Display, Formatter};
 
 use super::{
-    DecorationConfig, DecorationLayer, EnemySpawnConfig, EnemyStatOverrides, Facing, Fill,
-    PlatformConfig, RectH, RoomConfig, SizeH,
+    DecorationConfig, DecorationLayer, EnemySpawnConfig, Facing, Fill, PlatformConfig, RectH,
+    RoomConfig, SizeH,
 };
 
 const HEADER: &str = "\
@@ -24,8 +24,8 @@ impl Display for RoomConfig {
         writeln!(formatter, "  height_h: {}", self.size.height_h)?;
         writeln!(
             formatter,
-            "background_profile: {}",
-            YamlText(&self.background_profile)
+            "background_profiles: [{}]",
+            self.background_profiles.join(", ")
         )?;
         writeln!(formatter, "player_spawn:")?;
         writeln!(formatter, "  x_h: {}", self.player_spawn.x_h)?;
@@ -121,11 +121,7 @@ impl Display for EnemySpawnConfig {
             .label
             .iter()
             .map(|label| format!("label: {}", YamlText(label)));
-        let overrides = self
-            .stat_overrides
-            .iter()
-            .filter(|overrides| **overrides != EnemyStatOverrides::default())
-            .map(|overrides| format!("stat_overrides: {overrides}"));
+        let armor = (self.armor_layers > 0).then(|| format!("armor_layers: {}", self.armor_layers));
         let fields = label
             .chain([
                 format!("type_id: {}", self.type_id),
@@ -135,7 +131,7 @@ impl Display for EnemySpawnConfig {
                 ),
                 format!("facing: {}", self.facing),
             ])
-            .chain(overrides)
+            .chain(armor)
             .collect();
         write!(formatter, "{}", YamlEntry(fields))
     }
@@ -163,25 +159,6 @@ impl Display for YamlEntry {
             let indent = if index == 0 { "  - " } else { "    " };
             writeln!(formatter, "{indent}{field}")
         })
-    }
-}
-
-impl Display for EnemyStatOverrides {
-    fn fmt(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
-        let fields = [
-            ("health", self.health),
-            ("movement_speed_h_s", self.movement_speed_h_s),
-            ("attack_damage", self.attack_damage),
-        ];
-        let set = fields
-            .iter()
-            .filter_map(|(name, value)| value.map(|value| format!("{name}: {value}")))
-            .chain(
-                self.armor_layers
-                    .map(|layers| format!("armor_layers: {layers}")),
-            )
-            .collect::<Vec<_>>();
-        write!(formatter, "{{ {} }}", set.join(", "))
     }
 }
 
@@ -277,7 +254,7 @@ mod tests {
 room_id: 3
 chapter_id: 1
 size: { width_h: 24, height_h: 13.5 }
-background_profile: city_blue_day
+background_profiles: [city_blue_day]
 player_spawn: { x_h: 2, y_h: 1 }
 platforms:
   - { color: \"#2DE2D5\", rect_h: { x: 0, y: 0, width: 24, height: 1 } }
@@ -305,7 +282,7 @@ next_room_id: 4
 room_id: 3
 chapter_id: 1
 size: { width_h: 24, height_h: 13.5 }
-background_profile: city_blue_day
+background_profiles: [city_blue_day]
 player_spawn: { x_h: 2, y_h: 1 }
 platforms:
   - { material: city_pavement, rect_h: { x: 0, y: 0, width: 24, height: 1 } }
@@ -337,13 +314,13 @@ next_room_id: 4
 room_id: 3
 chapter_id: 1
 size: { width_h: 24, height_h: 13.5 }
-background_profile: city_blue_day
+background_profiles: [city_blue_day]
 player_spawn: { x_h: 2, y_h: 1 }
 platforms:
   - { material: city_pavement, rect_h: { x: 0, y: 0, width: 24, height: 1 } }
 enemy_spawns:
   - { type_id: blade_unit, position_h: { x: 10, y: 1 }, facing: right }
-  - { type_id: blade_unit, position_h: { x: 14, y: 1 }, stat_overrides: { health: 40, armor_layers: 0 } }
+  - { type_id: blade_unit, position_h: { x: 14, y: 1 }, armor_layers: 2 }
 bonus: { x_h: 20, y_h: 1 }
 exit: { x_h: 22, y_h: 1 }
 next_room_id: 4
@@ -360,8 +337,8 @@ next_room_id: 4
             "every spawn is written with the way it faces: {written}"
         );
         assert!(
-            written.contains("stat_overrides: { health: 40, armor_layers: 0 }"),
-            "an override that strips the armor is written, not dropped: {written}"
+            written.contains("armor_layers: 2"),
+            "an enemy's armor is written: {written}"
         );
         let read_back: RoomConfig =
             yaml_serde::from_str(&written).expect("the written room is valid YAML");

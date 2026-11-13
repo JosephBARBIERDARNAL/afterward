@@ -194,14 +194,14 @@ fn a_ground_enemy_walks_up_a_slope_to_a_player_standing_above_it() {
 room_id: 3
 chapter_id: 1
 size: { width_h: 48, height_h: 27 }
-background_profile: clouds_bright_blue
+background_profiles: [clouds_bright_blue]
 player_spawn: { x_h: 2.5, y_h: 1 }
 platforms:
   - { material: city_pavement, rect_h: { x: 0, y: 0, width: 48, height: 1 } }
   - { material: city_pavement, rect_h: { x: 17.5, y: 4.5, width: 14, height: 0.5 } }
   - { material: city_plating, rect_h: { x: 6, y: 2.45, width: 12, height: 0.5 }, rotation_deg: 20 }
 enemy_spawns:
-  - { type_id: stalker_unit, position_h: { x: 5, y: 1 } }
+  - { type_id: blade_unit, position_h: { x: 5, y: 1 } }
 bonus: { x_h: 43, y_h: 1 }
 exit: { x_h: 45, y_h: 1 }
 next_room_id: 4
@@ -251,12 +251,12 @@ next_room_id: 4
             )
                 .chain(),
         );
-    // The stalker sees the player beside it, who is then stood on the walkway.
+    // The blade unit sees the player beside it, who is then stood on the walkway.
     app.update();
     let mut enemies = app.world_mut().query_filtered::<Entity, With<EnemyBody>>();
     let climber = enemies
         .single(app.world())
-        .expect("the layout should spawn one stalker");
+        .expect("the layout should spawn one blade unit");
     let player_feet_y = 5.0 * H_WORLD_UNITS;
     let mut players = app
         .world_mut()
@@ -276,7 +276,7 @@ next_room_id: 4
         let enemy = app
             .world()
             .get::<EnemyBody>(climber)
-            .expect("the stalker should remain spawned");
+            .expect("the blade unit should remain spawned");
         let feet_y = enemy.home_y - enemy.feet_offset;
         highest_feet_h = highest_feet_h.max(feet_y / H_WORLD_UNITS);
         if enemy.grounded && (feet_y - player_feet_y).abs() <= 1.0 {
@@ -284,6 +284,6 @@ next_room_id: 4
         }
     }
     panic!(
-        "the stalker should walk up the plank to the walkway, but got no higher than {highest_feet_h} H"
+        "the blade unit should walk up the plank to the walkway, but got no higher than {highest_feet_h} H"
     );
 }

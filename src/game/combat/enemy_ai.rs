@@ -303,7 +303,10 @@ pub(in crate::game) fn update_enemy_ai(
             .filter(|_| enemy.grounded)
             .map(|(platform, _)| platform);
         let should_approach = distance_h > maximum_distance || other_level;
-        let should_retreat = !other_level && distance_h < minimum_distance;
+        // A shot that is ready is fired from wherever the enemy stands, however
+        // close the player is: it only backs away while the next one cools.
+        let should_retreat =
+            !other_level && distance_h < minimum_distance && enemy.attack_cooldown > 0.0;
         let mut direction = if should_approach {
             dx.signum()
         } else {
@@ -318,8 +321,9 @@ pub(in crate::game) fn update_enemy_ai(
             gravity,
             level_change_threshold,
         };
+        // Only the way to the player is worth a leap: backing away never is.
         let plan = standing
-            .filter(|_| should_approach || should_retreat)
+            .filter(|_| should_approach)
             .and_then(|platform| route.plan(platform, &surfaces));
         let mut waiting = false;
         match plan {
@@ -350,6 +354,26 @@ pub(in crate::game) fn update_enemy_ai(
                 waiting = other_level && rise > 0.0 && dx.abs() < 0.5 * H_WORLD_UNITS;
             }
         }
+        // Platform sides stop an enemy as they stop the player, and so does a
+        // ledge: it keeps to the floor it stands on. It only steps off on its
+        // way to a player standing below, onto a floor that is not too far
+        // down and no lower than the player's own level.
+        let next_x = surfaces.blocked_x(
+            feet.x,
+            (feet.x + direction * enemy.movement_speed_h_s * H_WORLD_UNITS * dt).clamp(
+                HALF_BODY_WIDTH,
+                data.rooms[&session.room_id].size.width_h * H_WORLD_UNITS - HALF_BODY_WIDTH,
+            ),
+            feet.y,
+        );
+        let keeps_its_floor = surfaces.standing_on(next_x, feet.y, SLOPE_STRIDE).is_some();
+        let drops_after_the_player = should_approach
+            && mark.grounded
+            && surfaces.floor_below(next_x, feet.y).is_some_and(|floor| {
+                feet.y - floor <= jumping.max_drop_h * H_WORLD_UNITS
+                    && floor >= mark.feet.y - level_change_threshold
+            });
+        waiting |= !(keeps_its_floor || drops_after_the_player);
         if (should_approach || should_retreat) && !waiting {
             enemy.movement_sound_timer = (enemy.movement_sound_timer - dt).max(0.0);
             if enemy.movement_sound_timer == 0.0 {
@@ -361,19 +385,7 @@ pub(in crate::game) fn update_enemy_ai(
             if should_approach {
                 sprite.flip_x = direction < 0.0;
             }
-            let speed = enemy.movement_speed_h_s * H_WORLD_UNITS * dt;
-            let room_width_h = data.rooms[&session.room_id].size.width_h;
-            let wanted_x = (feet.x + direction * speed).clamp(
-                HALF_BODY_WIDTH,
-                room_width_h * H_WORLD_UNITS - HALF_BODY_WIDTH,
-            );
-            // Platform sides stop an enemy as they stop the player, and so
-            // does a bottomless gap: an enemy walks down to a lower platform,
-            // never into a step with nothing under it at all.
-            let next_x = surfaces.blocked_x(feet.x, wanted_x, feet.y);
-            if surfaces.has_ground_below(next_x, feet.y) {
-                transform.translation.x = next_x;
-            }
+            transform.translation.x = next_x;
             let movement_speed_h_s = enemy.movement_speed_h_s;
             let home_y = enemy.home_y;
             let facing = enemy.facing;
@@ -393,7 +405,10 @@ pub(in crate::game) fn update_enemy_ai(
                 transform.translation.y = enemy.home_y;
                 transform.rotation = Quat::IDENTITY;
             }
-            if enemy.attack_cooldown <= 0.0 && !other_level {
+            // Held where it stands with the player out of its reach, only a
+            // shot is worth throwing.
+            let in_reach = distance_h <= maximum_distance || attack.kind.contains("projectile");
+            if enemy.attack_cooldown <= 0.0 && !other_level && in_reach {
                 enemy.movement_sound_timer = 0.0;
                 enemy.active_attack = enemy.next_attack;
                 enemy.next_attack = (enemy.next_attack + 1) % enemy.attacks.len();

@@ -17,7 +17,7 @@ fn a_player_pressed_into_a_wall_slides_down_it_and_jumps_away_from_it() {
 room_id: 1
 chapter_id: 1
 size: { width_h: 24, height_h: 13.5 }
-background_profile: clouds_bright_blue
+background_profiles: [clouds_bright_blue]
 player_spawn: { x_h: 2.5, y_h: 1 }
 platforms:
   - { material: city_pavement, rect_h: { x: 0, y: 0, width: 24, height: 1 } }

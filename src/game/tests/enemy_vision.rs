@@ -9,18 +9,20 @@ fn an_enemy_only_chases_a_player_it_can_see() {
     let mut data = GameData::load(&asset_root).expect("Chapter 1 data should load");
     // A fixed layout, independent of the authored rooms: a flat street with a
     // pillar to hide behind, one BladeUnit watching the way the player walks
-    // in from, and a second one at the far end with its back to it.
+    // in from, a second one at the far end with its back to it, and a third
+    // near the entrance with its back to it too.
     *data.rooms.get_mut(&1).expect("room 1 should exist") = yaml_serde::from_str(
         "
 room_id: 1
 chapter_id: 1
 size: { width_h: 48, height_h: 13.5 }
-background_profile: clouds_bright_blue
+background_profiles: [clouds_bright_blue]
 player_spawn: { x_h: 2.5, y_h: 1 }
 platforms:
   - { material: city_pavement, rect_h: { x: 0, y: 0, width: 48, height: 1 } }
   - { material: city_plating, rect_h: { x: 24, y: 1, width: 1, height: 4 } }
 enemy_spawns:
+  - { type_id: blade_unit, position_h: { x: 10, y: 1 }, facing: right }
   - { type_id: blade_unit, position_h: { x: 30, y: 1 } }
   - { type_id: blade_unit, position_h: { x: 40, y: 1 }, facing: right }
 bonus: { x_h: 43, y_h: 1 }
@@ -77,8 +79,8 @@ next_room_id: 2
         spawned.sort_by(|(_, left), (_, right)| left.total_cmp(right));
         spawned
     };
-    let [(blade_unit, _), (lookout, _)] = spawned[..] else {
-        panic!("the layout should spawn two Swordsmen");
+    let [(sentry, _), (blade_unit, _), (lookout, _)] = spawned[..] else {
+        panic!("the layout should spawn three Swordsmen");
     };
     let player = {
         let mut players = app.world_mut().query_filtered::<Entity, With<PlayerBody>>();
@@ -105,6 +107,10 @@ next_room_id: 2
     assert!(
         !chasing(&app, blade_unit),
         "a player across the room should go unnoticed"
+    );
+    assert!(
+        !chasing(&app, sentry),
+        "a player well behind an enemy's back should go unnoticed"
     );
     // Close enough, but high above the BladeUnit's eyes.
     stands_at(&mut app, 26.0, 6.0);
@@ -146,5 +152,12 @@ next_room_id: 2
     assert!(
         chasing(&app, lookout),
         "a player stepping in front of an enemy facing right should be chased"
+    );
+    // An enemy sees behind itself too, only not as far: 2 H at its back is
+    // inside the 3 H it watches there.
+    stands_at(&mut app, 8.0, 1.0);
+    assert!(
+        chasing(&app, sentry),
+        "a player close behind an enemy's back should be noticed"
     );
 }

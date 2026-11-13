@@ -269,10 +269,6 @@ roster stops being a fantasy pack:
 | `swordsman`   | `blade_unit`   | melee chassis, bladed arm                 |
 | `infantryman` | `rifle_unit`   | ranged chassis                            |
 | `destroyer`   | `heavy_unit`   | armoured, slow, charges its shot          |
-| `gorgon_1`    | `stalker_unit` | fast, lunges                              |
-| `gorgon_2`    | `lancer_unit`  | ranged, keeps its distance                |
-| `gorgon_3`    | `breaker_unit` | heavy sweep, slow                         |
-| `dark_ninja`  | `scout_unit`   | fastest, lightest frame                   |
 | `evil_wizard` | `emitter_unit` | the Chapter 1 boss; its shots are blasts  |
 
 The three robots each have a dark twin (`dark_blade_unit`, `dark_rifle_unit`,
@@ -284,8 +280,8 @@ from the ordinary ones by `scripts/darken_robots.py` (`just dark-robots`) into
 
 The `flesh` material is now `polymer`: nothing in this world bleeds, and the
 distinction it actually encodes is armoured chassis versus light frame. Armor
-is its own setting now (`armor_layers`), which the `metal` types carry one
-layer of.
+is its own setting now (`armor_layers`), given to one enemy at a time by its
+room spawn.
 
 The sprite sheets keep their vendor names and paths
 (`enemies/type1/Swordsman/` and the rest). They name files on disk, not the
