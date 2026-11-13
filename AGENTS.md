@@ -78,7 +78,7 @@ Without `just`, pass the flag directly: `cargo run -- --room 7`.
 
 - `just shot --grid 3` rules the picture in H (a line per H, a number every 5, origin bottom left, as in the YAML) and writes `room_003_grid.png`: read a spot off the grid and it is the `x_h`/`y_h` to write. `just shot 3 4` takes several rooms, `just shot` every room.
 - It is the real game (`cargo run -- --room 3 --shot [--grid]`, `src/game/room_shot.rs`): the room is built by `world::spawn_room` on the `Playing` screen with the clock paused, and drawn into an image instead of a window, so platforms, decorations, enemies with their armor, the player on their spawn and the exit door are what a run shows on its first frame. The bonus item is not there: it is only laid once the room is cleared.
-- It shows the whole room, where the player only ever sees a 24 H by 13.5 H window of it (the editor's F overlay frames that). The picture's long side is 1920 px at most, so a wide room is drawn smaller; the backdrop, which in play is one view tall and follows the camera, is laid flat and enlarged to cover a taller room; there is no HUD.
+- It shows the whole room, where the player only ever sees a 24 H by 13.5 H window of it (the editor's F overlay frames that). The picture's long side is 1920 px at most, so a wide room is drawn smaller; the backdrop, which in play is one view tall and follows the camera, is laid flat, each layer where it stands as the room opens, and enlarged to cover a taller room; there is no HUD.
 - It needs a GPU but no display. A failed shot prints the game's log and exits non-zero.
 
 ### Walking through a stretch of the run

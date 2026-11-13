@@ -184,9 +184,14 @@ fn frame_the_room(
     }
     // The backdrop is as tall as the player's view and follows it; here it is
     // laid flat over the room, enlarged until it covers the room's height.
+    // Each layer stands where `update_background_parallax` puts it with the
+    // camera against the room's left wall, so what a layer hangs in the
+    // middle of the view (a moon) is in the middle of a one-view room here.
+    let opening_x = data.gameplay.viewport_width_h() / 2.0 * H_WORLD_UNITS;
     for (mut transform, background) in &mut backgrounds {
         let enlarged = (size.y / background.tile.y).max(1.0);
-        transform.translation.x = background.base_x * enlarged;
+        transform.translation.x =
+            (background.base_x + opening_x * (1.0 - background.factor)) * enlarged;
         transform.translation.y = size.y / 2.0;
         transform.scale = (background.tile * enlarged).extend(1.0);
     }

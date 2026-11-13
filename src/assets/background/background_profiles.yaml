@@ -535,3 +535,27 @@ profiles:
         parallax: 0.32
       - asset: background/city/teal-evening/layer-5.png
         parallax: 0.5
+  # Dead city skylines ("Dead City Parallax BG"). Drawn at 1920x1080 rather
+  # than the 576x324 of the other packs, so one tile is still one viewport.
+  # `layer-1` is the opaque sky and `layer-2` the moon, which hangs still in
+  # the sky at parallax 0: a layer that follows the camera has its tile seam
+  # in the middle of the view, so the moon is drawn across that seam (the
+  # pack's own layer rolled by half its width). The front row stops at 0.5
+  # because rooms draw their own ground.
+  dead_city_ephemeral:
+    backdrop: background/dead-city/ephemeral/layer-1.png
+    source_size_px: { width: 1920, height: 1080 }
+    tile_h: 13.5
+    repeat_horizontal: true
+    filtering: nearest
+    layers:
+      - asset: background/dead-city/ephemeral/layer-2.png
+        parallax: 0
+      - asset: background/dead-city/ephemeral/layer-3.png
+        parallax: 0.08
+      - asset: background/dead-city/ephemeral/layer-4.png
+        parallax: 0.18
+      - asset: background/dead-city/ephemeral/layer-5.png
+        parallax: 0.32
+      - asset: background/dead-city/ephemeral/layer-6.png
+        parallax: 0.5
