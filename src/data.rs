@@ -429,14 +429,18 @@ impl GameData {
         if bonus_ids.len() != self.bonuses.bonuses.len() {
             return Err(InvalidGameData::from("bonus IDs must be unique"));
         }
-        if self
-            .bonuses
-            .bonuses
-            .iter()
-            .any(|bonus| !self.bonuses.categories.contains_key(&bonus.category))
-        {
+        if self.bonuses.bonuses.iter().any(|bonus| {
+            !self.bonuses.categories.contains_key(&bonus.category)
+                || bonus.requires.iter().any(|required| {
+                    !self
+                        .bonuses
+                        .bonuses
+                        .iter()
+                        .any(|other| other.id == *required)
+                })
+        }) {
             return Err(InvalidGameData::from(
-                "a bonus references an unknown category",
+                "a bonus references an unknown category, or requires an unknown bonus",
             ));
         }
         if BonusRarity::ALL

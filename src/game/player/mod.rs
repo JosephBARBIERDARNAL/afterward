@@ -55,10 +55,12 @@ pub(super) fn update_player(
     }
     player.wall_control_lock_s = (player.wall_control_lock_s - dt).max(0.0);
     // The roll runs on its own clock and ends with its clip.
+    let was_rolling = player.roll_s.is_some();
     player.roll_s = player
         .roll_s
         .filter(|_| matches!(player.action, Some(PlayerAction::Roll)))
         .map(|elapsed_s| elapsed_s + dt);
+    player.roll_ended = was_rolling && player.roll_s.is_none();
     let mut sprite_view = PlayerSprite {
         sprite: &mut sprite,
         animation: &mut animation,

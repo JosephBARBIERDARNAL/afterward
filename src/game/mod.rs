@@ -281,7 +281,11 @@ impl Plugin for GamePlugin {
                     bonus_pickup::spawn_bonus_pickup,
                     interact::mark_what_is_in_reach,
                     bonus_pickup::update_bonus_pickup,
-                    shaders::light_the_unlocked_door,
+                    (
+                        bonus_pickup::promise_the_next_bonus,
+                        shaders::light_the_unlocked_door,
+                    )
+                        .chain(),
                     flow::handle_door_touch,
                     flow::room_clear_check,
                 )

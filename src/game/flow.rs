@@ -31,6 +31,8 @@ pub(super) fn room_clear_check(
         return;
     }
     session.room_cleared = true;
+    // A fight won without a wound is paid for: see `draw_bonus_pair`.
+    session.flawless = session.untouched && session.has_enemies(&data);
     session.offered_bonuses.clear();
     // A cleared room gives the player all their health back, under the
     // healing glow when there was any to give.
@@ -270,7 +272,7 @@ fn eligible_bonuses<'a>(
         .bonuses
         .iter()
         .filter(|bonus| session.bonus_category.as_ref() == Some(&bonus.category))
-        .filter(|bonus| !session.owned_bonuses.contains(&bonus.id))
+        .filter(|bonus| session.may_be_offered(bonus))
         .filter(|bonus| !excluded.contains(&bonus.id))
 }
 
@@ -430,7 +432,16 @@ pub(super) fn draw_bonus_pair(
     let mut offers = Vec::with_capacity(2);
     // A rarer bonus weighs less in the draw, so commons come up often and
     // legendaries rarely.
-    let weight = |bonus: &crate::data::BonusConfig| data.bonuses.rarities[bonus.rarity].weight;
+    // A room cleared untouched weighs everything above common heavier still.
+    let untouched = data.gameplay.room_flow.untouched.rarer_weight_multiplier;
+    let weight = |bonus: &crate::data::BonusConfig| {
+        data.bonuses.rarities[bonus.rarity].weight
+            * if session.flawless && bonus.rarity != crate::data::BonusRarity::Common {
+                untouched
+            } else {
+                1
+            }
+    };
     while offers.len() < 2 && !eligible.is_empty() {
         let total = eligible.iter().copied().map(weight).sum::<u32>() as usize;
         let mut drawn = random.index(total.max(1)) as u32;

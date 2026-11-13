@@ -105,6 +105,7 @@ fn apply_player_damage(
     if !session.playtest.infinite_health {
         session.health = (session.health - reduced_damage).max(0.0);
     }
+    session.untouched = false;
     player.invulnerability_timer = tuning.damage_invulnerability_s;
     spawn_damage_number(commands, transform.translation, reduced_damage, true);
     sounds.push(SoundCue::Damage(DamageSound::Neutral));

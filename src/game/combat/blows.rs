@@ -41,7 +41,30 @@ pub(super) struct Blow {
     /// Heard cutting the air when it reaches nobody. The slam is not: it
     /// lands on the floor either way.
     pub(super) whiffs: bool,
+    /// Drags the enemies around it in, whether or not it reached them.
+    pub(super) pull: Option<Pull>,
+    /// Throws the bodies it wounds into whatever stands behind them.
+    pub(super) launch: Option<Launch>,
 }
+
+/// The drag of a blow on every enemy within `radius_h` of where it was
+/// thrown from, toward that spot at `speed_h_s`.
+pub(super) struct Pull {
+    pub(super) radius_h: f32,
+    pub(super) speed_h_s: f32,
+}
+
+/// What Battering Ram adds to a blow: a body it wounds is shoved
+/// `knockback_multiplier` times harder, and whatever stands within `reach_h`
+/// behind it is hit for `damage`.
+pub(super) struct Launch {
+    pub(super) damage: f32,
+    pub(super) reach_h: f32,
+    pub(super) knockback_multiplier: f32,
+}
+
+/// How fast a shoved body slows down, in H a second each second.
+pub(super) const KNOCKBACK_DRAG_H_S2: f32 = 14.0;
 
 pub(super) struct LandingResources<'a, 'w, 's> {
     pub(super) commands: &'a mut Commands<'w, 's>,
@@ -73,6 +96,8 @@ pub(super) fn land_the_blow(
     let mut killed = false;
     // Where the blow landed, for the idle enemies standing near enough to hear it.
     let mut struck = Vec::new();
+    // Behind each body the blow threw: where the throw lands in its turn.
+    let mut thrown = Vec::new();
 
     for (entity, mut enemy, mut enemy_transform, mut sprite, mut animation) in enemies.iter_mut() {
         if enemy.health <= 0.0
@@ -180,6 +205,17 @@ pub(super) fn land_the_blow(
                 enemy_transform.translation.y = enemy.home_y;
             } else {
                 enemy.knockback_velocity = away * melee.knockback_h_s;
+                if let Some(launch) = &blow.launch {
+                    enemy.knockback_velocity *= launch.knockback_multiplier;
+                    let body = enemy.hurtbox(&enemy_transform);
+                    let near = if away < 0.0 { body.min.x } else { body.max.x };
+                    thrown.push(Rect::new(
+                        near,
+                        body.min.y,
+                        near + away * launch.reach_h * H_WORLD_UNITS,
+                        body.max.y,
+                    ));
+                }
             }
             enemy.windup_remaining = 0.0;
             enemy.combo_hit_pending = false;
@@ -287,11 +323,62 @@ pub(super) fn land_the_blow(
         }
     }
 
+    // A blow that drags pulls in everything near it, struck or not, and
+    // sets each down just short of where it was thrown from. A boss is not
+    // moved.
+    if let Some(pull) = &blow.pull {
+        for (_, mut enemy, transform, _, _) in enemies.iter_mut() {
+            let offset_h = (transform.translation.x - blow.from_x) / H_WORLD_UNITS;
+            let level = (enemy.home_y - enemy.feet_offset - blow.area.min.y).abs();
+            if enemy.health <= 0.0
+                || enemy.behavior == "boss"
+                || offset_h.abs() > pull.radius_h
+                || level > 1.5 * H_WORLD_UNITS
+            {
+                continue;
+            }
+            let carry_h = (offset_h.abs() - 0.9).max(0.0);
+            enemy.knockback_velocity = -offset_h.signum()
+                * (2.0 * KNOCKBACK_DRAG_H_S2 * carry_h)
+                    .sqrt()
+                    .min(pull.speed_h_s);
+        }
+    }
     if !connected {
         if blow.whiffs {
             sounds.push(SoundCue::MeleeMiss);
         }
         return;
+    }
+    // A thrown body lands on whatever stood behind it, as a blow of its own.
+    if let Some(launch) = &blow.launch {
+        for area in thrown {
+            land_the_blow(
+                LandingResources {
+                    commands: &mut *commands,
+                    data,
+                    session: &mut *session,
+                    random: &mut *random,
+                    sheets,
+                    sounds: &mut *sounds,
+                },
+                player,
+                Blow {
+                    area,
+                    from_x: blow.from_x,
+                    heavy: false,
+                    damage: launch.damage,
+                    pierces_shields: false,
+                    flinch_s: blow.flinch_s,
+                    finisher: false,
+                    punch: usize::MAX,
+                    whiffs: false,
+                    pull: None,
+                    launch: None,
+                },
+                enemies,
+            );
+        }
     }
     // A blow is heard: every idle enemy near one it landed on turns on the
     // player, whether or not it could have seen them.

@@ -1,5 +1,5 @@
 use super::{
-    blows::{Blow, LandingResources, MeleeEnemiesQuery, land_the_blow},
+    blows::{Blow, LandingResources, Launch, MeleeEnemiesQuery, Pull, land_the_blow},
     *,
 };
 use crate::game::player::Thrown;
@@ -84,9 +84,52 @@ pub(in crate::game) fn player_melee(
     if chain.is_empty() {
         return;
     }
+    // What Undertow gives the slam, and Riptide the roll's shock with it.
+    let pull = || Pull {
+        radius_h: data.bonus_effect("undertow", "slam_pull_radius_h"),
+        speed_h_s: data.bonus_effect("undertow", "slam_pull_h_s"),
+    };
+    // A roll has just ended: with Aftershock, the floor it ends on shocks
+    // everything standing to either side.
+    if player.roll_ended && session.has_bonus("aftershock") {
+        let reach = data.bonus_effect("aftershock", "roll_shock_reach_h") * H_WORLD_UNITS;
+        let drags = session.has_bonus("riptide");
+        land_the_blow(
+            LandingResources {
+                commands: &mut commands,
+                data: &data,
+                session: &mut session,
+                random: &mut random,
+                sheets: &sheets,
+                sounds: &mut sounds,
+            },
+            &mut player,
+            Blow {
+                area: Rect::new(
+                    feet.x - reach,
+                    feet.y,
+                    feet.x + reach,
+                    feet.y + H_WORLD_UNITS,
+                ),
+                from_x: feet.x,
+                heavy: true,
+                damage: data.bonus_effect("aftershock", "roll_shock_damage"),
+                pierces_shields: false,
+                flinch_s: 0.32,
+                finisher: false,
+                punch: usize::MAX,
+                whiffs: false,
+                pull: drags.then(pull),
+                launch: None,
+            },
+            &mut enemies,
+        );
+    }
     // The slam has reached the floor: it breaks to both sides of the player.
     if player.slam_landed {
         player.slam_landed = false;
+        let drags = session.has_bonus("undertow");
+        let breaks_shields = session.has_bonus("breaker");
         land_the_blow(
             LandingResources {
                 commands: &mut commands,
@@ -102,11 +145,13 @@ pub(in crate::game) fn player_melee(
                 from_x: feet.x,
                 heavy: true,
                 damage: melee.slam.damage,
-                pierces_shields: false,
+                pierces_shields: breaks_shields,
                 flinch_s: 0.32,
                 finisher: false,
                 punch: usize::MAX,
                 whiffs: false,
+                pull: drags.then(pull),
+                launch: None,
             },
             &mut enemies,
         );
@@ -169,6 +214,8 @@ pub(in crate::game) fn player_melee(
                     finisher: player.combo_step == 0,
                     punch: index,
                     whiffs: true,
+                    pull: None,
+                    launch: None,
                 }
             }
             Thrown::Charged => Blow {
@@ -181,6 +228,13 @@ pub(in crate::game) fn player_melee(
                 finisher: false,
                 punch: usize::MAX,
                 whiffs: true,
+                pull: None,
+                launch: session.has_bonus("battering_ram").then(|| Launch {
+                    damage: data.bonus_effect("battering_ram", "launch_damage"),
+                    reach_h: data.bonus_effect("battering_ram", "launch_reach_h"),
+                    knockback_multiplier: data
+                        .bonus_effect("battering_ram", "launch_knockback_multiplier"),
+                }),
             },
         };
         land_the_blow(

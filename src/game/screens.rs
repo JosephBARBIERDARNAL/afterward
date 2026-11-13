@@ -262,6 +262,7 @@ pub(super) fn reset_run(
     session.max_health = data.gameplay.player.max_health;
     session.rerolls = data.gameplay.room_flow.bonus_rerolls_per_run;
     session.owned_bonuses.clear();
+    session.next_bonus_category = None;
     // What a playtest asked the run to open with, each paid out as if chosen.
     let mut pool = data.bonuses.bonuses.iter().collect::<Vec<_>>();
     let granted = session.playtest.starting_bonuses.min(pool.len());

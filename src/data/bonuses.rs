@@ -120,6 +120,10 @@ pub struct BonusConfig {
     pub category: String,
     pub rarity: BonusRarity,
     pub effects: BTreeMap<String, Value>,
+    /// The bonuses a run must own before this one is offered: it is what
+    /// two of them do together.
+    #[serde(default)]
+    pub requires: Vec<String>,
 }
 
 #[derive(Debug, Clone, Copy)]

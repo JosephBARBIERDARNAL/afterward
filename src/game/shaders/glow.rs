@@ -104,7 +104,9 @@ pub(super) fn brighten_what_is_in_reach(
     }
 }
 
-/// Lights the exit door the moment it unlocks.
+/// Lights the exit door the moment it unlocks, in the colour of the bonus
+/// category the room behind it will pay out — or in the door's own once no
+/// category has a bonus left to offer.
 pub(in crate::game) fn light_the_unlocked_door(
     mut commands: Commands,
     data: Res<GameData>,
@@ -116,7 +118,15 @@ pub(in crate::game) fn light_the_unlocked_door(
     }
     for entity in &doors {
         commands.entity(entity).insert(Glowing {
-            color: Color::from(data.gameplay.effects.glow.door_color),
+            color: Color::from(
+                session
+                    .next_bonus_category
+                    .as_ref()
+                    .and_then(|category| data.bonuses.categories.get(category))
+                    .map_or(data.gameplay.effects.glow.door_color, |category| {
+                        category.color
+                    }),
+            ),
             radius_h: data.gameplay.effects.glow.door_radius_h,
         });
     }

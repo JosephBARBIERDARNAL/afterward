@@ -37,20 +37,7 @@ pub(super) fn spawn_bonus_pickup(
     if !session.room_cleared || session.door_open || !pickups.is_empty() {
         return;
     }
-    let categories = data
-        .bonuses
-        .categories
-        .iter()
-        .filter(|(name, _)| {
-            data.bonuses
-                .bonuses
-                .iter()
-                .filter(|bonus| bonus.category == **name)
-                .filter(|bonus| !session.owned_bonuses.contains(&bonus.id))
-                .count()
-                >= 2
-        })
-        .collect::<Vec<_>>();
+    let categories = session.categories_on_offer(&data);
     if categories.is_empty() {
         for mut sprite in &mut doors {
             if let Some(atlas) = sprite.texture_atlas.as_mut() {
@@ -61,7 +48,15 @@ pub(super) fn spawn_bonus_pickup(
         sounds.push(SoundCue::DoorAppear);
         return;
     }
-    let (category, config) = categories[random.index(categories.len())];
+    // The door the player came through wore this item's colour: the category
+    // was drawn as it unlocked. A run's first room draws it here.
+    let promised = session.next_bonus_category.take();
+    let (category, config) = categories
+        .iter()
+        .copied()
+        .find(|(name, _)| Some(*name) == promised.as_ref())
+        .unwrap_or_else(|| categories[random.index(categories.len())]);
+    let untouched = &data.gameplay.room_flow.untouched;
     let room = &data.rooms[&session.room_id];
     let item = &data.gameplay.room_flow.bonus_pickup;
     let Some(sheet) = sheets.0.get(BonusPickup::SHEET) else {
@@ -79,7 +74,7 @@ pub(super) fn spawn_bonus_pickup(
         height * sheet.frame_size.x / sheet.frame_size.y,
         height,
     ));
-    commands.spawn((
+    let mut pickup = commands.spawn((
         sprite,
         AnimatedSprite {
             sheet: BonusPickup::SHEET.into(),
@@ -102,11 +97,48 @@ pub(super) fn spawn_bonus_pickup(
         },
         Glowing {
             color: Color::from(config.color),
-            radius_h: data.gameplay.effects.glow.bonus_radius_h,
+            radius_h: data.gameplay.effects.glow.bonus_radius_h
+                * if session.flawless {
+                    untouched.glow_multiplier
+                } else {
+                    1.0
+                },
         },
         RoomEntity,
     ));
+    // The item of a room cleared untouched says what that earned.
+    if session.flawless {
+        pickup.with_child((
+            Text2d::new(untouched.label.clone()),
+            TextFont {
+                font_size: bevy::text::FontSize::Px(14.0),
+                ..default()
+            },
+            TextColor(Color::from(config.color)),
+            Transform::from_xyz(0.0, (item.height_h / 2.0 + 0.9) * H_WORLD_UNITS, 0.5),
+        ));
+    }
     sounds.push(SoundCue::BonusAppear);
+}
+
+/// Draws the category of the next room's bonus item the moment this room's
+/// door unlocks, so the door can wear its colour
+/// (`shaders::light_the_unlocked_door`) and the player knows what the next
+/// room is fought for.
+pub(super) fn promise_the_next_bonus(
+    data: Res<GameData>,
+    mut random: ResMut<RandomState>,
+    mut session: ResMut<RunSession>,
+) {
+    if !session.door_open || session.next_bonus_category.is_some() {
+        return;
+    }
+    let categories = session.categories_on_offer(&data);
+    if categories.is_empty() {
+        return;
+    }
+    let (category, _) = categories[random.index(categories.len())];
+    session.next_bonus_category = Some(category.clone());
 }
 
 #[derive(SystemParam)]

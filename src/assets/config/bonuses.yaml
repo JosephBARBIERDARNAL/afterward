@@ -484,3 +484,44 @@ bonuses:
         standing_damage_taken_multiplier: 0.9,
         standing_damage_multiplier: 1.05,
       }
+  # Bonuses that change what a move does rather than how hard it hits: the
+  # roll, the slam and the charged blow each have one, and `requires` marks a
+  # bonus that is only offered to a run owning the ones it names — what two of
+  # them do together.
+  - id: aftershock
+    name: Aftershock
+    description: A roll ends in a shock that hits everything beside you for 18 damage.
+    category: agility
+    rarity: rare
+    effects: { roll_shock_damage: 18, roll_shock_reach_h: 1.6 }
+  - id: undertow
+    name: Undertow
+    description: The slam drags every enemy within 5 H in to you.
+    category: combat
+    rarity: rare
+    effects: { slam_pull_radius_h: 5, slam_pull_h_s: 10 }
+  - id: battering_ram
+    name: Battering Ram
+    description: The charged blow throws what it hits into whatever stands behind, for 25 damage.
+    category: combat
+    rarity: rare
+    effects:
+      {
+        launch_damage: 25,
+        launch_reach_h: 3,
+        launch_knockback_multiplier: 2.5,
+      }
+  - id: riptide
+    name: Riptide
+    description: "Aftershock and Undertow together: the roll's shock drags enemies in too."
+    category: combined
+    rarity: uncommon
+    requires: [aftershock, undertow]
+    effects: {}
+  - id: breaker
+    name: Breaker
+    description: "Undertow and Battering Ram together: the slam goes through shields."
+    category: combined
+    rarity: uncommon
+    requires: [undertow, battering_ram]
+    effects: {}

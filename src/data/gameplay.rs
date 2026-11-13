@@ -325,6 +325,7 @@ pub struct RoomFlowConfig {
     pub room_transition_duration_s: f32,
     pub room_intro: RoomIntroConfig,
     pub waves: WavesConfig,
+    pub untouched: UntouchedConfig,
     pub exit_side: String,
     /// How fast the camera slides from one room into the next, in H a second.
     pub room_pan_speed_h_s: f32,
@@ -525,6 +526,18 @@ impl RoomIntroConfig {
             + self.enemy_appear_s
             + self.fight_start_delay_s
     }
+}
+
+/// What clearing a room without losing any health earns.
+#[derive(Debug, Deserialize)]
+pub struct UntouchedConfig {
+    /// How many times heavier every rarity above common weighs in the draw
+    /// of that room's bonuses.
+    pub rarer_weight_multiplier: u32,
+    /// How much further that room's bonus item glows.
+    pub glow_multiplier: f32,
+    /// The word standing over the item.
+    pub label: String,
 }
 
 /// How a room's later waves of enemies arrive.

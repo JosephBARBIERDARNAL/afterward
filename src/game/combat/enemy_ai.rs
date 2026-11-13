@@ -97,7 +97,11 @@ pub(in crate::game) fn update_enemy_ai(
                 wanted_x,
                 enemy.home_y - enemy.feet_offset,
             );
-            enemy.knockback_velocity = move_towards(enemy.knockback_velocity, 0.0, 14.0 * dt);
+            enemy.knockback_velocity = move_towards(
+                enemy.knockback_velocity,
+                0.0,
+                blows::KNOCKBACK_DRAG_H_S2 * dt,
+            );
         }
         let sees_player =
             enemy.sees_player(&transform, player_box, &data.enemies.detection, &surfaces);

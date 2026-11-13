@@ -194,6 +194,16 @@ room_flow:
   waves:
     delay_s: 0.7
     arrive_s: 0.45
+  # A room is entered whole, so health carries no stake from one room to the
+  # next; this is the stake instead. Clearing a room without losing any health
+  # weighs every rarity above common `rarer_weight_multiplier` times heavier
+  # in the draw of its two bonuses, and its item glows `glow_multiplier`
+  # times further under `label`. A hit soaked by Room Ward or rolled through
+  # costs nothing and so does not count.
+  untouched:
+    rarer_weight_multiplier: 4
+    glow_multiplier: 1.6
+    label: UNTOUCHED
   exit_side: right
   # Rooms are not cut apart: the camera slides out of the room being left into
   # the next one, which stands `room_gap_h` further right across a dark gap.

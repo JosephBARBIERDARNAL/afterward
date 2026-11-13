@@ -36,6 +36,8 @@ pub(super) fn spawn_room(
     draw_room(&mut commands, room, &data, &asset_server, &mut shaders);
     spawn_player(&mut commands, room, &data, &sheets);
     session.wave = 0;
+    session.untouched = true;
+    session.flawless = false;
     session.wave_wait_s = 0.0;
     if session.has_enemies(&data) {
         spawn_enemies(&mut commands, room, &data, &sheets, Some(0));

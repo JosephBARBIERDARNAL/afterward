@@ -32,6 +32,9 @@ pub(crate) struct PlayerBody {
     /// How long Attack has been held since the blow in hand ended; past
     /// `melee.charge.ready_s` the charged blow is ready to throw.
     pub(crate) charge_s: f32,
+    /// A roll came to its end this frame: `combat::player_melee` takes it,
+    /// for the shock Aftershock leaves there.
+    pub(crate) roll_ended: bool,
     /// How far into the roll the player is, while one is under way.
     pub(crate) roll_s: Option<f32>,
     /// Where a roll just began, until `combat::plant_decoy` has taken it:
@@ -82,6 +85,7 @@ impl Default for PlayerBody {
             slamming: false,
             slam_landed: false,
             charge_s: 0.0,
+            roll_ended: false,
             roll_s: None,
             roll_origin: None,
             crouching: false,

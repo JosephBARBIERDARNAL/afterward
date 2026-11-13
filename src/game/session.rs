@@ -76,6 +76,14 @@ pub(crate) struct RunSession {
     pub(crate) wave: u8,
     /// How long the room has stood empty with a wave still to come.
     pub(crate) wave_wait_s: f32,
+    /// Nothing has cost the player health since the room opened.
+    pub(crate) untouched: bool,
+    /// The room was cleared untouched: its bonus is drawn leaning toward
+    /// the rarer ones, and its item says so.
+    pub(crate) flawless: bool,
+    /// The category the next room's bonus item will be of, drawn as this
+    /// room's door unlocks so the door can wear its colour.
+    pub(crate) next_bonus_category: Option<String>,
     /// Every enemy is down, so the room's bonus item may be laid out.
     pub(crate) room_cleared: bool,
     pub(crate) door_open: bool,
@@ -90,6 +98,31 @@ pub(crate) struct RunSession {
 impl RunSession {
     pub(crate) fn has_bonus(&self, id: &str) -> bool {
         self.owned_bonuses.iter().any(|owned| owned == id)
+    }
+
+    /// Whether a bonus may still be offered: not one already owned, and not
+    /// one that builds on bonuses the run has yet to take.
+    pub(crate) fn may_be_offered(&self, bonus: &crate::data::BonusConfig) -> bool {
+        !self.has_bonus(&bonus.id) && bonus.requires.iter().all(|id| self.has_bonus(id))
+    }
+
+    /// The categories that can still offer a choice of two.
+    pub(crate) fn categories_on_offer<'a>(
+        &self,
+        data: &'a GameData,
+    ) -> Vec<(&'a String, &'a crate::data::BonusCategoryConfig)> {
+        data.bonuses
+            .categories
+            .iter()
+            .filter(|(name, _)| {
+                data.bonuses
+                    .bonuses
+                    .iter()
+                    .filter(|bonus| bonus.category == **name && self.may_be_offered(bonus))
+                    .count()
+                    >= 2
+            })
+            .collect()
     }
 
     /// Whether the room being played has anyone to fight. One that does not
@@ -126,6 +159,9 @@ impl Default for RunSession {
             bonus_chosen_hold_remaining_s: 0.0,
             wave: 0,
             wave_wait_s: 0.0,
+            untouched: true,
+            flawless: false,
+            next_bonus_category: None,
             room_cleared: false,
             door_open: false,
             room_ward_used: false,
