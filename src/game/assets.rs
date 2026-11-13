@@ -1,5 +1,8 @@
 use super::*;
-use crate::{data::HealthPickupConfig, game::combat::HealthPickup};
+use crate::{
+    data::{BonusPickupConfig, HealthPickupConfig},
+    game::{bonus_pickup::BonusPickup, combat::HealthPickup},
+};
 
 mod boss_sheets;
 mod effect_sheets;
@@ -20,6 +23,7 @@ pub(super) fn load_sprites(
         .chain([
             exit_door_sheet(&data.gameplay.room_flow.exit_door),
             health_pickup_sheet(&data.gameplay.health_pickup),
+            bonus_pickup_sheet(&data.gameplay.room_flow.bonus_pickup),
         ])
         .collect::<Vec<_>>();
 
@@ -85,6 +89,20 @@ fn health_pickup_sheet(pickup: &HealthPickupConfig) -> SpriteSheetSpec {
     }
 }
 
+/// The obelisk a cleared room's bonus is taken from: one hovering loop, the
+/// same for every category.
+fn bonus_pickup_sheet(pickup: &BonusPickupConfig) -> SpriteSheetSpec {
+    SpriteSheetSpec {
+        key: BonusPickup::SHEET.into(),
+        path: pickup.sheet.clone(),
+        frame_width: pickup.frame_size_px.width,
+        frame_height: pickup.frame_size_px.height,
+        frames: pickup.frames,
+        fps: pickup.fps,
+        first_cell: UVec2::ZERO,
+    }
+}
+
 pub(super) fn animate_sprites(
     time: Res<Time>,
     mut query: Query<(&mut Sprite, &mut AnimatedSprite)>,
@@ -125,6 +143,7 @@ mod tests {
             .chain([
                 exit_door_sheet(&data.gameplay.room_flow.exit_door),
                 health_pickup_sheet(&data.gameplay.health_pickup),
+                bonus_pickup_sheet(&data.gameplay.room_flow.bonus_pickup),
             ]);
 
         for spec in specs {

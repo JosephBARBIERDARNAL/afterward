@@ -1,27 +1,22 @@
-# Each category paints the bonus screen and names the item the player picks up
-# on the ground once a room is cleared; the two bonuses offered then come from
-# that item's category.
+# Each category paints the bonus screen and the glow of the item the player
+# picks up once a room is cleared; the two bonuses offered then come from that
+# item's category.
 categories:
   combat:
     color: "#D74444"
     icon: crossed_swords
-    pickup: pickups/combat.png
   defense:
     color: "#4F8FD6"
     icon: shield
-    pickup: pickups/defense.png
   agility:
     color: "#58AD68"
     icon: wing
-    pickup: pickups/agility.png
   intelligence:
     color: "#E6D772"
     icon: light
-    pickup: pickups/intelligence.png
   combined:
     color: "#E8843F"
     icon: knot
-    pickup: pickups/combined.png
 
 # A bonus wears its rarity's colour, and nothing else's: white for common,
 # green for uncommon, blue for rare, purple for epic and orange for legendary.

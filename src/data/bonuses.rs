@@ -88,8 +88,6 @@ impl Display for BonusRarity {
 pub struct BonusCategoryConfig {
     pub color: HexColor,
     pub icon: BonusCategoryIcon,
-    /// The item the player picks up to be offered this category, under `src/assets/`.
-    pub pickup: String,
 }
 
 #[derive(Debug, Clone, Copy, Deserialize)]

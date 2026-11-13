@@ -444,9 +444,12 @@ pub struct GlowConfig {
 /// The bonus item lying on the room's `bonus` spot once it is cleared.
 #[derive(Debug, Deserialize)]
 pub struct BonusPickupConfig {
-    pub size_h: f32,
-    pub bob_height_h: f32,
-    pub bob_period_s: f32,
+    /// Path under `src/assets/`.
+    pub sheet: String,
+    pub frame_size_px: ImageSizeConfig,
+    pub frames: usize,
+    pub fps: f32,
+    pub height_h: f32,
     /// How close the player must stand for Interact to take the item.
     pub reach_h: f32,
 }

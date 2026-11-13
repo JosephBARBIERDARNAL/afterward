@@ -205,11 +205,16 @@ room_flow:
   # The bonus item lying on the room's `bonus` spot once every enemy is down.
   # Its category is drawn at random; Interact pressed within `reach_h` of it
   # opens the bonus screen, which then offers two bonuses of that category. It
-  # hovers `bob_height_h` up and down over `bob_period_s`.
+  # is the same obelisk whatever the category, told apart by the colour of its
+  # glow: `sheet` is one row of `frames` frames played in a loop at `fps`, the
+  # hover and the shadow under it being part of the drawing, and a frame is
+  # drawn `height_h` tall with its foot on the spot.
   bonus_pickup:
-    size_h: 0.5
-    bob_height_h: 0.075
-    bob_period_s: 3.6
+    sheet: pickups/flying_obelisk.png
+    frame_size_px: { width: 200, height: 400 }
+    frames: 13
+    fps: 10
+    height_h: 1.4
     reach_h: 0.7
   # The bonus item and the unlocked door are used with Interact, never by
   # walking into them. The door is in reach `door_reach_x_h` to either side of

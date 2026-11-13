@@ -1,16 +1,18 @@
-//! The bonus item lying on a cleared room's `bonus` spot. Its category is
-//! drawn when it appears; Interact pressed within reach of it opens the bonus
-//! screen, which then offers two bonuses of that category.
+//! The bonus item hovering over a cleared room's `bonus` spot: the same
+//! obelisk every time, glowing in the colour of the category drawn when it
+//! appears. Interact pressed within reach of it opens the bonus screen, which
+//! then offers two bonuses of that category.
 
 use super::*;
-use crate::game::ui_style::load_pixel_art;
 
 #[derive(Component)]
 pub(super) struct BonusPickup {
     pub(super) category: String,
-    /// Where the item hovers around, in world units.
-    base_y: f32,
-    bob_phase_s: f32,
+}
+
+impl BonusPickup {
+    /// Its sheet's key in `SpriteSheets`.
+    pub(super) const SHEET: &'static str = "bonus_pickup";
 }
 
 /// Lays the item out once the room is cleared, as long as no bonus has been
@@ -20,7 +22,7 @@ pub(super) fn spawn_bonus_pickup(
     mut commands: Commands,
     data: Res<GameData>,
     session: Res<RunSession>,
-    asset_server: Res<AssetServer>,
+    sheets: Res<SpriteSheets>,
     mut random: ResMut<RandomState>,
     pickups: Query<Entity, With<BonusPickup>>,
     mut sounds: ResMut<SoundQueue>,
@@ -35,21 +37,41 @@ pub(super) fn spawn_bonus_pickup(
     };
     let room = &data.rooms[&session.room_id];
     let item = &data.gameplay.room_flow.bonus_pickup;
-    let size = item.size_h * H_WORLD_UNITS;
-    let base_y = (room.bonus.y_h + item.size_h / 2.0) * H_WORLD_UNITS;
-    let mut sprite = Sprite::from_image(load_pixel_art(&asset_server, config.pickup.clone()));
-    sprite.custom_size = Some(Vec2::splat(size));
+    let Some(sheet) = sheets.0.get(BonusPickup::SHEET) else {
+        return;
+    };
+    let height = item.height_h * H_WORLD_UNITS;
+    let mut sprite = Sprite::from_atlas_image(
+        sheet.image.clone(),
+        TextureAtlas {
+            layout: sheet.layout.clone(),
+            index: 0,
+        },
+    );
+    sprite.custom_size = Some(Vec2::new(
+        height * sheet.frame_size.x / sheet.frame_size.y,
+        height,
+    ));
     commands.spawn((
         sprite,
-        Transform::from_xyz(room.bonus.x_h * H_WORLD_UNITS, base_y, 2.5),
+        AnimatedSprite {
+            sheet: BonusPickup::SHEET.into(),
+            frame: 0,
+            frames: sheet.frames,
+            timer: Timer::from_seconds(1.0 / sheet.fps, TimerMode::Repeating),
+            looping: true,
+        },
+        Transform::from_xyz(
+            room.bonus.x_h * H_WORLD_UNITS,
+            (room.bonus.y_h + item.height_h / 2.0) * H_WORLD_UNITS,
+            2.5,
+        ),
         BonusPickup {
             category: category.clone(),
-            base_y,
-            bob_phase_s: 0.0,
         },
         Interactable {
             reach_h: Vec2::splat(item.reach_h),
-            top_h: item.size_h / 2.0,
+            top_h: item.height_h / 2.0,
         },
         Glowing {
             color: Color::from(config.color),
@@ -62,7 +84,6 @@ pub(super) fn spawn_bonus_pickup(
 
 #[derive(SystemParam)]
 pub(super) struct BonusPickupResources<'w> {
-    time: Res<'w, Time>,
     data: Res<'w, GameData>,
     keys: Res<'w, ButtonInput<KeyCode>>,
     controls: Res<'w, ControlBindings>,
@@ -73,16 +94,14 @@ pub(super) struct BonusPickupResources<'w> {
     sounds: ResMut<'w, SoundQueue>,
 }
 
-/// Hovers the item, and opens the bonus screen when Interact is pressed
-/// within reach of it.
+/// Opens the bonus screen when Interact is pressed within reach of the item.
 pub(super) fn update_bonus_pickup(
     resources: BonusPickupResources,
     mut commands: Commands,
-    mut pickups: Query<(Entity, &mut Transform, &mut BonusPickup)>,
+    pickups: Query<(Entity, &BonusPickup)>,
     mut doors: Query<&mut Sprite, With<ExitDoor>>,
 ) {
     let BonusPickupResources {
-        time,
         data,
         keys,
         controls,
@@ -92,11 +111,7 @@ pub(super) fn update_bonus_pickup(
         mut next_screen,
         mut sounds,
     } = resources;
-    let item = &data.gameplay.room_flow.bonus_pickup;
-    for (entity, mut transform, mut pickup) in &mut pickups {
-        pickup.bob_phase_s = (pickup.bob_phase_s + time.delta_secs()) % item.bob_period_s;
-        let turn = std::f32::consts::TAU * pickup.bob_phase_s / item.bob_period_s;
-        transform.translation.y = pickup.base_y + turn.sin() * item.bob_height_h * H_WORLD_UNITS;
+    for (entity, pickup) in &pickups {
         if in_reach.0 != Some(entity) || !controls.just_pressed(GameAction::Interact, &keys) {
             continue;
         }

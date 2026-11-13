@@ -420,7 +420,7 @@ impl GameData {
         // bonuses of its category, and two more on a reroll, the category needs
         // one per earlier room plus those four.
         let needed_per_category = self.rooms.len() + 3;
-        for (name, category) in &self.bonuses.categories {
+        for name in self.bonuses.categories.keys() {
             let count = self
                 .bonuses
                 .bonuses
@@ -432,12 +432,6 @@ impl GameData {
                     "category {name} holds {count} bonuses, but a run of {} rooms can ask it \
                      for {needed_per_category}",
                     self.rooms.len()
-                )));
-            }
-            if !asset_root.join(&category.pickup).is_file() {
-                return Err(InvalidGameData::from(format!(
-                    "missing bonus pickup art: {}",
-                    category.pickup
                 )));
             }
         }
@@ -469,15 +463,20 @@ impl GameData {
             ));
         }
         let pickup = &self.gameplay.room_flow.bonus_pickup;
-        if [pickup.size_h, pickup.bob_period_s, pickup.reach_h]
+        if [pickup.height_h, pickup.fps, pickup.reach_h]
             .iter()
             .any(|value| !value.is_finite() || *value <= 0.0)
-            || !pickup.bob_height_h.is_finite()
-            || pickup.bob_height_h < 0.0
+            || pickup.frames == 0
         {
             return Err(InvalidGameData::from(
-                "the bonus pickup needs a positive size, bob period and reach",
+                "the bonus pickup needs a positive height, frame rate and reach, and a frame to show",
             ));
+        }
+        if !asset_root.join(&pickup.sheet).is_file() {
+            return Err(InvalidGameData::from(format!(
+                "missing bonus pickup art: {}",
+                pickup.sheet
+            )));
         }
         let interact = &self.gameplay.room_flow.interact;
         if [
