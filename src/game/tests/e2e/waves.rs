@@ -100,7 +100,12 @@ fn a_patch_that_burns_warns_first_and_a_hit_ends_the_untouched_room() {
         .translation
         .truncate();
     world.spawn((
-        Sprite::default(),
+        Flame {
+            size: Vec2::splat(2.0 * H_WORLD_UNITS),
+            heat: 0.0,
+            burning: false,
+            grate: false,
+        },
         Hazard {
             area: Rect::from_center_half_size(player, Vec2::splat(H_WORLD_UNITS)),
             damage: 10.0,

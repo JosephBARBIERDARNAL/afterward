@@ -80,7 +80,7 @@ pub(super) fn draw_room(
             rest_s: Some(vent.rest_s),
             elapsed_s: vent.offset_s,
         }
-        .lay(commands, data);
+        .lay(commands);
     }
     // The profiles are mixed rather than laid one over the other. Their skies
     // are blended in equal parts, each drawn over the ones before it at the

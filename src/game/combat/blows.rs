@@ -277,7 +277,7 @@ pub(super) fn land_the_blow(
                     rest_s: None,
                     elapsed_s: 0.0,
                 }
-                .lay(commands, data);
+                .lay(commands);
             }
             let item = &data.gameplay.health_pickup;
             let drop_chance = item.base_drop_chance

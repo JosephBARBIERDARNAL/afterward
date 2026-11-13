@@ -338,7 +338,7 @@ pub(in crate::game) fn update_enemy_ai(
                         rest_s: None,
                         elapsed_s: 0.0,
                     }
-                    .lay(&mut commands, &data);
+                    .lay(&mut commands);
                     if attack.strike_frame.is_some() {
                         enemy.stance = Some((
                             Stance::Clip,
@@ -459,10 +459,13 @@ pub(in crate::game) fn update_enemy_ai(
                     if let Some(wave) = &attack.shockwave {
                         let size = Vec2::new(wave.size_h.width, wave.size_h.height) * H_WORLD_UNITS;
                         commands.spawn((
-                            Sprite::from_color(
-                                Color::from(data.gameplay.effects.hazard.shockwave_color),
+                            Visibility::default(),
+                            Flame {
                                 size,
-                            ),
+                                heat: 1.0,
+                                burning: true,
+                                grate: false,
+                            },
                             Transform::from_xyz(
                                 strike_feet.x + enemy.facing * attack.reach_h * H_WORLD_UNITS,
                                 // Clear of the floor it runs along, which

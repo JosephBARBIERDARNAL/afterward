@@ -196,8 +196,10 @@ fn frame_the_room(
         transform.scale = (background.tile * enlarged).extend(1.0);
     }
     // The door the player walks in through is gone by the time they can act.
+    // It is hidden rather than taken away: the renderer may still have a
+    // command of its own queued for a sprite spawned this frame.
     for door in &entry_doors {
-        commands.entity(door).despawn();
+        commands.entity(door).insert(Visibility::Hidden);
     }
 }
 

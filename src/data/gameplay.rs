@@ -361,17 +361,14 @@ pub struct EffectsConfig {
     pub hazard: HazardLookConfig,
 }
 
-/// How a patch that burns is drawn: its warning, filling in to
-/// `warning_alpha` as the burn comes, the burn itself, and what is left of
-/// the warning while a vent rests.
+/// How fire is drawn (`shaders/vent.wgsl`): the colour of its warning embers
+/// and of a flame's edge, the colour of a flame's core, and how many art
+/// pixels it is drawn with to the H.
 #[derive(Debug, Deserialize)]
 pub struct HazardLookConfig {
     pub warning_color: HexColor,
-    pub warning_alpha: f32,
-    pub rest_alpha: f32,
     pub burn_color: HexColor,
-    /// The colour of the wave a strike sends along the floor.
-    pub shockwave_color: HexColor,
+    pub pixels_per_h: f32,
 }
 
 /// The droplet that falls where a button is hovered, selected with an arrow,

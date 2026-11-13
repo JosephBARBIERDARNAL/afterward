@@ -305,16 +305,16 @@ effects:
     # A bonus item lights in its category's colour; these two light in their own.
     health_color: "#4CF07A"
     door_color: "#7FD4FF"
-  # A patch of the room that burns (a mage's, a rust monster's last blast, a
-  # room's vents): its warning fills in from `rest_alpha` to `warning_alpha`
-  # as the burn comes, and a vent keeps `rest_alpha` between two burns. Warm,
-  # as everything that hurts is.
+  # Fire (`shaders/vent.wgsl`): a room's vents, the patch a mage sets alight,
+  # a rust monster's last blast and the wave a brute sends along the floor.
+  # A vent at rest is only its grate; as the burn comes, embers of
+  # `warning_color` climb out of it, and the jet that follows is `burn_color`
+  # at its core and `warning_color` at its edge. Warm, as everything that
+  # hurts is. It is drawn on a grid of `pixels_per_h` art pixels to the H.
   hazard:
     warning_color: "#FF6A2A"
-    warning_alpha: 0.55
-    rest_alpha: 0.12
     burn_color: "#FFE2A8"
-    shockwave_color: "#FF8A3C"
+    pixels_per_h: 16
   # The flood the city drowned in, and the water the main menu is drawn over:
   # a web of cold light wandering over deep wine cells, quantized to a pixel
   # grid and to the four tones below.
