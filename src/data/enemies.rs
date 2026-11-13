@@ -136,6 +136,12 @@ pub struct EnemyTypeConfig {
     #[serde(default)]
     pub attacks: Vec<EnemyAttackConfig>,
     pub roll: Option<EnemyRollConfig>,
+    /// The layers of armor every enemy of the type walks in with, on top of
+    /// the `armor_layers` its room spawn gives it.
+    #[serde(default)]
+    pub armor_layers: u8,
+    /// What it leaves where it dies.
+    pub death_blast: Option<DeathBlastConfig>,
     pub phase_two: Option<BossPhaseConfig>,
     /// How the type's sheets are drawn; the older types have theirs in
     /// `world::spawn_enemies`.
@@ -197,6 +203,47 @@ pub struct EnemyAttackConfig {
     pub strike_frame: Option<usize>,
     /// What a `parry` does once its guard is up.
     pub guard: Option<EnemyGuardConfig>,
+    /// How far from its mark the enemy starts the attack, instead of once
+    /// the mark reaches its hitbox's far edge: a pounce or a blink thrown
+    /// from across the floor.
+    pub start_range_h: Option<f32>,
+    /// The attack is passed over while the mark stands nearer than this, for
+    /// the next one of the type's `attacks`.
+    #[serde(default)]
+    pub min_range_h: f32,
+    /// The wave a strike sends along the floor ahead of it.
+    pub shockwave: Option<ShockwaveConfig>,
+    /// The patch of floor a `hazard` sets alight under its mark.
+    pub hazard: Option<HazardConfig>,
+}
+
+/// A low wave a strike sends along the floor the way the enemy faces, hurting
+/// like a shot: it is jumped over, or rolled through.
+#[derive(Debug, Clone, Deserialize)]
+pub struct ShockwaveConfig {
+    pub damage: f32,
+    pub speed_h_s: f32,
+    pub range_h: f32,
+    pub size_h: SizeH,
+}
+
+/// The patch a `hazard` attack lays under its mark's feet: it warns for
+/// `arm_s`, then burns for `burn_s` and hurts whoever still stands in it.
+#[derive(Debug, Clone, Deserialize)]
+pub struct HazardConfig {
+    pub size_h: SizeH,
+    pub arm_s: f32,
+    pub burn_s: f32,
+}
+
+/// The blast a type leaves where it dies: its body warns for `fuse_s`, then
+/// everything within `radius_h` of it burns.
+#[derive(Debug, Clone, Deserialize)]
+pub struct DeathBlastConfig {
+    pub radius_h: f32,
+    pub damage: f32,
+    pub fuse_s: f32,
+    pub burn_s: f32,
 }
 
 /// The guard a `parry` holds once `windup_s` has raised it. An ordinary blow

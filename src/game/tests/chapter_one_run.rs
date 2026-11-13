@@ -524,7 +524,7 @@ fn spawn_test_room(
     let room = &data.rooms[&session.room_id];
     world::spawn_room_platforms(&mut commands, room, &data);
     world::spawn_player(&mut commands, room, &data, &sheets);
-    world::spawn_enemies(&mut commands, room, &data, &sheets);
+    world::spawn_enemies(&mut commands, room, &data, &sheets, None);
     world::spawn_exit_door(&mut commands, room, &data, &sheets);
     session.world_loaded = true;
 }

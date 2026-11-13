@@ -20,6 +20,16 @@ pub(super) fn room_clear_check(
     if enemies.iter().any(|enemy| enemy.health > 0.0) {
         return;
     }
+    // A wave still to come keeps the room open: `combat::send_in_the_next_wave`
+    // brings it in.
+    if session.has_enemies(&data)
+        && data.rooms[&session.room_id]
+            .enemy_spawns
+            .iter()
+            .any(|spawn| spawn.wave > session.wave)
+    {
+        return;
+    }
     session.room_cleared = true;
     session.offered_bonuses.clear();
     // A cleared room gives the player all their health back, under the

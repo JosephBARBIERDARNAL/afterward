@@ -336,7 +336,14 @@ impl GameData {
                 )));
             }
             for attack in enemy.attack.iter().chain(&enemy.attacks) {
-                let sized = if attack.kind.contains("projectile") {
+                let sized = if attack.kind == "blink" {
+                    true
+                } else if attack.kind == "hazard" {
+                    attack.hazard.as_ref().is_some_and(|hazard| {
+                        positive(hazard.size_h.width, hazard.size_h.height)
+                            && positive(hazard.arm_s, hazard.burn_s)
+                    })
+                } else if attack.kind.contains("projectile") {
                     attack
                         .projectile_size_h
                         .is_some_and(|size| positive(size.width, size.height))

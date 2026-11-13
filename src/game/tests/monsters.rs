@@ -79,7 +79,7 @@ next_room_id: 2
                     let room = &data.rooms[&1];
                     world::spawn_room_platforms(&mut commands, room, &data);
                     world::spawn_player(&mut commands, room, &data, &sheets);
-                    world::spawn_enemies(&mut commands, room, &data, &sheets);
+                    world::spawn_enemies(&mut commands, room, &data, &sheets, None);
                 },
             )
             .add_systems(
@@ -88,6 +88,7 @@ next_room_id: 2
                     combat::update_enemy_ai,
                     combat::update_enemy_platform_physics,
                     combat::update_projectiles,
+                    combat::update_hazards,
                 )
                     .chain(),
             );

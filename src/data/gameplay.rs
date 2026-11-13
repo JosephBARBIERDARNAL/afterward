@@ -324,6 +324,7 @@ pub struct RoomFlowConfig {
     pub boss_intro_duration_s: f32,
     pub room_transition_duration_s: f32,
     pub room_intro: RoomIntroConfig,
+    pub waves: WavesConfig,
     pub exit_side: String,
     /// How fast the camera slides from one room into the next, in H a second.
     pub room_pan_speed_h_s: f32,
@@ -356,6 +357,20 @@ pub struct EffectsConfig {
     pub glow: GlowConfig,
     pub flood: FloodConfig,
     pub ripple: RippleConfig,
+    pub hazard: HazardLookConfig,
+}
+
+/// How a patch that burns is drawn: its warning, filling in to
+/// `warning_alpha` as the burn comes, the burn itself, and what is left of
+/// the warning while a vent rests.
+#[derive(Debug, Deserialize)]
+pub struct HazardLookConfig {
+    pub warning_color: HexColor,
+    pub warning_alpha: f32,
+    pub rest_alpha: f32,
+    pub burn_color: HexColor,
+    /// The colour of the wave a strike sends along the floor.
+    pub shockwave_color: HexColor,
 }
 
 /// The droplet that falls where a button is hovered, selected with an arrow,
@@ -510,6 +525,17 @@ impl RoomIntroConfig {
             + self.enemy_appear_s
             + self.fight_start_delay_s
     }
+}
+
+/// How a room's later waves of enemies arrive.
+#[derive(Debug, Deserialize)]
+pub struct WavesConfig {
+    /// The breath between the last enemy of a wave going down and the next
+    /// wave arriving.
+    pub delay_s: f32,
+    /// How long an arriving enemy takes to rise out of the floor, held where
+    /// it stands.
+    pub arrive_s: f32,
 }
 
 #[derive(Debug, Deserialize)]

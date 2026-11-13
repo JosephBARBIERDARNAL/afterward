@@ -186,6 +186,14 @@ room_flow:
     enemy_appear_s: 0.4
     enemy_appear_spread_s: 0.45
     fight_start_delay_s: 0.2
+  # A room's enemies may come in waves: `wave` on a room spawn, 0 (left out)
+  # for those standing there as the room opens. Each later wave arrives
+  # `delay_s` after the last enemy of the waves before it went down, rising
+  # out of the floor over `arrive_s`, and arrives knowing where the player is.
+  # The room is only cleared once its last wave is down.
+  waves:
+    delay_s: 0.7
+    arrive_s: 0.45
   exit_side: right
   # Rooms are not cut apart: the camera slides out of the room being left into
   # the next one, which stands `room_gap_h` further right across a dark gap.
@@ -287,6 +295,16 @@ effects:
     # A bonus item lights in its category's colour; these two light in their own.
     health_color: "#4CF07A"
     door_color: "#7FD4FF"
+  # A patch of the room that burns (a mage's, a rust monster's last blast, a
+  # room's vents): its warning fills in from `rest_alpha` to `warning_alpha`
+  # as the burn comes, and a vent keeps `rest_alpha` between two burns. Warm,
+  # as everything that hurts is.
+  hazard:
+    warning_color: "#FF6A2A"
+    warning_alpha: 0.55
+    rest_alpha: 0.12
+    burn_color: "#FFE2A8"
+    shockwave_color: "#FF8A3C"
   # The flood the city drowned in, and the water the main menu is drawn over:
   # a web of cold light wandering over deep wine cells, quantized to a pixel
   # grid and to the four tones below.

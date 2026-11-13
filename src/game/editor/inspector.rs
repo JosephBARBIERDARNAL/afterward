@@ -13,6 +13,7 @@ const ROTATION_STEP_DEG: f32 = 5.0;
 /// The most layers of armor Left/Right gives an enemy: more than this and the
 /// row of icons over its health bar outgrows the bar by too much to read.
 const MAX_ARMOR_LAYERS: u8 = 5;
+const MAX_WAVE: u8 = 9;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum Field {
@@ -32,6 +33,7 @@ pub(super) enum Field {
     Height,
     Rotation,
     Armor,
+    Wave,
     // Shared by every enemy of a type or by the player, in every room
     // (hitboxes.rs): the size the player is drawn at, then the hitboxes.
     BodyHeight,
@@ -90,6 +92,7 @@ impl Field {
                 Self::X,
                 Self::Y,
                 Self::Armor,
+                Self::Wave,
                 Self::HurtboxWidth,
                 Self::HurtboxHeight,
                 Self::Attack,
@@ -127,6 +130,7 @@ impl Field {
             Self::Height => "Height (H)",
             Self::Rotation => "Rotation (deg)",
             Self::Armor => "Armor layers",
+            Self::Wave => "Wave",
             Self::BodyHeight => "Body height (H)",
             Self::HurtboxWidth => "Hurtbox width (H)",
             Self::HurtboxHeight => "Hurtbox height (H)",
@@ -263,6 +267,11 @@ impl Field {
             Self::Armor => match spawn.map(|spawn| spawn.armor_layers) {
                 Some(0) => String::from("none"),
                 Some(layers) => layers.to_string(),
+                None => String::new(),
+            },
+            Self::Wave => match spawn.map(|spawn| spawn.wave) {
+                Some(0) => String::from("0  (there as the room opens)"),
+                Some(wave) => format!("{wave}  (arrives once wave {} is down)", wave - 1),
                 None => String::new(),
             },
             Self::BodyHeight
@@ -428,6 +437,17 @@ impl Field {
                         spawn.armor_layers.saturating_sub(1)
                     } else {
                         spawn.armor_layers.saturating_add(1).min(MAX_ARMOR_LAYERS)
+                    };
+                }
+            }
+            Self::Wave => {
+                if let Some(EditorItem::Enemy(index)) = item
+                    && let Some(spawn) = room.enemy_spawns.get_mut(index)
+                {
+                    spawn.wave = if steps < 0.0 {
+                        spawn.wave.saturating_sub(1)
+                    } else {
+                        spawn.wave.saturating_add(1).min(MAX_WAVE)
                     };
                 }
             }

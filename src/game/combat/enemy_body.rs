@@ -1,7 +1,7 @@
 //! Enemy bodies, their attacks, and their health bars.
 
 use super::*;
-use crate::data::EnemyGuardConfig;
+use crate::data::{EnemyGuardConfig, HazardConfig, ShockwaveConfig};
 
 #[derive(Component)]
 pub(crate) struct EnemyBody {
@@ -86,6 +86,28 @@ impl EnemyBody {
     }
 }
 
+impl EnemyBody {
+    /// The attack it goes for next: the one its turn has come to, unless its
+    /// mark stands nearer than that one is thrown from, in which case the
+    /// turn passes on. A mark on another floor is only reached by a blink,
+    /// so a type that has one goes for it whatever the turn.
+    pub(super) fn choose_attack(&self, distance_h: f32, other_level: bool) -> usize {
+        let turns = (0..self.attacks.len())
+            .map(|step| (self.next_attack + step) % self.attacks.len())
+            .collect::<Vec<_>>();
+        turns
+            .iter()
+            .find(|index| other_level && self.attacks[**index].kind == "blink")
+            .or_else(|| {
+                turns
+                    .iter()
+                    .find(|index| distance_h >= self.attacks[**index].min_range_h)
+            })
+            .copied()
+            .unwrap_or(self.next_attack)
+    }
+}
+
 #[derive(Clone, Copy)]
 pub(crate) struct EnemyJump {
     pub(crate) velocity_x: f32,
@@ -119,6 +141,13 @@ pub(crate) struct EnemyAttack {
     pub(crate) clip: Option<String>,
     pub(crate) strike_frame: Option<usize>,
     pub(crate) guard: Option<EnemyGuardConfig>,
+    /// How far from its mark the attack is started, in H, when that is not
+    /// its hitbox's far edge.
+    pub(crate) start_range_h: Option<f32>,
+    /// The attack is passed over while the mark stands nearer than this.
+    pub(crate) min_range_h: f32,
+    pub(crate) shockwave: Option<ShockwaveConfig>,
+    pub(crate) hazard: Option<HazardConfig>,
 }
 
 impl From<&EnemyAttackConfig> for EnemyAttack {
@@ -143,6 +172,10 @@ impl From<&EnemyAttackConfig> for EnemyAttack {
             clip: config.clip.clone(),
             strike_frame: config.strike_frame,
             guard: config.guard.clone(),
+            start_range_h: config.start_range_h,
+            min_range_h: config.min_range_h,
+            shockwave: config.shockwave.clone(),
+            hazard: config.hazard.clone(),
         }
     }
 }

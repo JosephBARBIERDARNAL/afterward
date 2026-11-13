@@ -43,8 +43,11 @@ pub(super) fn set_enemy_animation(
     // A type whose sheets are named after it and the action (`<type>_<action>`)
     // needs no line below.
     let own = format!("{type_id}_{action}");
+    let own_walk = format!("{type_id}_walk");
     let key = match action {
         _ if sheets.0.contains_key(&own) => own.as_str(),
+        // A type with sheets of its own and none for the air leaps in its walk.
+        "jump" | "fall" if sheets.0.contains_key(&own_walk) => own_walk.as_str(),
         "jump" if &**type_id == "emitter_unit" => "boss_jump",
         "fall" if &**type_id == "emitter_unit" => "boss_fall",
         // Without dedicated art, airborne enemies use their movement sheet.

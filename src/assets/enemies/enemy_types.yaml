@@ -252,17 +252,23 @@ types:
       health_fraction_at_or_below: 0.5
       cooldown_multiplier: 0.75
   # The monsters: five types drawn from two packs (enemies/horror/ and
-  # enemies/eye_beast/, listed clip by clip in assets/monster_sheets.rs) and
-  # placed in no room yet. They are not machines, and `polymer` only stands in
-  # for a flesh material that has no sound yet. Every number here is a first
-  # guess, read off the sheets rather than played.
+  # enemies/eye_beast/, listed clip by clip in assets/monster_sheets.rs).
+  # They are not machines, and `polymer` only stands in for a flesh material
+  # that has no sound yet. Every number here is a first guess, read off the
+  # sheets rather than played. Each asks for one of the player's moves: the
+  # brute's wave is jumped, the mage's patch is walked out of, the cat's
+  # pounce is rolled through, and the ghost is met as it comes back.
+  # An attack may open from further than its hitbox reaches
+  # (`start_range_h`), and is passed over for the type's next one while the
+  # player stands nearer than `min_range_h`.
   # `sprite` is how a type's sheets are laid over its body, in source pixels:
   # the world units a pixel is drawn at, the empty rows above and below the
   # figure in a frame, and how far above the feet the body's middle is (shots
   # leave from there).
   #
   # A brute that lashes far ahead of itself: slow, and its reach is the
-  # danger. The lash lands on the frame its tendrils are fully out.
+  # danger. The lash lands on the frame its tendrils are fully out, and
+  # carries on along the floor as a low wave: jump it, or roll through.
   abomination:
     hurtbox_h: { width: 0.98, height: 1.26 }
     health: 220
@@ -282,16 +288,22 @@ types:
       strike_frame: 4
       damage: 14
       hitbox_h: { x: 0.28, y: 0, width: 2.03, height: 0.84 }
-      cooldown_s: 2
-      windup_s: 0.6
-  # It walks up and calls a ring around itself, which hurts on both sides of
-  # it at once: the way out is back, or through with a roll.
+      cooldown_s: 2.4
+      windup_s: 0.7
+      shockwave:
+        damage: 10
+        speed_h_s: 7
+        range_h: 6
+        size_h: { width: 0.5, height: 0.4 }
+  # It keeps its distance and sets the floor under the player alight: the
+  # patch warns, then burns whoever is still standing in it. Standing still
+  # is what it punishes, so it is the one to go for first.
   mage:
     hurtbox_h: { width: 0.42, height: 0.88 }
     health: 90
     material: polymer
     movement_speed_h_s: 1.6
-    behavior: melee_pursuit
+    behavior: ranged_keep_distance
     sprite:
       {
         scale: 1.4,
@@ -299,16 +311,21 @@ types:
         bottom_padding_px: 0,
         origin_above_feet_px: 15,
       }
+    preferred_distance_h: { min: 4, max: 7.5 }
     attack:
-      kind: melee
+      kind: hazard
       clip: attack
       strike_frame: 5
-      damage: 12
-      hitbox_h: { x: -1.47, y: 0, width: 2.94, height: 1.19 }
-      cooldown_s: 2.4
+      damage: 14
+      cooldown_s: 3.2
       windup_s: 0.8
-  # Small, quick and frail: it sits until it sees the player, runs in and
-  # bites.
+      hazard:
+        size_h: { width: 2.2, height: 1.6 }
+        arm_s: 0.8
+        burn_s: 0.35
+  # Small, quick and frail. From a few H away it coils and pounces at where
+  # the player stands, landing on them unless they have moved or rolled; up
+  # close it bites.
   catto:
     hurtbox_h: { width: 0.49, height: 0.42 }
     health: 60
@@ -322,16 +339,27 @@ types:
         bottom_padding_px: 0,
         origin_above_feet_px: 7,
       }
-    attack:
-      kind: melee
-      clip: attack
-      strike_frame: 3
-      damage: 6
-      hitbox_h: { x: 0, y: 0, width: 0.59, height: 0.84 }
-      cooldown_s: 0.9
-      windup_s: 0.3
-  # Its wind-up is the claws coming out; the slash is tall, and putting them
-  # away again is the opening.
+    attacks:
+      - kind: jump_slam
+        clip: attack
+        strike_frame: 2
+        damage: 9
+        hitbox_h: { x: -0.45, y: 0, width: 1.05, height: 0.84 }
+        start_range_h: 4
+        min_range_h: 2
+        cooldown_s: 1.6
+        windup_s: 0.45
+      - kind: melee
+        clip: attack
+        strike_frame: 3
+        damage: 6
+        hitbox_h: { x: 0, y: 0, width: 0.59, height: 0.84 }
+        cooldown_s: 0.9
+        windup_s: 0.3
+  # No platform is cover from it: with the player far off, or on another
+  # floor, it fades out of where it stands and comes back at their back.
+  # Then the claws come out; the slash is tall, and putting them away again
+  # is the opening.
   mad_ghost:
     hurtbox_h: { width: 0.56, height: 1.01 }
     health: 120
@@ -345,14 +373,20 @@ types:
         bottom_padding_px: 0,
         origin_above_feet_px: 18,
       }
-    attack:
-      kind: melee
-      clip: attack
-      strike_frame: 5
-      damage: 12
-      hitbox_h: { x: 0, y: 0, width: 0.84, height: 1.54 }
-      cooldown_s: 1.4
-      windup_s: 0.5
+    attacks:
+      - kind: blink
+        clip: idle
+        start_range_h: 9
+        min_range_h: 3.5
+        cooldown_s: 1.3
+        windup_s: 0.6
+      - kind: melee
+        clip: attack
+        strike_frame: 5
+        damage: 12
+        hitbox_h: { x: 0, y: 0, width: 0.84, height: 1.54 }
+        cooldown_s: 1.4
+        windup_s: 0.5
   # It keeps its distance and fires the void ball of its `shot` sheet, let go
   # on the frame the eye clears. It hangs a little off the floor: its
   # bottom_padding_px is 4 px short of the empty rows under it.
@@ -380,18 +414,24 @@ types:
       cooldown_s: 1.8
       windup_s: 0.7
   # The four monsters of the horror pack again, in three other palettes each,
-  # all dark: `rust`, a brown-red body with a cyan eye, `gold`, a dark
-  # golden one with a dark red eye, and `purple`, a dark purple one with a pink
-  # eye. Only
-  # the colours differ — every number is the one of the type it is drawn
-  # from, and should stay so — and their sheets are that type's, recoloured
-  # by scripts/recolour_monsters.py into enemies/horror/<palette>/.
+  # all dark, and each palette is a warning the player reads before closing in:
+  # - `rust`, a brown-red body with a cyan eye, goes off as it dies
+  #   (`death_blast`): the corpse warns for fuse_s, then everything within
+  #   radius_h of it burns. Kill it and step away.
+  # - `gold`, a dark golden one with a dark red eye, walks in armored
+  #   (`armor_layers`, on top of whatever its room spawn gives it).
+  # - `purple`, a dark purple one with a pink eye, is fast: it moves 1.4 times
+  #   quicker and its attacks cool down in 0.7 of the time.
+  # Every other number is the one of the type it is drawn from, and should
+  # stay so. Their sheets are that type's, recoloured by
+  # scripts/recolour_monsters.py into enemies/horror/<palette>/.
   abomination_rust:
     hurtbox_h: { width: 0.98, height: 1.26 }
     health: 220
     material: polymer
     movement_speed_h_s: 1.4
     behavior: melee_pursuit
+    death_blast: { radius_h: 1.5, damage: 12, fuse_s: 0.8, burn_s: 0.2 }
     sprite:
       {
         scale: 1.4,
@@ -405,14 +445,20 @@ types:
       strike_frame: 4
       damage: 14
       hitbox_h: { x: 0.28, y: 0, width: 2.03, height: 0.84 }
-      cooldown_s: 2
-      windup_s: 0.6
+      cooldown_s: 2.4
+      windup_s: 0.7
+      shockwave:
+        damage: 10
+        speed_h_s: 7
+        range_h: 6
+        size_h: { width: 0.5, height: 0.4 }
   abomination_gold:
     hurtbox_h: { width: 0.98, height: 1.26 }
     health: 220
     material: polymer
     movement_speed_h_s: 1.4
     behavior: melee_pursuit
+    armor_layers: 2
     sprite:
       {
         scale: 1.4,
@@ -426,13 +472,18 @@ types:
       strike_frame: 4
       damage: 14
       hitbox_h: { x: 0.28, y: 0, width: 2.03, height: 0.84 }
-      cooldown_s: 2
-      windup_s: 0.6
+      cooldown_s: 2.4
+      windup_s: 0.7
+      shockwave:
+        damage: 10
+        speed_h_s: 7
+        range_h: 6
+        size_h: { width: 0.5, height: 0.4 }
   abomination_purple:
     hurtbox_h: { width: 0.98, height: 1.26 }
     health: 220
     material: polymer
-    movement_speed_h_s: 1.4
+    movement_speed_h_s: 1.96
     behavior: melee_pursuit
     sprite:
       {
@@ -447,14 +498,20 @@ types:
       strike_frame: 4
       damage: 14
       hitbox_h: { x: 0.28, y: 0, width: 2.03, height: 0.84 }
-      cooldown_s: 2
-      windup_s: 0.6
+      cooldown_s: 1.68
+      windup_s: 0.7
+      shockwave:
+        damage: 10
+        speed_h_s: 7
+        range_h: 6
+        size_h: { width: 0.5, height: 0.4 }
   mage_rust:
     hurtbox_h: { width: 0.42, height: 0.88 }
     health: 90
     material: polymer
     movement_speed_h_s: 1.6
-    behavior: melee_pursuit
+    behavior: ranged_keep_distance
+    death_blast: { radius_h: 1.5, damage: 12, fuse_s: 0.8, burn_s: 0.2 }
     sprite:
       {
         scale: 1.4,
@@ -462,20 +519,25 @@ types:
         bottom_padding_px: 0,
         origin_above_feet_px: 15,
       }
+    preferred_distance_h: { min: 4, max: 7.5 }
     attack:
-      kind: melee
+      kind: hazard
       clip: attack
       strike_frame: 5
-      damage: 12
-      hitbox_h: { x: -1.47, y: 0, width: 2.94, height: 1.19 }
-      cooldown_s: 2.4
+      damage: 14
+      cooldown_s: 3.2
       windup_s: 0.8
+      hazard:
+        size_h: { width: 2.2, height: 1.6 }
+        arm_s: 0.8
+        burn_s: 0.35
   mage_gold:
     hurtbox_h: { width: 0.42, height: 0.88 }
     health: 90
     material: polymer
     movement_speed_h_s: 1.6
-    behavior: melee_pursuit
+    behavior: ranged_keep_distance
+    armor_layers: 1
     sprite:
       {
         scale: 1.4,
@@ -483,20 +545,24 @@ types:
         bottom_padding_px: 0,
         origin_above_feet_px: 15,
       }
+    preferred_distance_h: { min: 4, max: 7.5 }
     attack:
-      kind: melee
+      kind: hazard
       clip: attack
       strike_frame: 5
-      damage: 12
-      hitbox_h: { x: -1.47, y: 0, width: 2.94, height: 1.19 }
-      cooldown_s: 2.4
+      damage: 14
+      cooldown_s: 3.2
       windup_s: 0.8
+      hazard:
+        size_h: { width: 2.2, height: 1.6 }
+        arm_s: 0.8
+        burn_s: 0.35
   mage_purple:
     hurtbox_h: { width: 0.42, height: 0.88 }
     health: 90
     material: polymer
-    movement_speed_h_s: 1.6
-    behavior: melee_pursuit
+    movement_speed_h_s: 2.24
+    behavior: ranged_keep_distance
     sprite:
       {
         scale: 1.4,
@@ -504,20 +570,25 @@ types:
         bottom_padding_px: 0,
         origin_above_feet_px: 15,
       }
+    preferred_distance_h: { min: 4, max: 7.5 }
     attack:
-      kind: melee
+      kind: hazard
       clip: attack
       strike_frame: 5
-      damage: 12
-      hitbox_h: { x: -1.47, y: 0, width: 2.94, height: 1.19 }
-      cooldown_s: 2.4
+      damage: 14
+      cooldown_s: 2.24
       windup_s: 0.8
+      hazard:
+        size_h: { width: 2.2, height: 1.6 }
+        arm_s: 0.8
+        burn_s: 0.35
   catto_rust:
     hurtbox_h: { width: 0.49, height: 0.42 }
     health: 60
     material: polymer
     movement_speed_h_s: 4
     behavior: melee_pursuit
+    death_blast: { radius_h: 1.5, damage: 12, fuse_s: 0.8, burn_s: 0.2 }
     sprite:
       {
         scale: 1.4,
@@ -525,20 +596,30 @@ types:
         bottom_padding_px: 0,
         origin_above_feet_px: 7,
       }
-    attack:
-      kind: melee
-      clip: attack
-      strike_frame: 3
-      damage: 6
-      hitbox_h: { x: 0, y: 0, width: 0.59, height: 0.84 }
-      cooldown_s: 0.9
-      windup_s: 0.3
+    attacks:
+      - kind: jump_slam
+        clip: attack
+        strike_frame: 2
+        damage: 9
+        hitbox_h: { x: -0.45, y: 0, width: 1.05, height: 0.84 }
+        start_range_h: 4
+        min_range_h: 2
+        cooldown_s: 1.6
+        windup_s: 0.45
+      - kind: melee
+        clip: attack
+        strike_frame: 3
+        damage: 6
+        hitbox_h: { x: 0, y: 0, width: 0.59, height: 0.84 }
+        cooldown_s: 0.9
+        windup_s: 0.3
   catto_gold:
     hurtbox_h: { width: 0.49, height: 0.42 }
     health: 60
     material: polymer
     movement_speed_h_s: 4
     behavior: melee_pursuit
+    armor_layers: 1
     sprite:
       {
         scale: 1.4,
@@ -546,19 +627,28 @@ types:
         bottom_padding_px: 0,
         origin_above_feet_px: 7,
       }
-    attack:
-      kind: melee
-      clip: attack
-      strike_frame: 3
-      damage: 6
-      hitbox_h: { x: 0, y: 0, width: 0.59, height: 0.84 }
-      cooldown_s: 0.9
-      windup_s: 0.3
+    attacks:
+      - kind: jump_slam
+        clip: attack
+        strike_frame: 2
+        damage: 9
+        hitbox_h: { x: -0.45, y: 0, width: 1.05, height: 0.84 }
+        start_range_h: 4
+        min_range_h: 2
+        cooldown_s: 1.6
+        windup_s: 0.45
+      - kind: melee
+        clip: attack
+        strike_frame: 3
+        damage: 6
+        hitbox_h: { x: 0, y: 0, width: 0.59, height: 0.84 }
+        cooldown_s: 0.9
+        windup_s: 0.3
   catto_purple:
     hurtbox_h: { width: 0.49, height: 0.42 }
     health: 60
     material: polymer
-    movement_speed_h_s: 4
+    movement_speed_h_s: 5.6
     behavior: melee_pursuit
     sprite:
       {
@@ -567,20 +657,30 @@ types:
         bottom_padding_px: 0,
         origin_above_feet_px: 7,
       }
-    attack:
-      kind: melee
-      clip: attack
-      strike_frame: 3
-      damage: 6
-      hitbox_h: { x: 0, y: 0, width: 0.59, height: 0.84 }
-      cooldown_s: 0.9
-      windup_s: 0.3
+    attacks:
+      - kind: jump_slam
+        clip: attack
+        strike_frame: 2
+        damage: 9
+        hitbox_h: { x: -0.45, y: 0, width: 1.05, height: 0.84 }
+        start_range_h: 4
+        min_range_h: 2
+        cooldown_s: 1.12
+        windup_s: 0.45
+      - kind: melee
+        clip: attack
+        strike_frame: 3
+        damage: 6
+        hitbox_h: { x: 0, y: 0, width: 0.59, height: 0.84 }
+        cooldown_s: 0.63
+        windup_s: 0.3
   mad_ghost_rust:
     hurtbox_h: { width: 0.56, height: 1.01 }
     health: 120
     material: polymer
     movement_speed_h_s: 2.8
     behavior: melee_pursuit
+    death_blast: { radius_h: 1.5, damage: 12, fuse_s: 0.8, burn_s: 0.2 }
     sprite:
       {
         scale: 1.4,
@@ -588,20 +688,27 @@ types:
         bottom_padding_px: 0,
         origin_above_feet_px: 18,
       }
-    attack:
-      kind: melee
-      clip: attack
-      strike_frame: 5
-      damage: 12
-      hitbox_h: { x: 0, y: 0, width: 0.84, height: 1.54 }
-      cooldown_s: 1.4
-      windup_s: 0.5
+    attacks:
+      - kind: blink
+        clip: idle
+        start_range_h: 9
+        min_range_h: 3.5
+        cooldown_s: 1.3
+        windup_s: 0.6
+      - kind: melee
+        clip: attack
+        strike_frame: 5
+        damage: 12
+        hitbox_h: { x: 0, y: 0, width: 0.84, height: 1.54 }
+        cooldown_s: 1.4
+        windup_s: 0.5
   mad_ghost_gold:
     hurtbox_h: { width: 0.56, height: 1.01 }
     health: 120
     material: polymer
     movement_speed_h_s: 2.8
     behavior: melee_pursuit
+    armor_layers: 1
     sprite:
       {
         scale: 1.4,
@@ -609,19 +716,25 @@ types:
         bottom_padding_px: 0,
         origin_above_feet_px: 18,
       }
-    attack:
-      kind: melee
-      clip: attack
-      strike_frame: 5
-      damage: 12
-      hitbox_h: { x: 0, y: 0, width: 0.84, height: 1.54 }
-      cooldown_s: 1.4
-      windup_s: 0.5
+    attacks:
+      - kind: blink
+        clip: idle
+        start_range_h: 9
+        min_range_h: 3.5
+        cooldown_s: 1.3
+        windup_s: 0.6
+      - kind: melee
+        clip: attack
+        strike_frame: 5
+        damage: 12
+        hitbox_h: { x: 0, y: 0, width: 0.84, height: 1.54 }
+        cooldown_s: 1.4
+        windup_s: 0.5
   mad_ghost_purple:
     hurtbox_h: { width: 0.56, height: 1.01 }
     health: 120
     material: polymer
-    movement_speed_h_s: 2.8
+    movement_speed_h_s: 3.92
     behavior: melee_pursuit
     sprite:
       {
@@ -630,11 +743,17 @@ types:
         bottom_padding_px: 0,
         origin_above_feet_px: 18,
       }
-    attack:
-      kind: melee
-      clip: attack
-      strike_frame: 5
-      damage: 12
-      hitbox_h: { x: 0, y: 0, width: 0.84, height: 1.54 }
-      cooldown_s: 1.4
-      windup_s: 0.5
+    attacks:
+      - kind: blink
+        clip: idle
+        start_range_h: 9
+        min_range_h: 3.5
+        cooldown_s: 0.91
+        windup_s: 0.6
+      - kind: melee
+        clip: attack
+        strike_frame: 5
+        damage: 12
+        hitbox_h: { x: 0, y: 0, width: 0.84, height: 1.54 }
+        cooldown_s: 0.98
+        windup_s: 0.5

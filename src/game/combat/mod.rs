@@ -13,11 +13,13 @@ mod enemy_body;
 mod enemy_jumps;
 mod falls;
 mod feedback;
+mod hazards;
 mod hitboxes;
 mod player_melee;
 mod projectiles;
 mod shield;
 mod vision;
+mod waves;
 
 pub(super) use cleanup::clear_room_combat_effects;
 pub(super) use components::{
@@ -36,6 +38,7 @@ pub(super) use feedback::{
     update_damage_numbers, update_dead_enemies, update_healing_over_time, update_health_bars,
     update_health_pickups, update_hit_effects, update_impact_effects,
 };
+pub(super) use hazards::{Hazard, update_hazards};
 use hitboxes::blow_area;
 #[cfg(debug_assertions)]
 pub(super) use hitboxes::blow_area as melee_blow_area;
@@ -43,6 +46,7 @@ pub(super) use hitboxes::player_hurtbox;
 pub(super) use player_melee::player_melee;
 pub(super) use projectiles::update_projectiles;
 pub(super) use shield::{SHIELD_OFFSET_Y, SHIELD_SHEET, update_enemy_shields};
+pub(super) use waves::{Arriving, raise_the_arriving, send_in_the_next_wave};
 
 struct PlayerDamageResources<'a, 'w, 's> {
     commands: &'a mut Commands<'w, 's>,

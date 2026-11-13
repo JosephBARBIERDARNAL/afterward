@@ -71,6 +71,11 @@ pub(crate) struct RunSession {
     /// What is left of the hold the bonus screen keeps after a bonus is
     /// chosen, so the droplet lands on the box before the room comes back.
     pub(crate) bonus_chosen_hold_remaining_s: f32,
+    /// The last wave of the room's enemies to have arrived: `wave` of a room
+    /// spawn, 0 as the room opens.
+    pub(crate) wave: u8,
+    /// How long the room has stood empty with a wave still to come.
+    pub(crate) wave_wait_s: f32,
     /// Every enemy is down, so the room's bonus item may be laid out.
     pub(crate) room_cleared: bool,
     pub(crate) door_open: bool,
@@ -119,6 +124,8 @@ impl Default for RunSession {
             selected_choice: bonus_screen::BonusChoice::Offer(0),
             bonus_reroll_animation_remaining_s: 0.0,
             bonus_chosen_hold_remaining_s: 0.0,
+            wave: 0,
+            wave_wait_s: 0.0,
             room_cleared: false,
             door_open: false,
             room_ward_used: false,

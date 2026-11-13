@@ -45,7 +45,7 @@ pub(super) fn refresh_room_view(
     };
     world::draw_room(&mut commands, room, &data, &asset_server, &mut shaders);
     world::spawn_player(&mut commands, room, &data, &sheets);
-    world::spawn_enemies(&mut commands, room, &data, &sheets);
+    world::spawn_enemies(&mut commands, room, &data, &sheets, None);
     world::spawn_exit_door(&mut commands, room, &data, &sheets);
     if editor
         .selected

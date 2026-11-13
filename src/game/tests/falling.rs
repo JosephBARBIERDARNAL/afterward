@@ -146,7 +146,7 @@ next_room_id: 4
                 let room = &data.rooms[&3];
                 world::spawn_room_platforms(&mut commands, room, &data);
                 world::spawn_player(&mut commands, room, &data, &sheets);
-                world::spawn_enemies(&mut commands, room, &data, &sheets);
+                world::spawn_enemies(&mut commands, room, &data, &sheets, None);
             },
         )
         .add_systems(
@@ -231,7 +231,7 @@ next_room_id: 4
             |mut commands: Commands, data: Res<GameData>, sheets: Res<SpriteSheets>| {
                 let room = &data.rooms[&3];
                 world::spawn_room_platforms(&mut commands, room, &data);
-                world::spawn_enemies(&mut commands, room, &data, &sheets);
+                world::spawn_enemies(&mut commands, room, &data, &sheets, None);
             },
         )
         .add_systems(

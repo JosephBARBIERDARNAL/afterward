@@ -8,7 +8,14 @@ pub(in crate::game) fn clear_room_combat_effects(
     impacts: Query<Entity, With<ImpactEffect>>,
     // Nothing is left to strike at a double once the room is won.
     doubles: Query<Entity, With<Decoy>>,
+    // What the dead laid on the floor goes with them; a room's own vents stay.
+    hazards: Query<(Entity, &Hazard)>,
 ) {
+    for (entity, hazard) in &hazards {
+        if hazard.rest_s.is_none() {
+            commands.entity(entity).despawn();
+        }
+    }
     for entity in &projectiles {
         commands.entity(entity).despawn();
     }

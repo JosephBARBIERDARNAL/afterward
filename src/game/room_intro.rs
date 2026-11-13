@@ -13,6 +13,32 @@ pub(super) struct EnemyEntrance {
     pub(super) delay_s: f32,
 }
 
+impl EnemyEntrance {
+    /// Poses an enemy `appear` of the way, from 0 to 1, through rising out of
+    /// the ground: with a slight overshoot, its feet kept on the spawn
+    /// baseline, unstretching from a shadow tint to its own colors.
+    pub(super) fn pose(
+        &self,
+        appear: f32,
+        enemy: &EnemyBody,
+        transform: &mut Transform,
+        sprite: &mut Sprite,
+    ) {
+        let remaining = appear - 1.0;
+        let rise = 1.0
+            + (ENEMY_APPEAR_OVERSHOOT + 1.0) * remaining.powi(3)
+            + ENEMY_APPEAR_OVERSHOOT * remaining.powi(2);
+        transform.scale = Vec3::new(
+            self.base_scale.x * (1.0 + ENEMY_APPEAR_STRETCH_X * (1.0 - appear)),
+            self.base_scale.y * rise,
+            self.base_scale.z,
+        );
+        transform.translation.y = enemy.home_y - enemy.feet_offset * (1.0 - rise);
+        let tint = ENEMY_APPEAR_TINT.lerp(Vec3::ONE, appear);
+        sprite.color = Color::srgba(tint.x, tint.y, tint.z, appear);
+    }
+}
+
 /// Shadow tint an enemy materializes from before settling on its own colors.
 const ENEMY_APPEAR_TINT: Vec3 = Vec3::new(0.42, 0.18, 0.72);
 /// Horizontal stretch of a materializing enemy at the start of its animation.
@@ -230,20 +256,7 @@ pub(super) fn pose_room_intro(
         let appear = ((elapsed_s - intro.enemies_start_s() - entrance.delay_s)
             / intro.enemy_appear_s)
             .clamp(0.0, 1.0);
-        // Rise out of the ground with a slight overshoot, feet kept on the
-        // spawn baseline, unstretching from a shadow tint to full color.
-        let remaining = appear - 1.0;
-        let rise = 1.0
-            + (ENEMY_APPEAR_OVERSHOOT + 1.0) * remaining.powi(3)
-            + ENEMY_APPEAR_OVERSHOOT * remaining.powi(2);
-        transform.scale = Vec3::new(
-            entrance.base_scale.x * (1.0 + ENEMY_APPEAR_STRETCH_X * (1.0 - appear)),
-            entrance.base_scale.y * rise,
-            entrance.base_scale.z,
-        );
-        transform.translation.y = enemy.home_y - enemy.feet_offset * (1.0 - rise);
-        let tint = ENEMY_APPEAR_TINT.lerp(Vec3::ONE, appear);
-        sprite.color = Color::srgba(tint.x, tint.y, tint.z, appear);
+        entrance.pose(appear, enemy, &mut transform, &mut sprite);
         appearances.insert(entity, appear);
     }
     for (mut sprite, (fill, background, shield)) in &mut health_bars {

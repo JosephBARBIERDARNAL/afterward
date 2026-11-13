@@ -35,8 +35,10 @@ pub(super) fn spawn_room(
     let room = &data.rooms[&session.room_id];
     draw_room(&mut commands, room, &data, &asset_server, &mut shaders);
     spawn_player(&mut commands, room, &data, &sheets);
+    session.wave = 0;
+    session.wave_wait_s = 0.0;
     if session.has_enemies(&data) {
-        spawn_enemies(&mut commands, room, &data, &sheets);
+        spawn_enemies(&mut commands, room, &data, &sheets, Some(0));
     }
     spawn_exit_door(&mut commands, room, &data, &sheets);
     spawn_entry_door(&mut commands, room, &data, &sheets);
@@ -60,6 +62,23 @@ pub(super) fn draw_room(
     asset_server: &AssetServer,
     shaders: &mut ShaderAssets,
 ) {
+    // The room's vents, wherever a room is drawn: they only burn in play.
+    for vent in &room.hazards {
+        combat::Hazard {
+            area: Rect::new(
+                vent.rect_h.x * H_WORLD_UNITS,
+                vent.rect_h.y * H_WORLD_UNITS,
+                vent.rect_h.right() * H_WORLD_UNITS,
+                vent.rect_h.top() * H_WORLD_UNITS,
+            ),
+            damage: vent.damage,
+            arm_s: vent.arm_s,
+            burn_s: vent.burn_s,
+            rest_s: Some(vent.rest_s),
+            elapsed_s: vent.offset_s,
+        }
+        .lay(commands, data);
+    }
     // The profiles are mixed rather than laid one over the other. Their skies
     // are blended in equal parts, each drawn over the ones before it at the
     // share that leaves them all even. Their layers are then dealt together
@@ -272,11 +291,22 @@ pub(super) fn spawn_enemies(
     room: &RoomConfig,
     data: &GameData,
     sheets: &SpriteSheets,
+    wave: Option<u8>,
 ) {
-    // Enemies appear one after another, evenly spread over the intro window.
+    // Only the enemies of `wave`, or all of them without one (the editor
+    // shows every wave at once). Those of the wave a room opens with appear
+    // one after another, evenly spread over the intro window; a later wave
+    // rises all at once, held for as long as that takes, and knows where the
+    // player is.
     let appear_spread_s = data.gameplay.room_flow.room_intro.enemy_appear_spread_s;
-    let last_index = room.enemy_spawns.len().saturating_sub(1).max(1) as f32;
-    for (index, spawn) in room.enemy_spawns.iter().enumerate() {
+    let arriving = wave.is_some_and(|wave| wave > 0);
+    let spawns = room
+        .enemy_spawns
+        .iter()
+        .filter(|spawn| wave.is_none_or(|wave| spawn.wave == wave))
+        .collect::<Vec<_>>();
+    let last_index = spawns.len().saturating_sub(1).max(1) as f32;
+    for (index, spawn) in spawns.into_iter().enumerate() {
         let profile = &data.enemies.types[&spawn.type_id];
         let key = spawn.type_id.idle_sheet();
         let sheet = &sheets.0[key];
@@ -318,7 +348,7 @@ pub(super) fn spawn_enemies(
                 .collect::<Vec<_>>()
         };
         let health = profile.health;
-        let armor = spawn.armor_layers;
+        let armor = spawn.armor_layers + profile.armor_layers;
         let preferred_distance_h = profile
             .preferred_distance_h
             .as_ref()
@@ -392,7 +422,7 @@ pub(super) fn spawn_enemies(
                     preferred_distance_h,
                     attacks,
                     facing,
-                    engaged: false,
+                    engaged: arriving,
                     attack_cooldown: 0.0,
                     windup_remaining: 0.0,
                     combo_hit_pending: false,
@@ -405,7 +435,8 @@ pub(super) fn spawn_enemies(
                     phase_two_announced: false,
                     marked_timer: 0.0,
                     movement_sound_timer: 0.0,
-                    stance: None,
+                    stance: arriving
+                        .then_some((combat::Stance::Clip, data.gameplay.room_flow.waves.arrive_s)),
                     countering: false,
                     wounds: 0,
                 },
@@ -416,6 +447,14 @@ pub(super) fn spawn_enemies(
                 RoomEntity,
             ))
             .id();
+        if arriving {
+            commands
+                .entity(enemy)
+                .insert(combat::Arriving(Timer::from_seconds(
+                    data.gameplay.room_flow.waves.arrive_s,
+                    TimerMode::Once,
+                )));
+        }
         let bar_position = Vec3::new(
             spawn.position_h.x_h * H_WORLD_UNITS,
             home_y + visible_top_offset + 6.0,

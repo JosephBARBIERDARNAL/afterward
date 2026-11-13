@@ -275,6 +275,11 @@ pub(in crate::game) fn update_enemy_ai(
                 let frame = (1.0 - enemy.windup_remaining / windup_s) * strike_frame as f32;
                 animation.hold_frame(&mut sprite, frame as usize);
             }
+            // A blink's wind-up is the body fading out of where it stands.
+            if attack.kind == "blink" {
+                sprite.color =
+                    Color::WHITE.with_alpha(0.15 + 0.85 * enemy.windup_remaining / attack.windup_s);
+            }
             if enemy.windup_remaining == 0.0 {
                 let kind = attack.kind.as_str();
                 // A guard that has been raised is held, until a blow lands
@@ -284,6 +289,61 @@ pub(in crate::game) fn update_enemy_ai(
                     continue;
                 }
                 enemy.countering = false;
+                if kind == "blink" {
+                    // It comes back on the floor its mark stands on, past
+                    // them by its reach: at their back, or in front of them
+                    // where the floor ends behind. Platforms are no cover
+                    // from it. A mark in mid-air has no floor to come back on.
+                    let past = if dx < 0.0 { -1.0 } else { 1.0 };
+                    let landing = [past, -past]
+                        .map(|side| mark.feet.x + side * attack.reach_h * H_WORLD_UNITS)
+                        .into_iter()
+                        .find(|x| {
+                            surfaces
+                                .standing_on(*x, mark.feet.y, SLOPE_STRIDE)
+                                .is_some()
+                        });
+                    if let Some(x) = landing.filter(|_| mark.grounded) {
+                        transform.translation.x = x;
+                        enemy.home_y = mark.feet.y + enemy.feet_offset;
+                        transform.translation.y = enemy.home_y;
+                    }
+                    sprite.color = Color::WHITE;
+                    continue;
+                }
+                if let Some(hazard) = attack.hazard.as_ref().filter(|_| kind == "hazard") {
+                    // The floor under its mark is set alight: the patch
+                    // warns, then burns whoever is still standing in it.
+                    sounds.push(SoundCue::EnemyAttack(audio::EnemySoundStyle::from(
+                        &enemy.type_id,
+                    )));
+                    let floor = surfaces
+                        .floor_below(mark.feet.x, mark.feet.y + SLOPE_STRIDE)
+                        .unwrap_or(mark.feet.y);
+                    let half_width = hazard.size_h.width / 2.0 * H_WORLD_UNITS;
+                    Hazard {
+                        area: Rect::new(
+                            mark.feet.x - half_width,
+                            floor,
+                            mark.feet.x + half_width,
+                            floor + hazard.size_h.height * H_WORLD_UNITS,
+                        ),
+                        damage: attack.damage,
+                        arm_s: hazard.arm_s,
+                        burn_s: hazard.burn_s,
+                        rest_s: None,
+                        elapsed_s: 0.0,
+                    }
+                    .lay(&mut commands, &data);
+                    if attack.strike_frame.is_some() {
+                        enemy.stance = Some((
+                            Stance::Clip,
+                            animation.frames.saturating_sub(animation.frame + 1) as f32
+                                * animation.timer.duration().as_secs_f32(),
+                        ));
+                    }
+                    continue;
+                }
                 if kind == "jump_slam" {
                     // Leap at the player; the slam resolves on touchdown.
                     let jump_height = enemy.jump_height_h * H_WORLD_UNITS;
@@ -390,6 +450,32 @@ pub(in crate::game) fn update_enemy_ai(
                             attack.damage,
                         );
                     }
+                    // The strike carries on along the floor as a low wave,
+                    // which is jumped or rolled through.
+                    if let Some(wave) = &attack.shockwave {
+                        let size = Vec2::new(wave.size_h.width, wave.size_h.height) * H_WORLD_UNITS;
+                        commands.spawn((
+                            Sprite::from_color(
+                                Color::from(data.gameplay.effects.hazard.shockwave_color),
+                                size,
+                            ),
+                            Transform::from_xyz(
+                                strike_feet.x + enemy.facing * attack.reach_h * H_WORLD_UNITS,
+                                // Clear of the floor it runs along, which
+                                // would stop it as it stops a shot.
+                                strike_feet.y + size.y / 2.0 + 2.0,
+                                3.4,
+                            ),
+                            CombatProjectile {
+                                velocity_x: enemy.facing * wave.speed_h_s * H_WORLD_UNITS,
+                                damage: wave.damage,
+                                life_s: wave.range_h / wave.speed_h_s,
+                                remaining_range: wave.range_h * H_WORLD_UNITS,
+                                half_size: size / 2.0,
+                            },
+                            RoomEntity,
+                        ));
+                    }
                     if attack.hits > 1 {
                         if enemy.combo_hit_pending {
                             enemy.combo_hit_pending = false;
@@ -417,20 +503,23 @@ pub(in crate::game) fn update_enemy_ai(
             continue;
         }
 
-        let Some(attack) = enemy.attacks.get(enemy.next_attack).cloned() else {
-            continue;
-        };
-        let (minimum_distance, maximum_distance) = if enemy.behavior == "ranged_keep_distance" {
-            enemy
-                .preferred_distance_h
-                .unwrap_or((0.0, (attack.reach_h + player_half_width_h)))
-        } else {
-            (0.0, (attack.reach_h + player_half_width_h))
-        };
         // Only a grounded player defines a level; a mid-jump player does not
         // send enemies scrambling for platforms.
         let rise = mark.feet.y - feet.y;
-        let other_level = mark.grounded && rise.abs() > level_change_threshold;
+        let on_another_floor = mark.grounded && rise.abs() > level_change_threshold;
+        let chosen = enemy.choose_attack(distance_h, on_another_floor);
+        let Some(attack) = enemy.attacks.get(chosen).cloned() else {
+            continue;
+        };
+        // A blink is thrown at a mark on another floor from where it stands:
+        // it is its way there.
+        let other_level = on_another_floor && attack.kind != "blink";
+        let opens_at_h = attack.start_range_h.unwrap_or(attack.reach_h) + player_half_width_h;
+        let (minimum_distance, maximum_distance) = if enemy.behavior == "ranged_keep_distance" {
+            enemy.preferred_distance_h.unwrap_or((0.0, opens_at_h))
+        } else {
+            (0.0, opens_at_h)
+        };
         let standing = surfaces
             .standing_on(feet.x, feet.y, SLOPE_STRIDE)
             .filter(|_| enemy.grounded)
@@ -543,8 +632,8 @@ pub(in crate::game) fn update_enemy_ai(
             let in_reach = distance_h <= maximum_distance || attack.kind.contains("projectile");
             if enemy.attack_cooldown <= 0.0 && !other_level && in_reach {
                 enemy.movement_sound_timer = 0.0;
-                enemy.active_attack = enemy.next_attack;
-                enemy.next_attack = (enemy.next_attack + 1) % enemy.attacks.len();
+                enemy.active_attack = chosen;
+                enemy.next_attack = (chosen + 1) % enemy.attacks.len();
                 enemy.windup_remaining = attack.windup_s;
                 let phase_multiplier = enemy
                     .phase_two
