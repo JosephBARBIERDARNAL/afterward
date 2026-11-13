@@ -1,6 +1,6 @@
 // The hero's `summon` sheet: 8 frames, each drawn in the window
 // of its cell that starts at (43, 47). See ../_player.typ.
-#import "../_player.typ": palette, sheet
+#import "../_player.typ": sheet
 
 #let own = (
   "0": rgb("#e6e7f0"),
@@ -8,7 +8,7 @@
 
 #sheet(
   at: (43, 47),
-  palette: palette + own,
+  own: own,
   (
     // Frame 0
     ```

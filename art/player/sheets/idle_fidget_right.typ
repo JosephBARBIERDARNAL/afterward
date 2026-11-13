@@ -1,6 +1,6 @@
 // The hero's `idle_fidget_right` sheet: 5 frames, each drawn in the window
 // of its cell that starts at (43, 42). See ../_player.typ.
-#import "../_player.typ": palette, sheet
+#import "../_player.typ": sheet
 
 #let own = (
   "0": rgb("#2789cd"),
@@ -8,7 +8,7 @@
 
 #sheet(
   at: (43, 42),
-  palette: palette + own,
+  own: own,
   (
     // Frame 0
     ```

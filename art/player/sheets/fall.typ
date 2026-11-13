@@ -1,6 +1,6 @@
 // The hero's `fall` sheet: 13 frames, each drawn in the window
 // of its cell that starts at (0, 39). See ../_player.typ.
-#import "../_player.typ": palette, sheet
+#import "../_player.typ": sheet
 
 #let own = (
   "0": rgb("#ecebe7"),
@@ -8,7 +8,7 @@
 
 #sheet(
   at: (0, 39),
-  palette: palette + own,
+  own: own,
   (
     // Frame 0
     ```

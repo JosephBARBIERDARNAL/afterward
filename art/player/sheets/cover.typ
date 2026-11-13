@@ -1,6 +1,6 @@
 // The hero's `cover` sheet: 12 frames, each drawn in the window
 // of its cell that starts at (26, 45). See ../_player.typ.
-#import "../_player.typ": palette, sheet
+#import "../_player.typ": sheet
 
 #let own = (
   "0": rgb("#4572e3"),
@@ -8,7 +8,7 @@
 
 #sheet(
   at: (26, 45),
-  palette: palette + own,
+  own: own,
   (
     // Frame 0
     ```

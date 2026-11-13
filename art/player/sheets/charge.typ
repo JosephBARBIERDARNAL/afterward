@@ -1,6 +1,6 @@
 // The hero's `charge` sheet: 6 frames, each drawn in the window
 // of its cell that starts at (33, 37). See ../_player.typ.
-#import "../_player.typ": palette, sheet
+#import "../_player.typ": sheet
 
 #let own = (
   "0": rgb("#fef3c0"),
@@ -8,7 +8,7 @@
 
 #sheet(
   at: (33, 37),
-  palette: palette + own,
+  own: own,
   (
     // Frame 0
     ```

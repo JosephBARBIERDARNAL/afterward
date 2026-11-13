@@ -5,8 +5,10 @@
 
 The PNG is a row of 128 x 128 frames. Each frame becomes a block of text, one
 character per pixel, cropped to the window that holds every frame of the sheet.
-Colours are looked up in the palette of `art/player/_player.typ`; one that is
-not there is declared in the sheet itself, under a key of its own.
+Colours are looked up in `art/player/_player.typ`, by the colours the packs
+draw the body and its effects in (`PACK`, below, for the body, whose parts that
+file now colours its own way); one that is not there is declared in the sheet
+itself, under a key of its own.
 
 This is how a sheet of the Craftpix packs first came into `art/player/sheets/`.
 It overwrites its target, so it is for bringing a new sheet in, not for a sheet
@@ -24,9 +26,11 @@ SHARED = Path(__file__).resolve().parent.parent / "art/player/_player.typ"
 SPARE_KEYS = "0123456789ABCDEFGHIJKLMNPQRSTUVXZefijkpqrtuvxz"
 
 source, target = Path(sys.argv[1]), Path(sys.argv[2])
-shared = {
-    colour: key
-    for key, colour in re.findall(r'"(.)": rgb\("#([0-9a-f]{6})"\)', SHARED.read_text())
+# The part of the body each of the packs' five body colours stands for.
+PACK = {"e6ecf5": "h", "4660a8": "l", "3a509a": "m", "2a3a78": "d", "24306a": "s"}
+effects = SHARED.read_text().split("#let effects")[1]
+shared = PACK | {
+    colour: key for key, colour in re.findall(r'"(.)": rgb\("#([0-9a-f]{6})"\)', effects)
 }
 
 width, height = map(
@@ -69,9 +73,9 @@ lines = [
     f"// of its cell that starts at ({left}, {top}). See ../_player.typ.",
 ]
 if own:
-    lines += ['#import "../_player.typ": palette, sheet', "", "#let own = ("]
+    lines += ['#import "../_player.typ": sheet', "", "#let own = ("]
     lines += [f'  "{key}": rgb("#{colour}"),' for colour, key in own.items()]
-    lines += [")", "", f"#sheet(at: ({left}, {top}), palette: palette + own, ("]
+    lines += [")", "", f"#sheet(at: ({left}, {top}), own: own, ("]
 else:
     lines += ['#import "../_player.typ": sheet', "", f"#sheet(at: ({left}, {top}), ("]
 for frame in range(frames):

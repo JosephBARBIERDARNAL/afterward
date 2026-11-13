@@ -1,6 +1,6 @@
 // The hero's `hit` sheet: 3 frames, each drawn in the window
 // of its cell that starts at (34, 66). See ../_player.typ.
-#import "../_player.typ": palette, sheet
+#import "../_player.typ": sheet
 
 #let own = (
   "0": rgb("#3b1725"),
@@ -10,7 +10,7 @@
 
 #sheet(
   at: (34, 66),
-  palette: palette + own,
+  own: own,
   (
     // Frame 0
     ```

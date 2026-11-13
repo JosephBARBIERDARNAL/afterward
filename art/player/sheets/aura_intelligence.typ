@@ -1,6 +1,6 @@
 // The hero's `aura_intelligence` sheet: 10 frames, each drawn in the window
 // of its cell that starts at (16, 41). See ../_player.typ.
-#import "../_player.typ": palette, sheet
+#import "../_player.typ": sheet
 
 #let own = (
   "0": rgb("#f8e398"),
@@ -26,7 +26,7 @@
 
 #sheet(
   at: (16, 41),
-  palette: palette + own,
+  own: own,
   (
     // Frame 0
     ```

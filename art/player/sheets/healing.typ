@@ -1,6 +1,6 @@
 // The hero's `healing` sheet: 8 frames, each drawn in the window
 // of its cell that starts at (46, 57). See ../_player.typ.
-#import "../_player.typ": palette, sheet
+#import "../_player.typ": sheet
 
 #let own = (
   "0": rgb("#c4f129"),
@@ -9,7 +9,7 @@
 
 #sheet(
   at: (46, 57),
-  palette: palette + own,
+  own: own,
   (
     // Frame 0
     ```
