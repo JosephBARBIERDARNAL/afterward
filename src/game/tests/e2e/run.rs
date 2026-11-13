@@ -5,8 +5,16 @@ fn a_run_goes_from_the_menu_through_combat_the_bonus_and_the_door_to_room_two() 
     let mut game = HeadlessGame::new();
     game.start_run();
     assert_eq!(game.session().room_id, 1);
-    let roster = game.data().rooms[&1].enemy_spawns.len();
-    assert_eq!(game.enemies().len(), roster, "every spawn materializes");
+    let roster = game.data().rooms[&1]
+        .enemy_spawns
+        .iter()
+        .filter(|spawn| spawn.wave == 0)
+        .count();
+    assert_eq!(
+        game.enemies().len(),
+        roster,
+        "every spawn of the first wave materializes"
+    );
     // The exit door's frame: 0 locked, 1 unlocked, 2 and up opening. While the
     // camera crosses into the next room, both rooms have one, so this reads the
     // one that has come furthest: the door just walked through.
@@ -67,8 +75,12 @@ fn a_run_goes_from_the_menu_through_combat_the_bonus_and_the_door_to_room_two() 
         game.session().health >= health,
         "health carries over between rooms"
     );
-    let roster = game.data().rooms[&2].enemy_spawns.len();
-    assert_eq!(game.enemies().len(), roster, "room 2's roster spawns");
+    let roster = game.data().rooms[&2]
+        .enemy_spawns
+        .iter()
+        .filter(|spawn| spawn.wave == 0)
+        .count();
+    assert_eq!(game.enemies().len(), roster, "room 2's first wave spawns");
 }
 
 #[test]

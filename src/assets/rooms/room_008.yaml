@@ -72,9 +72,6 @@ enemy_spawns:
     position_h: { x: 9.5, y: 1 }
     facing: left
   - type_id: blade_unit
-    position_h: { x: 13.5, y: 2.5 }
-    facing: left
-  - type_id: blade_unit
     position_h: { x: 17, y: 1 }
     facing: left
   - type_id: rifle_unit
@@ -84,77 +81,43 @@ enemy_spawns:
   - type_id: heavy_unit
     position_h: { x: 24, y: 1 }
     facing: left
-    armor_layers: 2
-  - type_id: blade_unit
-    position_h: { x: 27, y: 1 }
-    facing: left
-  - type_id: blade_unit
-    position_h: { x: 32, y: 3 }
-    facing: left
-  - type_id: rifle_unit
-    position_h: { x: 36, y: 5 }
-    facing: left
     armor_layers: 1
-  - type_id: heavy_unit
-    position_h: { x: 40.5, y: 7 }
-    facing: left
-    armor_layers: 2
   - type_id: blade_unit
     position_h: { x: 29.5, y: 10 }
     facing: right
+    wave: 1
   - type_id: dark_blade_unit
     position_h: { x: 27, y: 10 }
     facing: right
     armor_layers: 2
-  - type_id: heavy_unit
-    position_h: { x: 25, y: 10 }
-    facing: right
-    armor_layers: 3
+    wave: 1
   - type_id: rifle_unit
     position_h: { x: 13.5, y: 13 }
     facing: right
     armor_layers: 1
+    wave: 1
   - type_id: blade_unit
     position_h: { x: 10, y: 13 }
     facing: right
-  - type_id: blade_unit
-    position_h: { x: 6.5, y: 13 }
-    facing: right
-  - type_id: rifle_unit
-    position_h: { x: 2, y: 15 }
-    facing: right
-  - type_id: rifle_unit
-    position_h: { x: 6.75, y: 17 }
-    facing: left
-    armor_layers: 1
+    wave: 1
   - type_id: blade_unit
     position_h: { x: 13, y: 19 }
     facing: left
-  - type_id: blade_unit
-    position_h: { x: 16, y: 19 }
-    facing: left
+    wave: 2
   - type_id: heavy_unit
     position_h: { x: 19, y: 19 }
     facing: left
-    armor_layers: 3
-  - type_id: rifle_unit
-    position_h: { x: 21, y: 19 }
-    facing: left
     armor_layers: 2
-  - type_id: blade_unit
-    position_h: { x: 26, y: 21 }
-    facing: left
+    wave: 2
   - type_id: blade_unit
     position_h: { x: 33, y: 22 }
     facing: left
-  - type_id: heavy_unit
-    position_h: { x: 36, y: 22 }
-    facing: left
-    armor_layers: 2
+    wave: 2
   - type_id: dark_rifle_unit
     position_h: { x: 39, y: 22 }
     facing: left
     armor_layers: 2
+    wave: 2
 # The bonus item, lying beside the door once every enemy is down.
 bonus:
   x_h: 40.75

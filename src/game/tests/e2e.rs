@@ -47,11 +47,13 @@ mod hitboxes;
 mod impact;
 mod main_menu;
 mod menus;
+mod move_bonuses;
 mod opening_room;
 mod pause;
 mod prologue;
 mod room_pan;
 mod run;
+mod waves;
 
 const FRAME_S: f32 = 1.0 / 60.0;
 
@@ -383,9 +385,27 @@ impl HeadlessGame {
 
     /// Shortcut: brings every enemy to 0 health, as if shot dead.
     fn defeat_enemies(&mut self) {
-        let world = self.app.world_mut();
-        for mut enemy in world.query::<&mut EnemyBody>().iter_mut(world) {
-            enemy.health = 0.0;
+        // Wave after wave, until the room's last one is down.
+        loop {
+            let world = self.app.world_mut();
+            for mut enemy in world.query::<&mut EnemyBody>().iter_mut(world) {
+                enemy.health = 0.0;
+            }
+            let wave = self.session().wave;
+            let more_to_come = self.session().has_enemies(self.data())
+                && self.data().rooms[&self.session().room_id]
+                    .enemy_spawns
+                    .iter()
+                    .any(|spawn| spawn.wave > wave);
+            if !more_to_come {
+                break;
+            }
+            let mut waited_s = 0.0;
+            while self.session().wave == wave {
+                assert!(waited_s < 5.0, "the next wave should have arrived");
+                self.app.update();
+                waited_s += FRAME_S;
+            }
         }
     }
 

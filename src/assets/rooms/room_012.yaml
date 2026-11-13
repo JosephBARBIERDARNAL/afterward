@@ -67,68 +67,74 @@ enemy_spawns:
   - type_id: catto
     position_h: { x: 9, y: 1 }
     facing: left
-  - type_id: catto_rust
-    position_h: { x: 13, y: 1 }
-    facing: left
-  - type_id: mad_ghost
-    position_h: { x: 17, y: 1 }
-    facing: left
   - type_id: mage
     position_h: { x: 21, y: 3 }
     facing: left
-  - type_id: mage
-    position_h: { x: 14, y: 5 }
-    facing: right
   - type_id: mad_ghost_rust
     position_h: { x: 10, y: 5 }
     facing: right
-  - type_id: catto
-    position_h: { x: 2.5, y: 7 }
-    facing: right
-  - type_id: mage_rust
-    position_h: { x: 10, y: 9 }
-    facing: left
   - type_id: abomination_rust
     position_h: { x: 15.5, y: 9 }
     facing: left
-    armor_layers: 1
+    wave: 1
   - type_id: catto_rust
     position_h: { x: 21.5, y: 11 }
     facing: left
-  - type_id: mad_ghost_rust
-    position_h: { x: 13, y: 13 }
-    facing: right
-  - type_id: mad_ghost
-    position_h: { x: 9.5, y: 13 }
-    facing: right
+    wave: 1
   - type_id: mage
     position_h: { x: 2.5, y: 15 }
     facing: right
-  - type_id: catto
-    position_h: { x: 9, y: 17 }
-    facing: left
+    wave: 1
   - type_id: abomination
     position_h: { x: 12.5, y: 17 }
     facing: left
-    armor_layers: 2
-  - type_id: mage_rust
-    position_h: { x: 21, y: 19 }
-    facing: left
     armor_layers: 1
+    wave: 2
   - type_id: mad_ghost_rust
     position_h: { x: 12, y: 21 }
     facing: right
-    armor_layers: 1
-  - type_id: catto_rust
-    position_h: { x: 3, y: 23 }
-    facing: right
-  - type_id: abomination_rust
-    position_h: { x: 15, y: 25 }
-    facing: left
-    armor_layers: 2
+    wave: 2
   - type_id: mage
     position_h: { x: 18.5, y: 25 }
     facing: left
+    wave: 2
+# Vents: each warns for arm_s, burns for burn_s, rests for rest_s, and
+# starts over, offset_s into that cycle as the room opens.
+hazards:
+  - rect_h: { x: 12, y: 1, width: 2, height: 1.5 }
+    damage: 12
+    arm_s: 0.8
+    burn_s: 0.6
+    rest_s: 1.4
+  - rect_h: { x: 1.5, y: 7, width: 2, height: 1.5 }
+    damage: 12
+    arm_s: 0.8
+    burn_s: 0.6
+    rest_s: 1.4
+    offset_s: 0.7
+  - rect_h: { x: 9, y: 9, width: 2, height: 1.5 }
+    damage: 12
+    arm_s: 0.8
+    burn_s: 0.6
+    rest_s: 1.4
+    offset_s: 1.4
+  - rect_h: { x: 8.5, y: 13, width: 2, height: 1.5 }
+    damage: 12
+    arm_s: 0.8
+    burn_s: 0.6
+    rest_s: 1.4
+    offset_s: 2.1
+  - rect_h: { x: 8, y: 17, width: 2, height: 1.5 }
+    damage: 12
+    arm_s: 0.8
+    burn_s: 0.6
+    rest_s: 1.4
+  - rect_h: { x: 2, y: 23, width: 2, height: 1.5 }
+    damage: 12
+    arm_s: 0.8
+    burn_s: 0.6
+    rest_s: 1.4
+    offset_s: 1.4
 # The bonus item, lying beside the door once every enemy is down.
 bonus:
   x_h: 20.75

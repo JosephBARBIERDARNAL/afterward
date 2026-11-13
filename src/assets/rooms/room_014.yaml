@@ -61,42 +61,31 @@ enemy_spawns:
   - type_id: mage_purple
     position_h: { x: 13.5, y: 1 }
     facing: left
-  - type_id: mage
-    position_h: { x: 26, y: 4 }
-    facing: left
-  - type_id: abomination
-    position_h: { x: 28.5, y: 4 }
-    facing: left
-    armor_layers: 1
   - type_id: catto_purple
     position_h: { x: 31, y: 4 }
     facing: left
-  - type_id: mad_ghost_purple
-    position_h: { x: 9, y: 9 }
-    facing: right
-    armor_layers: 1
-  - type_id: mage_purple
-    position_h: { x: 6.5, y: 9 }
-    facing: right
-  - type_id: catto
-    position_h: { x: 4.5, y: 9 }
-    facing: right
+    wave: 1
   - type_id: catto_purple
     position_h: { x: 2.5, y: 9 }
     facing: right
-  - type_id: mage
-    position_h: { x: 14.25, y: 11 }
-    facing: left
-  - type_id: mage_purple
-    position_h: { x: 26, y: 14 }
-    facing: left
+    wave: 1
+  - type_id: mad_ghost_purple
+    position_h: { x: 9, y: 9 }
+    facing: right
+    wave: 1
   - type_id: abomination_purple
     position_h: { x: 28, y: 14 }
     facing: left
-    armor_layers: 2
+    armor_layers: 1
+    wave: 2
+  - type_id: mage_purple
+    position_h: { x: 26, y: 14 }
+    facing: left
+    wave: 2
   - type_id: mad_ghost_purple
     position_h: { x: 29.75, y: 14 }
     facing: left
+    wave: 2
 # The bonus item, lying beside the door once every enemy is down.
 bonus:
   x_h: 30.75

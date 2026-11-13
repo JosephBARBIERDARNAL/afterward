@@ -55,40 +55,33 @@ enemy_spawns:
   - type_id: catto
     position_h: { x: 11, y: 2.5 }
     facing: left
-  - type_id: mage
-    position_h: { x: 15.5, y: 1 }
-    facing: left
   - type_id: mad_ghost
     position_h: { x: 16, y: 5 }
     facing: left
-  - type_id: catto_rust
-    position_h: { x: 18, y: 1 }
+  - type_id: mage
+    position_h: { x: 15.5, y: 1 }
     facing: left
+    wave: 1
   - type_id: mad_ghost
     position_h: { x: 22, y: 3 }
     facing: left
-  - type_id: mage
-    position_h: { x: 26.5, y: 1 }
+    wave: 1
+  - type_id: catto_rust
+    position_h: { x: 18, y: 1 }
     facing: left
-  - type_id: mad_ghost_rust
-    position_h: { x: 28, y: 5 }
-    facing: left
+    wave: 1
   - type_id: abomination
     position_h: { x: 28.5, y: 1 }
     facing: left
-  - type_id: catto
-    position_h: { x: 31, y: 2.5 }
-    facing: left
+    wave: 2
   - type_id: mage_rust
     position_h: { x: 34, y: 4 }
     facing: left
-  - type_id: abomination
-    position_h: { x: 37, y: 5.5 }
-    facing: left
-    armor_layers: 1
+    wave: 2
   - type_id: mad_ghost
     position_h: { x: 39.5, y: 4 }
     facing: left
+    wave: 2
 # The bonus item, lying beside the door once every enemy is down.
 bonus:
   x_h: 40.75

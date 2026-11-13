@@ -93,8 +93,12 @@ fn the_empty_opening_room_offers_its_bonus_at_once_and_runs_into_room_one() {
     assert_eq!(game.session().health, game.session().max_health);
     assert_eq!(
         game.enemies().len(),
-        game.data().rooms[&1].enemy_spawns.len(),
-        "room 1's roster waits on the other side"
+        game.data().rooms[&1]
+            .enemy_spawns
+            .iter()
+            .filter(|spawn| spawn.wave == 0)
+            .count(),
+        "room 1's first wave waits on the other side"
     );
 }
 

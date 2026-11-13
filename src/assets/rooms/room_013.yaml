@@ -49,58 +49,39 @@ enemy_spawns:
   - type_id: catto
     position_h: { x: 11, y: 1 }
     facing: left
-  - type_id: catto_gold
-    position_h: { x: 14, y: 1 }
-    facing: left
   - type_id: mad_ghost
     position_h: { x: 19, y: 1 }
     facing: left
-  - type_id: mage_gold
-    position_h: { x: 24, y: 1 }
+  - type_id: mage
+    position_h: { x: 10, y: 5 }
+    facing: left
+  - type_id: catto_gold
+    position_h: { x: 14, y: 1 }
     facing: left
   - type_id: mad_ghost_gold
     position_h: { x: 28, y: 1 }
     facing: left
-    armor_layers: 1
+    wave: 1
   - type_id: catto
     position_h: { x: 33, y: 1 }
     facing: left
-  - type_id: abomination
-    position_h: { x: 37, y: 1 }
-    facing: left
-    armor_layers: 1
-  - type_id: mage
-    position_h: { x: 10, y: 5 }
-    facing: left
-  - type_id: mad_ghost
-    position_h: { x: 14, y: 7 }
-    facing: left
-  - type_id: catto_gold
-    position_h: { x: 18, y: 9 }
-    facing: left
-  - type_id: abomination_gold
-    position_h: { x: 25, y: 11 }
-    facing: left
-    armor_layers: 2
-  - type_id: mage_gold
-    position_h: { x: 24, y: 13 }
-    facing: left
-  - type_id: mad_ghost_gold
-    position_h: { x: 30, y: 9 }
-    facing: left
+    wave: 1
   - type_id: mage
     position_h: { x: 34, y: 7 }
     facing: left
-  - type_id: catto
-    position_h: { x: 38, y: 5 }
+    wave: 1
+  - type_id: abomination_gold
+    position_h: { x: 25, y: 11 }
     facing: left
+    wave: 2
+  - type_id: mage_gold
+    position_h: { x: 24, y: 13 }
+    facing: left
+    wave: 2
   - type_id: catto_gold
     position_h: { x: 41.5, y: 3 }
     facing: left
-  - type_id: abomination_gold
-    position_h: { x: 44.25, y: 1 }
-    facing: left
-    armor_layers: 1
+    wave: 2
 # The bonus item, lying beside the door once every enemy is down.
 bonus:
   x_h: 44.75

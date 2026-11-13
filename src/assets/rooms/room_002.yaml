@@ -71,52 +71,40 @@ platforms:
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
 enemy_spawns:
-  - type_id: blade_unit
-    position_h: { x: 1.75, y: 11 }
-    facing: right
-  - type_id: blade_unit
-    position_h: { x: 2.25, y: 13.25 }
+  - type_id: rifle_unit
+    position_h: { x: 9.75, y: 2 }
     facing: right
   - type_id: blade_unit
     position_h: { x: 11, y: 7 }
     facing: right
-  - type_id: rifle_unit
-    position_h: { x: 9.75, y: 2 }
-    facing: right
-  - type_id: rifle_unit
-    position_h: { x: 10.25, y: 4.75 }
-    facing: right
-    armor_layers: 1
-  - type_id: rifle_unit
-    position_h: { x: 42.25, y: 9 }
-    facing: left
-    armor_layers: 1
   - type_id: blade_unit
     position_h: { x: 17.25, y: 4 }
     facing: left
   - type_id: blade_unit
     position_h: { x: 19.5, y: 12 }
     facing: right
+  - type_id: blade_unit
+    position_h: { x: 28.5, y: 3 }
+    facing: right
+    wave: 1
+  - type_id: blade_unit
+    position_h: { x: 32.5, y: 3 }
+    facing: left
+    wave: 1
   - type_id: rifle_unit
     position_h: { x: 26.25, y: 12 }
     facing: left
     armor_layers: 1
+    wave: 1
   - type_id: heavy_unit
     position_h: { x: 35, y: 1 }
     facing: left
-    armor_layers: 3
-  - type_id: rifle_unit
-    position_h: { x: 11.25, y: 11 }
-    facing: left
-  - type_id: blade_unit
-    position_h: { x: 28.5, y: 3 }
-    facing: right
-  - type_id: blade_unit
-    position_h: { x: 32.5, y: 3 }
-    facing: left
+    armor_layers: 2
+    wave: 2
   - type_id: blade_unit
     position_h: { x: 36.25, y: 9 }
     facing: right
+    wave: 2
 # The bonus item, lying beside the door once every enemy is down.
 bonus:
   x_h: 44.75

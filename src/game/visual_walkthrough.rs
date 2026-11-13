@@ -88,6 +88,9 @@ struct VisualScene {
     room_id: u16,
     room_cleared: bool,
     door_open: bool,
+    /// Each wave of a room's enemies is a scene of its own: the walkthrough
+    /// clears the one standing, and must clear the next when it arrives.
+    wave: u8,
 }
 
 #[derive(SystemParam)]
@@ -144,6 +147,7 @@ fn drive_visual_walkthrough(resources: VisualWalkthroughResources) {
         room_id: session.room_id,
         room_cleared: session.room_cleared,
         door_open: session.door_open,
+        wave: session.wave,
     };
     if walkthrough.active_scene != Some(scene) {
         walkthrough.active_scene = Some(scene);
