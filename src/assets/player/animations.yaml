@@ -8,6 +8,8 @@
 # `body_height_px` tall and stands on `feet_row_px` (rows counted from the top
 # of a frame). It is drawn `body_height_h` tall, feet on the collision box's
 # baseline; the collision box itself stays 1 H tall.
+# Every drawn frame is followed by an in-between, so a clip counts two frames
+# for each pose and plays them at twice the pace the poses were drawn for.
 frame_size_px: { width: 128, height: 128 }
 body_height_px: 68
 feet_row_px: 128
@@ -24,62 +26,62 @@ idle_fidget_after_s: 4
 clips:
   # Standing still: the guard breathing slowly, quicker while enemies are up,
   # then a held flinch once badly hurt.
-  idle: { sheet: player/sheets/guard.png, frames: 2, fps: 2 }
-  idle_alert: { sheet: player/sheets/guard.png, frames: 2, fps: 6 }
-  idle_wounded: { sheet: player/sheets/hurt.png, first_frame: 2, frames: 1, fps: 1 }
-  idle_fidget_left: { sheet: player/sheets/idle_fidget_left.png, frames: 5, fps: 8 }
-  idle_fidget_right: { sheet: player/sheets/idle_fidget_right.png, frames: 5, fps: 8 }
-  walk: { sheet: player/sheets/walk.png, frames: 12, fps: 12 }
-  jog: { sheet: player/sheets/jog.png, frames: 12, fps: 16 }
+  idle: { sheet: player/sheets/guard.png, frames: 4, fps: 4 }
+  idle_alert: { sheet: player/sheets/guard.png, frames: 4, fps: 12 }
+  idle_wounded: { sheet: player/sheets/hurt.png, first_frame: 4, frames: 1, fps: 1 }
+  idle_fidget_left: { sheet: player/sheets/idle_fidget_left.png, frames: 10, fps: 16 }
+  idle_fidget_right: { sheet: player/sheets/idle_fidget_right.png, frames: 10, fps: 16 }
+  walk: { sheet: player/sheets/walk.png, frames: 24, fps: 24 }
+  jog: { sheet: player/sheets/jog.png, frames: 24, fps: 32 }
   # Holding Down on the ground: the crouch plays down and holds its last
   # frame, which the crouch walk shuffles along on.
-  crouch: { sheet: player/sheets/crouch.png, frames: 3, fps: 12 }
-  crouch_walk: { sheet: player/sheets/crouch.png, first_frame: 2, frames: 1, fps: 1 }
+  crouch: { sheet: player/sheets/crouch.png, frames: 6, fps: 24 }
+  crouch_walk: { sheet: player/sheets/crouch.png, first_frame: 4, frames: 1, fps: 1 }
   # Take-off, then the rising loop until the player starts falling.
-  jump: { sheet: player/sheets/jump.png, frames: 6, fps: 24 }
-  ascend: { sheet: player/sheets/jump.png, first_frame: 6, frames: 2, fps: 8 }
+  jump: { sheet: player/sheets/jump.png, frames: 12, fps: 48 }
+  ascend: { sheet: player/sheets/jump.png, first_frame: 12, frames: 4, fps: 16 }
   # Falling, then touching down: both cut out of the landing sheet, whose
   # first frames are airborne and whose last ones kick up dust.
-  descend: { sheet: player/sheets/fall.png, first_frame: 4, frames: 2, fps: 8 }
-  land: { sheet: player/sheets/fall.png, first_frame: 6, frames: 7, fps: 20 }
+  descend: { sheet: player/sheets/fall.png, first_frame: 8, frames: 4, fps: 16 }
+  land: { sheet: player/sheets/fall.png, first_frame: 12, frames: 14, fps: 40 }
   # Clinging to a wall, then pushing off it.
-  wall_slide: { sheet: player/sheets/wall_jump.png, frames: 2, fps: 6 }
-  wall_jump: { sheet: player/sheets/wall_jump.png, first_frame: 2, frames: 2, fps: 16 }
+  wall_slide: { sheet: player/sheets/wall_jump.png, frames: 4, fps: 12 }
+  wall_jump: { sheet: player/sheets/wall_jump.png, first_frame: 4, frames: 4, fps: 32 }
   # Raising the guard; holds its last frame while Cover is held.
-  cover: { sheet: player/sheets/cover.png, frames: 12, fps: 20 }
-  hit: { sheet: player/sheets/hit.png, frames: 3, fps: 14 }
-  death: { sheet: player/sheets/death.png, frames: 5, fps: 9 }
+  cover: { sheet: player/sheets/cover.png, frames: 24, fps: 40 }
+  hit: { sheet: player/sheets/hit.png, frames: 6, fps: 28 }
+  death: { sheet: player/sheets/death.png, frames: 10, fps: 18 }
   # The melee chain, in the order the steps of `player.melee` of
   # `config/gameplay.yaml` call for them. The last four are finishers: a run
   # throws whichever one of them its bonuses bought.
-  strike_1: { sheet: player/sheets/strike_1.png, frames: 7, fps: 24 }
-  strike_2: { sheet: player/sheets/strike_2.png, frames: 8, fps: 24 }
-  kick: { sheet: player/sheets/kick.png, frames: 5, fps: 18 }
-  power_strike: { sheet: player/sheets/power_strike.png, frames: 11, fps: 26 }
-  fire_kick: { sheet: player/sheets/fire_kick.png, frames: 11, fps: 26 }
-  explosive_strike: { sheet: player/sheets/explosive_strike.png, frames: 9, fps: 22 }
+  strike_1: { sheet: player/sheets/strike_1.png, frames: 14, fps: 48 }
+  strike_2: { sheet: player/sheets/strike_2.png, frames: 16, fps: 48 }
+  kick: { sheet: player/sheets/kick.png, frames: 10, fps: 36 }
+  power_strike: { sheet: player/sheets/power_strike.png, frames: 22, fps: 52 }
+  fire_kick: { sheet: player/sheets/fire_kick.png, frames: 22, fps: 52 }
+  explosive_strike: { sheet: player/sheets/explosive_strike.png, frames: 18, fps: 44 }
   # Attack with Down held in mid-air: the drop, then the floor it breaks.
-  ground_slam: { sheet: player/sheets/ground_slam.png, frames: 12, fps: 24 }
+  ground_slam: { sheet: player/sheets/ground_slam.png, frames: 24, fps: 48 }
   # Down and Jump together on the ground: a roll that nothing can hit through
   # its middle.
-  roll: { sheet: player/sheets/roll.png, frames: 9, fps: 18 }
+  roll: { sheet: player/sheets/roll.png, frames: 18, fps: 36 }
   # Attack held rather than tapped: the gather, then the brace it is thrown
   # from. The charge loops until the key goes.
-  charge: { sheet: player/sheets/charge.png, frames: 6, fps: 12 }
-  charge_brace: { sheet: player/sheets/charge_brace.png, frames: 10, fps: 16 }
+  charge: { sheet: player/sheets/charge.png, frames: 12, fps: 24 }
+  charge_brace: { sheet: player/sheets/charge_brace.png, frames: 20, fps: 32 }
   # Healing: the glow of a health drop taken off the floor, or of a bonus that
   # heals a cleared room.
-  healing: { sheet: player/sheets/healing.png, frames: 8, fps: 14 }
+  healing: { sheet: player/sheets/healing.png, frames: 16, fps: 28 }
   # Getting up off the floor again, which only Last Stand ever asks for.
-  rise: { sheet: player/sheets/rise.png, frames: 8, fps: 10 }
+  rise: { sheet: player/sheets/rise.png, frames: 16, fps: 20 }
   # Planting the decoy that enemies swing at.
-  summon: { sheet: player/sheets/summon.png, frames: 8, fps: 16 }
+  summon: { sheet: player/sheets/summon.png, frames: 16, fps: 32 }
   # Going into a door and coming out of the next one.
-  dissolve: { sheet: player/sheets/dissolve.png, frames: 6, fps: 14 }
-  materialize: { sheet: player/sheets/materialize.png, frames: 6, fps: 14 }
+  dissolve: { sheet: player/sheets/dissolve.png, frames: 12, fps: 28 }
+  materialize: { sheet: player/sheets/materialize.png, frames: 12, fps: 28 }
   # The aura worn for a moment when a bonus is taken, one per category; the
   # defensive one is the guard's own sheet, played through once.
-  aura_combat: { sheet: player/sheets/aura_combat.png, frames: 10, fps: 18 }
-  aura_agility: { sheet: player/sheets/aura_agility.png, frames: 6, fps: 14 }
-  aura_intelligence: { sheet: player/sheets/aura_intelligence.png, frames: 10, fps: 18 }
-  aura_defense: { sheet: player/sheets/cover.png, frames: 12, fps: 20 }
+  aura_combat: { sheet: player/sheets/aura_combat.png, frames: 20, fps: 36 }
+  aura_agility: { sheet: player/sheets/aura_agility.png, frames: 12, fps: 28 }
+  aura_intelligence: { sheet: player/sheets/aura_intelligence.png, frames: 20, fps: 36 }
+  aura_defense: { sheet: player/sheets/cover.png, frames: 24, fps: 40 }

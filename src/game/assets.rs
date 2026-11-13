@@ -122,12 +122,16 @@ pub(super) fn animate_sprites(
         let Some(atlas) = sprite.texture_atlas.as_mut() else {
             continue;
         };
-        if animation.frame + 1 == animation.frames {
-            if animation.looping {
-                animation.frame = 0;
+        // A clip paced faster than the screen is drawn skips frames rather
+        // than running late.
+        for _ in 0..animation.timer.times_finished_this_tick() {
+            if animation.frame + 1 == animation.frames {
+                if animation.looping {
+                    animation.frame = 0;
+                }
+            } else {
+                animation.frame += 1;
             }
-        } else {
-            animation.frame += 1;
         }
         atlas.index = animation.frame;
     }
