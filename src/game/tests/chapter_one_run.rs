@@ -426,7 +426,9 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
         if screen == GameScreen::RoomIntro {
             intro_rooms.insert(room_id);
         }
-        if screen == GameScreen::Complete {
+        // The run goes on into the later chapters: this one ends where
+        // Chapter 1 does, as the door out of room 10 lets go.
+        if room_id > 10 {
             break;
         }
     }
@@ -471,9 +473,9 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
     let session = app.world().resource::<RunSession>();
     let owned_bonuses = session.owned_bonuses.iter().collect::<BTreeSet<_>>();
     assert_eq!(
-        *app.world().resource::<State<GameScreen>>().get(),
-        GameScreen::Complete,
-        "the input-driven run should reach the Chapter 1 completion screen; room: {}, health: {}, bonuses: {:?}, living enemies: {}, enemy states: {:?}, door open: {}, player position: {:?}, velocity: {:?}, grounded: {}, facing: {}, left pressed: {}, right pressed: {}, current screen: {:?}, current offers: {:?}, interact binding: {}",
+        session.room_id,
+        11,
+        "the input-driven run should leave Chapter 1 through the door of room 10; room: {}, health: {}, bonuses: {:?}, living enemies: {}, enemy states: {:?}, door open: {}, player position: {:?}, velocity: {:?}, grounded: {}, facing: {}, left pressed: {}, right pressed: {}, current screen: {:?}, current offers: {:?}, interact binding: {}",
         session.room_id,
         session.health,
         session.owned_bonuses,
@@ -492,7 +494,6 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
             .resource::<ControlBindings>()
             .binding_label(GameAction::Interact),
     );
-    assert_eq!(session.room_id, 10);
     assert!(saw_boss_intro, "the run should show the room 10 boss intro");
     assert_eq!(
         intro_rooms,

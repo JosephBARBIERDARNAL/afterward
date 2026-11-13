@@ -51,8 +51,8 @@ impl GameData {
         let surfaces = read_yaml(&asset_root.join("surfaces/materials.yaml"))?;
         let mut rooms = BTreeMap::new();
 
-        // Room 0 is the run's empty opening room; the chapter proper is 1..=10.
-        for room_id in 0..=10 {
+        // Room 0 is the run's empty opening room; the ten chapters are 1..=100.
+        for room_id in 0..=RoomConfig::LAST_ID {
             let room: RoomConfig = read_yaml(&RoomConfig::file_path(asset_root, room_id))?;
             rooms.insert(room.room_id, room);
         }
@@ -404,10 +404,11 @@ impl GameData {
             }
         }
 
-        if self.rooms.len() != 11 {
-            return Err(InvalidGameData::from(
-                "the Chapter 1 data must contain the opening room 0 and rooms 1 through 10",
-            ));
+        if !self.rooms.keys().copied().eq(0..=RoomConfig::LAST_ID) {
+            return Err(InvalidGameData::from(format!(
+                "the room data must contain the opening room 0 and rooms 1 through {}",
+                RoomConfig::LAST_ID
+            )));
         }
 
         let mut bonus_ids = self
@@ -438,26 +439,6 @@ impl GameData {
             return Err(InvalidGameData::from(
                 "every bonus rarity needs a draw weight above zero",
             ));
-        }
-        // Every room lays out one bonus item, and the player owns one bonus per
-        // room already cleared. For the last room's item to still offer two
-        // bonuses of its category, and two more on a reroll, the category needs
-        // one per earlier room plus those four.
-        let needed_per_category = self.rooms.len() + 3;
-        for name in self.bonuses.categories.keys() {
-            let count = self
-                .bonuses
-                .bonuses
-                .iter()
-                .filter(|bonus| bonus.category == *name)
-                .count();
-            if count < needed_per_category {
-                return Err(InvalidGameData::from(format!(
-                    "category {name} holds {count} bonuses, but a run of {} rooms can ask it \
-                     for {needed_per_category}",
-                    self.rooms.len()
-                )));
-            }
         }
         let lights = &self.gameplay.effects.city_lights;
         let glow = &self.gameplay.effects.glow;
@@ -723,24 +704,11 @@ mod tests {
         let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
         let data = GameData::load(&asset_root).expect("Chapter 1 YAML should be valid");
 
-        assert_eq!(data.rooms.len(), 11);
+        assert_eq!(data.rooms.len(), 101);
         assert!(
             data.rooms[&0].enemy_spawns.is_empty(),
             "the opening room holds no enemies"
         );
-        for name in data.bonuses.categories.keys() {
-            let count = data
-                .bonuses
-                .bonuses
-                .iter()
-                .filter(|bonus| bonus.category == *name)
-                .count();
-            assert!(
-                count >= data.rooms.len() + 3,
-                "category {name} holds only {count} bonuses for a chapter of {} rooms",
-                data.rooms.len()
-            );
-        }
         assert!(
             data.rooms[&10]
                 .enemy_spawns

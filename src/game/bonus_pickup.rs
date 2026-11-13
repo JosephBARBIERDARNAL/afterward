@@ -17,24 +17,51 @@ impl BonusPickup {
 
 /// Lays the item out once the room is cleared, as long as no bonus has been
 /// picked there yet. A room without enemies is cleared the moment it opens, so
-/// its item is simply there from the start.
+/// its item is simply there from the start. A run is longer than the bonuses
+/// are many: once no category can still offer a choice of two, the room lays
+/// nothing and its door simply opens.
 pub(super) fn spawn_bonus_pickup(
     mut commands: Commands,
-    data: Res<GameData>,
-    session: Res<RunSession>,
+    resources: BonusPickupResources,
     sheets: Res<SpriteSheets>,
-    mut random: ResMut<RandomState>,
     pickups: Query<Entity, With<BonusPickup>>,
-    mut sounds: ResMut<SoundQueue>,
+    mut doors: Query<&mut Sprite, With<ExitDoor>>,
 ) {
+    let BonusPickupResources {
+        data,
+        mut random,
+        mut session,
+        mut sounds,
+        ..
+    } = resources;
     if !session.room_cleared || session.door_open || !pickups.is_empty() {
         return;
     }
-    let categories = &data.bonuses.categories;
-    let index = random.index(categories.len());
-    let Some((category, config)) = categories.iter().nth(index) else {
+    let categories = data
+        .bonuses
+        .categories
+        .iter()
+        .filter(|(name, _)| {
+            data.bonuses
+                .bonuses
+                .iter()
+                .filter(|bonus| bonus.category == **name)
+                .filter(|bonus| !session.owned_bonuses.contains(&bonus.id))
+                .count()
+                >= 2
+        })
+        .collect::<Vec<_>>();
+    if categories.is_empty() {
+        for mut sprite in &mut doors {
+            if let Some(atlas) = sprite.texture_atlas.as_mut() {
+                atlas.index = ExitDoor::UNLOCKED_FRAME;
+            }
+        }
+        session.door_open = true;
+        sounds.push(SoundCue::DoorAppear);
         return;
-    };
+    }
+    let (category, config) = categories[random.index(categories.len())];
     let room = &data.rooms[&session.room_id];
     let item = &data.gameplay.room_flow.bonus_pickup;
     let Some(sheet) = sheets.0.get(BonusPickup::SHEET) else {
@@ -99,7 +126,6 @@ pub(super) fn update_bonus_pickup(
     resources: BonusPickupResources,
     mut commands: Commands,
     pickups: Query<(Entity, &BonusPickup)>,
-    mut doors: Query<&mut Sprite, With<ExitDoor>>,
 ) {
     let BonusPickupResources {
         data,
@@ -125,18 +151,6 @@ pub(super) fn update_bonus_pickup(
         session.selected_choice = bonus_screen::BonusChoice::Offer(0);
         sounds.push(SoundCue::Pickup);
         commands.entity(entity).despawn();
-        // A build that already holds everything of this category has nothing
-        // to be offered: the item is simply taken, and the door opens.
-        if session.offered_bonuses.is_empty() {
-            for mut sprite in &mut doors {
-                if let Some(atlas) = sprite.texture_atlas.as_mut() {
-                    atlas.index = ExitDoor::UNLOCKED_FRAME;
-                }
-            }
-            session.door_open = true;
-            sounds.push(SoundCue::DoorAppear);
-            return;
-        }
         next_screen.set(GameScreen::Bonus);
         return;
     }

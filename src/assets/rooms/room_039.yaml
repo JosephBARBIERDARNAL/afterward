@@ -1,0 +1,35 @@
+# Room coordinates use H from the lower-left. Platform and decoration `rect_h`
+# give each block's lower-left corner and size; player, enemy, and exit y
+# values mark the feet baseline on a platform top.
+room_id: 39
+chapter_id: 4
+size:
+  width_h: 24
+  height_h: 13.5
+background_profiles: [city_teal_evening]
+player_spawn:
+  x_h: 4.25
+  y_h: 1
+# Solid platforms: land on their top, stop against their sides, bump
+# your head on their underside. They stop shots too.
+platforms:
+  - label: placeholder floor
+    color: "#1C1A2E"
+    rect_h: { x: 1, y: 0, width: 23, height: 1 }
+  - label: placeholder wall
+    color: "#1C1A2E"
+    rect_h: { x: 23, y: 0, width: 1, height: 13.5 }
+  - label: placeholder wall
+    color: "#1C1A2E"
+    rect_h: { x: 0, y: 0, width: 1, height: 13.5 }
+# Decorations: non-solid panels behind the platforms or in front of the bodies.
+decorations: []
+enemy_spawns: []
+# The bonus item, lying beside the door once every enemy is down.
+bonus:
+  x_h: 20.75
+  y_h: 1
+exit:
+  x_h: 22
+  y_h: 1
+next_room_id: 40

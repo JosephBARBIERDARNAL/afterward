@@ -30,6 +30,10 @@ pub struct RoomConfig {
 }
 
 impl RoomConfig {
+    /// The last room of a run: ten chapters of ten rooms after the opening
+    /// room 0.
+    pub(crate) const LAST_ID: u16 = 100;
+
     /// Where room `room_id` is stored under the asset root.
     pub(crate) fn file_path(asset_root: &Path, room_id: u16) -> PathBuf {
         asset_root.join(format!("rooms/room_{room_id:03}.yaml"))
