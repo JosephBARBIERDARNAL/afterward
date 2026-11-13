@@ -114,8 +114,8 @@ impl Field {
             Self::Room => "Room",
             Self::RoomWidth => "Room width (H)",
             Self::RoomHeight => "Room height (H)",
-            Self::Background => "Background",
-            Self::BackgroundOver => "Laid over it",
+            Self::Background => "Background 1",
+            Self::BackgroundOver => "Background 2",
             Self::Label => "Label",
             Self::Fill => "Fill",
             Self::Layer => "Layer",
@@ -222,7 +222,7 @@ impl Field {
                 .cloned()
                 .unwrap_or_default(),
             Self::BackgroundOver => match room.background_profiles.get(1..) {
-                Some([]) | None => String::from("nothing"),
+                Some([]) | None => String::from("None"),
                 Some(over) => over.join(", "),
             },
             Self::Label => self.text(room, item).unwrap_or_else(|| String::from("-")),
