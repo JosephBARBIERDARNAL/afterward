@@ -33,7 +33,7 @@ Git hooks are managed by [prek](https://prek.j178.dev) from `prek.toml`: file hy
 
 ## Rules
 
-- When something is unclear, needs decision, is inconsistent or contradictory with something else, ask explicitly what should be done.
+- When something is unclear, needs decision, is inconsistent or contradictory with something else, ask explicitly what should be done. Ask me for things that need decisions or are unclear. Good ideas and suggestions welcome.
 - When defining the number of enemies, room organization, etc., always do it in a consistent and centralized way in yaml files so that making changes in a specific room is easy. Those files should be the source of truth on the construction of the game and make the game a true data-driven game.
 - All constant parameters (game dimensions, player stats, etc.) should be clearly defined in such way and easy to change.
 - Always feel free to move, rename and change asset files for consistency and simplicity.

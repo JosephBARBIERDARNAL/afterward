@@ -6,7 +6,7 @@ chapter_id: 1
 size:
   width_h: 34
   height_h: 40
-background_profiles: [city_peach_sunset]
+background_profiles: [city_peach_sunset, clouds_violet]
 player_spawn:
   x_h: 2.5
   y_h: 37

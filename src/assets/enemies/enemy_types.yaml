@@ -187,7 +187,7 @@ types:
   # then works through its attacks in order. Its body is 31 px tall in a
   # sheet drawn at 3 world units a pixel, which is where 1.9 H comes from.
   black_knight:
-    hurtbox_h: { width: 1, height: 1.9 }
+    hurtbox_h: { width: 1, height: 1.5 }
     health: 450
     material: metal
     movement_speed_h_s: 3.2
