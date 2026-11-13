@@ -30,21 +30,21 @@ platforms:
 decorations: []
 enemy_spawns:
   - type_id: heavy_unit
-    position_h: { x: 20.5, y: 4 }
+    position_h: { x: 17.5, y: 4 }
     facing: left
     stat_overrides: { health: 120, armor_layers: 3 }
-  - type_id: heavy_unit
-    position_h: { x: 14.75, y: 6.25 }
+  - type_id: dark_blade_unit
+    position_h: { x: 14.5, y: 1 }
+    facing: left
+    stat_overrides: { health: 500, armor_layers: 3 }
+  - type_id: dark_blade_unit
+    position_h: { x: 13.55, y: 6.25 }
     facing: right
-    stat_overrides: { health: 120, armor_layers: 3 }
-  - type_id: emitter_unit
-    position_h: { x: 22, y: 1 }
+    stat_overrides: { health: 500, armor_layers: 3 }
+  - type_id: dark_blade_unit
+    position_h: { x: 16.5, y: 1 }
     facing: left
-    stat_overrides: { health: 500 }
-  - type_id: heavy_unit
-    position_h: { x: 24.5, y: 1 }
-    facing: left
-    stat_overrides: { health: 120, armor_layers: 3 }
+    stat_overrides: { health: 500, armor_layers: 3 }
 # The bonus item, lying beside the door once every enemy is down.
 bonus:
   x_h: 29.5
