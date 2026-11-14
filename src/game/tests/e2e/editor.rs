@@ -275,3 +275,42 @@ fn tab_moves_the_selection_to_the_closest_item_of_the_same_kind() {
     assert_eq!(enemies(&game).len(), authored + 1);
     assert_eq!(enemies(&game)[authored], second);
 }
+
+#[test]
+fn the_editor_adds_tunes_saves_and_deletes_a_vent() {
+    let mut game = HeadlessGame::with_copied_data();
+    game.tap(KeyCode::KeyD);
+    game.tap(KeyCode::PageDown);
+    let vents = |game: &HeadlessGame| game.data().rooms[&1].hazards.clone();
+    let authored = vents(&game).len();
+
+    // G adds a vent and selects it; its rows run Label, X, Y, Width,
+    // Height, then Damage and the cycle down to the offset.
+    game.tap(KeyCode::KeyG);
+    assert_eq!(vents(&game).len(), authored + 1);
+    let added = vents(&game)[authored].clone();
+    for _ in 0..5 {
+        game.tap(KeyCode::ArrowDown);
+    }
+    game.tap(KeyCode::ArrowRight);
+    assert_eq!(vents(&game)[authored].damage, added.damage + 1.0);
+    for _ in 0..4 {
+        game.tap(KeyCode::ArrowDown);
+    }
+    game.tap(KeyCode::ArrowRight);
+    assert_eq!(vents(&game)[authored].offset_s, added.offset_s + 0.1);
+    // C starts its cycle as the room opens again.
+    game.tap(KeyCode::KeyC);
+    assert_eq!(vents(&game)[authored].offset_s, 0.0);
+
+    // Cmd+S writes it to room 1's file, and Delete takes it out again.
+    command_presses(&mut game, KeyCode::KeyS, "s", 1);
+    let saved: RoomConfig = yaml_serde::from_str(
+        &fs::read_to_string(RoomConfig::file_path(&game.data().asset_root, 1))
+            .expect("the editor wrote the room file"),
+    )
+    .expect("the saved room is valid YAML");
+    assert_eq!(saved.hazards, vents(&game));
+    game.tap(KeyCode::Delete);
+    assert_eq!(vents(&game).len(), authored);
+}

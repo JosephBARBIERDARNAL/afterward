@@ -14,6 +14,7 @@ const PLAYER_BODY_COLOR: Color = Color::srgb(0.95, 0.95, 1.0);
 const EXIT_COLOR: Color = Color::srgb(0.35, 0.8, 1.0);
 const ENEMY_COLOR: Color = Color::srgb(1.0, 0.35, 0.45);
 const BONUS_COLOR: Color = Color::srgb(1.0, 0.78, 0.3);
+const VENT_COLOR: Color = Color::srgb(1.0, 0.45, 0.1);
 const HOVER_COLOR: Color = Color::WHITE;
 pub(super) const SELECTED_COLOR: Color = Color::srgb(1.0, 0.9, 0.2);
 // The selected body's hitboxes, colored as in the B overlay.
@@ -208,6 +209,7 @@ impl EditorItem {
             Self::PlayerSpawn => PLAYER_COLOR,
             Self::Exit => EXIT_COLOR,
             Self::Bonus => BONUS_COLOR,
+            Self::Hazard(_) => VENT_COLOR,
         }
     }
 }

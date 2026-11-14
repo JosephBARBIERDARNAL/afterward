@@ -273,7 +273,7 @@ fn status_hint(editor: &RoomEditor, room: &RoomConfig) -> (String, Color) {
     }
     let hint = if editor.selected.is_empty() {
         String::from(
-            "Click to select, drag empty space to box-select, P / D / E add at the cursor. Hold H for every shortcut.",
+            "Click to select, drag empty space to box-select, P / D / E / G add at the cursor. Hold H for every shortcut.",
         )
     } else {
         format!(

@@ -155,6 +155,8 @@ pub(super) fn handle_editor_keys(
         EditorAction::Add(NewItem::Decoration)
     } else if letter('e') {
         EditorAction::Add(NewItem::Enemy)
+    } else if letter('g') {
+        EditorAction::Add(NewItem::Vent)
     } else if pressed(KeyCode::Tab) {
         EditorAction::SelectNextOfKind
     } else if pressed(KeyCode::Delete) || pressed(KeyCode::Backspace) {
