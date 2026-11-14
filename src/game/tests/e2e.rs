@@ -287,7 +287,7 @@ impl HeadlessGame {
         self.app.update();
     }
 
-    /// From the main menu, opens a run in the empty room 0: Begin asks how
+    /// From the main menu, opens a run in room 0: Begin asks how
     /// hard it should be, and the difficulty screen opens on the choice
     /// already made, which is Normal until one is made.
     fn begin_run(&mut self) {
@@ -298,12 +298,13 @@ impl HeadlessGame {
         self.wait_for_screen(GameScreen::Playing, 10.0);
     }
 
-    /// From the main menu, starts a run and plays it to room 1, where the
-    /// first fight waits: a run opens in the empty room 0, whose bonus item is
-    /// picked up to unlock its door.
+    /// From the main menu, starts a run and plays it to room 1: a run opens
+    /// in room 0, whose enemies (if it has any) are defeated and whose bonus
+    /// item is picked up to unlock its door.
     fn start_run(&mut self) {
         self.begin_run();
         assert_eq!(self.session().room_id, 0);
+        self.defeat_enemies();
         self.take_bonus();
         self.tap(KeyCode::Digit1);
         self.leave_through_the_door();

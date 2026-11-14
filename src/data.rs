@@ -745,10 +745,6 @@ mod tests {
 
         assert_eq!(data.rooms.len(), 101);
         assert!(
-            data.rooms[&0].enemy_spawns.is_empty(),
-            "the opening room holds no enemies"
-        );
-        assert!(
             data.rooms[&10]
                 .enemy_spawns
                 .iter()

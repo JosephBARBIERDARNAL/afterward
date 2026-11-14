@@ -1,9 +1,18 @@
 use super::*;
 
 #[test]
-fn the_empty_opening_room_offers_its_bonus_at_once_and_runs_into_room_one() {
+fn an_empty_opening_room_offers_its_bonus_at_once_and_runs_into_room_one() {
     let mut game = HeadlessGame::new();
     assert_eq!(game.screen(), GameScreen::MainMenu);
+    // Whatever room 0 is authored with, this is about a room with nobody in it.
+    game.app
+        .world_mut()
+        .resource_mut::<GameData>()
+        .rooms
+        .get_mut(&0)
+        .expect("room 0 should exist")
+        .enemy_spawns
+        .clear();
     game.begin_run();
     assert_eq!(game.session().room_id, 0, "a run opens in room 0");
     assert!(game.enemies().is_empty(), "with nothing to fight");
@@ -134,6 +143,7 @@ fn the_opening_music_gives_way_to_a_chapter_track_on_the_way_into_room_one() {
         "with the city rising under it"
     );
 
+    game.defeat_enemies();
     game.take_bonus();
     game.tap(KeyCode::Digit1);
     game.leave_through_the_door();

@@ -12,6 +12,7 @@ use crate::game::{
 fn the_city_is_spoken_for_before_the_run_walks_into_it() {
     let mut game = HeadlessGame::new();
     game.begin_run();
+    game.defeat_enemies();
     game.take_bonus();
     game.tap(KeyCode::Digit1);
     game.step_toward_exit();

@@ -13,6 +13,7 @@ use crate::game::{
 fn the_camera_slides_into_the_next_room_and_the_entry_door_goes_once_it_lands() {
     let mut game = HeadlessGame::new();
     game.begin_run();
+    game.defeat_enemies();
     game.take_bonus();
     game.tap(KeyCode::Digit1);
 
