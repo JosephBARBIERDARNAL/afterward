@@ -10,7 +10,8 @@ Each piece below is cut out as it stands, with no padding:
   `src/assets/surfaces/textures/sci_fi/` and listed as materials in
   `surfaces/materials.yaml` (with `tile_h: 1`, the pack's scale).
 - `PROPS` are everything else, written under `src/assets/props/sci_fi/` and
-  listed in `props/props.yaml`, with the size printed here.
+  listed in `props/props.yaml`, with the size printed here; `ANIMATIONS` are
+  props whose frames are laid side by side in one strip.
 
 Run it with `just sci-fi` after the sheet or a piece changes. Needs
 ImageMagick.
@@ -52,15 +53,17 @@ PROPS = {
     "small_crate": (224, 22, 16, 10),
     "crate_stack": (242, 12, 27, 20),
     "spikes": (192, 56, 96, 8),
-    # A laser gate, off and then lit three ways.
-    "laser_off": (194, 80, 13, 48),
-    "laser_thin": (210, 80, 13, 48),
-    "laser_double": (226, 80, 13, 48),
-    "laser_bright": (242, 80, 13, 48),
     # Platforms: the hover pads, green at one end or the other, and the bench.
     "hover_pad_left": (0, 112, 42, 13),
     "hover_pad_right": (54, 112, 42, 13),
     "bench": (0, 144, 48, 15),
+}
+
+# Animated props: each frame's box in the sheet, laid left to right in one
+# strip, which `props/props.yaml` gives a frame count and a pace.
+ANIMATIONS = {
+    # A laser gate: off, then lit thin, double and bright.
+    "laser": [(194 + 16 * frame, 80, 13, 48) for frame in range(4)],
 }
 
 
@@ -98,6 +101,17 @@ def main():
     for name, box in PROPS.items():
         cut(name, box, ASSETS / "props/sci_fi")
         print(f"sci_fi_{name}: {box[2]}x{box[3]} px")
+    for name, boxes in ANIMATIONS.items():
+        frames = [
+            part
+            for x, y, w, h in boxes
+            for part in ["(", SOURCE, "-crop", f"{w}x{h}+{x}+{y}", "+repage", ")"]
+        ]
+        subprocess.run(
+            ["magick", *frames, "+append", "-strip", ASSETS / f"props/sci_fi/{name}.png"],
+            check=True,
+        )
+        print(f"sci_fi_{name}: {len(boxes)} frames of {boxes[0][2]}x{boxes[0][3]} px")
 
 
 if __name__ == "__main__":

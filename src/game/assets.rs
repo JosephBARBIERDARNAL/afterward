@@ -27,11 +27,24 @@ pub(super) fn load_sprites(
             health_pickup_sheet(&data.gameplay.health_pickup),
             bonus_pickup_sheet(&data.gameplay.room_flow.bonus_pickup),
         ])
+        // Every prop, still or animated, so a room draws them all one way.
+        .chain(data.props.props.iter().map(|(id, prop)| {
+            let animation = prop.animation;
+            SpriteSheetSpec {
+                key: id.sheet(),
+                path: prop.sprite.clone(),
+                frame_width: prop.size_px[0],
+                frame_height: prop.size_px[1],
+                frames: animation.map_or(1, |animation| animation.frames),
+                fps: animation.map_or(1.0, |animation| animation.fps),
+                first_cell: UVec2::ZERO,
+            }
+        }))
         .collect::<Vec<_>>();
 
     let mut sheets = BTreeMap::new();
     for spec in specs {
-        // Sheets under `ui/`, `pickups/` and `effects/` are pixel art drawn
+        // Sheets under `ui/`, `pickups/`, `effects/` and `props/` are pixel art drawn
         // near 1:1, and the Black Knight and the monsters are pixel art drawn
         // larger than their sheets, so they keep their hard pixel edges; the
         // other character sheets are scaled down and look better with the
@@ -39,6 +52,7 @@ pub(super) fn load_sprites(
         let image = if spec.path.starts_with("ui/")
             || spec.path.starts_with("pickups/")
             || spec.path.starts_with("effects/")
+            || spec.path.starts_with("props/")
             || spec.path.starts_with("enemies/black_knight/")
             || spec.path.starts_with("enemies/horror/")
             || spec.path.starts_with("enemies/eye_beast/")

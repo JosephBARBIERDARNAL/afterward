@@ -731,6 +731,7 @@ next_room_id: 4
                 crate::data::PropSprite {
                     sprite: String::from("crate.png"),
                     size_px: [32, 32],
+                    animation: None,
                 },
             )]
             .into(),

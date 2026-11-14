@@ -33,7 +33,14 @@ pub(super) fn spawn_room(
     // its entrance starts over rather than carrying on from a crossing.
     pan.came_through_a_door = false;
     let room = &data.rooms[&session.room_id];
-    draw_room(&mut commands, room, &data, &asset_server, &mut shaders);
+    draw_room(
+        &mut commands,
+        room,
+        &data,
+        &asset_server,
+        &sheets,
+        &mut shaders,
+    );
     spawn_player(&mut commands, room, &data, &sheets);
     session.wave = 0;
     session.untouched = true;
@@ -63,6 +70,7 @@ pub(super) fn draw_room(
     room: &RoomConfig,
     data: &GameData,
     asset_server: &AssetServer,
+    sheets: &SpriteSheets,
     shaders: &mut ShaderAssets,
 ) {
     // The room's vents, wherever a room is drawn: they only burn in play.
@@ -194,7 +202,7 @@ pub(super) fn draw_room(
     }
 
     spawn_room_platforms(commands, room, data);
-    room_art::draw(commands, room, data, asset_server);
+    room_art::draw(commands, room, data, asset_server, sheets);
 }
 
 /// Spawns the colliders of the room's platforms; `room_art::draw` draws them.

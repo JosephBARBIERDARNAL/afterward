@@ -9,6 +9,9 @@
 # 32 a 16 px crate is half as wide as the hero is tall.
 px_per_h: 32
 
+# An animated prop's sprite is a strip of `animation.frames` frames laid left
+# to right, each `size_px`, looped at `animation.fps` while the room is played
+# (the editor shows its first frame).
 props:
   sci_fi_green_window:
     sprite: props/sci_fi/green_window.png
@@ -55,18 +58,6 @@ props:
   sci_fi_spikes:
     sprite: props/sci_fi/spikes.png
     size_px: [96, 8]
-  sci_fi_laser_off:
-    sprite: props/sci_fi/laser_off.png
-    size_px: [13, 48]
-  sci_fi_laser_thin:
-    sprite: props/sci_fi/laser_thin.png
-    size_px: [13, 48]
-  sci_fi_laser_double:
-    sprite: props/sci_fi/laser_double.png
-    size_px: [13, 48]
-  sci_fi_laser_bright:
-    sprite: props/sci_fi/laser_bright.png
-    size_px: [13, 48]
   sci_fi_hover_pad_left:
     sprite: props/sci_fi/hover_pad_left.png
     size_px: [42, 13]
@@ -76,3 +67,7 @@ props:
   sci_fi_bench:
     sprite: props/sci_fi/bench.png
     size_px: [48, 15]
+  sci_fi_laser:
+    sprite: props/sci_fi/laser.png
+    size_px: [13, 48]
+    animation: { frames: 4, fps: 8 }

@@ -128,6 +128,7 @@ pub(super) fn draw(
     room: &RoomConfig,
     data: &GameData,
     asset_server: &AssetServer,
+    sheets: &SpriteSheets,
 ) {
     let surfaces = &data.surfaces;
     let texel_h = surfaces.texel_h();
@@ -253,11 +254,12 @@ pub(super) fn draw(
         ));
     }
 
+    // Each prop is drawn from its sheet, which `animate_sprites` loops while
+    // the room is played: a still prop is a sheet of one frame.
     for (index, placed) in room.props.iter().enumerate() {
-        let (Some(sprite), Some(size_h)) = (
-            data.props.props.get(&placed.prop),
-            data.props.size_h(&placed.prop),
-        ) else {
+        let key = placed.prop.sheet();
+        let (Some(sheet), Some(size_h)) = (sheets.0.get(&key), data.props.size_h(&placed.prop))
+        else {
             continue;
         };
         let base_z = match placed.layer {
@@ -271,7 +273,20 @@ pub(super) fn draw(
         commands.spawn((
             Sprite {
                 custom_size: Some(size_h * H_WORLD_UNITS),
-                ..Sprite::from_image(load_texture(asset_server, &sprite.sprite))
+                ..Sprite::from_atlas_image(
+                    sheet.image.clone(),
+                    TextureAtlas {
+                        layout: sheet.layout.clone(),
+                        index: 0,
+                    },
+                )
+            },
+            AnimatedSprite {
+                sheet: key,
+                frame: 0,
+                frames: sheet.frames,
+                timer: Timer::from_seconds(1.0 / sheet.fps, TimerMode::Repeating),
+                looping: true,
             },
             Transform::from_translation(
                 (middle * H_WORLD_UNITS).extend(base_z + index as f32 * BLOCK_Z_STEP),

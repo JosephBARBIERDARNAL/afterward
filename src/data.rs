@@ -703,9 +703,13 @@ impl GameData {
                     prop.sprite
                 )));
             }
-            if prop.size_px.contains(&0) {
+            if prop.size_px.contains(&0)
+                || prop.animation.is_some_and(|animation| {
+                    animation.frames == 0 || !(animation.fps.is_finite() && animation.fps > 0.0)
+                })
+            {
                 return Err(InvalidGameData::from(format!(
-                    "prop sprite {} needs a positive size",
+                    "prop sprite {} needs a positive size, and frames and a pace when animated",
                     prop.sprite
                 )));
             }

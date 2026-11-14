@@ -44,7 +44,14 @@ pub(super) fn refresh_room_view(
     let Some(room) = data.rooms.get(&editor.room_id) else {
         return;
     };
-    world::draw_room(&mut commands, room, &data, &asset_server, &mut shaders);
+    world::draw_room(
+        &mut commands,
+        room,
+        &data,
+        &asset_server,
+        &sheets,
+        &mut shaders,
+    );
     world::spawn_player(&mut commands, room, &data, &sheets);
     world::spawn_enemies(&mut commands, room, &data, &sheets, None);
     world::spawn_exit_door(&mut commands, room, &data, &sheets);

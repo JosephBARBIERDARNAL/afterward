@@ -31,8 +31,19 @@ impl PropCatalog {
 #[derive(Debug, Clone, Deserialize)]
 pub struct PropSprite {
     pub sprite: String,
-    /// The sprite's width and height in pixels.
+    /// The width and height in pixels of the sprite, or of one of its frames.
     pub size_px: [u32; 2],
+    /// Left out for a still prop. An animated one's sprite is a strip of
+    /// frames laid left to right.
+    #[serde(default)]
+    pub animation: Option<PropAnimation>,
+}
+
+/// How an animated prop's strip is played: looped at `fps`.
+#[derive(Debug, Clone, Copy, Deserialize)]
+pub struct PropAnimation {
+    pub frames: usize,
+    pub fps: f32,
 }
 
 /// The name of a prop in `props/props.yaml`, as rooms refer to it.
@@ -75,6 +86,13 @@ impl Deref for PropId {
 
     fn deref(&self) -> &Self::Target {
         &self.0
+    }
+}
+
+impl PropId {
+    /// The key the prop's sprite is loaded under in the game's sprite sheets.
+    pub(crate) fn sheet(&self) -> String {
+        format!("prop_{}", self.0)
     }
 }
 

@@ -89,16 +89,16 @@ materials:
     footstep: wood
 
   # Sci-fi: tiles cut from the sci-fi platformer pack (scripts/
-  # slice_sci_fi_tileset.py), drawn at the pack's 16 px per H.
+  # slice_sci_fi_tileset.py), drawn at 32 px per H, as the props are.
   sci_fi_dark:
     texture: surfaces/textures/sci_fi/dark.png
     footstep: stone
-    tile_h: 1
+    tile_h: 0.5
   sci_fi_dark_rivets:
     texture: surfaces/textures/sci_fi/dark_rivets.png
     footstep: stone
-    tile_h: 1
+    tile_h: 0.5
   sci_fi_riveted_wall:
     texture: surfaces/textures/sci_fi/riveted_wall.png
     footstep: stone
-    tile_h: 1
+    tile_h: 0.5

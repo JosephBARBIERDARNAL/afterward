@@ -173,13 +173,17 @@ pub(super) fn spawn_palette(
                             RelativeCursorPosition::default(),
                             PaletteSwatch::Prop(id.clone()),
                         ))
+                        // An animated prop shows its first frame.
                         .with_child((
                             Node {
                                 width: px(width_px * scale),
                                 height: px(height_px * scale),
                                 ..default()
                             },
-                            ImageNode::new(room_art::load_texture(asset_server, &prop.sprite)),
+                            ImageNode {
+                                rect: Some(Rect::new(0.0, 0.0, width_px, height_px)),
+                                ..ImageNode::new(room_art::load_texture(asset_server, &prop.sprite))
+                            },
                         ));
                     }
                 });
