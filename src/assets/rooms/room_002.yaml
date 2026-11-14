@@ -7,6 +7,7 @@ size:
   width_h: 48
   height_h: 16
 background_profiles: [city_peach_sunset]
+hidden_background_layers: [city_peach_sunset/4, city_peach_sunset/5]
 player_spawn:
   x_h: 3
   y_h: 2
@@ -43,9 +44,9 @@ platforms:
   - color: "#1C1A2E"
     rect_h: { x: 8, y: 2, width: 1, height: 9 }
   - color: "#1C1A2E"
-    rect_h: { x: 9, y: 6.75, width: 4.25, height: 0.25 }
+    rect_h: { x: 9, y: 6.75, width: 3, height: 0.25 }
   - color: "#1C1A2E"
-    rect_h: { x: 9, y: 4.5, width: 3, height: 0.25 }
+    rect_h: { x: 9, y: 4.5, width: 4, height: 0.25 }
   - color: "#1C1A2E"
     rect_h: { x: 24, y: 0, width: 1, height: 12 }
   - color: "#1C1A2E"
@@ -55,19 +56,21 @@ platforms:
     rect_h: { x: 25, y: 11, width: 2, height: 1 }
   - label: the ledge the whole room stands on
     color: "#1C1A2E"
-    rect_h: { x: 27, y: 0, width: 13, height: 1 }
+    rect_h: { x: 26, y: 0, width: 14, height: 1 }
   - label: the ledge the whole room stands on
     color: "#1C1A2E"
-    rect_h: { x: 28, y: 2.75, width: 5, height: 0.25 }
+    rect_h: { x: 28.75, y: 2.75, width: 5, height: 0.25 }
   - label: the ledge the whole room stands on
     color: "#1C1A2E"
-    rect_h: { x: 29.25, y: 9.25, width: 5, height: 0.25 }
-    rotation_deg: -15
+    rect_h: { x: 32, y: 8.75, width: 2, height: 0.25 }
   - color: "#1C1A2E"
     rect_h: { x: 13, y: 9, width: 3, height: 1 }
   - label: the ledge the whole room stands on
     color: "#1C1A2E"
     rect_h: { x: 37, y: 2, width: 1, height: 6 }
+  - label: the ledge the whole room stands on
+    color: "#1C1A2E"
+    rect_h: { x: 29.5, y: 10, width: 2, height: 0.25 }
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
 enemy_spawns:
@@ -84,11 +87,11 @@ enemy_spawns:
     position_h: { x: 19.5, y: 12 }
     facing: right
   - type_id: blade_unit
-    position_h: { x: 28.5, y: 3 }
+    position_h: { x: 29.25, y: 3 }
     facing: right
     wave: 1
   - type_id: blade_unit
-    position_h: { x: 32.5, y: 3 }
+    position_h: { x: 33.25, y: 3 }
     facing: left
     wave: 1
   - type_id: rifle_unit
@@ -97,14 +100,21 @@ enemy_spawns:
     armor_layers: 1
     wave: 1
   - type_id: heavy_unit
-    position_h: { x: 35, y: 1 }
+    position_h: { x: 36.25, y: 1 }
     facing: left
     armor_layers: 2
     wave: 2
   - type_id: blade_unit
     position_h: { x: 36.25, y: 9 }
-    facing: right
+    facing: left
     wave: 2
+  - type_id: blade_unit
+    position_h: { x: 22.75, y: 4 }
+    facing: left
+    wave: 1
+  - type_id: blade_unit
+    position_h: { x: 2.5500002, y: 11 }
+    facing: right
 # The bonus item, lying beside the door once every enemy is down.
 bonus:
   x_h: 44.75

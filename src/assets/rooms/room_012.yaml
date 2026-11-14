@@ -7,6 +7,7 @@ size:
   width_h: 24
   height_h: 32
 background_profiles: [dead_city_ephemeral]
+hidden_background_layers: [dead_city_ephemeral/4, dead_city_ephemeral/5]
 player_spawn:
   x_h: 2.5
   y_h: 1

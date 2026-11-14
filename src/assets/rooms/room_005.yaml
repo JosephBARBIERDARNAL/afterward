@@ -7,6 +7,7 @@ size:
   width_h: 33
   height_h: 16
 background_profiles: [city_peach_sunset]
+hidden_background_layers: [city_peach_sunset/4, city_peach_sunset/5]
 player_spawn:
   x_h: 2.5
   y_h: 1

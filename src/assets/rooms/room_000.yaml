@@ -6,7 +6,8 @@ chapter_id: 1
 size:
   width_h: 55
   height_h: 16
-background_profiles: [city_peach_sunset]
+background_profiles: [city_peach_sunset, city_plum_dusk]
+hidden_background_layers: [city_peach_sunset/4, city_peach_sunset/5, city_plum_dusk/1, city_plum_dusk/2, city_plum_dusk/3, city_plum_dusk/4]
 player_spawn:
   x_h: 4.25
   y_h: 2
@@ -15,15 +16,7 @@ player_spawn:
 platforms:
   - label: the ledge the whole room stands on
     color: "#1C1A2E"
-    rect_h: { x: 1, y: 0, width: 21, height: 2 }
-  - label: the ledge the whole room stands on
-    color: "#1C1A2E"
     rect_h: { x: 54, y: 0, width: 1, height: 16 }
-  - label: the ledge the whole room stands on
-    color: "#1C1A2E"
-    rect_h: { x: 0, y: 0, width: 1, height: 16 }
-  - color: "#1C1A2E"
-    rect_h: { x: 34.5, y: 3, width: 3.5, height: 0.25 }
   - color: "#1C1A2E"
     rect_h: { x: 43.75, y: 3, width: 2.5, height: 0.25 }
   - label: the ledge the whole room stands on
@@ -33,24 +26,55 @@ platforms:
     rect_h: { x: 47.75, y: 4.25, width: 2.5, height: 0.25 }
   - label: the ledge the whole room stands on
     color: "#1C1A2E"
-    rect_h: { x: 52, y: 9, width: 2, height: 2 }
+    rect_h: { x: 50.75, y: 9, width: 3.25, height: 0.25 }
   - color: "#1C1A2E"
     rect_h: { x: 50.75, y: 6, width: 2.5, height: 0.25 }
   - color: "#1C1A2E"
     rect_h: { x: 46.5, y: 7.25, width: 2.5, height: 0.25 }
-  - color: "#1C1A2E"
-    rect_h: { x: 51, y: 9, width: 1, height: 0.25 }
   - label: the ledge the whole room stands on
     color: "#1C1A2E"
-    rect_h: { x: 25, y: 0, width: 8, height: 2 }
+    rect_h: { x: 25, y: 0, width: 10, height: 2 }
+  - material: sci_fi_riveted_wall
+    rect_h: { x: 0.5, y: 1, width: 20, height: 0.5 }
+  - material: sci_fi_dark_rivets
+    rect_h: { x: 0, y: 0.5, width: 20.5, height: 0.5 }
+  - material: sci_fi_dark_rivets
+    rect_h: { x: 0, y: 0, width: 20.5, height: 0.5 }
+  - material: sci_fi_riveted_wall
+    rect_h: { x: 0.5, y: 1.5, width: 0.5, height: 14.5 }
+  - material: sci_fi_dark_rivets
+    rect_h: { x: 0, y: 1, width: 0.5, height: 15 }
+  - material: sci_fi_riveted_wall
+    rect_h: { x: 20.5, y: 0, width: 0.5, height: 1.5 }
+  - material: sci_fi_green_edge
+    rect_h: { x: 1, y: 1.5, width: 20, height: 0.5 }
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
-enemy_spawns: []
+# Props: sprites standing on a spot (the middle of their bottom edge).
+props:
+  - prop: sci_fi_conveyor
+    position_h: { x: 7.75, y: 3.25 }
+  - prop: sci_fi_green_pipe
+    position_h: { x: 11, y: 5.5 }
+  - prop: sci_fi_hover_pad_left
+    position_h: { x: 11.5, y: 4 }
+  - prop: sci_fi_hover_pad_right
+    position_h: { x: 12.75, y: 4 }
+  - prop: sci_fi_green_pipe
+    position_h: { x: 11.5, y: 5.5 }
+  - prop: sci_fi_steel_block
+    position_h: { x: 6, y: 4.25 }
+  - prop: sci_fi_bench
+    position_h: { x: 37.5, y: 3.25 }
+enemy_spawns:
+  - type_id: blade_unit
+    position_h: { x: 30.75, y: 2 }
+    facing: left
 # The bonus item, lying beside the door once every enemy is down.
 bonus:
-  x_h: 52.5
-  y_h: 11
+  x_h: 51.75
+  y_h: 9.25
 exit:
-  x_h: 53.5
-  y_h: 11
+  x_h: 53.25
+  y_h: 9.25
 next_room_id: 1

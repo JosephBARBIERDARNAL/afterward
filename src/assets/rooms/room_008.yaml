@@ -7,6 +7,7 @@ size:
   width_h: 44
   height_h: 28
 background_profiles: [city_teal_evening]
+hidden_background_layers: [city_teal_evening/3, city_teal_evening/4]
 player_spawn:
   x_h: 2.5
   y_h: 1
