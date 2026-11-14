@@ -1,6 +1,9 @@
 //! Room layouts from `rooms/room_NNN.yaml`.
 
-use std::path::{Path, PathBuf};
+use std::{
+    collections::BTreeMap,
+    path::{Path, PathBuf},
+};
 
 use bevy::math::{Rect, Vec2};
 use serde::Deserialize;
@@ -20,6 +23,10 @@ pub struct RoomConfig {
     /// when the list is left out.
     #[serde(default)]
     pub hidden_background_layers: Vec<BackgroundLayerRef>,
+    /// How opaque the room draws layers of those profiles, from 0 to 1;
+    /// a layer left out is drawn whole.
+    #[serde(default)]
+    pub layer_opacity: BTreeMap<BackgroundLayerRef, f32>,
     pub player_spawn: SpawnPosition,
     /// Solid platforms: bodies land on their top, are stopped by their sides,
     /// and bump their head on their underside. They stop shots too.
@@ -56,6 +63,27 @@ impl RoomConfig {
             .any(|hidden| hidden.profile == profile && hidden.layer == layer)
     }
 
+    /// How opaque the room draws `layer` of its background profile `profile`.
+    pub(crate) fn layer_opacity(&self, profile: &str, layer: ProfileLayer) -> f32 {
+        self.layer_opacity
+            .iter()
+            .find(|(faded, _)| faded.profile == profile && faded.layer == layer)
+            .map_or(1.0, |(_, opacity)| *opacity)
+    }
+
+    /// Fades `layer` in or out by `step`, within 0..=1; one drawn whole is
+    /// left out of the map.
+    pub(crate) fn fade_layer(&mut self, layer: BackgroundLayerRef, step: f32) {
+        let opacity = self.layer_opacity(&layer.profile, layer.layer);
+        // Rounded to tenths, so repeated presses don't drift.
+        let faded = ((opacity + step) * 10.0).round().clamp(0.0, 10.0) / 10.0;
+        if faded == 1.0 {
+            self.layer_opacity.remove(&layer);
+        } else {
+            self.layer_opacity.insert(layer, faded);
+        }
+    }
+
     /// Hides a drawn layer of one of the room's profiles, or shows a hidden
     /// one again.
     pub(crate) fn toggle_layer(&mut self, layer: BackgroundLayerRef) {
@@ -74,14 +102,16 @@ impl RoomConfig {
         }
     }
 
-    /// Forgets hidden layers of profiles the room no longer draws.
+    /// Forgets hidden and faded layers of profiles the room no longer draws.
     pub(crate) fn forget_unused_layers(&mut self) {
         let profiles = &self.background_profiles;
-        self.hidden_background_layers.retain(|hidden| {
+        let drawn = |layer: &BackgroundLayerRef| {
             profiles
                 .iter()
-                .any(|backdrop| matches!(backdrop, Backdrop::Profile(profile) if *profile == hidden.profile))
-        });
+                .any(|backdrop| matches!(backdrop, Backdrop::Profile(profile) if *profile == layer.profile))
+        };
+        self.hidden_background_layers.retain(drawn);
+        self.layer_opacity.retain(|layer, _| drawn(layer));
     }
 
     /// Where room `room_id` is stored under the asset root.

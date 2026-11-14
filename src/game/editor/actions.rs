@@ -78,6 +78,8 @@ pub(super) enum EditorAction {
     Escape,
     /// Hides or shows one layer of the room's backgrounds.
     ToggleLayer(BackgroundLayerRef),
+    /// Fades a background layer of the room in (1) or out (-1) by a tenth.
+    FadeLayer(BackgroundLayerRef, i8),
     /// Shows every background layer of the room again.
     ShowAllLayers,
     /// Moves the playtest settings' focus up (-1) or down (1).
@@ -375,6 +377,10 @@ pub(super) fn run_actions(resources: EditorActionResources) {
             }
             EditorAction::ShowAllLayers => {
                 editor.edit(&mut data, |room| room.hidden_background_layers.clear());
+            }
+            EditorAction::FadeLayer(layer, way) => {
+                let (layer, step) = (layer.clone(), f32::from(*way) / 10.0);
+                editor.edit(&mut data, |room| room.fade_layer(layer, step));
             }
             EditorAction::PlaytestMove(_)
             | EditorAction::PlaytestChange(..)

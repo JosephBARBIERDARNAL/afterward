@@ -44,6 +44,14 @@ impl Display for RoomConfig {
                 hidden.join(", ")
             )?;
         }
+        if !self.layer_opacity.is_empty() {
+            let faded = self
+                .layer_opacity
+                .iter()
+                .map(|(layer, opacity)| format!("{layer}: {opacity}"))
+                .collect::<Vec<_>>();
+            writeln!(formatter, "layer_opacity: {{ {} }}", faded.join(", "))?;
+        }
         writeln!(formatter, "player_spawn:")?;
         writeln!(formatter, "  x_h: {}", self.player_spawn.x_h)?;
         writeln!(formatter, "  y_h: {}", self.player_spawn.y_h)?;
@@ -355,7 +363,9 @@ impl Display for YamlText<'_> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::data::{DeviceKind, DeviceTag, GameData, SpawnPosition};
+    use crate::data::{
+        BackgroundLayerRef, DeviceKind, DeviceTag, GameData, ProfileLayer, SpawnPosition,
+    };
     use std::path::Path;
 
     #[test]
@@ -485,6 +495,45 @@ next_room_id: 4
         let read_back: RoomConfig =
             yaml_serde::from_str(&written).expect("the written room is valid YAML");
         assert_eq!(read_back, room, "{written}");
+    }
+
+    #[test]
+    fn faded_background_layers_keep_their_opacity_and_a_whole_one_is_left_out() {
+        let mut room: RoomConfig = yaml_serde::from_str(
+            "
+room_id: 3
+chapter_id: 1
+size: { width_h: 24, height_h: 13.5 }
+background_profiles: [city_blue_morning]
+layer_opacity: { city_blue_morning/sky: 0.4 }
+player_spawn: { x_h: 2, y_h: 1 }
+platforms:
+  - { material: city_pavement, rect_h: { x: 0, y: 0, width: 24, height: 1 } }
+enemy_spawns: []
+bonus: { x_h: 20, y_h: 1 }
+exit: { x_h: 22, y_h: 1 }
+next_room_id: 4
+",
+        )
+        .expect("a faded sky parses");
+        let layer = |text: &str| text.parse::<BackgroundLayerRef>().expect("a layer");
+        assert_eq!(
+            room.layer_opacity("city_blue_morning", ProfileLayer::Sky),
+            0.4
+        );
+        // Faded out a step, then the sky back in to whole.
+        room.fade_layer(layer("city_blue_morning/2"), -0.1);
+        for _ in 0..6 {
+            room.fade_layer(layer("city_blue_morning/sky"), 0.1);
+        }
+        let written = room.to_string();
+        assert!(
+            written.contains("layer_opacity: { city_blue_morning/2: 0.9 }"),
+            "only the faded layer is written: {written}"
+        );
+        let read_back: RoomConfig =
+            yaml_serde::from_str(&written).expect("the written room is valid YAML");
+        assert_eq!(read_back, room);
     }
 
     #[test]

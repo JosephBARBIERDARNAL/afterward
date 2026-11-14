@@ -611,6 +611,15 @@ impl GameData {
                 )
                 .chain(room.props.iter().map(|placed| &placed.placement))
                 .chain(room.devices.iter().map(|device| &device.placement));
+            if room
+                .layer_opacity
+                .values()
+                .any(|opacity| !(0.0..=1.0).contains(opacity))
+            {
+                return Err(InvalidGameData::from(format!(
+                    "room {room_id} fades a background layer outside 0..=1"
+                )));
+            }
             for placement in placements {
                 if !placement.rotation_deg.is_finite() || !(0.0..=1.0).contains(&placement.opacity)
                 {

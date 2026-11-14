@@ -80,6 +80,7 @@ impl Plugin for EditorPlugin {
                         panels::refresh_panels,
                         panels::show_cards,
                         layers::update_layers_card,
+                        layers::show_layer_opacity,
                         palette::show_palette,
                         palette::refresh_palette,
                     )
@@ -667,7 +668,8 @@ impl RoomEditor {
         self.saved
             .entry(self.room_id)
             .or_insert_with(|| before.clone());
-        self.undo.push(Snapshot::Room(self.room_id, before));
+        self.undo
+            .push(Snapshot::Room(self.room_id, Box::new(before)));
         self.redo.clear();
         self.view_dirty = true;
         self.leave_armed = false;
@@ -746,7 +748,7 @@ impl RoomEditor {
 
 /// One undo or redo step: a room, or the hitboxes, as they were.
 enum Snapshot {
-    Room(u16, RoomConfig),
+    Room(u16, Box<RoomConfig>),
     Hitboxes(Hitboxes),
 }
 
@@ -756,8 +758,8 @@ impl Snapshot {
         match self {
             Self::Room(room_id, room) => data
                 .rooms
-                .insert(room_id, room)
-                .map(|current| Self::Room(room_id, current)),
+                .insert(room_id, *room)
+                .map(|current| Self::Room(room_id, Box::new(current))),
             Self::Hitboxes(hitboxes) => {
                 let current = Hitboxes::of(data);
                 hitboxes.apply(data);

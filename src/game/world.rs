@@ -111,7 +111,7 @@ pub(super) fn draw_room(
                 profiles.push((name.as_str(), profile));
                 if room.shows_layer(name, ProfileLayer::Sky) {
                     drawn_skies += 1;
-                    let alpha = 1.0 / drawn_skies as f32;
+                    let alpha = room.layer_opacity(name, ProfileLayer::Sky) / drawn_skies as f32;
                     skies.push((index, profile, profile.backdrop.as_str(), 0.0, alpha));
                 }
             }
@@ -148,7 +148,10 @@ pub(super) fn draw_room(
                 .iter()
                 .enumerate()
                 .filter(|(index, _)| room.shows_layer(name, ProfileLayer::Scenery(*index)))
-                .map(|(_, layer)| (*profile, layer.asset.as_str(), layer.parallax, 1.0))
+                .map(|(index, layer)| {
+                    let opacity = room.layer_opacity(name, ProfileLayer::Scenery(index));
+                    (*profile, layer.asset.as_str(), layer.parallax, opacity)
+                })
         })
         .collect::<Vec<_>>();
     scenery.sort_by(|first, second| first.2.total_cmp(&second.2));

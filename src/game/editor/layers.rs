@@ -3,7 +3,8 @@
 //! from the furthest to the nearest, each with a thumbnail and a box ticked
 //! while the room draws it. Clicking a row hides the layer or shows it again
 //! (`hidden_background_layers` of the room file); every layer is drawn until
-//! one is hidden.
+//! one is hidden. The `-` and `+` beside a layer fade it out or in by a tenth
+//! (`layer_opacity` of the room file).
 
 use super::*;
 use crate::data::{Backdrop, BackgroundLayerRef, ProfileLayer};
@@ -26,6 +27,10 @@ pub(super) struct LayerTick(BackgroundLayerRef);
 /// A layer's thumbnail, faded while the room hides the layer.
 #[derive(Component)]
 pub(super) struct LayerThumb(BackgroundLayerRef);
+
+/// How opaque the room draws a layer, written between its `-` and `+`.
+#[derive(Component)]
+pub(super) struct LayerOpacity(BackgroundLayerRef);
 
 pub(super) fn spawn_layers_card(commands: &mut Commands, left: Entity) {
     commands.spawn((card(10.0), LayersCard::default(), ChildOf(left)));
@@ -140,7 +145,7 @@ pub(super) fn update_layers_card(
                 }
             }
             card.spawn((
-                Text::new("Click a layer to hide or show it in this room."),
+                Text::new("Click a layer to hide or show it, - and + to fade it."),
                 font(SMALL_PX),
                 TextColor(MUTED),
             ));
@@ -155,12 +160,32 @@ pub(super) fn update_layers_card(
     }
     for (LayerThumb(layer), mut image) in &mut thumbs {
         let alpha = if room.shows_layer(&layer.profile, layer.layer) {
-            1.0
+            room.layer_opacity(&layer.profile, layer.layer).max(0.15)
         } else {
-            0.25
+            0.15
         };
         if image.color.alpha() != alpha {
             image.color = Color::WHITE.with_alpha(alpha);
+        }
+    }
+}
+
+/// Writes how opaque the room draws each layer between its `-` and `+`.
+pub(super) fn show_layer_opacity(
+    editor: Res<RoomEditor>,
+    data: Res<GameData>,
+    mut opacities: Query<(&LayerOpacity, &mut Text)>,
+) {
+    let Some(room) = data.rooms.get(&editor.room_id) else {
+        return;
+    };
+    for (LayerOpacity(layer), mut text) in &mut opacities {
+        let percent = format!(
+            "{:.0}%",
+            room.layer_opacity(&layer.profile, layer.layer) * 100.0
+        );
+        if text.0 != percent {
+            text.0 = percent;
         }
     }
 }
@@ -221,7 +246,7 @@ fn spawn_layer_row(
             },
             BackgroundColor(Color::srgb(0.12, 0.13, 0.17)),
             ImageNode::new(image),
-            LayerThumb(layer),
+            LayerThumb(layer.clone()),
         ));
         row.spawn(Node {
             flex_direction: FlexDirection::Column,
@@ -230,6 +255,29 @@ fn spawn_layer_row(
         .with_children(|words| {
             words.spawn((Text::new(title), font(SMALL_PX + 1.0), TextColor(TEXT)));
             words.spawn((Text::new(detail), font(SMALL_PX), TextColor(MUTED)));
+        });
+        // Its opacity, faded out or in by a tenth.
+        row.spawn(Node {
+            margin: UiRect::left(Val::Auto),
+            column_gap: px(4),
+            align_items: AlignItems::Center,
+            ..default()
+        })
+        .with_children(|fade| {
+            button(fade, "-", "", EditorAction::FadeLayer(layer.clone(), -1));
+            fade.spawn((
+                Text::new(""),
+                font(SMALL_PX),
+                TextColor(TEXT),
+                Node {
+                    min_width: px(34),
+                    justify_content: JustifyContent::Center,
+                    ..default()
+                },
+                TextLayout::justify(Justify::Center),
+                LayerOpacity(layer.clone()),
+            ));
+            button(fade, "+", "", EditorAction::FadeLayer(layer, 1));
         });
     });
 }

@@ -4,6 +4,7 @@ size:
   width_h: 48
   height_h: 13.5
 background_profiles: [sci_fi_industrial]
+layer_opacity: { sci_fi_industrial/5: 0.6 }
 player_spawn:
   x_h: 2.5
   y_h: 2
@@ -33,7 +34,8 @@ platforms:
   - { label: right wall, material: sci_fi_riveted_wall, rect_h: { x: 47.5, y: 2, width: 0.5, height: 11.5 } }
 decorations: []
 props:
-  - { prop: sci_fi_steel_crate, position_h: { x: 7, y: 6 } }
+  - { prop: sci_fi_steel_crate, position_h: { x: 7, y: 6 }, rotation_deg: 15, opacity: 0.6 }
+  - { prop: sci_fi_crate_stack, position_h: { x: 1.25, y: 2 }, mirrored: true }
 devices:
   - { label: ladder to the ledge, kind: ladder, position_h: { x: 4.5, y: 2 }, height_h: 4 }
   - { label: laser gate, kind: laser, position_h: { x: 7, y: 2 }, length_h: 3 }
