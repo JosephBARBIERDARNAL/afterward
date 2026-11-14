@@ -103,6 +103,9 @@ impl EnemyTypeId {
             "mad_ghost_gold" => "mad_ghost_gold_idle",
             "mad_ghost_purple" => "mad_ghost_purple_idle",
             "eye_beast" => "eye_beast_idle",
+            "sci_fi_walker" => "sci_fi_walker_idle",
+            "sci_fi_orb" => "sci_fi_orb_idle",
+            "sci_fi_drone" => "sci_fi_drone_idle",
             _ => "enemy_swordsman_idle",
         }
     }

@@ -39,10 +39,12 @@ pub(in crate::game) fn update_projectiles(
     for (projectile_entity, mut projectile_transform, mut projectile) in &mut projectiles {
         let start = projectile_transform.translation.truncate();
         projectile.life_s -= dt;
-        let travel = (projectile.velocity_x * dt)
-            .clamp(-projectile.remaining_range, projectile.remaining_range);
-        projectile.remaining_range -= travel.abs();
-        projectile_transform.translation.x += travel;
+        let velocity = Vec2::new(projectile.velocity_x, projectile.velocity_y);
+        let travel = velocity * dt;
+        let travel = travel.clamp_length_max(projectile.remaining_range);
+        projectile.remaining_range -= travel.length();
+        projectile_transform.translation.x += travel.x;
+        projectile_transform.translation.y += travel.y;
         let end = projectile_transform.translation.truncate();
         let mut hit = projectile.life_s <= 0.0;
         let shot = Rect::from_center_half_size(end, projectile.half_size);

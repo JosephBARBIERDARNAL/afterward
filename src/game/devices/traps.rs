@@ -114,6 +114,7 @@ fn fire_shot(
         Transform::from_translation(muzzle.center().extend(DEVICE_Z + 0.1)),
         combat::CombatProjectile {
             velocity_x: direction * speed,
+            velocity_y: 0.0,
             damage: turret.damage,
             life_s: SHOT_LIFE_S,
             remaining_range: speed * SHOT_LIFE_S,

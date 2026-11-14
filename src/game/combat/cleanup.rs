@@ -50,6 +50,7 @@ mod tests {
             .world_mut()
             .spawn(CombatProjectile {
                 velocity_x: 1.0,
+                velocity_y: 0.0,
                 damage: 15.0,
                 life_s: 1.0,
                 remaining_range: 100.0,

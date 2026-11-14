@@ -44,7 +44,8 @@ pub(super) fn load_sprites(
 
     let mut sheets = BTreeMap::new();
     for spec in specs {
-        // Sheets under `ui/`, `pickups/`, `effects/` and `props/` are pixel art drawn
+        // Sheets under `ui/`, `pickups/`, `effects/`, `props/` and the sci-fi
+        // enemies are pixel art drawn
         // near 1:1, and the Black Knight and the monsters are pixel art drawn
         // larger than their sheets, so they keep their hard pixel edges; the
         // other character sheets are scaled down and look better with the
@@ -53,6 +54,7 @@ pub(super) fn load_sprites(
             || spec.path.starts_with("pickups/")
             || spec.path.starts_with("effects/")
             || spec.path.starts_with("props/")
+            || spec.path.starts_with("enemies/sci_fi/")
             || spec.path.starts_with("enemies/black_knight/")
             || spec.path.starts_with("enemies/horror/")
             || spec.path.starts_with("enemies/eye_beast/")

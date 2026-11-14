@@ -13,6 +13,7 @@ mod enemy_body;
 mod enemy_jumps;
 mod falls;
 mod feedback;
+mod flight;
 mod hazards;
 mod hitboxes;
 mod player_melee;

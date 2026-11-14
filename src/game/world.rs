@@ -460,6 +460,7 @@ pub(super) fn spawn_enemies(
                     jump_cooldown: 0.0,
                     jump: None,
                     behavior: profile.behavior.clone(),
+                    flight: profile.flight,
                     procedural_movement: profile.procedural_movement.as_ref().map(|movement| {
                         ProceduralMovementState {
                             phase_radians: 0.0,

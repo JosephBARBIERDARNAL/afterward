@@ -5,6 +5,9 @@ use super::*;
 #[derive(Component)]
 pub(crate) struct CombatProjectile {
     pub(crate) velocity_x: f32,
+    /// Up or down, for a shot dropped by a flying enemy; 0 for one fired
+    /// level.
+    pub(crate) velocity_y: f32,
     pub(crate) damage: f32,
     pub(crate) life_s: f32,
     pub(crate) remaining_range: f32,

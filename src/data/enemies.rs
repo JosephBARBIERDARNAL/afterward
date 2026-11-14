@@ -146,6 +146,29 @@ pub struct EnemyTypeConfig {
     /// How the type's sheets are drawn; the older types have theirs in
     /// `world::spawn_enemies`.
     pub sprite: Option<EnemySpriteConfig>,
+    /// How a type that flies moves; left out, it walks the floors.
+    #[serde(default)]
+    pub flight: Option<FlightConfig>,
+    /// The effect sheet played over it as it dies, `size_h` across.
+    #[serde(default)]
+    pub death_effect: Option<DeathEffectConfig>,
+}
+
+/// A flying enemy: it sees all around it within its detection range, flies
+/// straight at the spot `hover_h` above its mark's feet (stopped by the
+/// platforms as a walk is), and keeps no floor. A flying mine, with a
+/// `contact_h`, goes off once its middle comes that close to its mark's.
+#[derive(Debug, Clone, Copy, Deserialize)]
+pub struct FlightConfig {
+    pub hover_h: f32,
+    #[serde(default)]
+    pub contact_h: Option<f32>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct DeathEffectConfig {
+    pub sheet: String,
+    pub size_h: f32,
 }
 
 /// How a type's sheets are laid over its body, in source pixels.

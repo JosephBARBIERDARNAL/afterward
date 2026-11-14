@@ -291,6 +291,14 @@ Five more types of `enemies/enemy_types.yaml`, drawn from two packs: `abominatio
 - The four horror monsters each come in three more palettes, as types of their own: `<type>_rust` (brown-red, a cyan eye), `<type>_gold` (dark gold, a dark red eye) and `<type>_purple` (dark purple, a pink eye). `scripts/recolour_monsters.py` (`just monsters`, needs ImageMagick) swaps the body and eye colours of the pack's sheets into a folder per palette under `enemies/horror/`, and its `PALETTES` table is where a palette is changed or added; the PNGs are committed. A palette is a warning read before closing in: rust goes off as it dies (`death_blast`), gold walks in armored (`armor_layers` on the type), purple moves and attacks faster. Every other number in their entries is a copy of the type they are drawn from: one changed there should be changed on its three palettes too.
 - Nothing flies: the ghost and the eye beast walk the floor like any other enemy, the eye beast drawn a little above it.
 
+### The sci-fi robots
+
+Three types of `enemies/enemy_types.yaml` come from the sci-fi pack (`enemies/sci_fi/`, cut by `just sci-fi`, registered in `assets/monster_sheets.rs`), drawn at scale 3 (16 px per H) beside the hero, and dying in the pack's explosion (`death_effect`). Room 17 holds them in three waves (`just run 17`).
+
+- `sci_fi_walker` is a ground gunner (`ranged_keep_distance`): its frames are mirrored by the script, since the pack draws it looking left.
+- `sci_fi_orb` and `sci_fi_drone` fly: `flight` on a type (`combat/flight.rs`) makes it see all round it within its detection range, fly straight at a spot by its mark (stopped by the platforms, one axis at a time) and keep no floor, so `update_enemy_platform_physics` leaves it alone. The orb is a flying mine (`contact_h`): it goes off on reaching the player, who is hit at once (a blast left to burn would never go off if it was the room's last enemy, as the room clears as it dies), and one blow sets it off where it is. The drone hovers `hover_h` above its mark and, right over it, winds up and drops its shot straight down (`CombatProjectile::velocity_y`).
+- They have no hurt or death clips of their own: `<type>_hurt` and `<type>_dead` are cut from their idle frames, and `idle_sheet` lists them so they spawn in their own sheet.
+
 ### Typst pixel art
 
 Every surface texture except the sci-fi pack's is drawn in code with [Typst](https://typst.app) instead of a paint program, as are the HUD pieces in `src/assets/ui/`, the health drop in `src/assets/pickups/`: the surface families are `city`, `metal`, `carved`, and `wood`. Sources live in `art/`, mirroring their output path under `src/assets/` (`art/surfaces/textures/wood/planks.typ` renders `src/assets/surfaces/textures/wood/planks.png`).

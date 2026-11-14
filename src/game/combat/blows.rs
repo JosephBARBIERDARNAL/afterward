@@ -264,20 +264,20 @@ pub(super) fn land_the_blow(
             });
             // A type that goes off as it dies warns where it fell, then
             // burns everything near it.
-            if let Some(blast) = &data.enemies.types[&enemy.type_id].death_blast {
-                let middle = enemy.hurtbox(&enemy_transform).center();
-                Hazard {
-                    area: Rect::from_center_half_size(
-                        middle,
-                        Vec2::splat(blast.radius_h * H_WORLD_UNITS),
-                    ),
-                    damage: blast.damage,
-                    arm_s: blast.fuse_s,
-                    burn_s: blast.burn_s,
-                    rest_s: None,
-                    elapsed_s: 0.0,
-                }
-                .lay(commands);
+            let profile = &data.enemies.types[&enemy.type_id];
+            let middle = enemy.hurtbox(&enemy_transform).center();
+            if let Some(blast) = &profile.death_blast {
+                Hazard::death_blast(blast, middle).lay(commands);
+            }
+            if let Some(effect) = &profile.death_effect {
+                play_effect(
+                    commands,
+                    sheets,
+                    &effect.sheet,
+                    middle.extend(7.0),
+                    effect.size_h,
+                    false,
+                );
             }
             let item = &data.gameplay.health_pickup;
             let drop_chance = item.base_drop_chance

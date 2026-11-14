@@ -15,6 +15,7 @@ type EnemyAiEnemiesQuery<'w, 's> = Query<
     'w,
     's,
     (
+        Entity,
         &'static mut EnemyBody,
         &'static mut Transform,
         &'static mut Sprite,
@@ -69,7 +70,7 @@ pub(in crate::game) fn update_enemy_ai(
     };
     player.invulnerability_timer = (player.invulnerability_timer - dt).max(0.0);
 
-    for (mut enemy, mut transform, mut sprite, mut animation) in &mut enemies {
+    for (entity, mut enemy, mut transform, mut sprite, mut animation) in &mut enemies {
         // The flare a wound left goes out by itself, on the dead as well.
         if enemy.flash_s > 0.0 {
             enemy.flash_s = (enemy.flash_s - dt).max(0.0);
@@ -103,8 +104,16 @@ pub(in crate::game) fn update_enemy_ai(
                 blows::KNOCKBACK_DRAG_H_S2 * dt,
             );
         }
-        let sees_player =
-            enemy.sees_player(&transform, player_box, &data.enemies.detection, &surfaces);
+        let sees_player = if enemy.flight.is_some() {
+            flight::sees(
+                &data,
+                &surfaces,
+                enemy.hurtbox(&transform).center(),
+                player_box.center(),
+            )
+        } else {
+            enemy.sees_player(&transform, player_box, &data.enemies.detection, &surfaces)
+        };
         if !enemy.engaged && sees_player {
             enemy.engaged = true;
             sounds.push(SoundCue::enemy_idle(&enemy.type_id));
@@ -127,6 +136,31 @@ pub(in crate::game) fn update_enemy_ai(
         enemy.facing = if dx < 0.0 { -1.0 } else { 1.0 };
         sprite.flip_x = enemy.facing < 0.0;
         let feet = Vec2::new(transform.translation.x, enemy.home_y - enemy.feet_offset);
+
+        if enemy.flight.is_some() {
+            flight::fly(
+                flight::FlightWorld {
+                    commands: &mut commands,
+                    data: &data,
+                    session: &mut session,
+                    sounds: &mut sounds,
+                    player: &mut player,
+                    player_transform,
+                    sheets: &sheets,
+                    surfaces: &surfaces,
+                    dt,
+                },
+                flight::Flyer {
+                    entity,
+                    enemy: &mut enemy,
+                    transform: &mut transform,
+                    sprite: &mut sprite,
+                    animation: &mut animation,
+                },
+                &mark,
+            );
+            continue;
+        }
 
         // Airborne after a jump or a step off a ledge: physics owns the motion.
         if !enemy.grounded {
@@ -426,6 +460,7 @@ pub(in crate::game) fn update_enemy_ai(
                         Transform::from_translation(muzzle).with_scale(Vec3::splat(shot_scale)),
                         CombatProjectile {
                             velocity_x: direction * attack.projectile_speed_h_s * H_WORLD_UNITS,
+                            velocity_y: 0.0,
                             damage: attack.damage,
                             life_s: 3.0,
                             remaining_range: attack.projectile_speed_h_s * H_WORLD_UNITS * 3.0,
@@ -513,6 +548,7 @@ pub(in crate::game) fn update_enemy_ai(
                             ),
                             CombatProjectile {
                                 velocity_x: enemy.facing * wave.speed_h_s * H_WORLD_UNITS,
+                                velocity_y: 0.0,
                                 damage: wave.damage,
                                 life_s: wave.range_h / wave.speed_h_s,
                                 remaining_range: wave.range_h * H_WORLD_UNITS,
@@ -718,6 +754,11 @@ pub(in crate::game) fn update_enemy_platform_physics(
         if enemy.health <= 0.0 {
             // Corpses drop straight down instead of finishing a leap.
             enemy.jump = None;
+        }
+        // A flyer keeps no floor: `fly` moves it, and a dead one goes up in
+        // its explosion where it was.
+        if enemy.flight.is_some() {
+            continue;
         }
         let gait_offset = transform.translation.y - enemy.home_y;
         let previous_foot_y = enemy.home_y - enemy.feet_offset;

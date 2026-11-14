@@ -16,6 +16,14 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             12.0,
         ),
         ("effect_hit_spark", "effects/hit_spark.png", 32, 6, 30.0),
+        // The sci-fi pack's explosion (`packs/sci_fi/`): how its robots die.
+        (
+            "effect_sci_fi_explosion",
+            "effects/sci_fi/explosion.png",
+            48,
+            9,
+            18.0,
+        ),
         ("effect_hit_burst", "effects/hit_burst.png", 32, 5, 26.0),
         ("effect_kill_ring", "effects/kill_ring.png", 32, 6, 24.0),
         (

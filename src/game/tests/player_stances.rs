@@ -122,6 +122,7 @@ fn crouching_slows_cover_blocks_frontal_hits_and_death_plays_out_before_the_run_
             Transform::from_translation(position + Vec3::X * 10.0),
             CombatProjectile {
                 velocity_x: -H_WORLD_UNITS,
+                velocity_y: 0.0,
                 damage,
                 life_s: 1.0,
                 remaining_range: H_WORLD_UNITS,

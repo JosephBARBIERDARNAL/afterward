@@ -255,6 +255,7 @@ next_room_id: 2
         Transform::from_translation(double_position + Vec3::X * 4.0),
         CombatProjectile {
             velocity_x: -H_WORLD_UNITS,
+            velocity_y: 0.0,
             damage: 10.0,
             life_s: 1.0,
             remaining_range: H_WORLD_UNITS,

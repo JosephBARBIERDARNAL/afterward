@@ -184,7 +184,9 @@ STRIPS = {
     "door": ("devices/sci_fi", row("interactables/door.png", 0, 0, 16, 32, 7)),
     # The ladder's top and a middle rung, from its one column.
     "ladder": ("devices/sci_fi", [("interactables/ladder.png", 0, y, 16, 16) for y in (0, 16)]),
-    # Enemies: a frame per clip cell, one strip per clip.
+    # Enemies: a frame per clip cell, one strip per clip. The walker is drawn
+    # looking left and every enemy sheet of the game looks right, so its
+    # frames are mirrored (`FLOPPED`).
     "orb_idle": ("enemies/sci_fi", row("enemies/enemy-01.png", 0, 0, 48, 48, 3) + row("enemies/enemy-01.png", 0, 48, 48, 48, 2)),
     "walker_idle": ("enemies/sci_fi", row("enemies/enemy-02.png", 0, 0, 48, 48, 5)),
     "walker_walk": ("enemies/sci_fi", row("enemies/enemy-02.png", 0, 48, 48, 48, 6)),
@@ -196,17 +198,23 @@ STRIPS = {
     "explosion": ("effects/sci_fi", row("effects/explosion.png", 0, 0, 48, 48, 9)),
     "shot_red": ("effects/sci_fi", row("effects/projectiles.png", 0, 16, 16, 16, 4)),
     "shot_blue": ("effects/sci_fi", row("effects/projectiles.png", 0, 48, 16, 16, 4)),
+    # A round shot, for one fired straight down.
+    "ball_blue": ("effects/sci_fi", row("effects/projectiles.png", 0, 32, 16, 16, 4)),
     "shot_burst_red": ("effects/sci_fi", row("effects/projectile-explosion.png", 0, 0, 16, 16, 4)),
     "shot_burst_blue": ("effects/sci_fi", row("effects/projectile-explosion.png", 0, 16, 16, 16, 4)),
     "muzzle_red": ("effects/sci_fi", row("effects/muzzle-flashes.png", 0, 0, 16, 16, 4)),
     "muzzle_blue": ("effects/sci_fi", row("effects/muzzle-flashes.png", 0, 48, 16, 16, 4)),
 }
 
+FLOPPED = {"walker_idle", "walker_walk", "walker_shoot"}
+
 COPIES = {f"background/sci_fi/layer-{n}.png": f"background/layer-{n}.png" for n in range(6)}
 
 
-def crop(sheet, x, y, width, height):
-    return ["(", PACK / sheet, "-crop", f"{width}x{height}+{x}+{y}", "+repage", ")"]
+def crop(sheet, x, y, width, height, flop=False):
+    """One box of a sheet, mirrored left to right when `flop` is set."""
+    mirror = ["-flop"] if flop else []
+    return ["(", PACK / sheet, "-crop", f"{width}x{height}+{x}+{y}", "+repage", *mirror, ")"]
 
 
 def magick(*args):
@@ -232,7 +240,7 @@ def main():
     for name, (folder, frames) in STRIPS.items():
         target = ASSETS / folder / f"{name}.png"
         target.parent.mkdir(parents=True, exist_ok=True)
-        parts = [part for frame in frames for part in crop(*frame)]
+        parts = [part for frame in frames for part in crop(*frame, flop=name in FLOPPED)]
         magick(*parts, "-background", "none", "+append", "-strip", target)
     for target, source in COPIES.items():
         (ASSETS / target).parent.mkdir(parents=True, exist_ok=True)

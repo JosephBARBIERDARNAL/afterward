@@ -24,6 +24,8 @@ pub(crate) struct EnemyBody {
     pub(crate) jump_cooldown: f32,
     pub(crate) jump: Option<EnemyJump>,
     pub(crate) behavior: String,
+    /// How a flying enemy moves; `None` for one that walks.
+    pub(crate) flight: Option<crate::data::FlightConfig>,
     pub(crate) procedural_movement: Option<ProceduralMovementState>,
     pub(crate) preferred_distance_h: Option<f32>,
     pub(crate) attacks: Vec<EnemyAttack>,

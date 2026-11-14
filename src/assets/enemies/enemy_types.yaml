@@ -780,3 +780,76 @@ types:
         hitbox_h: { x: 0, y: 0, width: 0.84, height: 1.54 }
         cooldown_s: 0.98
         windup_s: 0.5
+  # The sci-fi pack's robots (enemies/sci_fi/, cut by `just sci-fi`), drawn at
+  # 16 px per H (scale 3) beside the hero. They die in the pack's explosion.
+  # A walking gun: it keeps its distance and fires a blue bolt from its eye
+  # level, to roll through or close in on between shots.
+  sci_fi_walker:
+    hurtbox_h: { width: 1.2, height: 1.3 }
+    health: 40
+    material: metal
+    movement_speed_h_s: 1.6
+    behavior: ranged_keep_distance
+    preferred_distance_h: 7
+    sprite:
+      {
+        scale: 3,
+        top_padding_px: 13,
+        bottom_padding_px: 13,
+        origin_above_feet_px: 10,
+      }
+    death_effect: { sheet: effect_sci_fi_explosion, size_h: 2.5 }
+    attack:
+      kind: projectile
+      clip: attack
+      strike_frame: 2
+      damage: 9
+      projectile_size_h: { width: 0.4, height: 0.25 }
+      projectile_speed_h_s: 7
+      cooldown_s: 2.2
+      windup_s: 0.6
+  # A flying mine: once it sees the player it flies straight at them and goes
+  # off on reaching them, burning everything near; one blow sets it off where
+  # it is instead.
+  sci_fi_orb:
+    hurtbox_h: { width: 0.8, height: 0.7 }
+    health: 1
+    material: metal
+    movement_speed_h_s: 2.6
+    behavior: flying_mine
+    flight: { hover_h: 0.5, contact_h: 0.7 }
+    sprite:
+      {
+        scale: 3,
+        top_padding_px: 18,
+        bottom_padding_px: 17,
+        origin_above_feet_px: 6,
+      }
+    death_blast: { radius_h: 1.3, damage: 16, fuse_s: 0.05, burn_s: 0.2 }
+    death_effect: { sheet: effect_sci_fi_explosion, size_h: 3 }
+  # A drone that hovers above the player and drops shots straight down, out
+  # of reach of the chain unless the player jumps (or slams) at it.
+  sci_fi_drone:
+    hurtbox_h: { width: 1.2, height: 1 }
+    health: 30
+    material: metal
+    movement_speed_h_s: 2.2
+    behavior: flying_gunner
+    flight: { hover_h: 3.5 }
+    sprite:
+      {
+        scale: 3,
+        top_padding_px: 15,
+        bottom_padding_px: 10,
+        origin_above_feet_px: 11,
+      }
+    death_effect: { sheet: effect_sci_fi_explosion, size_h: 2.5 }
+    attack:
+      kind: projectile
+      clip: attack
+      strike_frame: 1
+      damage: 8
+      projectile_size_h: { width: 0.3, height: 0.3 }
+      projectile_speed_h_s: 7
+      cooldown_s: 2
+      windup_s: 0.5
