@@ -31,9 +31,6 @@ platforms:
     rect_h: { x: 50.75, y: 6, width: 2.5, height: 0.25 }
   - color: "#1C1A2E"
     rect_h: { x: 46.5, y: 7.25, width: 2.5, height: 0.25 }
-  - label: the ledge the whole room stands on
-    color: "#1C1A2E"
-    rect_h: { x: 25, y: 0, width: 10, height: 2 }
   - material: sci_fi_riveted_wall
     rect_h: { x: 0.5, y: 1, width: 20, height: 0.5 }
   - material: sci_fi_dark_rivets
@@ -48,28 +45,25 @@ platforms:
     rect_h: { x: 20.5, y: 0, width: 0.5, height: 1.5 }
   - material: sci_fi_green_edge
     rect_h: { x: 1, y: 1.5, width: 20, height: 0.5 }
+  - material: sci_fi_riveted_wall
+    rect_h: { x: 24.5, y: 1, width: 5, height: 0.5 }
+  - material: sci_fi_dark_rivets
+    rect_h: { x: 24.5, y: 0, width: 5, height: 1 }
+  - material: sci_fi_dark_rivets
+    rect_h: { x: 22.5, y: -3.5, width: 13.25, height: 0.5 }
+  - material: sci_fi_riveted_wall
+    rect_h: { x: 29.5, y: 0, width: 0.5, height: 1.5 }
+  - material: sci_fi_green_edge
+    rect_h: { x: 24, y: 1.5, width: 6, height: 0.5 }
+  - material: sci_fi_riveted_wall
+    rect_h: { x: 24, y: 0, width: 0.5, height: 1.5 }
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
 # Props: sprites standing on a spot (the middle of their bottom edge).
 props:
-  - prop: sci_fi_conveyor
-    position_h: { x: 7.75, y: 3.25 }
-  - prop: sci_fi_green_pipe
-    position_h: { x: 11, y: 5.5 }
-  - prop: sci_fi_hover_pad_left
-    position_h: { x: 11.5, y: 4 }
-  - prop: sci_fi_hover_pad_right
-    position_h: { x: 12.75, y: 4 }
-  - prop: sci_fi_green_pipe
-    position_h: { x: 11.5, y: 5.5 }
-  - prop: sci_fi_steel_block
-    position_h: { x: 6, y: 4.25 }
   - prop: sci_fi_bench
     position_h: { x: 37.5, y: 3.25 }
-enemy_spawns:
-  - type_id: blade_unit
-    position_h: { x: 30.75, y: 2 }
-    facing: left
+enemy_spawns: []
 # The bonus item, lying beside the door once every enemy is down.
 bonus:
   x_h: 51.75
