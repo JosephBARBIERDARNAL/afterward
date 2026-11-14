@@ -9,10 +9,12 @@
 
 use super::*;
 use crate::data::{Backdrop, DeviceTag, HexColor, MaterialId, PropId};
-use bevy::ui::RelativeCursorPosition;
+use bevy::{text::LineHeight, ui::RelativeCursorPosition};
 
 const SWATCH_PX: f32 = 26.0;
 const SWATCH_GAP_PX: f32 = 4.0;
+/// The height of a line of the caption naming the hovered (or current) fill.
+const CAPTION_LINE_PX: f32 = 16.0;
 const COLUMNS: usize = 9;
 /// Props and devices are pictures rather than patterns, so they get bigger
 /// swatches; there are many, so not much bigger.
@@ -134,12 +136,18 @@ pub(super) fn spawn_palette(
     commands
         .spawn((ui::card(10.0), PalettePanel, ChildOf(parent)))
         .with_children(|panel| {
+            // Always two lines tall, whatever it names, so the swatches under
+            // it never move as the pointer passes over them; a name longer
+            // than that is cut.
             panel.spawn((
                 Text::new(""),
                 ui::font(ui::SMALL_PX + 1.0),
+                LineHeight::Px(CAPTION_LINE_PX),
                 TextColor(ui::TEXT),
                 Node {
                     width: px(width),
+                    height: px(2.0 * CAPTION_LINE_PX),
+                    overflow: Overflow::clip(),
                     ..default()
                 },
                 PaletteCaption,
