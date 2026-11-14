@@ -11,22 +11,25 @@ use bevy::{
     text::{FontSize, TextBounds, TextLayoutInfo},
 };
 
-/// The bubble's words, in world units.
+/// The bubble's words are laid out at `FONT_SIZE` (world units) and wrapped
+/// at `WRAP_H` (in H), then drawn `TEXT_SCALE` times that size: the game's
+/// pixel font draws its letters no smaller than its own size, so a smaller
+/// font size alone would not shrink them.
 const FONT_SIZE: f32 = 15.0;
-/// How wide the words run before they wrap, in H.
 const WRAP_H: f32 = 6.0;
+const TEXT_SCALE: f32 = 0.5;
 /// Room between the words and the box's edge, and the edge's thickness.
-const PADDING: f32 = 8.0;
-const EDGE: f32 = 2.0;
+const PADDING: f32 = 4.0;
+const EDGE: f32 = 1.0;
 /// How far the box keeps from the room's sides, in H.
 const SIDE_MARGIN_H: f32 = 1.25;
 /// How far above the terminal's top the box stands, in H: the tail spans it.
-const GAP_H: f32 = 0.3;
+const GAP_H: f32 = 0.2;
 /// The tail's steps, from the box down to its point: width and height.
 const TAIL_STEPS: [Vec2; 3] = [
-    Vec2::new(14.0, 4.0),
-    Vec2::new(9.0, 4.0),
-    Vec2::new(4.0, 4.0),
+    Vec2::new(8.0, 3.0),
+    Vec2::new(5.0, 3.0),
+    Vec2::new(2.0, 3.0),
 ];
 /// Over the room and its bodies, under the interact prompt.
 const BUBBLE_Z: f32 = 9.0;
@@ -242,7 +245,7 @@ pub(crate) fn type_terminal_text(
     let mut size = None;
     for piece in pieces {
         if let Ok((BubblePart::Words, Some(layout), _, _)) = parts.get(*piece) {
-            size = Some(layout.size / layout.scale_factor.max(f32::EPSILON));
+            size = Some(layout.size / layout.scale_factor.max(f32::EPSILON) * TEXT_SCALE);
             if let Ok(words) = children.get(*piece) {
                 for (span, text) in words.iter().zip([&shown, &unseen]) {
                     if let Ok(mut span) = spans.get_mut(span)
@@ -279,7 +282,10 @@ pub(crate) fn type_terminal_text(
             continue;
         };
         match (part, sprite) {
-            (BubblePart::Words, _) => transform.translation = middle.extend(0.02),
+            (BubblePart::Words, _) => {
+                transform.translation = middle.extend(0.02);
+                transform.scale = Vec3::splat(TEXT_SCALE);
+            }
             (BubblePart::Edge, Some(mut sprite)) => {
                 sprite.custom_size = Some(inner + Vec2::splat(2.0 * EDGE));
                 transform.translation = middle.extend(0.0);
