@@ -802,6 +802,45 @@ next_room_id: 4
     }
 
     #[test]
+    fn a_typed_hex_code_paints_a_platform_and_either_background() {
+        use crate::data::Backdrop;
+        let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
+        let data = GameData::load(&asset_root).expect("Chapter 1 YAML should be valid");
+        let mut room = data.rooms[&1].clone();
+        room.background_profiles.truncate(1);
+        let profile = room.background_profiles[0].clone();
+        let selection = [EditorItem::Platform(0)];
+
+        Field::Fill.set_text(&mut room, &selection, &data, "#4c5a74");
+        assert_eq!(room.platforms[0].fill.to_string(), "#4C5A74");
+        Field::Fill.set_text(&mut room, &selection, &data, "not a color");
+        assert_eq!(
+            room.platforms[0].fill.to_string(),
+            "#4C5A74",
+            "nonsense is ignored"
+        );
+
+        Field::Background.set_text(&mut room, &[], &data, "203040");
+        assert_eq!(Field::Background.value(&room, &[], &data, 0), "#203040");
+        Field::BackgroundOver.set_text(&mut room, &[], &data, "#ABC");
+        assert_eq!(Field::BackgroundOver.value(&room, &[], &data, 0), "#AABBCC");
+
+        // Left/Right steps a color back onto the profiles, and C takes
+        // Background 2 off.
+        Field::Background.adjust(&mut room, &[], &data, 1.0);
+        assert!(matches!(room.background_profiles[0], Backdrop::Profile(_)));
+        Field::Background.set_text(&mut room, &[], &data, &profile.to_string());
+        assert_eq!(room.background_profiles[0], profile);
+        Field::BackgroundOver.clear(&mut room, None);
+        assert_eq!(room.background_profiles, [profile]);
+
+        Field::Background.set_text(&mut room, &[], &data, "#203040");
+        let mut data = data;
+        data.rooms.insert(1, room);
+        data.validate().expect("a color background is valid");
+    }
+
+    #[test]
     fn a_copied_selection_pastes_offset_paints_together_and_deletes_together() {
         let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
         let data = GameData::load(&asset_root).expect("Chapter 1 YAML should be valid");

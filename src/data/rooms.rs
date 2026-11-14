@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use bevy::math::Vec2;
 use serde::Deserialize;
 
-use super::{EnemyTypeId, Fill};
+use super::{Backdrop, EnemyTypeId, Fill};
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct RoomConfig {
@@ -14,7 +14,8 @@ pub struct RoomConfig {
     pub size: RoomSizeConfig,
     /// The background profiles mixed into the room's backdrop: their skies
     /// blended, their layers dealt together from the furthest to the nearest.
-    pub background_profiles: Vec<String>,
+    /// An entry can also be a plain color, a sky with no layers.
+    pub background_profiles: Vec<Backdrop>,
     pub player_spawn: SpawnPosition,
     /// Solid platforms: bodies land on their top, are stopped by their sides,
     /// and bump their head on their underside. They stop shots too.

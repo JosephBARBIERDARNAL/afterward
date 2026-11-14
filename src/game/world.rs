@@ -1,5 +1,5 @@
 use super::*;
-use crate::data::RoomConfig;
+use crate::data::{Backdrop, RoomConfig};
 use bevy::{image::ImageLoaderSettings, sprite::Anchor};
 
 const ENEMY_SPRITE_SCALE: f32 = 0.62;
@@ -84,22 +84,47 @@ pub(super) fn draw_room(
     }
     // The profiles are mixed rather than laid one over the other. Their skies
     // are blended in equal parts, each drawn over the ones before it at the
-    // share that leaves them all even. Their layers are then dealt together
-    // from the furthest to the nearest, by how fast each scrolls, so one
-    // skyline's far towers stand behind the other's near ones.
-    let profiles = room
-        .background_profiles
-        .iter()
-        .map(|profile| &data.backgrounds.profiles[profile])
-        .collect::<Vec<_>>();
-    let skies = profiles.iter().enumerate().map(|(index, profile)| {
-        (
-            *profile,
-            profile.backdrop.as_str(),
-            0.0,
-            1.0 / (index + 1) as f32,
-        )
-    });
+    // share that leaves them all even; a plain color is a sky like any other,
+    // with no layers. Their layers are then dealt together from the furthest
+    // to the nearest, by how fast each scrolls, so one skyline's far towers
+    // stand behind the other's near ones.
+    let view_size = Vec2::new(
+        data.gameplay.viewport_width_h(),
+        data.gameplay.viewport.height_h,
+    ) * H_WORLD_UNITS;
+    let mut profiles = Vec::new();
+    let mut skies = Vec::new();
+    for (index, backdrop) in room.background_profiles.iter().enumerate() {
+        let alpha = 1.0 / (index + 1) as f32;
+        match backdrop {
+            Backdrop::Profile(profile) => {
+                let profile = &data.backgrounds.profiles[profile];
+                profiles.push(profile);
+                skies.push((index, profile, profile.backdrop.as_str(), 0.0, alpha));
+            }
+            // One view tall like a profile's sky, and as wide as the room
+            // with a view to spare on each side, standing still behind it.
+            Backdrop::Color(color) => {
+                let tile = Vec2::new(
+                    room.size.width_h * H_WORLD_UNITS + 2.0 * view_size.x,
+                    view_size.y,
+                );
+                let base_x = room.size.width_h * H_WORLD_UNITS / 2.0;
+                commands.spawn((
+                    Sprite::from_color(Color::from(*color).with_alpha(alpha), Vec2::ONE),
+                    Transform::from_xyz(base_x, 0.0, -80.0 + index as f32)
+                        .with_scale(tile.extend(1.0)),
+                    BackgroundParallax {
+                        base_x,
+                        factor: 1.0,
+                        tile,
+                    },
+                    RoomEntity,
+                ));
+            }
+        }
+    }
+    let first_layer = room.background_profiles.len();
     let mut scenery = profiles
         .iter()
         .flat_map(|profile| {
@@ -110,7 +135,13 @@ pub(super) fn draw_room(
         })
         .collect::<Vec<_>>();
     scenery.sort_by(|first, second| first.2.total_cmp(&second.2));
-    for (depth, (profile, asset, parallax, alpha)) in skies.chain(scenery).enumerate() {
+    // Every sky stands at its place in the list, the layers after them all.
+    let layers = skies.into_iter().chain(scenery.into_iter().enumerate().map(
+        |(index, (profile, asset, parallax, alpha))| {
+            (first_layer + index, profile, asset, parallax, alpha)
+        },
+    ));
+    for (depth, profile, asset, parallax, alpha) in layers {
         let tile = Vec2::new(profile.tile_width_h(), profile.tile_h) * H_WORLD_UNITS;
         let (first_tile, last_tile) = if profile.repeat_horizontal {
             (

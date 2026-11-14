@@ -1,10 +1,11 @@
 //! The inspector: the editable fields of the selection (or of the room when
 //! nothing is selected), changed with Left/Right, typed into, or cleared.
 //! With several items selected, Fill repaints all of them and X/Y move them
-//! together.
+//! together. Fill and the two backgrounds take a typed hex code (`#4C5A74`,
+//! `4c5a74`, `#ABC`) as well as a material or profile name.
 
 use super::*;
-use crate::data::{DecorationLayer, Facing};
+use crate::data::{Backdrop, DecorationLayer, Facing, HexColor, MaterialId};
 
 /// How far one Left/Right press grows or shrinks the room, in H.
 const ROOM_SIZE_STEP_H: f32 = 0.5;
@@ -143,7 +144,15 @@ impl Field {
     }
 
     pub(super) fn is_text(self) -> bool {
-        self == Self::Label
+        matches!(
+            self,
+            Self::Label | Self::Fill | Self::Background | Self::BackgroundOver
+        )
+    }
+
+    /// Which of the room's backgrounds a background row stands for.
+    fn backdrop_index(self) -> usize {
+        usize::from(self == Self::BackgroundOver)
     }
 
     /// The field's text, for typing into it.
@@ -161,25 +170,87 @@ impl Field {
                 .decorations
                 .get(index)
                 .and_then(|decoration| decoration.label.clone()),
+            (Self::Fill, Some(item)) => item.fill(room).map(ToString::to_string),
+            (Self::Background | Self::BackgroundOver, _) => room
+                .background_profiles
+                .get(self.backdrop_index())
+                .map(ToString::to_string),
             _ => None,
         }
     }
 
-    /// Sets a text field; empty text removes it.
-    pub(super) fn set_text(self, room: &mut RoomConfig, item: Option<EditorItem>, text: &str) {
-        let text = Some(text.trim().to_string()).filter(|text| !text.is_empty());
-        match (self, item) {
-            (Self::Label, Some(EditorItem::Platform(index))) => {
+    /// Sets a text field from what was typed. A label is removed by empty
+    /// text. A fill or a background takes a material or profile name it
+    /// knows, else a hex code, and is left alone by anything else; Background
+    /// 2 is taken off by empty text.
+    pub(super) fn set_text(
+        self,
+        room: &mut RoomConfig,
+        selection: &[EditorItem],
+        data: &GameData,
+        text: &str,
+    ) {
+        let text = text.trim();
+        match self {
+            Self::Label => {
+                let label = Some(text.to_string()).filter(|text| !text.is_empty());
+                Self::set_label(room, selection.last().copied(), label);
+            }
+            Self::Fill => {
+                let fill = text
+                    .parse::<MaterialId>()
+                    .ok()
+                    .filter(|material| data.surfaces.materials.contains_key(material))
+                    .map(Fill::Material)
+                    .or_else(|| text.parse().ok().map(Fill::Color));
+                if let Some(fill) = fill {
+                    for item in selection {
+                        item.set_fill(room, &fill);
+                    }
+                }
+            }
+            Self::Background | Self::BackgroundOver => {
+                if text.is_empty() {
+                    self.set_backdrop(room, None);
+                } else if data.backgrounds.profiles.contains_key(text) {
+                    self.set_backdrop(room, Some(Backdrop::Profile(text.to_string())));
+                } else if let Ok(color) = text.parse::<HexColor>() {
+                    self.set_backdrop(room, Some(Backdrop::Color(color)));
+                }
+            }
+            _ => {}
+        }
+    }
+
+    /// Sets Background 1 or 2. `None` takes Background 2 off and leaves
+    /// Background 1, which a room cannot do without, as it is.
+    pub(super) fn set_backdrop(self, room: &mut RoomConfig, backdrop: Option<Backdrop>) {
+        let index = self.backdrop_index();
+        match backdrop {
+            None if index == 1 && room.background_profiles.len() > 1 => {
+                room.background_profiles.remove(1);
+            }
+            None => {}
+            Some(backdrop) => match room.background_profiles.get_mut(index) {
+                Some(slot) => *slot = backdrop,
+                None => room.background_profiles.push(backdrop),
+            },
+        }
+    }
+
+    fn set_label(room: &mut RoomConfig, item: Option<EditorItem>, text: Option<String>) {
+        match item {
+            Some(EditorItem::Platform(index)) => {
                 if let Some(block) = room.platforms.get_mut(index) {
                     block.label = text;
                 }
             }
-            (Self::Label, Some(EditorItem::Enemy(index))) => {
+            Some(EditorItem::Enemy(index)) => {
                 if let Some(spawn) = room.enemy_spawns.get_mut(index) {
                     spawn.label = text;
                 }
             }
-            (Self::Label, Some(EditorItem::Decoration(index))) => {
+            Some(EditorItem::Decoration(index)) => {
                 if let Some(decoration) = room.decorations.get_mut(index) {
                     decoration.label = text;
                 }
@@ -223,11 +294,14 @@ impl Field {
             Self::Background => room
                 .background_profiles
                 .first()
-                .cloned()
-                .unwrap_or_default(),
+                .map_or_else(String::new, ToString::to_string),
             Self::BackgroundOver => match room.background_profiles.get(1..) {
                 Some([]) | None => String::from("None"),
-                Some(over) => over.join(", "),
+                Some(over) => over
+                    .iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>()
+                    .join(", "),
             },
             Self::Label => self.text(room, item).unwrap_or_else(|| String::from("-")),
             Self::Fill => item
@@ -315,33 +389,27 @@ impl Field {
                 room.size.height_h = (room.size.height_h + steps * ROOM_SIZE_STEP_H)
                     .max(data.gameplay.viewport.height_h);
             }
-            Self::Background => {
-                let profiles = data.backgrounds.profiles.keys().cloned().collect();
-                if let Some(first) = room.background_profiles.first_mut()
-                    && let Some(profile) = cycle(profiles, first)
-                {
-                    *first = profile;
-                }
-            }
-            // The profile laid over the first: an empty name stands for
-            // nothing, so Left/Right walk through it like any other. Profiles
-            // a hand-written file stacks beyond that are left alone.
-            Self::BackgroundOver => {
-                let profiles = std::iter::once(String::new())
+            // Left/Right walk the profiles; a color (typed, or picked in the
+            // palette) steps onto the first of them. For Background 2 an
+            // empty name stands for nothing, so Left/Right walk through it
+            // like any other. Profiles a hand-written file stacks beyond that
+            // are left alone.
+            Self::Background | Self::BackgroundOver => {
+                let none = (self == Self::BackgroundOver).then(String::new);
+                let profiles = none
+                    .into_iter()
                     .chain(data.backgrounds.profiles.keys().cloned())
                     .collect();
-                let current = room.background_profiles.get(1).cloned().unwrap_or_default();
-                match cycle(profiles, &current) {
-                    Some(profile) if profile.is_empty() => {
-                        if room.background_profiles.len() > 1 {
-                            room.background_profiles.remove(1);
-                        }
-                    }
-                    Some(profile) => match room.background_profiles.get_mut(1) {
-                        Some(over) => *over = profile,
-                        None => room.background_profiles.push(profile),
-                    },
-                    None => {}
+                let current = room
+                    .background_profiles
+                    .get(self.backdrop_index())
+                    .map(ToString::to_string)
+                    .unwrap_or_default();
+                if let Some(profile) = cycle(profiles, &current) {
+                    let backdrop = Some(profile)
+                        .filter(|profile| !profile.is_empty())
+                        .map(Backdrop::Profile);
+                    self.set_backdrop(room, backdrop);
                 }
             }
             Self::Fill => {
@@ -465,11 +533,15 @@ impl Field {
         }
     }
 
-    /// Removes a text field, strips an enemy's armor, or stands a turned
-    /// platform square again.
+    /// Removes a label or Background 2, strips an enemy's armor, or stands a
+    /// turned platform square again.
     pub(super) fn clear(self, room: &mut RoomConfig, item: Option<EditorItem>) {
-        if self.is_text() {
-            self.set_text(room, item, "");
+        if self == Self::Label {
+            Self::set_label(room, item, None);
+            return;
+        }
+        if self == Self::BackgroundOver {
+            self.set_backdrop(room, None);
             return;
         }
         if let (Self::Rotation, Some(EditorItem::Platform(index))) = (self, item)

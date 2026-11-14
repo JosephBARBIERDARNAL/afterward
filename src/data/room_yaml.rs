@@ -4,8 +4,8 @@
 use std::fmt::{self, Display, Formatter};
 
 use super::{
-    DecorationConfig, DecorationLayer, EnemySpawnConfig, Facing, Fill, PlatformConfig, RectH,
-    RoomConfig, RoomHazardConfig, SizeH,
+    Backdrop, DecorationConfig, DecorationLayer, EnemySpawnConfig, Facing, Fill, PlatformConfig,
+    RectH, RoomConfig, RoomHazardConfig, SizeH,
 };
 
 const HEADER: &str = "\
@@ -22,11 +22,16 @@ impl Display for RoomConfig {
         writeln!(formatter, "size:")?;
         writeln!(formatter, "  width_h: {}", self.size.width_h)?;
         writeln!(formatter, "  height_h: {}", self.size.height_h)?;
-        writeln!(
-            formatter,
-            "background_profiles: [{}]",
-            self.background_profiles.join(", ")
-        )?;
+        // A color is quoted: unquoted, YAML reads `#` as a comment.
+        let backdrops = self
+            .background_profiles
+            .iter()
+            .map(|backdrop| match backdrop {
+                Backdrop::Profile(profile) => profile.clone(),
+                Backdrop::Color(color) => format!("\"{color}\""),
+            })
+            .collect::<Vec<_>>();
+        writeln!(formatter, "background_profiles: [{}]", backdrops.join(", "))?;
         writeln!(formatter, "player_spawn:")?;
         writeln!(formatter, "  x_h: {}", self.player_spawn.x_h)?;
         writeln!(formatter, "  y_h: {}", self.player_spawn.y_h)?;
@@ -278,13 +283,13 @@ mod tests {
     }
 
     #[test]
-    fn a_platform_painted_a_plain_color_is_written_back_quoted() {
+    fn a_platform_and_a_background_painted_a_plain_color_are_written_back_quoted() {
         let room: RoomConfig = yaml_serde::from_str(
             "
 room_id: 3
 chapter_id: 1
 size: { width_h: 24, height_h: 13.5 }
-background_profiles: [city_blue_day]
+background_profiles: [city_blue_day, \"#203040\"]
 player_spawn: { x_h: 2, y_h: 1 }
 platforms:
   - { color: \"#2DE2D5\", rect_h: { x: 0, y: 0, width: 24, height: 1 } }
@@ -299,6 +304,10 @@ next_room_id: 4
         assert!(
             written.contains("color: \"#2DE2D5\""),
             "an unquoted #RRGGBB would read back as a YAML comment: {written}"
+        );
+        assert!(
+            written.contains("background_profiles: [city_blue_day, \"#203040\"]"),
+            "a background color is quoted too: {written}"
         );
         let read_back: RoomConfig =
             yaml_serde::from_str(&written).expect("the written room is valid YAML");

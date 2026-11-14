@@ -31,9 +31,21 @@ pub(super) fn type_text(
         match input.key_code {
             KeyCode::Enter | KeyCode::NumpadEnter => {
                 let field = editor.fields().get(editor.field).copied();
-                let item = editor.primary();
-                if let Some(field) = field {
-                    editor.edit(&mut data, |room| field.set_text(room, item, &text));
+                let selection = editor.selected.clone();
+                let snapshot = &*data;
+                if let Some(field) = field
+                    && let Some(mut room) = snapshot.rooms.get(&editor.room_id).cloned()
+                {
+                    field.set_text(&mut room, &selection, snapshot, &text);
+                    editor.edit(&mut data, |edited| *edited = room);
+                    // A typed fill is the one new blocks are painted with.
+                    if field == Field::Fill {
+                        editor.fill = data
+                            .rooms
+                            .get(&editor.room_id)
+                            .and_then(|room| selection.last()?.fill(room))
+                            .cloned();
+                    }
                 }
                 continue;
             }

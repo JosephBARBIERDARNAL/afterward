@@ -1,10 +1,12 @@
 //! The fill palette: a swatch for every surface material, then a color
-//! picker (a hue strip over a grid of shades mixed from it). Clicking any of
-//! them paints the selected platforms and decorations and becomes the fill
-//! new ones use.
+//! picker (a field to type any hex code into, and a hue strip over a grid of
+//! shades mixed from it). Clicking any of them paints the selected platforms
+//! and decorations and becomes the fill new ones use. With nothing selected,
+//! a color paints the room's background instead: the one the inspector
+//! stands on, else Background 1.
 
 use super::*;
-use crate::data::{HexColor, MaterialId};
+use crate::data::{Backdrop, HexColor, MaterialId};
 use bevy::ui::RelativeCursorPosition;
 
 const SWATCH_PX: f32 = 26.0;
@@ -62,6 +64,37 @@ impl ShadeSwatch {
 /// The line naming the hovered (or current) fill.
 #[derive(Component)]
 pub(super) struct PaletteCaption;
+
+/// The field a hex code is typed into: clicking it opens the inspector's
+/// Fill row (or background row) for typing, which Enter keeps.
+#[derive(Component)]
+pub(super) struct HexField;
+
+/// The palette panel and its hex field, told apart by `Has<HexField>`.
+type PanelParts<'world, 'state> = Query<
+    'world,
+    'state,
+    (&'static RelativeCursorPosition, Has<HexField>),
+    Or<(With<PalettePanel>, With<HexField>)>,
+>;
+
+/// The text of the hex field: the current color, or what is being typed.
+#[derive(Component)]
+pub(super) struct HexFieldText;
+
+impl RoomEditor {
+    /// The background the palette paints while nothing is selected: the one
+    /// the inspector stands on, else Background 1. `None` while something is
+    /// selected, which the palette paints instead.
+    fn painted_background(&self) -> Option<Field> {
+        self.selected
+            .is_empty()
+            .then(|| match self.fields().get(self.field) {
+                Some(Field::BackgroundOver) => Field::BackgroundOver,
+                _ => Field::Background,
+            })
+    }
+}
 
 pub(super) fn spawn_palette(commands: &mut Commands, data: &GameData, asset_server: &AssetServer) {
     let width = COLUMNS as f32 * (SWATCH_PX + SWATCH_GAP_PX);
@@ -122,6 +155,30 @@ pub(super) fn spawn_palette(commands: &mut Commands, data: &GameData, asset_serv
                 }
             });
             panel
+                .spawn((
+                    Node {
+                        width: px(width),
+                        padding: UiRect::axes(px(6), px(4)),
+                        border: UiRect::all(px(1)),
+                        ..default()
+                    },
+                    BorderColor::all(HOVER_BORDER.with_alpha(0.4)),
+                    BackgroundColor(Color::srgba(0.0, 0.0, 0.0, 0.5)),
+                    RelativeCursorPosition::default(),
+                    HexField,
+                ))
+                .with_children(|field| {
+                    field.spawn((
+                        Text::new(""),
+                        TextFont {
+                            font_size: bevy::text::FontSize::Px(15.0),
+                            ..default()
+                        },
+                        TextColor(Color::WHITE),
+                        HexFieldText,
+                    ));
+                });
+            panel
                 .spawn(grid(HUES, COLOR_SWATCH_PX))
                 .with_children(|strip| {
                     for index in 0..HUES {
@@ -164,15 +221,34 @@ pub(super) fn handle_palette(
     mouse: Res<ButtonInput<MouseButton>>,
     mut editor: ResMut<RoomEditor>,
     mut data: ResMut<GameData>,
-    panels: Query<&RelativeCursorPosition, With<PalettePanel>>,
+    panels: PanelParts,
     materials: Query<(&RelativeCursorPosition, &PaletteSwatch)>,
     hues: Query<(&RelativeCursorPosition, &HueSwatch)>,
     shades: Query<(&RelativeCursorPosition, &ShadeSwatch)>,
 ) {
-    editor.pointer_over_panel = panels.iter().any(RelativeCursorPosition::cursor_over);
+    editor.pointer_over_panel = panels
+        .iter()
+        .any(|(cursor, is_field)| !is_field && cursor.cursor_over());
     if !mouse.just_pressed(MouseButton::Left) || editor.playtest_row.is_some() {
         return;
     }
+    if panels
+        .iter()
+        .any(|(cursor, is_field)| is_field && cursor.cursor_over())
+    {
+        // Typing goes through the inspector row it changes, so Enter keeps
+        // it and Escape drops it there as anywhere.
+        let target = editor.painted_background().unwrap_or(Field::Fill);
+        if let Some(row) = editor.fields().iter().position(|field| *field == target) {
+            editor.field = row;
+            editor.text_entry = Some(String::from("#"));
+        }
+        return;
+    }
+    if !editor.pointer_over_panel {
+        return;
+    }
+    editor.text_entry = None;
     if let Some((_, HueSwatch(hue))) = hues.iter().find(|(cursor, _)| cursor.cursor_over()) {
         editor.hue = *hue;
         return;
@@ -191,6 +267,14 @@ pub(super) fn handle_palette(
     let Some(fill) = picked else {
         return;
     };
+    if let Some(field) = editor.painted_background() {
+        if let Fill::Color(color) = fill {
+            editor.edit(&mut data, |room| {
+                field.set_backdrop(room, Some(Backdrop::Color(color)));
+            });
+        }
+        return;
+    }
     let selection = editor.selected.clone();
     editor.edit(&mut data, |room| {
         for item in &selection {
@@ -213,12 +297,26 @@ pub(super) fn refresh_palette(
     >,
     mut shades: Shades,
     mut caption: Query<&mut Text, With<PaletteCaption>>,
+    mut hex_text: Query<&mut Text, (With<HexFieldText>, Without<PaletteCaption>)>,
 ) {
-    let current = data
-        .rooms
-        .get(&editor.room_id)
-        .and_then(|room| editor.primary().and_then(|item| item.fill(room)))
-        .or(editor.fill.as_ref());
+    let room = data.rooms.get(&editor.room_id);
+    let background = editor.painted_background();
+    let current = match background {
+        Some(field) => room
+            .and_then(|room| {
+                room.background_profiles
+                    .get(usize::from(field == Field::BackgroundOver))
+            })
+            .and_then(|backdrop| match backdrop {
+                Backdrop::Color(color) => Some(Fill::Color(*color)),
+                Backdrop::Profile(_) => None,
+            }),
+        None => room
+            .and_then(|room| editor.primary().and_then(|item| item.fill(room)))
+            .or(editor.fill.as_ref())
+            .cloned(),
+    };
+    let current = current.as_ref();
     let mut hovered = None;
     let border = |cursor: &RelativeCursorPosition, is_current: bool| {
         if cursor.cursor_over() {
@@ -252,10 +350,25 @@ pub(super) fn refresh_palette(
     let name = hovered
         .or_else(|| current.map(ToString::to_string))
         .unwrap_or_else(|| String::from("-"));
-    let line = format!("FILL  {name}");
+    let target = background.map_or("Fill", Field::name).to_uppercase();
+    let line = format!("{target}  {name}");
     for mut text in &mut caption {
         if text.0 != line {
             text.0.clone_from(&line);
+        }
+    }
+    let typing = editor
+        .text_entry
+        .as_ref()
+        .filter(|_| editor.fields().get(editor.field) == Some(&background.unwrap_or(Field::Fill)));
+    let hex = match (typing, current) {
+        (Some(text), _) => format!("HEX  {text}_   Enter keeps, Esc cancels"),
+        (None, Some(Fill::Color(color))) => format!("HEX  {color}   click to type"),
+        (None, _) => String::from("HEX  click to type a code"),
+    };
+    for mut text in &mut hex_text {
+        if text.0 != hex {
+            text.0.clone_from(&hex);
         }
     }
 }

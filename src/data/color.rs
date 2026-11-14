@@ -9,7 +9,9 @@ use bevy::prelude::Color;
 use serde::{Deserialize, Deserializer, de::Error as DeserializeError};
 
 /// A color written as `#RRGGBB`, kept as its channels so it is written back
-/// exactly as it reads.
+/// exactly as it reads. It also reads the short `#RGB` form and either
+/// without its `#`, as the editor's hex field takes them, and is written back
+/// in full.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct HexColor([u8; 3]);
 
@@ -17,11 +19,18 @@ impl FromStr for HexColor {
     type Err = &'static str;
 
     fn from_str(value: &str) -> Result<Self, Self::Err> {
-        let hex = value.strip_prefix('#').unwrap_or(value);
-        if hex.len() != 6 {
-            return Err("hex colors must contain six digits");
+        const MESSAGE: &str = "hex colors must contain three or six hex digits";
+        let hex = value.trim();
+        let hex = hex.strip_prefix('#').unwrap_or(hex);
+        if !hex.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+            return Err(MESSAGE);
         }
-        let rgb = u32::from_str_radix(hex, 16).map_err(|_| "hex colors must contain six digits")?;
+        let full = match hex.len() {
+            6 => hex.to_string(),
+            3 => hex.chars().flat_map(|digit| [digit, digit]).collect(),
+            _ => return Err(MESSAGE),
+        };
+        let rgb = u32::from_str_radix(&full, 16).map_err(|_| MESSAGE)?;
         Ok(Self([(rgb >> 16) as u8, (rgb >> 8) as u8, rgb as u8]))
     }
 }
@@ -68,7 +77,13 @@ mod tests {
         let color: HexColor = "#2DE2D5".parse().expect("six digits parse");
         assert_eq!(color.to_string(), "#2DE2D5");
         assert_eq!(HexColor::from(Color::from(color)), color);
+        assert_eq!("2de2d5".parse::<HexColor>(), Ok(color));
+        assert_eq!(
+            "#2D5".parse::<HexColor>().map(|short| short.to_string()),
+            Ok("#22DD55".into())
+        );
         assert!("#2DE2".parse::<HexColor>().is_err());
+        assert!("#+2DE2D".parse::<HexColor>().is_err());
         assert!("#2DE2DZ".parse::<HexColor>().is_err());
     }
 }

@@ -545,11 +545,13 @@ impl GameData {
                     "room {room_id} needs at least one background profile"
                 )));
             }
-            if let Some(unknown) = room
-                .background_profiles
-                .iter()
-                .find(|profile| !self.backgrounds.profiles.contains_key(*profile))
-            {
+            if let Some(unknown) = room.background_profiles.iter().find_map(|backdrop| {
+                match backdrop {
+                    Backdrop::Profile(profile) => Some(profile),
+                    Backdrop::Color(_) => None,
+                }
+                .filter(|profile| !self.backgrounds.profiles.contains_key(*profile))
+            }) {
                 return Err(InvalidGameData::from(format!(
                     "room {room_id} references unknown background profile {unknown}"
                 )));
