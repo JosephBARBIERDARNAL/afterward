@@ -291,6 +291,7 @@ mod tests {
                 punch_hits: Vec::new(),
                 punch_missed: sound(),
                 land: sound(),
+                footstep: sound(),
             },
         }
     }

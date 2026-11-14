@@ -90,6 +90,8 @@ pub struct RecordedEffects {
     pub punch_missed: AudioAsset,
     /// The player touching down.
     pub land: AudioAsset,
+    /// One step of the player running on the ground, on any surface.
+    pub footstep: AudioAsset,
 }
 
 /// A sound file and how loud it plays relative to its volume setting.

@@ -450,6 +450,9 @@ audio:
     punch_missed: { asset: audio/sfx/punch-missed.wav, gain: 0.35 }
     # The player touching down, from a jump, a fall or a slam.
     land: { asset: audio/sfx/land.wav, gain: 0.2 }
+    # One step of the player running on the ground, every
+    # `footstep_interval_s`: kept low, since it repeats as long as they run.
+    footstep: { asset: audio/sfx/footstep.wav, gain: 0.12 }
 
 controls:
   move_left: [KeyA, KeyQ, ArrowLeft]

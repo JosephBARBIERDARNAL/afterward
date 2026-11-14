@@ -181,6 +181,8 @@ pub(super) fn initialize_sound_bank(
         (SoundCue::BonusRerolled, &recorded.bonus_reroll),
         (SoundCue::MeleeMiss, &recorded.punch_missed),
         (SoundCue::Landing, &recorded.land),
+        (SoundCue::Footstep(FootstepSound::Stone), &recorded.footstep),
+        (SoundCue::Footstep(FootstepSound::Wood), &recorded.footstep),
     ]
     .into_iter()
     .chain(
