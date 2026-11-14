@@ -890,8 +890,8 @@ mod tests {
         );
         assert_eq!(
             data.surfaces.materials.len(),
-            21,
-            "one material per Typst texture, and the sci-fi pack's eight tiles"
+            8,
+            "the sci-fi pack's eight tiles"
         );
         assert_eq!(
             data.gameplay.player.max_speed_h_s,
