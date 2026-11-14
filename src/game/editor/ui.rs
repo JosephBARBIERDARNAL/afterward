@@ -643,11 +643,15 @@ pub(super) fn click_buttons(
     keys: Res<ButtonInput<KeyCode>>,
     mut editor: ResMut<RoomEditor>,
     data: Res<GameData>,
-    blockers: Query<&RelativeCursorPosition, With<EditorBlocker>>,
+    blockers: Query<(&RelativeCursorPosition, &InheritedVisibility), With<EditorBlocker>>,
     buttons: Query<(&RelativeCursorPosition, &ComputedNode, &EditorButton)>,
     mut actions: MessageWriter<EditorAction>,
 ) {
-    editor.pointer_over_panel = blockers.iter().any(RelativeCursorPosition::cursor_over);
+    // A hidden panel keeps the cursor it had when it was hidden (Bevy stops
+    // updating it), so only the panels on show count.
+    editor.pointer_over_panel = blockers
+        .iter()
+        .any(|(cursor, visibility)| visibility.get() && cursor.cursor_over());
     if !mouse.just_pressed(MouseButton::Left) {
         return;
     }
