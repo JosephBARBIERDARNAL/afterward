@@ -6,8 +6,8 @@
 
 use super::*;
 use crate::data::{
-    Backdrop, DecorationLayer, DeviceKind, DeviceTag, Facing, HexColor, MaterialId, Placement,
-    RoomHazardConfig,
+    Backdrop, DecorationLayer, DeviceKind, DeviceTag, Facing, HexColor, MaterialId, ParamValue,
+    Placement, RoomHazardConfig,
 };
 use std::sync::LazyLock;
 
@@ -239,12 +239,24 @@ impl Field {
         matches!(
             self,
             Self::Label | Self::Fill | Self::Background | Self::BackgroundOver
-        )
+        ) || self.is_device_words()
+    }
+
+    /// Whether this is a device's words (a terminal's text): typed, never
+    /// stepped.
+    fn is_device_words(self) -> bool {
+        let Self::DeviceParam(tag, index) = self else {
+            return false;
+        };
+        let mut kind = DeviceKind::from(tag);
+        kind.params()
+            .get(usize::from(index))
+            .is_some_and(|param| matches!(param.value, ParamValue::Text(_)))
     }
 
     /// Whether Left/Right (and the row's < and >) change the field.
     pub(super) fn steps(self) -> bool {
-        self != Self::Label
+        self != Self::Label && !self.is_device_words()
     }
 
     /// Whether C (and the row's x) clears the field: see `Field::clear`.
@@ -297,6 +309,16 @@ impl Field {
                 .background_profiles
                 .get(self.backdrop_index())
                 .map(ToString::to_string),
+            (Self::DeviceParam(_, param), Some(EditorItem::Device(index, _))) => {
+                let mut kind = room.devices.get(index)?.kind.clone();
+                kind.params()
+                    .into_iter()
+                    .nth(usize::from(param))
+                    .and_then(|param| match param.value {
+                        ParamValue::Text(text) => Some(text.clone()),
+                        _ => None,
+                    })
+            }
             _ => None,
         }
     }
@@ -338,6 +360,19 @@ impl Field {
                     self.set_backdrop(room, Some(Backdrop::Profile(text.to_string())));
                 } else if let Ok(color) = text.parse::<HexColor>() {
                     self.set_backdrop(room, Some(Backdrop::Color(color)));
+                }
+            }
+            Self::DeviceParam(_, param) => {
+                if let Some(EditorItem::Device(index, _)) = selection.last()
+                    && let Some(device) = room.devices.get_mut(*index)
+                    && let Some(ParamValue::Text(words)) = device
+                        .kind
+                        .params()
+                        .into_iter()
+                        .nth(usize::from(param))
+                        .map(|param| param.value)
+                {
+                    text.clone_into(words);
                 }
             }
             _ => {}

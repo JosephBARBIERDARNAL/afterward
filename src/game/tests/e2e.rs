@@ -12,7 +12,7 @@ use crate::game::{
     audio::{AudioClass, ManagedAudio},
     bonus_pickup::BonusPickup,
     combat::CombatProjectile,
-    interact::InteractBadge,
+    interact::{InteractPrompt, InteractVerb},
     menus::{MenuAction, MenuButton},
     ripple::Ripple,
     shaders::{Flood, GlowAttached},

@@ -50,6 +50,7 @@ pub enum DeviceKind {
     Button(ButtonConfig),
     Door(DoorConfig),
     Ladder(LadderConfig),
+    Terminal(TerminalConfig),
 }
 
 /// A device's kind alone: what the editor adds, and what decides its rows.
@@ -68,10 +69,11 @@ pub enum DeviceTag {
     Button,
     Door,
     Ladder,
+    Terminal,
 }
 
 impl DeviceTag {
-    pub(crate) const ALL: [Self; 12] = [
+    pub(crate) const ALL: [Self; 13] = [
         Self::Laser,
         Self::FireTrap,
         Self::Spikes,
@@ -84,6 +86,7 @@ impl DeviceTag {
         Self::Button,
         Self::Door,
         Self::Ladder,
+        Self::Terminal,
     ];
 }
 
@@ -103,6 +106,7 @@ impl Display for DeviceTag {
             Self::Button => "button",
             Self::Door => "door",
             Self::Ladder => "ladder",
+            Self::Terminal => "terminal",
         })
     }
 }
@@ -123,6 +127,7 @@ impl From<DeviceTag> for DeviceKind {
             DeviceTag::Button => Self::Button(ButtonConfig::default()),
             DeviceTag::Door => Self::Door(DoorConfig::default()),
             DeviceTag::Ladder => Self::Ladder(LadderConfig::default()),
+            DeviceTag::Terminal => Self::Terminal(TerminalConfig::default()),
         }
     }
 }
@@ -150,6 +155,8 @@ pub(crate) enum ParamValue<'a> {
     },
     /// One of a few named options, walked through in turn.
     Choice(&'a mut dyn DeviceChoice),
+    /// Words, typed into the inspector rather than stepped.
+    Text(&'a mut String),
 }
 
 impl ParamValue<'_> {
@@ -166,6 +173,7 @@ impl ParamValue<'_> {
                 **value = stepped.clamp(i64::from(*min), i64::from(*max)) as u32;
             }
             Self::Choice(choice) => choice.step(steps >= 0.0),
+            Self::Text(_) => {}
         }
     }
 }
@@ -177,6 +185,7 @@ impl Display for ParamValue<'_> {
             Self::Number { value, .. } => write!(formatter, "{value}"),
             Self::Whole { value, .. } => write!(formatter, "{value}"),
             Self::Choice(choice) => formatter.write_str(choice.name()),
+            Self::Text(text) => formatter.write_str(text),
         }
     }
 }
@@ -500,6 +509,21 @@ impl Default for DoorConfig {
     }
 }
 
+/// A terminal that, used with Interact, types `text` out in a bubble over it.
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+#[serde(default)]
+pub struct TerminalConfig {
+    pub text: String,
+}
+
+impl Default for TerminalConfig {
+    fn default() -> Self {
+        Self {
+            text: String::from("..."),
+        }
+    }
+}
+
 /// A ladder climbed from its foot (the spot) up to `height_h`.
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(default)]
@@ -543,6 +567,7 @@ impl DeviceKind {
             Self::Button(_) => DeviceTag::Button,
             Self::Door(_) => DeviceTag::Door,
             Self::Ladder(_) => DeviceTag::Ladder,
+            Self::Terminal(_) => DeviceTag::Terminal,
         }
     }
 
@@ -703,6 +728,9 @@ impl DeviceKind {
                 "Height (H)",
                 number(&mut ladder.height_h, 0.5, 1.0),
             )],
+            Self::Terminal(terminal) => {
+                vec![param("text", "Text", ParamValue::Text(&mut terminal.text))]
+            }
         }
     }
 
@@ -730,7 +758,8 @@ impl DeviceKind {
             | Self::Blade(_)
             | Self::Turret(_)
             | Self::Button(_)
-            | Self::Door(_) => frame(self.tag()),
+            | Self::Door(_)
+            | Self::Terminal(_) => frame(self.tag()),
         }
     }
 }

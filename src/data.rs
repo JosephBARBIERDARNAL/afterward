@@ -508,19 +508,15 @@ impl GameData {
         if [
             interact.door_reach_x_h,
             interact.door_reach_y_h,
-            interact.badge_size_h,
-            interact.pop_s,
-            interact.bob_period_s,
+            interact.prompt_key_px,
         ]
         .iter()
         .any(|value| !value.is_finite() || *value <= 0.0)
-            || [interact.badge_gap_h, interact.bob_height_h]
-                .iter()
-                .any(|value| !value.is_finite() || *value < 0.0)
+            || !(interact.prompt_margin_px.is_finite() && interact.prompt_margin_px >= 0.0)
         {
             return Err(InvalidGameData::from(
-                "the interact prompt needs a positive door reach, badge size, pop time and \
-                 bob period, and a gap and bob height that are not negative",
+                "the interact prompt needs a positive door reach and key size, and a margin \
+                 that is not negative",
             ));
         }
 
@@ -669,7 +665,8 @@ impl GameData {
                         | DeviceKind::FoldingPlatform(_)
                         | DeviceKind::Blade(_)
                         | DeviceKind::Button(_)
-                        | DeviceKind::Door(_) => false,
+                        | DeviceKind::Door(_)
+                        | DeviceKind::Terminal(_) => false,
                     }
             }) {
                 return Err(InvalidGameData::from(format!(

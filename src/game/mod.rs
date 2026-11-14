@@ -146,6 +146,7 @@ impl Plugin for GamePlugin {
                 ui_style::use_the_game_font,
                 camera::spawn_camera,
                 interface::spawn_interface,
+                interact::spawn_interact_prompt,
                 bonus_screen::spawn_bonus_screen,
                 menus::spawn_menu,
                 prologue::spawn_prologue_text,
@@ -242,7 +243,7 @@ impl Plugin for GamePlugin {
                 camera::update_background_parallax,
                 interface::update_hud,
                 shaders::attach_glows,
-                interact::show_the_interact_badge,
+                interact::show_the_interact_prompt,
                 shaders::show_the_flood,
             ),
         )
@@ -290,7 +291,11 @@ impl Plugin for GamePlugin {
                 (combat::send_in_the_next_wave, combat::raise_the_arriving).chain(),
                 bonus_pickup::spawn_bonus_pickup,
                 interact::mark_what_is_in_reach,
-                (bonus_pickup::update_bonus_pickup, devices::press_buttons),
+                (
+                    bonus_pickup::update_bonus_pickup,
+                    devices::press_buttons,
+                    devices::read_terminals,
+                ),
                 (
                     bonus_pickup::promise_the_next_bonus,
                     shaders::light_the_unlocked_door,

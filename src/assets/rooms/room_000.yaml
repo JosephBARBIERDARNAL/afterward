@@ -51,7 +51,6 @@ props:
   - { label: corner, prop: sci_fi_steel_block, position_h: { x: 51.25, y: 8.5 } }
   - { label: corner, prop: sci_fi_steel_block, position_h: { x: 54.25, y: 9 } }
   # The way in: a terminal by the wall, crates and a barrel further on.
-  - { prop: sci_fi_terminal, position_h: { x: 2.25, y: 2 } }
   - { prop: sci_fi_crate_stack, position_h: { x: 16.5, y: 2 } }
   - { prop: sci_fi_small_crate, position_h: { x: 17.75, y: 2 } }
   - { prop: sci_fi_barrel, position_h: { x: 19.25, y: 2 } }
@@ -74,6 +73,10 @@ props:
   - prop: sci_fi_bench
     position_h: { x: 48.75, y: 9 }
 devices:
+  - label: welcome terminal
+    kind: terminal
+    position_h: { x: 2.25, y: 2 }
+    text: "CITY ACCESS LOG. LAST ENTRY: FORTY-ONE YEARS AGO. NOBODY HAS COME BACK OUT."
   - kind: hover_platform
     position_h: { x: 46.25, y: 2 }
     size: large

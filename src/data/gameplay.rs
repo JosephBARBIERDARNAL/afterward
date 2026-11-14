@@ -515,13 +515,11 @@ pub struct InteractConfig {
     /// middle, the player can use it from.
     pub door_reach_x_h: f32,
     pub door_reach_y_h: f32,
-    pub badge_size_h: f32,
-    /// The gap between the top of the thing in reach and its badge.
-    pub badge_gap_h: f32,
-    /// How long the badge takes to grow in.
-    pub pop_s: f32,
-    pub bob_height_h: f32,
-    pub bob_period_s: f32,
+    /// The prompt naming the key, and what it does, at the bottom of the
+    /// screen while something is in reach: its key badge's size, and how far
+    /// it stands above the screen's bottom edge, in pixels.
+    pub prompt_key_px: f32,
+    pub prompt_margin_px: f32,
 }
 
 /// The exit door's sprite sheet: frame 0 locked, 1 unlocked, then the

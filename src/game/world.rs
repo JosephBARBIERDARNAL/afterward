@@ -235,7 +235,7 @@ pub(super) fn spawn_exit_door(
             ExitDoor,
             Interactable {
                 reach_h: Vec2::new(interact.door_reach_x_h, interact.door_reach_y_h),
-                top_h: data.gameplay.room_flow.exit_door.height_h / 2.0,
+                verb: "enter",
             },
         ),
     );

@@ -19,8 +19,8 @@ platforms:
 decorations: []
 props:
   - { prop: sci_fi_crate_stack, position_h: { x: 13.5, y: 2 } }
-  - { prop: sci_fi_terminal, position_h: { x: 4.5, y: 2 } }
 devices:
+  - { label: warning terminal, kind: terminal, position_h: { x: 4.5, y: 2 }, text: "DEFENCE GRID ONLINE. WALKERS, MINES AND DRONES ARE ON PATROL." }
   - { label: ladder to the right ledge, kind: ladder, position_h: { x: 16.5, y: 2 }, height_h: 3.5 }
 enemy_spawns:
   - { label: gun walker, type_id: sci_fi_walker, position_h: { x: 20, y: 2 } }

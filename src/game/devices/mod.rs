@@ -21,9 +21,13 @@ use bevy::math::Rect;
 
 mod doors;
 mod platforms;
+mod terminals;
 mod traps;
 
 pub(super) use doors::{Ladder, press_buttons};
+#[cfg(test)]
+pub(super) use terminals::BubblePart;
+pub(super) use terminals::read_terminals;
 
 /// Devices stand over the platforms and the background props, behind the
 /// bodies.
@@ -33,7 +37,7 @@ pub(super) struct DevicesPlugin;
 
 impl Plugin for DevicesPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
+        app.init_resource::<terminals::Reading>().add_systems(
             Update,
             (
                 // Before the player moves: what carries or holds them up
@@ -50,6 +54,7 @@ impl Plugin for DevicesPlugin {
                     traps::run_cycles,
                     traps::run_turrets,
                     platforms::run_conveyors,
+                    terminals::type_terminal_text,
                     show_frames,
                 )
                     .chain()
@@ -342,7 +347,7 @@ pub(super) fn spawn_devices(
             DeviceTag::Conveyor | DeviceTag::HoverPlatform | DeviceTag::FoldingPlatform => {
                 Some("solid")
             }
-            DeviceTag::Door => Some("solid"),
+            DeviceTag::Door | DeviceTag::Terminal => Some("solid"),
             DeviceTag::Press | DeviceTag::Turret => Some("body"),
             _ => None,
         };
@@ -384,12 +389,18 @@ pub(super) fn spawn_devices(
                     ),
                 });
             }
+            DeviceKind::Terminal(_) => {
+                device.insert(Interactable {
+                    reach_h: Vec2::new(0.9, 1.0),
+                    verb: "read",
+                });
+            }
             DeviceKind::Button(_) => {
                 device.insert((
                     doors::ButtonState::default(),
                     Interactable {
                         reach_h: Vec2::new(0.8, 1.0),
-                        top_h: bounds.height(),
+                        verb: "press",
                     },
                 ));
             }

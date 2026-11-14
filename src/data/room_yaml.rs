@@ -5,7 +5,7 @@ use std::fmt::{self, Display, Formatter};
 
 use super::{
     Backdrop, DecorationConfig, DecorationLayer, DeviceConfig, EnemySpawnConfig, Facing, Fill,
-    Placement, PlatformConfig, PropConfig, RectH, RoomConfig, RoomHazardConfig, SizeH,
+    ParamValue, Placement, PlatformConfig, PropConfig, RectH, RoomConfig, RoomHazardConfig, SizeH,
 };
 
 const HEADER: &str = "\
@@ -218,7 +218,11 @@ impl Display for DeviceConfig {
         let params = kind
             .params()
             .into_iter()
-            .map(|param| format!("{}: {}", param.key, param.value))
+            .map(|param| match &param.value {
+                // Words are quoted, as a label is.
+                ParamValue::Text(text) => format!("{}: {}", param.key, YamlText(text)),
+                value => format!("{}: {value}", param.key),
+            })
             .collect::<Vec<_>>();
         let fields = label
             .chain([

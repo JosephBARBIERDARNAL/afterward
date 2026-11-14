@@ -1,28 +1,20 @@
-//! What the Interact key acts on. The bonus item and the unlocked door carry
-//! `Interactable`; `mark_what_is_in_reach` names the nearest one the player
-//! stands within reach of, the systems owning those things act on it when
-//! Interact is pressed, and `show_the_interact_badge` stands the key over it.
+//! What the Interact key acts on. The bonus item, the unlocked door, buttons
+//! and terminals carry `Interactable`; `mark_what_is_in_reach` names the
+//! nearest one the player stands within reach of, the systems owning those
+//! things act on it when Interact is pressed, and `show_the_interact_prompt`
+//! names the key, and what it does, at the bottom of the screen.
 
 use super::*;
-use crate::game::ui_style::ACTIVE_BORDER;
+use crate::game::ui_style::{DESCRIPTION_COLOR, key_badge};
 use bevy::text::{FontSize, FontWeight};
-
-/// The inside of the badge: dark, so the key reads over any room.
-const BADGE_FILL: Color = Color::srgba(0.05, 0.05, 0.1, 0.9);
-/// How thick the badge's edge is, as a share of its height.
-const BADGE_EDGE: f32 = 0.1;
-/// How tall the key's name is, as a share of the badge's height.
-const BADGE_TEXT: f32 = 0.6;
-/// In front of the bodies standing in the room.
-const BADGE_Z: f32 = 10.0;
 
 /// Something used with Interact rather than by walking into it.
 #[derive(Component)]
 pub(super) struct Interactable {
     /// How far from its middle the player may stand, on each axis, in H.
     pub(super) reach_h: Vec2,
-    /// How far its top stands above its middle, in H: where the badge goes.
-    pub(super) top_h: f32,
+    /// What Interact does to it, written beside the key ("take", "read").
+    pub(super) verb: &'static str,
 }
 
 /// The `Interactable` the player stands within reach of, the nearest when
@@ -30,13 +22,17 @@ pub(super) struct Interactable {
 #[derive(Resource, Default)]
 pub(super) struct InReach(pub(super) Option<Entity>);
 
-/// The key standing over the thing in reach, as its child.
+/// The prompt at the bottom of the screen, shown while something is in reach.
 #[derive(Component)]
-pub(super) struct InteractBadge {
-    age_s: f32,
-    /// Where it hovers around, above its parent's middle, in world units.
-    rest_y: f32,
-}
+pub(super) struct InteractPrompt;
+
+/// The name of the key Interact is bound to, in the prompt's badge.
+#[derive(Component)]
+pub(super) struct InteractKey;
+
+/// What Interact does to the thing in reach, beside the key.
+#[derive(Component)]
+pub(super) struct InteractVerb;
 
 pub(super) fn mark_what_is_in_reach(
     session: Res<RunSession>,
@@ -64,67 +60,84 @@ pub(super) fn mark_what_is_in_reach(
     }
 }
 
-/// Stands the badge over the thing in reach, hovers it, and takes it away
-/// once that thing is out of reach or gone.
-pub(super) fn show_the_interact_badge(
-    mut commands: Commands,
-    time: Res<Time>,
-    data: Res<GameData>,
-    controls: Res<ControlBindings>,
-    in_reach: Res<InReach>,
-    things: Query<&Interactable>,
-    mut badges: Query<(Entity, &ChildOf, &mut Transform, &mut InteractBadge)>,
-) {
+/// Lays the prompt out once, hidden, at the bottom middle of the screen.
+pub(super) fn spawn_interact_prompt(mut commands: Commands, data: Res<GameData>) {
     let config = &data.gameplay.room_flow.interact;
-    let mut standing = false;
-    for (entity, parent, mut transform, mut badge) in &mut badges {
-        if Some(parent.parent()) != in_reach.0 {
-            commands.entity(entity).despawn();
-            continue;
-        }
-        standing = true;
-        badge.age_s += time.delta_secs();
-        let turn = std::f32::consts::TAU * badge.age_s / config.bob_period_s;
-        transform.translation.y = badge.rest_y + turn.sin() * config.bob_height_h * H_WORLD_UNITS;
-        transform.scale = Vec3::splat((badge.age_s / config.pop_s).min(1.0));
-    }
-    if standing {
-        return;
-    }
-    let Some((target, thing)) = in_reach
-        .0
-        .and_then(|target| Some((target, things.get(target).ok()?)))
-    else {
-        return;
-    };
-    let label = controls.primary_label(GameAction::Interact);
-    let height = config.badge_size_h * H_WORLD_UNITS;
-    // Square for a single letter, and wider for a name such as ENTER.
-    let width = height * (1.0 + 0.5 * label.chars().count().saturating_sub(1) as f32);
-    let edge = height * BADGE_EDGE;
-    let rest_y = (thing.top_h + config.badge_gap_h) * H_WORLD_UNITS + height / 2.0;
-    commands.entity(target).with_child((
-        Sprite::from_color(ACTIVE_BORDER, Vec2::new(width, height)),
-        Transform::from_xyz(0.0, rest_y, BADGE_Z).with_scale(Vec3::ZERO),
-        InteractBadge { age_s: 0.0, rest_y },
-        children![
-            (
-                Sprite::from_color(
-                    BADGE_FILL,
-                    Vec2::new(width - 2.0 * edge, height - 2.0 * edge)
-                ),
-                Transform::from_xyz(0.0, 0.0, 0.1),
-            ),
-            (
-                Text2d::new(label),
+    commands
+        .spawn((
+            Node {
+                position_type: PositionType::Absolute,
+                left: px(0),
+                right: px(0),
+                bottom: px(config.prompt_margin_px),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                column_gap: px(config.prompt_key_px / 3.0),
+                ..default()
+            },
+            Visibility::Hidden,
+            Pickable::IGNORE,
+            InteractPrompt,
+        ))
+        .with_children(|prompt| {
+            prompt.spawn(key_badge(config.prompt_key_px)).with_child((
+                Text::new(""),
                 TextFont {
-                    font_size: FontSize::Px(height * BADGE_TEXT),
+                    font_size: FontSize::Px(config.prompt_key_px * 0.55),
                     weight: FontWeight::BOLD,
                     ..default()
                 },
                 TextColor(Color::WHITE),
-                Transform::from_xyz(0.0, 0.0, 0.2),
-            ),
-        ],
-    ));
+                Pickable::IGNORE,
+                InteractKey,
+            ));
+            prompt.spawn((
+                Text::new(""),
+                TextFont {
+                    font_size: FontSize::Px(config.prompt_key_px * 0.5),
+                    ..default()
+                },
+                TextColor(DESCRIPTION_COLOR),
+                Pickable::IGNORE,
+                InteractVerb,
+            ));
+        });
+}
+
+/// Shows the prompt while something stands in reach during play, naming the
+/// key Interact is bound to (so a rebind shows) and what it does there.
+pub(super) fn show_the_interact_prompt(
+    screen: Res<State<GameScreen>>,
+    controls: Res<ControlBindings>,
+    in_reach: Res<InReach>,
+    things: Query<&Interactable>,
+    mut prompts: Query<&mut Visibility, With<InteractPrompt>>,
+    mut keys: Query<&mut Text, With<InteractKey>>,
+    mut verbs: Query<&mut Text, (With<InteractVerb>, Without<InteractKey>)>,
+) {
+    let thing = in_reach
+        .0
+        .filter(|_| *screen.get() == GameScreen::Playing)
+        .and_then(|target| things.get(target).ok());
+    for mut visibility in &mut prompts {
+        visibility.set_if_neq(if thing.is_some() {
+            Visibility::Visible
+        } else {
+            Visibility::Hidden
+        });
+    }
+    let Some(thing) = thing else {
+        return;
+    };
+    let label = controls.primary_label(GameAction::Interact);
+    for mut text in &mut keys {
+        if text.0 != label {
+            text.0.clone_from(&label);
+        }
+    }
+    for mut text in &mut verbs {
+        if text.0 != thing.verb {
+            text.0 = thing.verb.to_string();
+        }
+    }
 }

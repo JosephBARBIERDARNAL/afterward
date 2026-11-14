@@ -126,3 +126,11 @@ kinds:
     fps: 1
     boxes:
       climb: [2, 0, 12, 16]
+  # Used with Interact, it types its text out in a bubble over it.
+  terminal:
+    sheets:
+      default: { sheet: props/sci_fi/terminal.png, frames: 1 }
+    frame_px: [32, 32]
+    fps: 1
+    boxes:
+      solid: [4, 9, 26, 23]

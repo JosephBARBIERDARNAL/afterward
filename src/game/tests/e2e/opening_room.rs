@@ -55,15 +55,10 @@ fn an_empty_opening_room_offers_its_bonus_at_once_and_runs_into_room_one() {
     }
     game.run_seconds(0.3);
     assert_eq!(game.screen(), GameScreen::Playing);
-    let world = game.app.world_mut();
     assert_eq!(
-        world
-            .query_filtered::<&ChildOf, (With<InteractBadge>, With<Sprite>)>()
-            .iter(world)
-            .filter(|badge| world.get::<BonusPickup>(badge.parent()).is_some())
-            .count(),
-        1,
-        "the item in reach wears the key that takes it"
+        prompt(&mut game),
+        Some(String::from("take")),
+        "the prompt at the bottom of the screen names the key that takes it"
     );
     game.take_bonus();
     let offers = game.session().offered_bonuses.clone();
@@ -82,16 +77,10 @@ fn an_empty_opening_room_offers_its_bonus_at_once_and_runs_into_room_one() {
     assert_eq!(game.screen(), GameScreen::Playing);
     game.step_toward_exit();
     game.run_seconds(0.1);
-    let world = game.app.world_mut();
-    let badged = world
-        .query_filtered::<&ChildOf, With<InteractBadge>>()
-        .iter(world)
-        .map(ChildOf::parent)
-        .collect::<Vec<_>>();
-    assert_eq!(badged.len(), 1, "one badge stands in the room");
-    assert!(
-        world.get::<ExitDoor>(badged[0]).is_some(),
-        "and it stands over the door"
+    assert_eq!(
+        prompt(&mut game),
+        Some(String::from("enter")),
+        "and the prompt names the key that uses the door"
     );
     game.tap(KeyCode::KeyE);
     game.wait_for_screen(GameScreen::Transitioning, 3.0);
@@ -169,4 +158,20 @@ fn the_opening_music_gives_way_to_a_chapter_track_on_the_way_into_room_one() {
         0,
         "and the opening music has faded away"
     );
+}
+
+/// What the prompt at the bottom of the screen says Interact does, while it
+/// is shown.
+fn prompt(game: &mut HeadlessGame) -> Option<String> {
+    let world = game.app.world_mut();
+    let shown = world
+        .query_filtered::<&Visibility, With<InteractPrompt>>()
+        .iter(world)
+        .any(|visibility| *visibility == Visibility::Visible);
+    let verb = world
+        .query_filtered::<&Text, With<InteractVerb>>()
+        .iter(world)
+        .next()
+        .map(|text| text.0.clone());
+    verb.filter(|_| shown)
 }

@@ -93,7 +93,7 @@ pub(super) fn spawn_bonus_pickup(
         },
         Interactable {
             reach_h: Vec2::splat(item.reach_h),
-            top_h: item.height_h / 2.0,
+            verb: "take",
         },
         Glowing {
             color: Color::from(config.color),

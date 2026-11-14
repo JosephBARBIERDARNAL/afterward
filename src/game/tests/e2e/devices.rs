@@ -1,5 +1,11 @@
 use super::*;
-use crate::{data::RoomConfig, game::devices::Device};
+use crate::{
+    data::RoomConfig,
+    game::{
+        audio::TypingSound,
+        devices::{BubblePart, Device},
+    },
+};
 
 /// A small hall of its own holding `devices`, so the scenarios survive edits
 /// to the authored rooms: a floor, the player on it at x 3, and no enemies.
@@ -199,4 +205,52 @@ fn up_climbs_a_ladder_the_player_hangs_on_it_and_jump_lets_go() {
         (feet(&mut game) - 1.0).abs() < 0.01,
         "let go, the player falls back to the floor"
     );
+}
+
+#[test]
+fn a_terminal_types_its_text_in_a_bubble_with_the_typing_heard_until_it_is_written() {
+    let mut game = play_in(hall(
+        "  - { kind: terminal, position_h: { x: 3.75, y: 1 }, text: \"HELLO THERE\" }",
+    ));
+    // The words typed so far, while a bubble stands; and whether the typing
+    // is heard.
+    let bubble = |game: &mut HeadlessGame| {
+        let world = game.app.world_mut();
+        let words = world
+            .query::<(&BubblePart, &Children)>()
+            .iter(world)
+            .find(|(part, _)| matches!(part, BubblePart::Words))
+            .and_then(|(_, spans)| spans.first().copied());
+        words.and_then(|span| world.get::<TextSpan>(span).map(|span| span.0.clone()))
+    };
+    let typing = |game: &mut HeadlessGame| {
+        let world = game.app.world_mut();
+        world.query::<&TypingSound>().iter(world).count()
+    };
+    assert_eq!(bubble(&mut game), None);
+    game.tap(KeyCode::KeyE);
+    game.run_seconds(0.1);
+    assert!(bubble(&mut game).is_some(), "Interact opens its bubble");
+    assert_eq!(typing(&mut game), 1, "with the typing heard");
+    game.run_seconds(1.0);
+    assert_eq!(bubble(&mut game).as_deref(), Some("HELLO THERE"));
+    assert_eq!(
+        typing(&mut game),
+        0,
+        "the typing stops with the last character"
+    );
+    game.tap(KeyCode::KeyE);
+    assert_eq!(bubble(&mut game), None, "Interact again closes it");
+
+    // Reopened, a second press writes the words out at once.
+    game.tap(KeyCode::KeyE);
+    game.tap(KeyCode::KeyE);
+    game.run_seconds(0.05);
+    assert_eq!(bubble(&mut game).as_deref(), Some("HELLO THERE"));
+    assert_eq!(typing(&mut game), 0);
+    // Walking away (left: the terminal itself is solid) closes it.
+    game.key(KeyCode::KeyA, ButtonState::Pressed);
+    game.run_seconds(1.0);
+    game.key(KeyCode::KeyA, ButtonState::Released);
+    assert_eq!(bubble(&mut game), None, "out of reach, the bubble is gone");
 }
