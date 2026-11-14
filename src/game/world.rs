@@ -205,10 +205,11 @@ pub(super) fn draw_room(
     room_art::draw(commands, room, data, asset_server, sheets);
 }
 
-/// Spawns the colliders of the room's platforms; `room_art::draw` draws them.
+/// Spawns the colliders of the room's platforms and solid props;
+/// `room_art::draw` draws them.
 pub(super) fn spawn_room_platforms(commands: &mut Commands, room: &RoomConfig, data: &GameData) {
-    for block in &room.platforms {
-        commands.spawn((PlatformSurface::of(block, data), RoomEntity));
+    for surface in PlatformSurface::of_room(room, data) {
+        commands.spawn((surface, RoomEntity));
     }
 }
 

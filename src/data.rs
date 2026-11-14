@@ -703,13 +703,25 @@ impl GameData {
                     prop.sprite
                 )));
             }
-            if prop.size_px.contains(&0)
+            let [width, height] = prop.size_px;
+            if width == 0
+                || height == 0
                 || prop.animation.is_some_and(|animation| {
                     animation.frames == 0 || !(animation.fps.is_finite() && animation.fps > 0.0)
                 })
+                || prop
+                    .solid_px
+                    .iter()
+                    .any(|[x, y, solid_width, solid_height]| {
+                        *solid_width == 0
+                            || *solid_height == 0
+                            || x + solid_width > width
+                            || y + solid_height > height
+                    })
             {
                 return Err(InvalidGameData::from(format!(
-                    "prop sprite {} needs a positive size, and frames and a pace when animated",
+                    "prop sprite {} needs a positive size, frames and a pace when animated, \
+                     and solid boxes inside its frame",
                     prop.sprite
                 )));
             }
@@ -802,8 +814,8 @@ mod tests {
         );
         assert_eq!(
             data.surfaces.materials.len(),
-            16,
-            "one material per Typst texture, and the sci-fi pack's three tiles"
+            18,
+            "one material per Typst texture, and the sci-fi pack's five tiles"
         );
         assert_eq!(
             data.gameplay.player.max_speed_h_s,

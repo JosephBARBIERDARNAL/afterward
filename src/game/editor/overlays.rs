@@ -38,11 +38,7 @@ pub(super) fn draw_overlays(mut gizmos: Gizmos, editor: Res<RoomEditor>, data: R
         draw_viewport(&mut gizmos, room, &data, editor.cursor_h);
     }
     if editor.overlays.sight {
-        let surfaces = room
-            .platforms
-            .iter()
-            .map(|block| PlatformSurface::of(block, &data))
-            .collect::<Vec<_>>();
+        let surfaces = PlatformSurface::of_room(room, &data);
         draw_sight(
             &mut gizmos,
             room,
@@ -183,12 +179,7 @@ next_room_id: 4
 ",
         )
         .expect("the test layout should parse");
-        let surfaces = |room: &RoomConfig| {
-            room.platforms
-                .iter()
-                .map(|block| PlatformSurface::of(block, &data))
-                .collect::<Vec<_>>()
-        };
+        let surfaces = |room: &RoomConfig| PlatformSurface::of_room(room, &data);
 
         // Eye level above the floor, looking across the room.
         let eyes = Vec2::new(20.0, 2.0) * H_WORLD_UNITS;

@@ -394,7 +394,15 @@ pub(super) fn refresh_palette(
                 material.to_string(),
                 matches!(current, Some(Fill::Material(picked)) if picked == material),
             ),
-            PaletteSwatch::Prop(prop) => (prop.to_string(), current_prop == Some(prop)),
+            PaletteSwatch::Prop(prop) => {
+                let solid = data
+                    .props
+                    .props
+                    .get(prop)
+                    .is_some_and(|sprite| !sprite.solid_px.is_empty());
+                let kind = if solid { "solid" } else { "scenery" };
+                (format!("{prop}  ({kind})"), current_prop == Some(prop))
+            }
         };
         if cursor.cursor_over() {
             hovered = Some(name);

@@ -12,6 +12,8 @@ use std::{
 use bevy::math::Vec2;
 use serde::{Deserialize, Deserializer, de::Error as DeserializeError};
 
+use super::{PropConfig, RectH};
+
 #[derive(Debug, Deserialize)]
 pub struct PropCatalog {
     /// How many of a sprite's pixels make one H: what sets every prop's size.
@@ -26,6 +28,27 @@ impl PropCatalog {
             Vec2::new(sprite.size_px[0] as f32, sprite.size_px[1] as f32) / self.px_per_h
         })
     }
+
+    /// The parts of `placed` bodies stand on and bump into, in H: its sprite's
+    /// `solid_px` boxes, set where it stands. None for a prop that is scenery.
+    pub(crate) fn solid_rects_h(&self, placed: &PropConfig) -> Vec<RectH> {
+        let (Some(sprite), Some(size)) = (self.props.get(&placed.prop), self.size_h(&placed.prop))
+        else {
+            return Vec::new();
+        };
+        let left = placed.position_h.x_h - size.x / 2.0;
+        let top = placed.position_h.y_h + size.y;
+        sprite
+            .solid_px
+            .iter()
+            .map(|[x, y, width, height]| RectH {
+                x: left + *x as f32 / self.px_per_h,
+                y: top - (y + height) as f32 / self.px_per_h,
+                width: *width as f32 / self.px_per_h,
+                height: *height as f32 / self.px_per_h,
+            })
+            .collect()
+    }
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -37,6 +60,11 @@ pub struct PropSprite {
     /// frames laid left to right.
     #[serde(default)]
     pub animation: Option<PropAnimation>,
+    /// The boxes of the sprite that are solid, as platforms are: `[left, top,
+    /// width, height]` in pixels from the frame's top-left corner. Left out,
+    /// the prop is scenery.
+    #[serde(default)]
+    pub solid_px: Vec<[u32; 4]>,
 }
 
 /// How an animated prop's strip is played: looped at `fps`.
@@ -99,5 +127,46 @@ impl PropId {
 impl Display for PropId {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
         formatter.write_str(&self.0)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::data::{DecorationLayer, GameData, SpawnPosition};
+    use std::path::Path;
+
+    #[test]
+    fn a_solid_prop_is_solid_where_its_sprite_is_drawn_and_scenery_is_not() {
+        let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
+        let props = GameData::load(&asset_root)
+            .expect("game data should load")
+            .props;
+        let placed = |prop: &str| PropConfig {
+            label: None,
+            prop: prop.parse().expect("a valid prop ID"),
+            position_h: SpawnPosition { x_h: 5.0, y_h: 1.0 },
+            layer: DecorationLayer::Background,
+        };
+
+        // The small crate fills the lower 10 px of its 16 px cell: half an H
+        // wide, standing on the spot.
+        let crate_rects = props.solid_rects_h(&placed("sci_fi_small_crate"));
+        assert_eq!(
+            crate_rects,
+            vec![RectH {
+                x: 4.75,
+                y: 1.0,
+                width: 0.5,
+                height: 10.0 / 32.0,
+            }]
+        );
+        // The stack is two boxes: the crate on top and the pair under it.
+        assert_eq!(props.solid_rects_h(&placed("sci_fi_crate_stack")).len(), 2);
+        assert!(
+            props
+                .solid_rects_h(&placed("sci_fi_ceiling_lamp"))
+                .is_empty()
+        );
     }
 }

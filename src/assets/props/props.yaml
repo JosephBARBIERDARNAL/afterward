@@ -1,12 +1,17 @@
 # Props: pixel-art sprites a room places at a spot (`props:` of a room file),
 # each drawn once at its own size, the middle of its bottom edge on the spot.
-# They are scenery: nothing collides with them and nothing is hurt by them.
+# A prop is scenery unless it lists `solid_px`: boxes of its frame, `[left,
+# top, width, height]` in pixels from its top-left corner, that are solid as
+# platforms are (stood on, walked into, bumped from below, and cover).
 #
 # The sci-fi pack's pieces (scripts/slice_sci_fi_tileset.py) are free for
 # non-commercial use only: see props/sci_fi/LICENSE.txt.
 
 # How many of a sprite's pixels make one H, which sets every prop's size: at
-# 32 a 16 px crate is half as wide as the hero is tall.
+# 32 a 16 px crate is half as wide as the hero is tall. The sci-fi pieces are
+# cut on the pack's 16 px grid, so each is a whole number of 0.5 H cells and
+# they fit together edge to edge, and with the sci_fi_* materials (which tile
+# every 0.5 H), the way the pack builds its own scenes.
 px_per_h: 32
 
 # An animated prop's sprite is a strip of `animation.frames` frames laid left
@@ -19,55 +24,67 @@ props:
   sci_fi_green_panel:
     sprite: props/sci_fi/green_panel.png
     size_px: [32, 32]
+    solid_px: [[0, 0, 32, 32]]
   sci_fi_steel_crate:
     sprite: props/sci_fi/steel_crate.png
     size_px: [32, 32]
+    solid_px: [[0, 0, 32, 32]]
   sci_fi_dark_panel:
     sprite: props/sci_fi/dark_panel.png
     size_px: [32, 32]
+    solid_px: [[0, 0, 32, 32]]
   sci_fi_steel_frame:
     sprite: props/sci_fi/steel_frame.png
-    size_px: [38, 38]
+    size_px: [48, 48]
   sci_fi_strut:
     sprite: props/sci_fi/strut.png
-    size_px: [11, 11]
+    size_px: [16, 16]
   sci_fi_rivets:
     sprite: props/sci_fi/rivets.png
-    size_px: [13, 12]
+    size_px: [16, 16]
   sci_fi_green_pipe:
     sprite: props/sci_fi/green_pipe.png
     size_px: [16, 16]
+    solid_px: [[0, 0, 16, 16]]
   sci_fi_steel_block:
     sprite: props/sci_fi/steel_block.png
     size_px: [16, 16]
+    solid_px: [[0, 0, 16, 16]]
   sci_fi_conveyor:
     sprite: props/sci_fi/conveyor.png
     size_px: [48, 16]
+    solid_px: [[0, 0, 48, 16]]
   sci_fi_conveyor_middle:
     sprite: props/sci_fi/conveyor_middle.png
     size_px: [16, 16]
+    solid_px: [[0, 0, 16, 16]]
   sci_fi_ceiling_lamp:
     sprite: props/sci_fi/ceiling_lamp.png
-    size_px: [28, 27]
+    size_px: [32, 32]
   sci_fi_small_crate:
     sprite: props/sci_fi/small_crate.png
-    size_px: [16, 10]
+    size_px: [16, 16]
+    solid_px: [[0, 6, 16, 10]]
   sci_fi_crate_stack:
     sprite: props/sci_fi/crate_stack.png
-    size_px: [27, 20]
+    size_px: [32, 32]
+    solid_px: [[8, 12, 16, 10], [2, 22, 27, 10]]
   sci_fi_spikes:
     sprite: props/sci_fi/spikes.png
-    size_px: [96, 8]
+    size_px: [96, 16]
   sci_fi_hover_pad_left:
     sprite: props/sci_fi/hover_pad_left.png
-    size_px: [42, 13]
+    size_px: [48, 16]
+    solid_px: [[0, 0, 42, 13]]
   sci_fi_hover_pad_right:
     sprite: props/sci_fi/hover_pad_right.png
-    size_px: [42, 13]
+    size_px: [48, 16]
+    solid_px: [[6, 0, 42, 13]]
   sci_fi_bench:
     sprite: props/sci_fi/bench.png
-    size_px: [48, 15]
+    size_px: [48, 16]
+    solid_px: [[0, 0, 48, 15]]
   sci_fi_laser:
     sprite: props/sci_fi/laser.png
-    size_px: [13, 48]
+    size_px: [16, 48]
     animation: { frames: 4, fps: 8 }

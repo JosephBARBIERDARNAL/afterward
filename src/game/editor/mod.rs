@@ -732,6 +732,7 @@ next_room_id: 4
                     sprite: String::from("crate.png"),
                     size_px: [32, 32],
                     animation: None,
+                    solid_px: Vec::new(),
                 },
             )]
             .into(),

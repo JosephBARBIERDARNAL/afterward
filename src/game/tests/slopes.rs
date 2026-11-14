@@ -64,8 +64,11 @@ fn a_gentle_slope_is_walked_and_a_steep_one_is_a_wall() {
             Startup,
             move |mut commands: Commands, data: Res<GameData>, sheets: Res<SpriteSheets>| {
                 world::spawn_player(&mut commands, &data.rooms[&1], &data, &sheets);
-                for block in &blocks {
-                    commands.spawn(PlatformSurface::of(block, &data));
+                let mut room = data.rooms[&1].clone();
+                room.platforms.clone_from(&blocks);
+                room.props.clear();
+                for surface in PlatformSurface::of_room(&room, &data) {
+                    commands.spawn(surface);
                 }
             },
         )
@@ -168,7 +171,12 @@ fn a_tilted_platform_hides_and_stops_shots_only_where_it_stands() {
         "{ material: city_pavement, rect_h: { x: 5, y: 9.75, width: 10, height: 0.5 }, rotation_deg: 45 }",
     )
     .expect("the plank should parse");
-    let plank = PlatformSurface::of(&block, &data);
+    let mut room = data.rooms[&1].clone();
+    room.platforms = vec![block];
+    room.props.clear();
+    let [plank] = PlatformSurface::of_room(&room, &data)[..] else {
+        panic!("the plank is the room's one collider");
+    };
     let at = |x_h: f32, y_h: f32| Vec2::new(x_h, y_h) * H_WORLD_UNITS;
 
     // Across the plank, corner to corner of its bounds.

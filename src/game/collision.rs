@@ -4,6 +4,9 @@
 //! body is a box `PLAYER_COLLISION_WIDTH_H` wide and 1 H tall, positioned by
 //! the center of its feet.
 //!
+//! A prop whose sprite has `solid_px` boxes is solid there in the same way,
+//! each box a platform standing square.
+//!
 //! A platform a room turns (`rotation_deg`) is solid the same way, as the
 //! tilted rectangle it is drawn as. The gentler of its two upper faces is a
 //! slope bodies walk when it is no steeper than `player.walkable_slope_deg`;
@@ -12,7 +15,7 @@
 //! always had.
 
 use super::*;
-use crate::data::PlatformConfig;
+use crate::data::RoomConfig;
 
 /// Gap, in world units, within which a body counts as touching a platform.
 const CONTACT_TOLERANCE: f32 = 1.0;
@@ -74,32 +77,52 @@ impl Tilt {
 }
 
 impl PlatformSurface {
-    /// The collider of an authored platform, in world units.
-    pub(super) fn of(block: &PlatformConfig, data: &GameData) -> Self {
-        let corners = block.corners_h().map(|corner| corner * H_WORLD_UNITS);
-        let low = corners.into_iter().reduce(Vec2::min).unwrap_or_default();
-        let high = corners.into_iter().reduce(Vec2::max).unwrap_or_default();
-        // A quarter turn leaves the platform square: its bounds are its shape.
-        let tilt = (block.rotation_deg % 90.0 != 0.0).then(|| {
-            let steepest = data.gameplay.player.walkable_slope_deg.to_radians().tan();
-            let rise = |(from, to): &(Vec2, Vec2)| ((to.y - from.y) / (to.x - from.x)).abs();
-            // Going round counter-clockwise, the faces that look up are the
-            // ones running right to left.
-            let floor = (0..4)
-                .map(|index| (corners[(index + 1) % 4], corners[index]))
-                .filter(|(from, to)| from.x < to.x)
-                .min_by(|first, second| rise(first).total_cmp(&rise(second)))
-                .filter(|face| rise(face) <= steepest);
-            Tilt { corners, floor }
-        });
-        Self {
-            left: low.x,
-            right: high.x,
-            bottom: low.y,
-            top: high.y,
-            footstep: data.surfaces.footstep(&block.fill),
-            tilt,
-        }
+    /// Every collider of `room`, in world units: its platforms, then the
+    /// solid boxes of its props.
+    pub(super) fn of_room(room: &RoomConfig, data: &GameData) -> Vec<Self> {
+        let props = room
+            .props
+            .iter()
+            .flat_map(|placed| data.props.solid_rects_h(placed))
+            .map(|rect| Self {
+                left: rect.x * H_WORLD_UNITS,
+                right: rect.right() * H_WORLD_UNITS,
+                bottom: rect.y * H_WORLD_UNITS,
+                top: rect.top() * H_WORLD_UNITS,
+                footstep: data.surfaces.color_footstep,
+                tilt: None,
+            });
+        room.platforms
+            .iter()
+            .map(|block| {
+                let corners = block.corners_h().map(|corner| corner * H_WORLD_UNITS);
+                let low = corners.into_iter().reduce(Vec2::min).unwrap_or_default();
+                let high = corners.into_iter().reduce(Vec2::max).unwrap_or_default();
+                // A quarter turn leaves the platform square: its bounds are its shape.
+                let tilt = (block.rotation_deg % 90.0 != 0.0).then(|| {
+                    let steepest = data.gameplay.player.walkable_slope_deg.to_radians().tan();
+                    let rise =
+                        |(from, to): &(Vec2, Vec2)| ((to.y - from.y) / (to.x - from.x)).abs();
+                    // Going round counter-clockwise, the faces that look up are the
+                    // ones running right to left.
+                    let floor = (0..4)
+                        .map(|index| (corners[(index + 1) % 4], corners[index]))
+                        .filter(|(from, to)| from.x < to.x)
+                        .min_by(|first, second| rise(first).total_cmp(&rise(second)))
+                        .filter(|face| rise(face) <= steepest);
+                    Tilt { corners, floor }
+                });
+                Self {
+                    left: low.x,
+                    right: high.x,
+                    bottom: low.y,
+                    top: high.y,
+                    footstep: data.surfaces.footstep(&block.fill),
+                    tilt,
+                }
+            })
+            .chain(props)
+            .collect()
     }
 
     /// The height the feet of a body centered at `x` stand at on this

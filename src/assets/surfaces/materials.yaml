@@ -102,3 +102,13 @@ materials:
     texture: surfaces/textures/sci_fi/riveted_wall.png
     footstep: stone
     tile_h: 0.5
+  # The green trim along the top of a floor, and a conveyor belt: one tile
+  # tall, so a platform 0.5 H high whose top is on the 0.5 H grid shows it once.
+  sci_fi_green_edge:
+    texture: surfaces/textures/sci_fi/green_edge.png
+    footstep: stone
+    tile_h: 0.5
+  sci_fi_conveyor:
+    texture: surfaces/textures/sci_fi/conveyor.png
+    footstep: stone
+    tile_h: 0.5
