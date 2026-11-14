@@ -1,7 +1,8 @@
 //! Room art: platforms and decoration panels, painted with their
-//! material's texture tiled in world space (so neighboring blocks line up) or
-//! with a plain color, and outlined and highlighted along every edge no other
-//! platform covers. Drawing only: collision lives in `collision.rs`.
+//! material's texture tiled in world space (so neighboring blocks line up),
+//! with a prop's sprite laid from their top-left corner, or with a plain
+//! color, and outlined and highlighted along every edge no other platform
+//! covers. Drawing only: collision lives in `collision.rs`.
 
 use super::*;
 use crate::data::{DecorationLayer, Fill, RectH, RoomConfig};
@@ -125,22 +126,39 @@ pub(super) fn draw(
     asset_server: &AssetServer,
 ) {
     let surfaces = &data.surfaces;
-    let px_per_h = surfaces.texture_px as f32 / surfaces.texture_tile_h;
     let texel_h = surfaces.texel_h();
     // A sprite painted with `fill`: the material's texture sampled at the
     // rectangle's world position, so every block of one material shares one
-    // continuous pattern, or a plain color. `tint` multiplies both.
+    // continuous pattern, a prop's sprite repeated from the rectangle's
+    // top-left corner, or a plain color. `tint` multiplies all three.
     let painted = |fill: &Fill, rect: RectH, tint: Color| match fill {
         Fill::Material(material) => match surfaces.materials.get(material) {
-            Some(material) => Sprite {
+            Some(material) => {
+                let tile_h = material.tile_h.unwrap_or(surfaces.texture_tile_h);
+                let px_per_h = surfaces.texture_px as f32 / tile_h;
+                Sprite {
+                    rect: Some(Rect::new(
+                        rect.x * px_per_h,
+                        -rect.top() * px_per_h,
+                        rect.right() * px_per_h,
+                        -rect.y * px_per_h,
+                    )),
+                    color: tint,
+                    ..Sprite::from_image(load_texture(asset_server, &material.texture))
+                }
+            }
+            None => Sprite::from_color(tint, Vec2::ONE),
+        },
+        Fill::Prop(prop) => match surfaces.props.get(prop) {
+            Some(prop) => Sprite {
                 rect: Some(Rect::new(
-                    rect.x * px_per_h,
-                    -rect.top() * px_per_h,
-                    rect.right() * px_per_h,
-                    -rect.y * px_per_h,
+                    0.0,
+                    0.0,
+                    rect.width * surfaces.prop_px_per_h,
+                    rect.height * surfaces.prop_px_per_h,
                 )),
                 color: tint,
-                ..Sprite::from_image(load_texture(asset_server, &material.texture))
+                ..Sprite::from_image(load_texture(asset_server, &prop.sprite))
             },
             None => Sprite::from_color(tint, Vec2::ONE),
         },
@@ -199,6 +217,10 @@ pub(super) fn draw(
             pivot,
             turn,
         ));
+        // A prop is drawn with its own outline, and transparent round it.
+        if matches!(block.fill, Fill::Prop(_)) {
+            continue;
+        }
         let below_outline = RectH {
             height: rect.height - edges.outline_px * texel_h,
             ..rect

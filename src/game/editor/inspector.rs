@@ -5,7 +5,7 @@
 //! `4c5a74`, `#ABC`) as well as a material or profile name.
 
 use super::*;
-use crate::data::{Backdrop, DecorationLayer, Facing, HexColor, MaterialId, RoomHazardConfig};
+use crate::data::{Backdrop, DecorationLayer, Facing, HexColor, RoomHazardConfig};
 
 /// How far one Left/Right press grows or shrinks the room, in H.
 const ROOM_SIZE_STEP_H: f32 = 0.5;
@@ -240,11 +240,9 @@ impl Field {
                 Self::set_label(room, selection.last().copied(), label);
             }
             Self::Fill => {
-                let fill = text
-                    .parse::<MaterialId>()
-                    .ok()
-                    .filter(|material| data.surfaces.materials.contains_key(material))
-                    .map(Fill::Material)
+                let fill = data
+                    .surfaces
+                    .fill(text)
                     .or_else(|| text.parse().ok().map(Fill::Color));
                 if let Some(fill) = fill {
                     for item in selection {
@@ -477,21 +475,22 @@ impl Field {
                     self.set_backdrop(room, backdrop);
                 }
             }
+            // Materials, then props: their names never clash.
             Self::Fill => {
-                let materials = data
+                let names = data
                     .surfaces
                     .materials
                     .keys()
+                    .chain(data.surfaces.props.keys())
                     .map(ToString::to_string)
                     .collect();
                 let current = match selection.iter().rev().find_map(|item| item.fill(room)) {
-                    Some(Fill::Material(material)) => material.to_string(),
+                    Some(Fill::Material(name) | Fill::Prop(name)) => name.to_string(),
                     Some(Fill::Color(_)) | None => String::new(),
                 };
-                if let Some(material) =
-                    cycle(materials, &current).and_then(|material| material.parse().ok())
+                if let Some(fill) =
+                    cycle(names, &current).and_then(|name| data.surfaces.fill(&name))
                 {
-                    let fill = Fill::Material(material);
                     for item in selection {
                         item.set_fill(room, &fill);
                     }

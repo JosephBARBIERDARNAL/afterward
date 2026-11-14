@@ -184,7 +184,7 @@ impl Display for RoomHazardConfig {
     }
 }
 
-/// The field a fill is written as: `material: <id>` or a quoted `color:`,
+/// The field a fill is written as: `material: <id>`, `prop: <id>` or a quoted `color:`,
 /// since an unquoted `#RRGGBB` would read back as a comment.
 struct YamlFill<'a>(&'a Fill);
 
@@ -193,6 +193,7 @@ impl Display for YamlFill<'_> {
         match self.0 {
             Fill::Material(material) => write!(formatter, "material: {material}"),
             Fill::Color(color) => write!(formatter, "color: \"{color}\""),
+            Fill::Prop(prop) => write!(formatter, "prop: {prop}"),
         }
     }
 }

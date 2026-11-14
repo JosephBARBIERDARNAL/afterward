@@ -2,13 +2,14 @@
 # sound. Room files name one material per block (`material:`), or paint a
 # plain color instead (`color: "#RRGGBB"`).
 #
-# Every texture is a seamless 16 px square drawn in Typst (art/surfaces/,
-# rendered by `just art`). They tile in world space, so neighboring blocks of
-# one material line up.
+# Every texture is a seamless 16 px square, drawn in Typst (art/surfaces/,
+# rendered by `just art`) or cut from a pack (`sci_fi_*`). They tile in world
+# space, so neighboring blocks of one material line up.
 
 texture_px: 16
 # One 16 px tile spans 0.25 H (64 px per H), close to the player sprite's
-# pixel density (60 px per H), and matches the editor's 0.25 H grid.
+# pixel density (60 px per H), and matches the editor's 0.25 H grid. A
+# material drawn at another scale says so with its own `tile_h`.
 texture_tile_h: 0.25
 
 # Drawn along every block edge that no other block covers, so blocks read
@@ -86,3 +87,98 @@ materials:
   wood_crate:
     texture: surfaces/textures/wood/crate.png
     footstep: wood
+
+  # Sci-fi: tiles cut from the sci-fi platformer pack (scripts/
+  # slice_sci_fi_tileset.py), drawn at the pack's 16 px per H.
+  sci_fi_dark:
+    texture: surfaces/textures/sci_fi/dark.png
+    footstep: stone
+    tile_h: 1
+  sci_fi_dark_rivets:
+    texture: surfaces/textures/sci_fi/dark_rivets.png
+    footstep: stone
+    tile_h: 1
+  sci_fi_riveted_wall:
+    texture: surfaces/textures/sci_fi/riveted_wall.png
+    footstep: stone
+    tile_h: 1
+
+# Props: pixel-art sprites a platform or decoration is painted with instead
+# of a material (`prop: sci_fi_small_crate`). One is drawn from the block's
+# top-left corner and repeats across a block bigger than itself, so a block
+# exactly `size_px` big shows it once, and a wider one lays a row of it (a
+# belt, a run of spikes). A prop has no outline of its own drawn round it, and
+# a prop platform is as solid as its whole rectangle, transparent corners
+# included. The editor adds one at its own size with O.
+#
+# The sci-fi pack's pieces (scripts/slice_sci_fi_tileset.py) are free for
+# non-commercial use only: see props/sci_fi/LICENSE.txt.
+prop_px_per_h: 16
+
+props:
+  sci_fi_green_window:
+    sprite: props/sci_fi/green_window.png
+    size_px: [48, 48]
+  sci_fi_green_panel:
+    sprite: props/sci_fi/green_panel.png
+    size_px: [32, 32]
+  sci_fi_steel_crate:
+    sprite: props/sci_fi/steel_crate.png
+    size_px: [32, 32]
+  sci_fi_dark_panel:
+    sprite: props/sci_fi/dark_panel.png
+    size_px: [32, 32]
+  sci_fi_steel_frame:
+    sprite: props/sci_fi/steel_frame.png
+    size_px: [38, 38]
+  sci_fi_strut:
+    sprite: props/sci_fi/strut.png
+    size_px: [11, 11]
+  sci_fi_rivets:
+    sprite: props/sci_fi/rivets.png
+    size_px: [13, 12]
+  sci_fi_green_pipe:
+    sprite: props/sci_fi/green_pipe.png
+    size_px: [16, 16]
+  sci_fi_steel_block:
+    sprite: props/sci_fi/steel_block.png
+    size_px: [16, 16]
+  sci_fi_conveyor:
+    sprite: props/sci_fi/conveyor.png
+    size_px: [48, 16]
+  sci_fi_conveyor_middle:
+    sprite: props/sci_fi/conveyor_middle.png
+    size_px: [16, 16]
+  sci_fi_ceiling_lamp:
+    sprite: props/sci_fi/ceiling_lamp.png
+    size_px: [28, 27]
+  sci_fi_small_crate:
+    sprite: props/sci_fi/small_crate.png
+    size_px: [16, 10]
+  sci_fi_crate_stack:
+    sprite: props/sci_fi/crate_stack.png
+    size_px: [27, 20]
+  sci_fi_spikes:
+    sprite: props/sci_fi/spikes.png
+    size_px: [96, 8]
+  sci_fi_laser_off:
+    sprite: props/sci_fi/laser_off.png
+    size_px: [13, 48]
+  sci_fi_laser_thin:
+    sprite: props/sci_fi/laser_thin.png
+    size_px: [13, 48]
+  sci_fi_laser_double:
+    sprite: props/sci_fi/laser_double.png
+    size_px: [13, 48]
+  sci_fi_laser_bright:
+    sprite: props/sci_fi/laser_bright.png
+    size_px: [13, 48]
+  sci_fi_hover_pad_left:
+    sprite: props/sci_fi/hover_pad_left.png
+    size_px: [42, 13]
+  sci_fi_hover_pad_right:
+    sprite: props/sci_fi/hover_pad_right.png
+    size_px: [42, 13]
+  sci_fi_bench:
+    sprite: props/sci_fi/bench.png
+    size_px: [48, 15]

@@ -605,11 +605,14 @@ impl GameData {
                 .map(|block| &block.fill)
                 .chain(room.decorations.iter().map(|decoration| &decoration.fill));
             for fill in fills {
-                if let Fill::Material(material) = fill
-                    && !self.surfaces.materials.contains_key(material)
-                {
+                let known = match fill {
+                    Fill::Material(material) => self.surfaces.materials.contains_key(material),
+                    Fill::Prop(prop) => self.surfaces.props.contains_key(prop),
+                    Fill::Color(_) => true,
+                };
+                if !known {
                     return Err(InvalidGameData::from(format!(
-                        "room {room_id} references unknown material {material}"
+                        "room {room_id} references unknown material or prop {fill}"
                     )));
                 }
             }
@@ -662,6 +665,43 @@ impl GameData {
                 return Err(InvalidGameData::from(format!(
                     "missing surface texture: {}",
                     material.texture
+                )));
+            }
+            if material
+                .tile_h
+                .is_some_and(|tile_h| !(tile_h.is_finite() && tile_h > 0.0))
+            {
+                return Err(InvalidGameData::from(format!(
+                    "surface texture {} needs a positive tile size",
+                    material.texture
+                )));
+            }
+        }
+        if !(surfaces.prop_px_per_h.is_finite() && surfaces.prop_px_per_h > 0.0) {
+            return Err(InvalidGameData::from(
+                "props need a positive number of pixels per H",
+            ));
+        }
+        if let Some(name) = surfaces
+            .props
+            .keys()
+            .find(|name| surfaces.materials.contains_key(*name))
+        {
+            return Err(InvalidGameData::from(format!(
+                "{name} names both a material and a prop"
+            )));
+        }
+        for prop in surfaces.props.values() {
+            if !asset_root.join(&prop.sprite).is_file() {
+                return Err(InvalidGameData::from(format!(
+                    "missing prop sprite: {}",
+                    prop.sprite
+                )));
+            }
+            if prop.size_px.contains(&0) {
+                return Err(InvalidGameData::from(format!(
+                    "prop sprite {} needs a positive size",
+                    prop.sprite
                 )));
             }
         }
@@ -753,8 +793,8 @@ mod tests {
         );
         assert_eq!(
             data.surfaces.materials.len(),
-            13,
-            "one material per Typst texture"
+            16,
+            "one material per Typst texture, and the sci-fi pack's three tiles"
         );
         assert_eq!(
             data.gameplay.player.max_speed_h_s,

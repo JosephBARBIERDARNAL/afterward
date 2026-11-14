@@ -87,6 +87,7 @@ impl HeadlessGame {
                 "background",
                 "audio",
                 "surfaces",
+                "props",
                 "doors",
                 "pickups",
                 "fonts",

@@ -1,6 +1,7 @@
 //! Surface materials from `surfaces/materials.yaml`: the textures platforms
 //! and decoration panels are drawn with, and the footsteps they
-//! make. A block can also skip the catalog and be painted a plain color.
+//! make. A block can also skip the catalog and be painted a plain color, or
+//! with a prop: one pixel-art sprite instead of a seamless texture.
 
 use std::{
     borrow::Borrow,
@@ -25,6 +26,9 @@ pub struct SurfaceMaterials {
     /// The footstep a plain-color block makes, since it names no material.
     pub color_footstep: FootstepSound,
     pub materials: BTreeMap<MaterialId, SurfaceMaterial>,
+    /// How many of a prop's pixels make one H.
+    pub prop_px_per_h: f32,
+    pub props: BTreeMap<MaterialId, SurfaceProp>,
 }
 
 impl SurfaceMaterials {
@@ -40,7 +44,17 @@ impl SurfaceMaterials {
                 .materials
                 .get(material)
                 .map_or(self.color_footstep, |material| material.footstep),
-            Fill::Color(_) => self.color_footstep,
+            Fill::Color(_) | Fill::Prop(_) => self.color_footstep,
+        }
+    }
+
+    /// The material or the prop called `name`.
+    pub(crate) fn fill(&self, name: &str) -> Option<Fill> {
+        let id = name.parse::<MaterialId>().ok()?;
+        if self.materials.contains_key(&id) {
+            Some(Fill::Material(id))
+        } else {
+            self.props.contains_key(&id).then_some(Fill::Prop(id))
         }
     }
 }
@@ -76,6 +90,20 @@ pub struct SurfaceMaterial {
     /// so neighboring blocks of one material line up.
     pub texture: String,
     pub footstep: FootstepSound,
+    /// World size of one tile of this texture, in H, when it is not the
+    /// catalog's `texture_tile_h`: a texture from a pack drawn at another scale.
+    #[serde(default)]
+    pub tile_h: Option<f32>,
+}
+
+/// A pixel-art sprite a block can be painted with. It is drawn at
+/// `prop_px_per_h` from the block's top-left corner, and repeats across a
+/// block bigger than itself.
+#[derive(Debug, Clone, Deserialize)]
+pub struct SurfaceProp {
+    pub sprite: String,
+    /// The sprite's width and height in pixels: the block a new prop is given.
+    pub size_px: [u32; 2],
 }
 
 /// What walking on a surface sounds like.
@@ -86,26 +114,28 @@ pub enum FootstepSound {
     Wood,
 }
 
-/// How a platform or a decoration panel is painted: with a material from
-/// `surfaces/materials.yaml`, or with a plain color.
+/// How a platform or a decoration panel is painted: with a material or a prop
+/// from `surfaces/materials.yaml`, or with a plain color.
 #[derive(Debug, Clone, Eq, PartialEq, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Fill {
     Material(MaterialId),
     Color(HexColor),
+    Prop(MaterialId),
 }
 
-/// Names the material, or the color's digits.
+/// Names the material or the prop, or the color's digits.
 impl Display for Fill {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Material(material) => Display::fmt(material, formatter),
+            Self::Material(material) | Self::Prop(material) => Display::fmt(material, formatter),
             Self::Color(color) => Display::fmt(color, formatter),
         }
     }
 }
 
-/// The name of a material in `surfaces/materials.yaml`, as rooms refer to it.
+/// The name of a material or a prop in `surfaces/materials.yaml`, as rooms
+/// refer to it.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct MaterialId(String);
 

@@ -9,13 +9,15 @@ use crate::data::{
 };
 use std::fs;
 
-/// What a new item added with P, D, E or G (or the toolbar) is.
+/// What a new item added with P, D, E, G or O (or the toolbar) is.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum NewItem {
     Platform,
     Decoration,
     Enemy,
     Vent,
+    /// A background decoration painted with a prop, at the prop's own size.
+    Prop,
 }
 
 /// The vent G adds to a room that has none to copy: the size and cycle of
@@ -440,7 +442,8 @@ impl RoomEditor {
         self.view_dirty = true;
     }
 
-    /// Adds a platform, decoration, enemy or vent around `at_h` and selects it.
+    /// Adds a platform, decoration, enemy, vent or prop around `at_h` and
+    /// selects it.
     fn add(&mut self, data: &mut GameData, new: NewItem, at_h: Vec2) {
         let Some(room) = data.rooms.get(&self.room_id) else {
             return;
@@ -481,6 +484,39 @@ impl RoomEditor {
             self.edit(data, |room| {
                 room.hazards.push(vent);
                 added = Some(EditorItem::Hazard(room.hazards.len() - 1));
+            });
+            self.select(added);
+            return;
+        }
+        if new == NewItem::Prop {
+            // The prop picked last, else the catalog's first, standing with
+            // its foot where the cursor is.
+            let picked = match &self.fill {
+                Some(Fill::Prop(prop)) => Some(prop.clone()),
+                _ => data.surfaces.props.keys().next().cloned(),
+            };
+            let Some((id, prop)) =
+                picked.and_then(|id| data.surfaces.props.get(&id).map(|prop| (id, prop)))
+            else {
+                return;
+            };
+            let [width, height] = prop
+                .size_px
+                .map(|side| side as f32 / data.surfaces.prop_px_per_h);
+            let rect_h = RectH {
+                x: snap(at_h.x - width / 2.0, false),
+                y: snap(at_h.y, false),
+                width,
+                height,
+            };
+            self.edit(data, |room| {
+                room.decorations.push(DecorationConfig {
+                    label: None,
+                    fill: Fill::Prop(id),
+                    layer: DecorationLayer::Background,
+                    rect_h,
+                });
+                added = Some(EditorItem::Decoration(room.decorations.len() - 1));
             });
             self.select(added);
             return;

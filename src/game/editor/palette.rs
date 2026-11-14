@@ -1,17 +1,20 @@
-//! The fill palette: a swatch for every surface material, then a color
-//! picker (a field to type any hex code into, and a hue strip over a grid of
+//! The fill palette: a swatch for every surface material and every prop,
+//! then a color picker (a field to type any hex code into, and a hue strip over a grid of
 //! shades mixed from it). Clicking any of them paints the selected platforms
 //! and decorations and becomes the fill new ones use. With nothing selected,
 //! a color paints the room's background instead: the one the inspector
 //! stands on, else Background 1.
 
 use super::*;
-use crate::data::{Backdrop, HexColor, MaterialId};
+use crate::data::{Backdrop, HexColor};
 use bevy::ui::RelativeCursorPosition;
 
 const SWATCH_PX: f32 = 26.0;
 const SWATCH_GAP_PX: f32 = 4.0;
 const COLUMNS: usize = 9;
+/// Props are pictures rather than patterns, so they get bigger swatches.
+const PROP_SWATCH_PX: f32 = 40.0;
+const PROP_COLUMNS: usize = 6;
 /// The color picker's swatches, in a denser grid than the materials.
 const COLOR_SWATCH_PX: f32 = 18.0;
 const HUES: usize = 12;
@@ -27,8 +30,9 @@ const HOVER_BORDER: Color = Color::WHITE;
 #[derive(Component)]
 pub(super) struct PalettePanel;
 
+/// A material's or a prop's swatch: clicking it paints with that fill.
 #[derive(Component)]
-pub(super) struct PaletteSwatch(MaterialId);
+pub(super) struct PaletteSwatch(Fill);
 
 /// A hue of the color picker, in degrees: clicking it mixes the shade grid
 /// from that hue without painting anything.
@@ -140,10 +144,41 @@ pub(super) fn spawn_palette(
                         BorderColor::all(SWATCH_BORDER),
                         ImageNode::new(room_art::load_texture(asset_server, &material.texture)),
                         RelativeCursorPosition::default(),
-                        PaletteSwatch(id.clone()),
+                        PaletteSwatch(Fill::Material(id.clone())),
                     ));
                 }
             });
+            panel.spawn(ui::heading("Props"));
+            panel
+                .spawn(grid(PROP_COLUMNS, PROP_SWATCH_PX))
+                .with_children(|grid| {
+                    for (id, prop) in &data.surfaces.props {
+                        // The sprite as big as the swatch allows, at its own
+                        // proportions.
+                        let [width_px, height_px] = prop.size_px.map(|side| side as f32);
+                        let inner = PROP_SWATCH_PX - 8.0;
+                        let scale = (inner / width_px).min(inner / height_px);
+                        grid.spawn((
+                            Node {
+                                justify_content: JustifyContent::Center,
+                                align_items: AlignItems::Center,
+                                ..cell(PROP_SWATCH_PX)
+                            },
+                            BorderColor::all(SWATCH_BORDER),
+                            BackgroundColor(Color::srgba(0.0, 0.0, 0.0, 0.35)),
+                            RelativeCursorPosition::default(),
+                            PaletteSwatch(Fill::Prop(id.clone())),
+                        ))
+                        .with_child((
+                            Node {
+                                width: px(width_px * scale),
+                                height: px(height_px * scale),
+                                ..default()
+                            },
+                            ImageNode::new(room_art::load_texture(asset_server, &prop.sprite)),
+                        ));
+                    }
+                });
             panel.spawn(ui::heading("Color"));
             panel
                 .spawn((
@@ -203,8 +238,8 @@ pub(super) fn spawn_palette(
         });
 }
 
-/// Paints the selection with a clicked material or shade and remembers it for
-/// new blocks; a clicked hue only remixes the shades.
+/// Paints the selection with a clicked material, prop or shade and remembers
+/// it for new blocks; a clicked hue only remixes the shades.
 pub(super) fn handle_palette(
     mouse: Res<ButtonInput<MouseButton>>,
     mut editor: ResMut<RoomEditor>,
@@ -244,7 +279,7 @@ pub(super) fn handle_palette(
     let picked = materials
         .iter()
         .find(|(cursor, _)| cursor.cursor_over())
-        .map(|(_, PaletteSwatch(material))| Fill::Material(material.clone()))
+        .map(|(_, PaletteSwatch(fill))| fill.clone())
         .or_else(|| {
             let hue = editor.hue;
             shades
@@ -256,10 +291,13 @@ pub(super) fn handle_palette(
         return;
     };
     if let Some(field) = editor.painted_background() {
-        if let Fill::Color(color) = fill {
-            editor.edit(&mut data, |room| {
+        // A color paints the background; a material or a prop is only
+        // picked for what P, D and O add next.
+        match fill {
+            Fill::Color(color) => editor.edit(&mut data, |room| {
                 field.set_backdrop(room, Some(Backdrop::Color(color)));
-            });
+            }),
+            fill => editor.fill = Some(fill),
         }
         return;
     }
@@ -315,11 +353,11 @@ pub(super) fn refresh_palette(
             SWATCH_BORDER
         }
     };
-    for (cursor, PaletteSwatch(material), mut outline) in &mut materials {
+    for (cursor, PaletteSwatch(fill), mut outline) in &mut materials {
         if cursor.cursor_over() {
-            hovered = Some(material.to_string());
+            hovered = Some(fill.to_string());
         }
-        let is_current = matches!(current, Some(Fill::Material(picked)) if picked == material);
+        let is_current = current == Some(fill);
         *outline = BorderColor::all(border(cursor, is_current));
     }
     for (cursor, HueSwatch(hue), mut outline) in &mut hues {
