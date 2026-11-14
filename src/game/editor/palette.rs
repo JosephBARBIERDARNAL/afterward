@@ -23,7 +23,7 @@ const SWATCH_BORDER: Color = Color::srgba(1.0, 1.0, 1.0, 0.12);
 const CURRENT_BORDER: Color = Color::srgb(1.0, 0.9, 0.2);
 const HOVER_BORDER: Color = Color::WHITE;
 
-/// The palette panel; clicks over it never reach the room.
+/// The palette panel (an `EditorBlocker`, so clicks over it never reach the room).
 #[derive(Component)]
 pub(super) struct PalettePanel;
 
@@ -96,7 +96,12 @@ impl RoomEditor {
     }
 }
 
-pub(super) fn spawn_palette(commands: &mut Commands, data: &GameData, asset_server: &AssetServer) {
+pub(super) fn spawn_palette(
+    commands: &mut Commands,
+    data: &GameData,
+    asset_server: &AssetServer,
+    parent: Entity,
+) {
     let width = COLUMNS as f32 * (SWATCH_PX + SWATCH_GAP_PX);
     let grid = |columns: usize, swatch_px: f32| Node {
         width: px(width),
@@ -111,38 +116,23 @@ pub(super) fn spawn_palette(commands: &mut Commands, data: &GameData, asset_serv
         width: px(swatch_px),
         height: px(swatch_px),
         border: UiRect::all(px(2)),
+        border_radius: BorderRadius::all(px(4)),
         ..default()
     };
     commands
-        .spawn((
-            Node {
-                position_type: PositionType::Absolute,
-                right: px(12),
-                top: px(12),
-                padding: UiRect::all(px(10)),
-                flex_direction: FlexDirection::Column,
-                row_gap: px(8),
-                ..default()
-            },
-            BackgroundColor(Color::srgba(0.02, 0.025, 0.05, 0.82)),
-            RelativeCursorPosition::default(),
-            PalettePanel,
-            EditorUi,
-        ))
+        .spawn((ui::card(10.0), PalettePanel, ChildOf(parent)))
         .with_children(|panel| {
             panel.spawn((
                 Text::new(""),
-                TextFont {
-                    font_size: bevy::text::FontSize::Px(15.0),
-                    ..default()
-                },
-                TextColor(Color::WHITE),
+                ui::font(ui::SMALL_PX + 1.0),
+                TextColor(ui::TEXT),
                 Node {
                     width: px(width),
                     ..default()
                 },
                 PaletteCaption,
             ));
+            panel.spawn(ui::heading("Materials"));
             panel.spawn(grid(COLUMNS, SWATCH_PX)).with_children(|grid| {
                 for (id, material) in &data.surfaces.materials {
                     grid.spawn((
@@ -154,15 +144,17 @@ pub(super) fn spawn_palette(commands: &mut Commands, data: &GameData, asset_serv
                     ));
                 }
             });
+            panel.spawn(ui::heading("Color"));
             panel
                 .spawn((
                     Node {
                         width: px(width),
-                        padding: UiRect::axes(px(6), px(4)),
+                        padding: UiRect::axes(px(8), px(5)),
                         border: UiRect::all(px(1)),
+                        border_radius: BorderRadius::all(px(5)),
                         ..default()
                     },
-                    BorderColor::all(HOVER_BORDER.with_alpha(0.4)),
+                    BorderColor::all(HOVER_BORDER.with_alpha(0.25)),
                     BackgroundColor(Color::srgba(0.0, 0.0, 0.0, 0.5)),
                     RelativeCursorPosition::default(),
                     HexField,
@@ -170,11 +162,8 @@ pub(super) fn spawn_palette(commands: &mut Commands, data: &GameData, asset_serv
                 .with_children(|field| {
                     field.spawn((
                         Text::new(""),
-                        TextFont {
-                            font_size: bevy::text::FontSize::Px(15.0),
-                            ..default()
-                        },
-                        TextColor(Color::WHITE),
+                        ui::font(ui::SMALL_PX + 1.0),
+                        TextColor(ui::TEXT),
                         HexFieldText,
                     ));
                 });
@@ -215,8 +204,7 @@ pub(super) fn spawn_palette(commands: &mut Commands, data: &GameData, asset_serv
 }
 
 /// Paints the selection with a clicked material or shade and remembers it for
-/// new blocks; a clicked hue only remixes the shades. Notes whether the cursor
-/// is over the palette so the room ignores the click.
+/// new blocks; a clicked hue only remixes the shades.
 pub(super) fn handle_palette(
     mouse: Res<ButtonInput<MouseButton>>,
     mut editor: ResMut<RoomEditor>,
@@ -226,7 +214,7 @@ pub(super) fn handle_palette(
     hues: Query<(&RelativeCursorPosition, &HueSwatch)>,
     shades: Query<(&RelativeCursorPosition, &ShadeSwatch)>,
 ) {
-    editor.pointer_over_panel = panels
+    let over_palette = panels
         .iter()
         .any(|(cursor, is_field)| !is_field && cursor.cursor_over());
     if !mouse.just_pressed(MouseButton::Left) || editor.playtest_row.is_some() {
@@ -245,7 +233,7 @@ pub(super) fn handle_palette(
         }
         return;
     }
-    if !editor.pointer_over_panel {
+    if !over_palette {
         return;
     }
     editor.text_entry = None;
@@ -369,6 +357,25 @@ pub(super) fn refresh_palette(
     for mut text in &mut hex_text {
         if text.0 != hex {
             text.0.clone_from(&hex);
+        }
+    }
+}
+
+/// Shows the palette while it has something to paint: the room's background
+/// with nothing selected, or a selection holding a platform or decoration.
+pub(super) fn show_palette(
+    editor: Res<RoomEditor>,
+    mut panels: Query<&mut Node, With<PalettePanel>>,
+) {
+    let paints = editor.selected.is_empty()
+        || editor
+            .selected
+            .iter()
+            .any(|item| matches!(item, EditorItem::Platform(_) | EditorItem::Decoration(_)));
+    let display = if paints { Display::Flex } else { Display::None };
+    for mut node in &mut panels {
+        if node.display != display {
+            node.display = display;
         }
     }
 }

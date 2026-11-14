@@ -157,10 +157,10 @@ fn the_editor_shows_its_shortcuts_only_while_h_is_held() {
     let help_visible = |game: &mut HeadlessGame| {
         let world = game.app.world_mut();
         world
-            .query::<(&Text, &Visibility)>()
+            .query::<(&Text, &InheritedVisibility)>()
             .iter(world)
-            .find(|(text, _)| text.0.contains("box-select"))
-            .map(|(_, visibility)| *visibility != Visibility::Hidden)
+            .find(|(text, _)| text.0 == "box-select")
+            .map(|(_, visibility)| visibility.get())
     };
     assert_eq!(help_visible(&mut game), Some(false), "hidden by default");
     game.key(KeyCode::KeyH, ButtonState::Pressed);
@@ -183,15 +183,15 @@ fn the_editor_toggles_the_viewport_and_sight_overlays() {
     // Room 1, which has enemies, so the sight overlay draws its bands and
     // lines for real rather than finding nothing to draw.
     game.tap(KeyCode::PageDown);
-    // The inspector names the overlays that are on, and says nothing of them
-    // while none is, so a toggle is visible even without a window to draw
-    // them in.
+    // The status bar names the overlays that are on, and says nothing of
+    // them while none is, so a toggle is visible even without a window to
+    // draw them in.
     let shown = |game: &mut HeadlessGame| {
         let world = game.app.world_mut();
         world.query::<&Text>().iter(world).find_map(|text| {
             text.0
-                .lines()
-                .find(|line| line.starts_with("Overlays"))
+                .split("     ")
+                .find(|part| part.starts_with("Overlays"))
                 .map(str::to_string)
         })
     };

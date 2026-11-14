@@ -5,15 +5,20 @@
 use super::*;
 use crate::data::{Fill, PlatformConfig, RectH, RoomConfig};
 
+mod actions;
 mod clipboard;
 mod draw;
 mod hitboxes;
 mod inspector;
 mod keyboard;
+mod layers;
 mod overlays;
 mod palette;
+mod panels;
 mod pointer;
+mod ui;
 
+use actions::EditorAction;
 use clipboard::Clipboard;
 use hitboxes::Hitboxes;
 use inspector::Field;
@@ -40,6 +45,7 @@ pub(super) struct EditorPlugin;
 impl Plugin for EditorPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<RoomEditor>()
+            .add_message::<EditorAction>()
             .add_systems(
                 OnEnter(GameScreen::Editor),
                 (world::cleanup_room, audio::stop_run_audio, enter_editor).chain(),
@@ -51,20 +57,31 @@ impl Plugin for EditorPlugin {
             .add_systems(
                 Update,
                 (
-                    keyboard::type_text,
-                    keyboard::handle_editor_keys,
-                    palette::handle_palette,
-                    pointer::handle_pointer,
-                    draw::refresh_room_view,
-                    // Places the redrawn background layers on the camera before
-                    // the frame renders, so an edit doesn't flash them at y = 0.
-                    camera::update_background_parallax,
-                    draw::draw_overlay,
-                    overlays::draw_overlays,
-                    draw::update_panels,
-                    draw::show_playtest_settings,
-                    draw::show_help_while_h_is_held,
-                    palette::refresh_palette,
+                    (
+                        keyboard::type_text,
+                        keyboard::handle_editor_keys,
+                        ui::click_buttons,
+                        palette::handle_palette,
+                        actions::run_actions,
+                        pointer::handle_pointer,
+                        draw::refresh_room_view,
+                        // Places the redrawn background layers on the camera
+                        // before the frame renders, so an edit doesn't flash
+                        // them at y = 0.
+                        camera::update_background_parallax,
+                        draw::draw_overlay,
+                        overlays::draw_overlays,
+                    )
+                        .chain(),
+                    (
+                        ui::style_buttons,
+                        panels::refresh_panels,
+                        panels::show_cards,
+                        layers::update_layers_card,
+                        palette::show_palette,
+                        palette::refresh_palette,
+                    )
+                        .chain(),
                 )
                     .chain()
                     .run_if(in_state(GameScreen::Editor)),
@@ -395,6 +412,8 @@ struct RoomEditor {
     view_dirty: bool,
     /// Escape was pressed once with unsaved rooms; a second press leaves.
     leave_armed: bool,
+    /// The toolbar's Help keeps the shortcuts up without H held.
+    help_pinned: bool,
 }
 
 impl Default for RoomEditor {
@@ -424,6 +443,7 @@ impl Default for RoomEditor {
             problem: None,
             view_dirty: true,
             leave_armed: false,
+            help_pinned: false,
         }
     }
 }
@@ -557,18 +577,6 @@ fn snap(value: f32, fine: bool) -> f32 {
     (value * steps_per_h).round() / steps_per_h + 0.0
 }
 
-/// The inspector panel, rewritten every frame.
-#[derive(Component)]
-struct EditorPanel;
-
-/// The shortcuts panel, shown while H is held.
-#[derive(Component)]
-struct EditorHelp;
-
-/// The playtest settings, shown between Cmd+R and the playtest itself.
-#[derive(Component)]
-struct EditorPlaytest;
-
 /// Every editor panel, despawned when the editor closes.
 #[derive(Component)]
 struct EditorUi;
@@ -589,105 +597,7 @@ fn enter_editor(
         transform.translation.y =
             (room.player_spawn.y_h + data.gameplay.viewport.height_h / 2.0 - 1.0) * H_WORLD_UNITS;
     }
-    let font = TextFont {
-        font_size: bevy::text::FontSize::Px(15.0),
-        ..default()
-    };
-    // The inspector stands top left, and the shortcuts under it.
-    let column = commands
-        .spawn((
-            Node {
-                position_type: PositionType::Absolute,
-                left: px(12),
-                top: px(12),
-                max_width: px(560),
-                flex_direction: FlexDirection::Column,
-                align_items: AlignItems::FlexStart,
-                row_gap: px(8),
-                ..default()
-            },
-            Pickable::IGNORE,
-            EditorUi,
-        ))
-        .id();
-    let panel_node = Node {
-        padding: UiRect::all(px(10)),
-        ..default()
-    };
-    commands.spawn((
-        panel_node.clone(),
-        Text::new(""),
-        font.clone(),
-        TextColor(Color::WHITE),
-        BackgroundColor(Color::srgba(0.02, 0.025, 0.05, 0.82)),
-        Pickable::IGNORE,
-        EditorPanel,
-        ChildOf(column),
-    ));
-    commands.spawn((
-        panel_node,
-        Text::new(
-            [
-                String::from("Drag empty space: box-select (Shift adds)"),
-                String::from("Drag the selection: move (Alt: fine grid)"),
-                String::from("Drag a selected block's edge: resize"),
-                String::from("Two-finger scroll, right or middle drag: pan"),
-                String::from("Pinch or wheel: zoom"),
-                String::from("Home: fit the room"),
-                String::from("P / D / E: add platform / decoration / enemy"),
-                String::from("F: viewport frame, at the spawn and at the cursor"),
-                String::from("V: what idle enemies see"),
-                String::from("Click a material or a color: paint the selection"),
-                String::from("Tab: select the closest item of the same kind"),
-                String::from("Del: delete"),
-                format!("{COMMAND_KEY}+D: duplicate"),
-                String::from("Up / Down: inspector field"),
-                String::from("Left / Right: change it (Shift: x4)"),
-                String::from("Enter: type a label"),
-                String::from("C: clear the field"),
-                String::from("PgUp / PgDn: previous / next room"),
-                format!("{COMMAND_KEY}+Shift+Z or {COMMAND_KEY}+Y: redo"),
-                format!("{COMMAND_KEY}+R: playtest, after its settings"),
-                String::from("B (in play): hitbox overlay"),
-                String::from("Esc: deselect, then back to the menu"),
-            ]
-            .join("\n"),
-        ),
-        font.clone(),
-        TextColor(Color::srgb(0.78, 0.8, 0.86)),
-        BackgroundColor(Color::srgba(0.02, 0.025, 0.05, 0.82)),
-        Visibility::Hidden,
-        Pickable::IGNORE,
-        EditorHelp,
-        ChildOf(column),
-    ));
-    // The playtest settings stand in the middle of the screen.
-    commands.spawn((
-        Node {
-            position_type: PositionType::Absolute,
-            width: percent(100),
-            height: percent(100),
-            justify_content: JustifyContent::Center,
-            align_items: AlignItems::Center,
-            ..default()
-        },
-        Pickable::IGNORE,
-        EditorUi,
-        children![(
-            Node {
-                padding: UiRect::all(px(16)),
-                ..default()
-            },
-            Text::new(""),
-            font,
-            TextColor(Color::WHITE),
-            BackgroundColor(Color::srgba(0.02, 0.025, 0.05, 0.94)),
-            Visibility::Hidden,
-            Pickable::IGNORE,
-            EditorPlaytest,
-        )],
-    ));
-    palette::spawn_palette(&mut commands, &data, &asset_server);
+    ui::spawn_editor_ui(&mut commands, &data, &asset_server);
 }
 
 fn exit_editor(
@@ -838,6 +748,46 @@ next_room_id: 4
         let mut data = data;
         data.rooms.insert(1, room);
         data.validate().expect("a color background is valid");
+    }
+
+    #[test]
+    fn a_hidden_background_layer_is_shown_again_saved_and_forgotten_with_its_profile() {
+        use crate::data::{Backdrop, ProfileLayer};
+        let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
+        let mut data = GameData::load(&asset_root).expect("Chapter 1 YAML should be valid");
+        let mut room = data.rooms[&1].clone();
+        room.background_profiles = vec![Backdrop::Profile(String::from("city_pink_dusk"))];
+        room.hidden_background_layers.clear();
+        assert!(
+            room.shows_layer("city_pink_dusk", ProfileLayer::Sky),
+            "all drawn at first"
+        );
+
+        let layer = "city_pink_dusk/3".parse().expect("a layer by number");
+        room.toggle_layer("city_pink_dusk/sky".parse().expect("the sky"));
+        room.toggle_layer(layer);
+        assert!(!room.shows_layer("city_pink_dusk", ProfileLayer::Sky));
+        assert!(!room.shows_layer("city_pink_dusk", ProfileLayer::Scenery(2)));
+        assert!(room.shows_layer("city_pink_dusk", ProfileLayer::Scenery(1)));
+        let read_back: RoomConfig =
+            yaml_serde::from_str(&room.to_string()).expect("the written room is valid YAML");
+        assert_eq!(read_back, room, "hidden layers survive a save");
+        data.rooms.insert(1, room.clone());
+        data.validate()
+            .expect("hiding a layer of a drawn profile is valid");
+
+        room.toggle_layer("city_pink_dusk/3".parse().expect("a layer by number"));
+        assert!(
+            room.shows_layer("city_pink_dusk", ProfileLayer::Scenery(2)),
+            "shown again"
+        );
+        room.toggle_layer("city_pink_dusk/9".parse().expect("a layer by number"));
+        data.rooms.insert(1, room.clone());
+        assert!(data.validate().is_err(), "the profile has no ninth layer");
+
+        // Another profile in its place leaves nothing hidden of the old one.
+        Field::Background.set_text(&mut room, &[], &data, "city_blue_day");
+        assert!(room.hidden_background_layers.is_empty());
     }
 
     #[test]

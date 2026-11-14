@@ -150,6 +150,19 @@ impl Field {
         )
     }
 
+    /// Whether Left/Right (and the row's < and >) change the field.
+    pub(super) fn steps(self) -> bool {
+        self != Self::Label
+    }
+
+    /// Whether C (and the row's x) clears the field: see `Field::clear`.
+    pub(super) fn clears(self) -> bool {
+        matches!(
+            self,
+            Self::Label | Self::BackgroundOver | Self::Rotation | Self::Armor
+        )
+    }
+
     /// Which of the room's backgrounds a background row stands for.
     fn backdrop_index(self) -> usize {
         usize::from(self == Self::BackgroundOver)
@@ -236,6 +249,7 @@ impl Field {
                 None => room.background_profiles.push(backdrop),
             },
         }
+        room.forget_unused_layers();
     }
 
     fn set_label(room: &mut RoomConfig, item: Option<EditorItem>, text: Option<String>) {

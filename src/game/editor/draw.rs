@@ -1,8 +1,7 @@
-//! What the editor shows: the room drawn as in play, outlines of every
-//! editable item over it, and the inspector and help panels.
+//! What the editor shows over the room: the room drawn as in play, and
+//! outlines of every editable item over it (the panels are ui.rs).
 
 use super::*;
-use bevy::input::keyboard::Key;
 
 const ROOM_BOUNDS_COLOR: Color = Color::srgb(0.95, 0.3, 0.3);
 const GRID_COLOR: Color = Color::srgba(1.0, 1.0, 1.0, 0.06);
@@ -16,7 +15,7 @@ const EXIT_COLOR: Color = Color::srgb(0.35, 0.8, 1.0);
 const ENEMY_COLOR: Color = Color::srgb(1.0, 0.35, 0.45);
 const BONUS_COLOR: Color = Color::srgb(1.0, 0.78, 0.3);
 const HOVER_COLOR: Color = Color::WHITE;
-const SELECTED_COLOR: Color = Color::srgb(1.0, 0.9, 0.2);
+pub(super) const SELECTED_COLOR: Color = Color::srgb(1.0, 0.9, 0.2);
 // The selected body's hitboxes, colored as in the B overlay.
 const PLAYER_HURTBOX_COLOR: Color = Color::srgb(0.3, 1.0, 0.45);
 const ENEMY_HURTBOX_COLOR: Color = Color::srgb(1.0, 0.9, 0.2);
@@ -172,12 +171,7 @@ pub(super) fn draw_overlay(mut gizmos: Gizmos, editor: Res<RoomEditor>, data: Re
         let color = match item {
             _ if selected => SELECTED_COLOR,
             _ if editor.hovered == Some(item) => HOVER_COLOR,
-            EditorItem::Platform(_) => PLATFORM_COLOR,
-            EditorItem::Decoration(_) => DECORATION_COLOR,
-            EditorItem::Enemy(_) => ENEMY_COLOR,
-            EditorItem::PlayerSpawn => PLAYER_COLOR,
-            EditorItem::Exit => EXIT_COLOR,
-            EditorItem::Bonus => BONUS_COLOR,
+            item => item.outline_color(),
         };
         if let Some(corners) = item.corners(room) {
             // Corner to corner and back to the first, so a turned platform
@@ -204,163 +198,16 @@ pub(super) fn draw_overlay(mut gizmos: Gizmos, editor: Res<RoomEditor>, data: Re
     }
 }
 
-pub(super) fn update_panels(
-    editor: Res<RoomEditor>,
-    data: Res<GameData>,
-    mut panel: Query<&mut Text, With<EditorPanel>>,
-) {
-    let Some(room) = data.rooms.get(&editor.room_id) else {
-        return;
-    };
-    let unsaved = editor.unsaved_rooms(&data);
-    let mut lines = vec![
-        format!("Room {}  (chapter {})", room.room_id, room.chapter_id),
-        {
-            let mut parts = Vec::new();
-            if !unsaved.is_empty() {
-                let rooms = unsaved
-                    .iter()
-                    .map(|room_id| format!("{room_id:02}"))
-                    .collect::<Vec<_>>();
-                parts.push(format!("room {}", rooms.join(", ")));
-            }
-            if editor.unsaved_hitboxes(&data) {
-                parts.push(String::from("hitboxes"));
-            }
-            if parts.is_empty() {
-                String::from("All changes saved.")
-            } else {
-                format!("UNSAVED: {}", parts.join(" | "))
-            }
-        },
-    ];
-    if let Some(problem) = &editor.problem {
-        lines.push(format!("! {problem}"));
-    }
-    if editor.leave_armed {
-        lines.push(format!(
-            "Esc again leaves: {COMMAND_KEY}+S saves first, and edits stay in memory until the game quits."
-        ));
-    }
-    lines.push(String::new());
-    lines.push(match editor.selected.as_slice() {
-        [] => String::from("Room (click an item to select it)"),
-        [item] => format!("Selected: {}", item.describe(room)),
-        items => format!("Selected: {} items", items.len()),
-    });
-    for (index, field) in editor.fields().iter().enumerate() {
-        let is_current = index == editor.field;
-        let value = match &editor.text_entry {
-            Some(text) if is_current => format!("{text}_"),
-            _ => field.value(room, &editor.selected, &data, editor.attack),
-        };
-        lines.push(format!(
-            "{} {:<18} {value}",
-            if is_current { ">" } else { " " },
-            field.name()
-        ));
-    }
-    if editor.text_entry.is_some() {
-        lines.push(String::from("Typing: Enter keeps, Esc cancels"));
-    }
-    if editor
-        .fields()
-        .get(editor.field)
-        .is_some_and(|field| field.is_hitbox())
-    {
-        lines.push(match editor.selected_enemy_type(&data) {
-            Some(type_id) => format!("Hitboxes are shared by every {type_id} (enemy_types.yaml)"),
-            None => String::from(
-                "The player's drawn size (animations.yaml) and hurtbox (gameplay.yaml)",
-            ),
-        });
-    }
-    if let Some(hovered) = editor
-        .hovered
-        .filter(|item| !editor.selected.contains(item))
-    {
-        lines.push(format!("Hover: {}", hovered.describe(room)));
-    }
-    if let Some(cursor_h) = editor.cursor_h {
-        lines.push(format!(
-            "Cursor: x {:.2}  y {:.2} H",
-            cursor_h.x, cursor_h.y
-        ));
-    }
-    // The overlays that are on; the keys that toggle them are in the help.
-    let overlays = [
-        (editor.overlays.viewport, "frame"),
-        (editor.overlays.sight, "sight"),
-    ]
-    .into_iter()
-    .filter_map(|(on, name)| on.then_some(name))
-    .collect::<Vec<_>>();
-    if !overlays.is_empty() {
-        lines.push(format!("Overlays: {}", overlays.join(", ")));
-    }
-    lines.push(String::from("\nHold H: shortcuts"));
-    for mut text in &mut panel {
-        text.0 = lines.join("\n");
-    }
-}
-
-/// Shows the playtest settings while they are open, the row Left/Right
-/// changes marked like the inspector's.
-pub(super) fn show_playtest_settings(
-    editor: Res<RoomEditor>,
-    session: Res<RunSession>,
-    mut panel: Query<(&mut Text, &mut Visibility), With<EditorPlaytest>>,
-) {
-    let Ok((mut text, mut visibility)) = panel.single_mut() else {
-        return;
-    };
-    let Some(current) = editor.playtest_row else {
-        visibility.set_if_neq(Visibility::Hidden);
-        return;
-    };
-    visibility.set_if_neq(Visibility::Inherited);
-    let on_off = |on: bool| String::from(if on { "on" } else { "off" });
-    let rows = [
-        ("Infinite health", on_off(session.playtest.infinite_health)),
-        ("Enemies", on_off(!session.playtest.no_enemies)),
-        (
-            "Bonuses",
-            match session.playtest.starting_bonuses {
-                0 => String::from("none"),
-                usize::MAX => String::from("all"),
-                count => format!("{count} at random"),
-            },
-        ),
-    ];
-    let mut lines = vec![format!("Playtest room {}", editor.room_id), String::new()];
-    for (index, (name, value)) in rows.into_iter().enumerate() {
-        lines.push(format!(
-            "{} {name:<18} {value}",
-            if index == current { ">" } else { " " }
-        ));
-    }
-    lines.push(String::new());
-    lines.push(String::from(
-        "Up / Down: setting    Left / Right: change it",
-    ));
-    lines.push(String::from("Enter: play    Esc: back to the editor"));
-    text.0 = lines.join("\n");
-}
-
-/// Shows the shortcuts panel while H is held (by the character it types, so
-/// on any layout), unless a label is being typed.
-pub(super) fn show_help_while_h_is_held(
-    keys: Res<ButtonInput<Key>>,
-    editor: Res<RoomEditor>,
-    mut help: Query<&mut Visibility, With<EditorHelp>>,
-) {
-    let held = keys.any_pressed([Key::Character("h".into()), Key::Character("H".into())])
-        && editor.text_entry.is_none();
-    for mut visibility in &mut help {
-        visibility.set_if_neq(if held {
-            Visibility::Inherited
-        } else {
-            Visibility::Hidden
-        });
+impl EditorItem {
+    /// The color the item is outlined in, which the inspector's chip repeats.
+    pub(super) fn outline_color(self) -> Color {
+        match self {
+            Self::Platform(_) => PLATFORM_COLOR,
+            Self::Decoration(_) => DECORATION_COLOR,
+            Self::Enemy(_) => ENEMY_COLOR,
+            Self::PlayerSpawn => PLAYER_COLOR,
+            Self::Exit => EXIT_COLOR,
+            Self::Bonus => BONUS_COLOR,
+        }
     }
 }

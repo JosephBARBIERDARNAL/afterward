@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use bevy::math::Vec2;
 use serde::Deserialize;
 
-use super::{Backdrop, EnemyTypeId, Fill};
+use super::{Backdrop, BackgroundLayerRef, EnemyTypeId, Fill, ProfileLayer};
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct RoomConfig {
@@ -16,6 +16,10 @@ pub struct RoomConfig {
     /// blended, their layers dealt together from the furthest to the nearest.
     /// An entry can also be a plain color, a sky with no layers.
     pub background_profiles: Vec<Backdrop>,
+    /// Layers of those profiles the room leaves out; every layer is drawn
+    /// when the list is left out.
+    #[serde(default)]
+    pub hidden_background_layers: Vec<BackgroundLayerRef>,
     pub player_spawn: SpawnPosition,
     /// Solid platforms: bodies land on their top, are stopped by their sides,
     /// and bump their head on their underside. They stop shots too.
@@ -37,6 +41,42 @@ impl RoomConfig {
     /// The last room of a run: ten chapters of ten rooms after the opening
     /// room 0.
     pub(crate) const LAST_ID: u16 = 100;
+
+    /// Whether the room draws `layer` of its background profile `profile`.
+    pub(crate) fn shows_layer(&self, profile: &str, layer: ProfileLayer) -> bool {
+        !self
+            .hidden_background_layers
+            .iter()
+            .any(|hidden| hidden.profile == profile && hidden.layer == layer)
+    }
+
+    /// Hides a drawn layer of one of the room's profiles, or shows a hidden
+    /// one again.
+    pub(crate) fn toggle_layer(&mut self, layer: BackgroundLayerRef) {
+        match self
+            .hidden_background_layers
+            .iter()
+            .position(|hidden| *hidden == layer)
+        {
+            Some(index) => {
+                self.hidden_background_layers.remove(index);
+            }
+            None => {
+                self.hidden_background_layers.push(layer);
+                self.hidden_background_layers.sort();
+            }
+        }
+    }
+
+    /// Forgets hidden layers of profiles the room no longer draws.
+    pub(crate) fn forget_unused_layers(&mut self) {
+        let profiles = &self.background_profiles;
+        self.hidden_background_layers.retain(|hidden| {
+            profiles
+                .iter()
+                .any(|backdrop| matches!(backdrop, Backdrop::Profile(profile) if *profile == hidden.profile))
+        });
+    }
 
     /// Where room `room_id` is stored under the asset root.
     pub(crate) fn file_path(asset_root: &Path, room_id: u16) -> PathBuf {

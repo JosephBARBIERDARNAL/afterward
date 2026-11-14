@@ -556,6 +556,24 @@ impl GameData {
                     "room {room_id} references unknown background profile {unknown}"
                 )));
             }
+            if let Some(hidden) = room.hidden_background_layers.iter().find(|hidden| {
+                let drawn = room.background_profiles.iter().any(|backdrop| {
+                    matches!(backdrop, Backdrop::Profile(profile) if *profile == hidden.profile)
+                });
+                let exists =
+                    self.backgrounds
+                        .profiles
+                        .get(&hidden.profile)
+                        .is_some_and(|profile| match hidden.layer {
+                            ProfileLayer::Sky => true,
+                            ProfileLayer::Scenery(index) => index < profile.layers.len(),
+                        });
+                !drawn || !exists
+            }) {
+                return Err(InvalidGameData::from(format!(
+                    "room {room_id} hides {hidden}, which is not a layer of its background profiles"
+                )));
+            }
             let rects = room
                 .platforms
                 .iter()

@@ -1,5 +1,5 @@
 use super::*;
-use crate::data::{Backdrop, RoomConfig};
+use crate::data::{Backdrop, ProfileLayer, RoomConfig};
 use bevy::{image::ImageLoaderSettings, sprite::Anchor};
 
 const ENEMY_SPRITE_SCALE: f32 = 0.62;
@@ -92,19 +92,26 @@ pub(super) fn draw_room(
         data.gameplay.viewport_width_h(),
         data.gameplay.viewport.height_h,
     ) * H_WORLD_UNITS;
+    // A sky the room hides is left out of the blend, so the others stay even.
     let mut profiles = Vec::new();
     let mut skies = Vec::new();
+    let mut drawn_skies = 0;
     for (index, backdrop) in room.background_profiles.iter().enumerate() {
-        let alpha = 1.0 / (index + 1) as f32;
         match backdrop {
-            Backdrop::Profile(profile) => {
-                let profile = &data.backgrounds.profiles[profile];
-                profiles.push(profile);
-                skies.push((index, profile, profile.backdrop.as_str(), 0.0, alpha));
+            Backdrop::Profile(name) => {
+                let profile = &data.backgrounds.profiles[name];
+                profiles.push((name.as_str(), profile));
+                if room.shows_layer(name, ProfileLayer::Sky) {
+                    drawn_skies += 1;
+                    let alpha = 1.0 / drawn_skies as f32;
+                    skies.push((index, profile, profile.backdrop.as_str(), 0.0, alpha));
+                }
             }
             // One view tall like a profile's sky, and as wide as the room
             // with a view to spare on each side, standing still behind it.
             Backdrop::Color(color) => {
+                drawn_skies += 1;
+                let alpha = 1.0 / drawn_skies as f32;
                 let tile = Vec2::new(
                     room.size.width_h * H_WORLD_UNITS + 2.0 * view_size.x,
                     view_size.y,
@@ -127,11 +134,13 @@ pub(super) fn draw_room(
     let first_layer = room.background_profiles.len();
     let mut scenery = profiles
         .iter()
-        .flat_map(|profile| {
+        .flat_map(|(name, profile)| {
             profile
                 .layers
                 .iter()
-                .map(|layer| (*profile, layer.asset.as_str(), layer.parallax, 1.0))
+                .enumerate()
+                .filter(|(index, _)| room.shows_layer(name, ProfileLayer::Scenery(*index)))
+                .map(|(_, layer)| (*profile, layer.asset.as_str(), layer.parallax, 1.0))
         })
         .collect::<Vec<_>>();
     scenery.sort_by(|first, second| first.2.total_cmp(&second.2));

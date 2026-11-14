@@ -32,6 +32,18 @@ impl Display for RoomConfig {
             })
             .collect::<Vec<_>>();
         writeln!(formatter, "background_profiles: [{}]", backdrops.join(", "))?;
+        if !self.hidden_background_layers.is_empty() {
+            let hidden = self
+                .hidden_background_layers
+                .iter()
+                .map(ToString::to_string)
+                .collect::<Vec<_>>();
+            writeln!(
+                formatter,
+                "hidden_background_layers: [{}]",
+                hidden.join(", ")
+            )?;
+        }
         writeln!(formatter, "player_spawn:")?;
         writeln!(formatter, "  x_h: {}", self.player_spawn.x_h)?;
         writeln!(formatter, "  y_h: {}", self.player_spawn.y_h)?;

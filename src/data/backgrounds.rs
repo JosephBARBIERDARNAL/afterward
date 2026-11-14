@@ -56,6 +56,72 @@ impl Display for Backdrop {
     }
 }
 
+/// One layer of a profile a room draws, as its `hidden_background_layers`
+/// names it: `city_pink_dusk/sky` for the profile's sky, `city_pink_dusk/2`
+/// for the second of its layers counted from the furthest.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub struct BackgroundLayerRef {
+    pub profile: String,
+    pub layer: ProfileLayer,
+}
+
+/// A profile's sky, or one of its `layers` by index (0 the furthest).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum ProfileLayer {
+    Sky,
+    Scenery(usize),
+}
+
+impl Display for ProfileLayer {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Sky => formatter.write_str("sky"),
+            Self::Scenery(index) => write!(formatter, "{}", index + 1),
+        }
+    }
+}
+
+impl FromStr for BackgroundLayerRef {
+    type Err = &'static str;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        const FORMAT: &str = "a background layer is <profile>/sky or <profile>/<layer number>";
+        let (profile, layer) = value.trim().split_once('/').ok_or(FORMAT)?;
+        let layer = match layer.trim() {
+            "sky" => ProfileLayer::Sky,
+            number => match number.parse::<usize>() {
+                Ok(number) if number > 0 => ProfileLayer::Scenery(number - 1),
+                _ => return Err(FORMAT),
+            },
+        };
+        let profile = profile.trim();
+        if profile.is_empty() {
+            return Err(FORMAT);
+        }
+        Ok(Self {
+            profile: profile.to_string(),
+            layer,
+        })
+    }
+}
+
+impl<'de> Deserialize<'de> for BackgroundLayerRef {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        String::deserialize(deserializer)?
+            .parse()
+            .map_err(D::Error::custom)
+    }
+}
+
+impl Display for BackgroundLayerRef {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
+        write!(formatter, "{}/{}", self.profile, self.layer)
+    }
+}
+
 #[derive(Debug, Deserialize)]
 pub struct BackgroundProfiles {
     pub profiles: BTreeMap<String, BackgroundProfile>,
