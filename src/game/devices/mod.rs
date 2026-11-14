@@ -23,7 +23,7 @@ mod doors;
 mod platforms;
 mod traps;
 
-pub(super) use doors::press_buttons;
+pub(super) use doors::{Ladder, press_buttons};
 
 /// Devices stand over the platforms and the background props, behind the
 /// bodies.
@@ -350,6 +350,19 @@ pub(super) fn spawn_devices(
             }
             DeviceKind::Turret(_) => {
                 device.insert(traps::TurretState::default());
+            }
+            DeviceKind::Ladder(_) => {
+                // Its column, from its foot to its top.
+                let width = device_box(config, art, "climb", center)
+                    .map_or(H_WORLD_UNITS / 2.0, |climb| climb.width());
+                device.insert(Ladder {
+                    area: Rect::new(
+                        center.x - width / 2.0,
+                        bounds.min.y * H_WORLD_UNITS,
+                        center.x + width / 2.0,
+                        bounds.max.y * H_WORLD_UNITS,
+                    ),
+                });
             }
             DeviceKind::Button(_) => {
                 device.insert((

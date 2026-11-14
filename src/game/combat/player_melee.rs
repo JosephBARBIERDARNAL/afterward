@@ -58,6 +58,11 @@ pub(in crate::game) fn player_melee(
     if player.rhythm_timer == 0.0 {
         player.rhythm_stacks = 0;
     }
+    // Both hands are on the ladder.
+    if player.climbing.is_some() {
+        player.attack_buffer_s = 0.0;
+        return;
+    }
     // An Attack pressed while it cannot be thrown is remembered for a moment
     // and thrown the instant it can, so a press made while the blow in hand
     // is still playing asks for the next rather than being lost.

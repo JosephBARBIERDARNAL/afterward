@@ -47,6 +47,9 @@ clips:
   # Clinging to a wall, then pushing off it.
   wall_slide: { sheet: player/sheets/wall_jump.png, frames: 4, fps: 12 }
   wall_jump: { sheet: player/sheets/wall_jump.png, first_frame: 4, frames: 4, fps: 32 }
+  # Climbing a ladder, seen from behind: the hands reach up a rung in turn,
+  # the opposite foot stepping with each. A loop, held on a frame while still.
+  climb: { sheet: player/sheets/climb.png, frames: 8, fps: 10 }
   # Raising the guard; holds its last frame while Cover is held.
   cover: { sheet: player/sheets/cover.png, frames: 24, fps: 40 }
   hit: { sheet: player/sheets/hit.png, frames: 6, fps: 28 }

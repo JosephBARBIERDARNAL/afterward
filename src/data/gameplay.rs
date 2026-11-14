@@ -107,6 +107,7 @@ pub struct AudioAsset {
 pub struct ControlsConfig {
     pub move_left: Vec<String>,
     pub move_right: Vec<String>,
+    pub move_up: Vec<String>,
     pub move_down: Vec<String>,
     pub navigate_up: Vec<String>,
     pub navigate_down: Vec<String>,
@@ -166,6 +167,18 @@ pub struct PlayerConfig {
     pub melee: MeleeConfig,
     pub roll: RollConfig,
     pub wall: WallConfig,
+    pub climb: ClimbConfig,
+}
+
+/// Climbing a ladder: Up or Down inside its column grabs it, Up and Down
+/// climb it, and Jump lets go with a hop.
+#[derive(Debug, Deserialize)]
+pub struct ClimbConfig {
+    pub speed_h_s: f32,
+    /// How far from the ladder's middle the player may stand and still grab it.
+    pub reach_h: f32,
+    /// The upward push of the hop off a ladder.
+    pub jump_off_impulse_h_s: f32,
 }
 
 /// The player's only weapon: a melee chain. Each press lands the next blow of

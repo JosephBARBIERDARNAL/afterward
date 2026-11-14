@@ -1,4 +1,4 @@
-//! Buttons and the doors they open.
+//! Buttons, the doors they open, and ladders.
 
 use super::*;
 use crate::game::interact::InReach;
@@ -13,6 +13,13 @@ pub(crate) struct ButtonState {
 #[derive(Component, Default)]
 pub(crate) struct DoorState {
     open_s: Option<f32>,
+}
+
+/// A ladder's column, from its foot to its top, in world units: where the
+/// player grabs it and climbs (`player::update_player`).
+#[derive(Component)]
+pub(crate) struct Ladder {
+    pub(crate) area: Rect,
 }
 
 /// Presses the button in reach when Interact goes down: it sinks in, and

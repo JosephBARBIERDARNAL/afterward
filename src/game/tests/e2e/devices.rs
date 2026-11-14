@@ -124,3 +124,41 @@ fn a_folding_platform_gives_way_under_the_player_and_comes_back() {
     game.run_seconds(0.85);
     assert!(!folded(&mut game), "and comes back");
 }
+
+#[test]
+fn up_climbs_a_ladder_the_player_hangs_on_it_and_jump_lets_go() {
+    let mut game = play_in(hall(
+        "  - { kind: ladder, position_h: { x: 3, y: 1 }, height_h: 4 }",
+    ));
+    let feet = |game: &mut HeadlessGame| {
+        let world = game.app.world_mut();
+        world
+            .query_filtered::<&Transform, With<PlayerBody>>()
+            .single(world)
+            .expect("the player stands in the room")
+            .translation
+            .y
+            / H_WORLD_UNITS
+            - 0.5
+    };
+    game.key(KeyCode::KeyW, ButtonState::Pressed);
+    game.run_seconds(0.5);
+    game.key(KeyCode::KeyW, ButtonState::Released);
+    let climbed = feet(&mut game);
+    assert!(
+        climbed > 2.0,
+        "half a second up the ladder reached only {climbed} H"
+    );
+    game.run_seconds(0.5);
+    assert_eq!(
+        feet(&mut game),
+        climbed,
+        "hanging on the ladder, nothing falls"
+    );
+    game.tap(KeyCode::Space);
+    game.run_seconds(1.5);
+    assert!(
+        (feet(&mut game) - 1.0).abs() < 0.01,
+        "let go, the player falls back to the floor"
+    );
+}

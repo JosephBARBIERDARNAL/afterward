@@ -90,6 +90,14 @@ impl PlayerSprite<'_> {
             self.play("player_wall_slide", true);
             return;
         }
+        if player.climbing.is_some() {
+            // Hanging still on the ladder holds the frame the climb is on.
+            self.play("player_climb", true);
+            if player.velocity.y == 0.0 {
+                self.animation.timer.reset();
+            }
+            return;
+        }
         if !player.grounded {
             let key = if player.velocity.y > 0.0 {
                 // Take-off, then the rising loop.

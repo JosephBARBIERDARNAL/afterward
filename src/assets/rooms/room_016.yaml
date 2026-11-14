@@ -27,10 +27,15 @@ platforms:
   - { label: press ceiling trim, material: sci_fi_trim_ceiling, rect_h: { x: 35, y: 4.25, width: 2, height: 0.5 } }
   - { label: turret pedestal, material: sci_fi_riveted_wall, rect_h: { x: 41.5, y: 2, width: 1, height: 1 } }
   - { label: wall over the door, material: sci_fi_riveted_wall, rect_h: { x: 44.5, y: 4, width: 1, height: 9.5 } }
+  - { label: ledge, material: sci_fi_riveted_wall, rect_h: { x: 4.75, y: 5.5, width: 3.75, height: 0.5 } }
+  - { label: ledge trim, material: sci_fi_green_edge, rect_h: { x: 4.75, y: 5.75, width: 3.75, height: 0.25 } }
   - { label: left wall, material: sci_fi_riveted_wall, rect_h: { x: 0, y: 2, width: 0.5, height: 11.5 } }
   - { label: right wall, material: sci_fi_riveted_wall, rect_h: { x: 47.5, y: 2, width: 0.5, height: 11.5 } }
 decorations: []
+props:
+  - { prop: sci_fi_steel_crate, position_h: { x: 7, y: 6 } }
 devices:
+  - { label: ladder to the ledge, kind: ladder, position_h: { x: 4.5, y: 2 }, height_h: 4 }
   - { label: laser gate, kind: laser, position_h: { x: 7, y: 2 }, length_h: 3 }
   - { label: grates in the floor, kind: fire_trap, position_h: { x: 10, y: 1.5 }, cells: 2 }
   - { label: spike pit, kind: spikes, position_h: { x: 13.5, y: 1 }, cells: 6 }

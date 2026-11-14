@@ -22,6 +22,7 @@ pub(super) struct PlayerUpdateResources<'w, 's> {
 pub(super) fn update_player(
     resources: PlayerUpdateResources,
     room_query: Query<&PlatformSurface>,
+    ladders: Query<&devices::Ladder>,
     mut player_query: Query<(
         &mut PlayerBody,
         &mut Transform,
@@ -98,6 +99,73 @@ pub(super) fn update_player(
     if held(GameAction::MoveRight) {
         direction += 1.0;
     }
+    // A ladder: Up or Down inside its column grabs it, and while the player
+    // climbs it nothing but the ladder holds them up.
+    let climb = &tuning.climb;
+    let feet_now = transform.translation.y - H_WORLD_UNITS / 2.0;
+    if player.climbing.is_none()
+        && alive
+        && !rolling
+        && !player.slamming
+        && player.strike.is_none()
+        && let Some(ladder) = ladders.iter().map(|ladder| ladder.area).find(|area| {
+            (transform.translation.x - area.center().x).abs() <= climb.reach_h * H_WORLD_UNITS
+                && (area.min.y - 1.0..=area.max.y + 1.0).contains(&feet_now)
+        })
+        && ((held(GameAction::MoveUp) && feet_now < ladder.max.y - 1.0)
+            || (held(GameAction::MoveDown) && feet_now > ladder.min.y + 1.0))
+    {
+        player.climbing = Some(ladder);
+        player.crouching = false;
+        player.covering = false;
+    }
+    if let Some(ladder) = player.climbing {
+        let up_down = f32::from(u8::from(held(GameAction::MoveUp)))
+            - f32::from(u8::from(held(GameAction::MoveDown)));
+        let feet = (feet_now + up_down * climb.speed_h_s * H_WORLD_UNITS * dt)
+            .clamp(ladder.min.y, ladder.max.y);
+        transform.translation.x = ladder.center().x;
+        transform.translation.y = feet + H_WORLD_UNITS / 2.0;
+        player.velocity = Vec2::new(0.0, up_down * climb.speed_h_s * H_WORLD_UNITS);
+        player.grounded = false;
+        player.wall_cling = None;
+        player.jumps_used = 0;
+        player.jump_buffer_s = 0.0;
+        if direction != 0.0 {
+            player.facing = direction.signum();
+        }
+        let at_top = feet >= ladder.max.y - 1.0;
+        let at_bottom = feet <= ladder.min.y + 1.0;
+        if tapped(GameAction::Jump) || !alive {
+            // Letting go with a hop, the way the player steers.
+            player.climbing = None;
+            player.velocity = Vec2::new(
+                direction * tuning.air_max_speed_h_s * H_WORLD_UNITS,
+                climb.jump_off_impulse_h_s * H_WORLD_UNITS,
+            );
+            player.jumps_used = 1;
+            sounds.push(SoundCue::Jump);
+        } else if (at_top && direction != 0.0)
+            || (at_bottom && held(GameAction::MoveDown))
+            || !ladders.iter().any(|other| other.area == ladder)
+        {
+            // Stepping off its top onto the ledge, or onto the floor at its
+            // foot: the ordinary movement takes over next frame.
+            player.climbing = None;
+            player.velocity = Vec2::ZERO;
+        }
+        let state = AnimationState {
+            moving: false,
+            jog_speed,
+            dt,
+            enemies_alive: enemies.iter().any(|enemy| enemy.health > 0.0),
+            health_fraction: session.health / session.max_health.max(1.0),
+        };
+        sprite_view.update(&mut player, &data.player_animations, &state);
+        sprite_view.sprite.flip_x = player.facing < 0.0;
+        return;
+    }
+
     // Cover plants the player, and the push off a wall owns them until its
     // lock runs out: no steering then, and no drag either, so the shove
     // carries them clear instead of being rubbed out the frame it is given.

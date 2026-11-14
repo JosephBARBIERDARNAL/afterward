@@ -52,6 +52,8 @@ impl<'a> FromIterator<&'a KeyboardInput> for TypedLetters {
 pub(super) enum GameAction {
     MoveLeft,
     MoveRight,
+    /// Climbs a ladder.
+    MoveUp,
     MoveDown,
     NavigateUp,
     NavigateDown,
@@ -67,9 +69,10 @@ pub(super) enum GameAction {
 }
 
 impl GameAction {
-    pub const ALL: [Self; 14] = [
+    pub const ALL: [Self; 15] = [
         Self::MoveLeft,
         Self::MoveRight,
+        Self::MoveUp,
         Self::MoveDown,
         Self::NavigateUp,
         Self::NavigateDown,
@@ -88,6 +91,7 @@ impl GameAction {
         match self {
             Self::MoveLeft => "MOVE LEFT",
             Self::MoveRight => "MOVE RIGHT",
+            Self::MoveUp => "CLIMB UP",
             Self::MoveDown => "CROUCH",
             Self::NavigateUp => "MENU UP",
             Self::NavigateDown => "MENU DOWN",
@@ -111,6 +115,7 @@ impl FromStr for GameAction {
         match id {
             "move_left" => Ok(Self::MoveLeft),
             "move_right" => Ok(Self::MoveRight),
+            "move_up" => Ok(Self::MoveUp),
             "move_down" => Ok(Self::MoveDown),
             "navigate_up" => Ok(Self::NavigateUp),
             "navigate_down" => Ok(Self::NavigateDown),
@@ -133,6 +138,7 @@ impl Display for GameAction {
         formatter.write_str(match self {
             Self::MoveLeft => "move_left",
             Self::MoveRight => "move_right",
+            Self::MoveUp => "move_up",
             Self::MoveDown => "move_down",
             Self::NavigateUp => "navigate_up",
             Self::NavigateDown => "navigate_down",
@@ -171,6 +177,7 @@ impl From<&ControlsConfig> for DefaultBindings {
         Self(BTreeMap::from([
             (GameAction::MoveLeft, parse_keys(&controls.move_left)),
             (GameAction::MoveRight, parse_keys(&controls.move_right)),
+            (GameAction::MoveUp, parse_keys(&controls.move_up)),
             (GameAction::MoveDown, parse_keys(&controls.move_down)),
             (GameAction::NavigateUp, parse_keys(&controls.navigate_up)),
             (

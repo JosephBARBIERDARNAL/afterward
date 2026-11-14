@@ -45,6 +45,8 @@ pub(crate) struct PlayerBody {
     /// Clinging to a platform's side in mid-air, and which way that wall lies
     /// (-1 for a wall on the player's left).
     pub(crate) wall_cling: Option<f32>,
+    /// The ladder the player is climbing: its column, in world units.
+    pub(crate) climbing: Option<Rect>,
     /// Seconds left of the lock a wall jump puts on movement input, so the
     /// push actually carries the player off the wall.
     pub(crate) wall_control_lock_s: f32,
@@ -91,6 +93,7 @@ impl Default for PlayerBody {
             crouching: false,
             covering: false,
             wall_cling: None,
+            climbing: None,
             wall_control_lock_s: 0.0,
             idle_s: 0.0,
             fidget_right: false,
