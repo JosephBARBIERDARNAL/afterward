@@ -156,3 +156,22 @@ profiles:
         parallax: 0.32
       - asset: background/dead-city/ephemeral/layer-6.png
         parallax: 0.5
+  # The sci-fi platformer pack's industrial skyline (packs/sci_fi, cut by
+  # `just sci-fi`): a starry sky, clouds, then rows of plants and towers.
+  sci_fi_industrial:
+    backdrop: background/sci_fi/layer-0.png
+    source_size_px: { width: 480, height: 270 }
+    tile_h: 13.5
+    repeat_horizontal: true
+    filtering: nearest
+    layers:
+      - asset: background/sci_fi/layer-1.png
+        parallax: 0.04
+      - asset: background/sci_fi/layer-2.png
+        parallax: 0.1
+      - asset: background/sci_fi/layer-3.png
+        parallax: 0.18
+      - asset: background/sci_fi/layer-4.png
+        parallax: 0.28
+      - asset: background/sci_fi/layer-5.png
+        parallax: 0.4

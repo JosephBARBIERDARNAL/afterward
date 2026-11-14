@@ -4,8 +4,9 @@
 # top, width, height]` in pixels from its top-left corner, that are solid as
 # platforms are (stood on, walked into, bumped from below, and cover).
 #
-# The sci-fi pack's pieces (scripts/slice_sci_fi_tileset.py) are free for
-# non-commercial use only: see props/sci_fi/LICENSE.txt.
+# The sci-fi pack's pieces (scripts/slice_sci_fi.py) are licensed for
+# commercial and non-commercial use; the pack itself is kept as it ships in
+# packs/sci_fi/ (see its LICENSE.txt), which `just sci-fi` cuts.
 
 # How many of a sprite's pixels make one H, which sets every prop's size: at
 # 32 a 16 px crate is half as wide as the hero is tall. The sci-fi pieces are
@@ -29,19 +30,10 @@ props:
     sprite: props/sci_fi/steel_crate.png
     size_px: [32, 32]
     solid_px: [[0, 0, 32, 32]]
-  sci_fi_dark_panel:
-    sprite: props/sci_fi/dark_panel.png
+  sci_fi_steel_door_block:
+    sprite: props/sci_fi/steel_door_block.png
     size_px: [32, 32]
     solid_px: [[0, 0, 32, 32]]
-  sci_fi_steel_frame:
-    sprite: props/sci_fi/steel_frame.png
-    size_px: [48, 48]
-  sci_fi_strut:
-    sprite: props/sci_fi/strut.png
-    size_px: [16, 16]
-  sci_fi_rivets:
-    sprite: props/sci_fi/rivets.png
-    size_px: [16, 16]
   sci_fi_green_pipe:
     sprite: props/sci_fi/green_pipe.png
     size_px: [16, 16]
@@ -58,20 +50,166 @@ props:
     sprite: props/sci_fi/conveyor_middle.png
     size_px: [16, 16]
     solid_px: [[0, 0, 16, 16]]
-  sci_fi_ceiling_lamp:
-    sprite: props/sci_fi/ceiling_lamp.png
-    size_px: [32, 32]
-  sci_fi_small_crate:
-    sprite: props/sci_fi/small_crate.png
+  sci_fi_trim_floor_ramp_down:
+    sprite: props/sci_fi/trim_floor_ramp_down.png
     size_px: [16, 16]
-    solid_px: [[0, 6, 16, 10]]
-  sci_fi_crate_stack:
-    sprite: props/sci_fi/crate_stack.png
+    solid_px: [[0, 0, 16, 16]]
+  sci_fi_trim_floor_notch:
+    sprite: props/sci_fi/trim_floor_notch.png
+    size_px: [16, 16]
+    solid_px: [[0, 0, 16, 16]]
+  sci_fi_trim_floor_ramp_up:
+    sprite: props/sci_fi/trim_floor_ramp_up.png
+    size_px: [16, 16]
+    solid_px: [[0, 0, 16, 16]]
+  sci_fi_trim_ceiling_ramp_down:
+    sprite: props/sci_fi/trim_ceiling_ramp_down.png
+    size_px: [16, 16]
+    solid_px: [[0, 0, 16, 16]]
+  sci_fi_trim_ceiling_notch:
+    sprite: props/sci_fi/trim_ceiling_notch.png
+    size_px: [16, 16]
+    solid_px: [[0, 0, 16, 16]]
+  sci_fi_trim_ceiling_ramp_up:
+    sprite: props/sci_fi/trim_ceiling_ramp_up.png
+    size_px: [16, 16]
+    solid_px: [[0, 0, 16, 16]]
+  sci_fi_trim_ceiling_joint:
+    sprite: props/sci_fi/trim_ceiling_joint.png
+    size_px: [16, 16]
+    solid_px: [[0, 0, 16, 16]]
+  sci_fi_trim_wall_left_notch:
+    sprite: props/sci_fi/trim_wall_left_notch.png
+    size_px: [16, 16]
+    solid_px: [[0, 0, 16, 16]]
+  sci_fi_trim_wall_left_ramp:
+    sprite: props/sci_fi/trim_wall_left_ramp.png
+    size_px: [16, 16]
+    solid_px: [[0, 0, 16, 16]]
+  sci_fi_trim_wall_left_ramp_back:
+    sprite: props/sci_fi/trim_wall_left_ramp_back.png
+    size_px: [16, 16]
+    solid_px: [[0, 0, 16, 16]]
+  sci_fi_trim_wall_left_joint:
+    sprite: props/sci_fi/trim_wall_left_joint.png
+    size_px: [16, 16]
+    solid_px: [[0, 0, 16, 16]]
+  sci_fi_trim_wall_right_joint:
+    sprite: props/sci_fi/trim_wall_right_joint.png
+    size_px: [16, 16]
+    solid_px: [[0, 0, 16, 16]]
+  sci_fi_trim_wall_right_notch:
+    sprite: props/sci_fi/trim_wall_right_notch.png
+    size_px: [16, 16]
+    solid_px: [[0, 0, 16, 16]]
+  sci_fi_trim_wall_right_ramp:
+    sprite: props/sci_fi/trim_wall_right_ramp.png
+    size_px: [16, 16]
+    solid_px: [[0, 0, 16, 16]]
+  sci_fi_trim_wall_right_ramp_back:
+    sprite: props/sci_fi/trim_wall_right_ramp_back.png
+    size_px: [16, 16]
+    solid_px: [[0, 0, 16, 16]]
+  sci_fi_steel_cap_top_left:
+    sprite: props/sci_fi/steel_cap_top_left.png
+    size_px: [16, 16]
+    solid_px: [[0, 0, 16, 16]]
+  sci_fi_steel_cap_bottom_right:
+    sprite: props/sci_fi/steel_cap_bottom_right.png
+    size_px: [16, 16]
+    solid_px: [[0, 0, 16, 16]]
+  sci_fi_steel_plate:
+    sprite: props/sci_fi/steel_plate.png
+    size_px: [16, 16]
+    solid_px: [[0, 0, 16, 16]]
+  sci_fi_dark_bevel:
+    sprite: props/sci_fi/dark_bevel.png
+    size_px: [16, 16]
+    solid_px: [[0, 0, 16, 16]]
+  sci_fi_elevator_door:
+    sprite: props/sci_fi/elevator_door.png
+    size_px: [48, 48]
+  sci_fi_wall_window:
+    sprite: props/sci_fi/wall_window.png
+    size_px: [64, 32]
+  sci_fi_bolt_plate:
+    sprite: props/sci_fi/bolt_plate.png
     size_px: [32, 32]
-    solid_px: [[8, 12, 16, 10], [2, 22, 27, 10]]
-  sci_fi_spikes:
-    sprite: props/sci_fi/spikes.png
-    size_px: [96, 16]
+  sci_fi_vent_grille:
+    sprite: props/sci_fi/vent_grille.png
+    size_px: [32, 32]
+  sci_fi_fuse_box:
+    sprite: props/sci_fi/fuse_box.png
+    size_px: [32, 32]
+  sci_fi_pipe_bend:
+    sprite: props/sci_fi/pipe_bend.png
+    size_px: [16, 32]
+  sci_fi_shutter:
+    sprite: props/sci_fi/shutter.png
+    size_px: [48, 32]
+  sci_fi_pipe_elbow:
+    sprite: props/sci_fi/pipe_elbow.png
+    size_px: [16, 32]
+  sci_fi_light_strip_vertical:
+    sprite: props/sci_fi/light_strip_vertical.png
+    size_px: [16, 48]
+  sci_fi_light_strip:
+    sprite: props/sci_fi/light_strip.png
+    size_px: [48, 16]
+  sci_fi_round_vent:
+    sprite: props/sci_fi/round_vent.png
+    size_px: [32, 32]
+  sci_fi_grate_panel:
+    sprite: props/sci_fi/grate_panel.png
+    size_px: [48, 32]
+  sci_fi_strut:
+    sprite: props/sci_fi/strut.png
+    size_px: [16, 16]
+  sci_fi_rivets:
+    sprite: props/sci_fi/rivets.png
+    size_px: [16, 16]
+  sci_fi_steel_frame:
+    sprite: props/sci_fi/steel_frame.png
+    size_px: [48, 48]
+  sci_fi_dark_panel:
+    sprite: props/sci_fi/dark_panel.png
+    size_px: [32, 32]
+  sci_fi_rounded_frame:
+    sprite: props/sci_fi/rounded_frame.png
+    size_px: [48, 48]
+  sci_fi_square_frame:
+    sprite: props/sci_fi/square_frame.png
+    size_px: [32, 32]
+  sci_fi_pipe_vertical:
+    sprite: props/sci_fi/pipe_vertical.png
+    size_px: [16, 48]
+  sci_fi_pipe_vertical_short:
+    sprite: props/sci_fi/pipe_vertical_short.png
+    size_px: [16, 48]
+  sci_fi_pipe_junction:
+    sprite: props/sci_fi/pipe_junction.png
+    size_px: [48, 48]
+  sci_fi_pipe_cross:
+    sprite: props/sci_fi/pipe_cross.png
+    size_px: [16, 16]
+  sci_fi_pipe_horizontal:
+    sprite: props/sci_fi/pipe_horizontal.png
+    size_px: [48, 16]
+  sci_fi_pipe_horizontal_short:
+    sprite: props/sci_fi/pipe_horizontal_short.png
+    size_px: [48, 16]
+  sci_fi_green_slab:
+    sprite: props/sci_fi/green_slab.png
+    size_px: [48, 16]
+    solid_px: [[0, 0, 48, 10]]
+  sci_fi_bench:
+    sprite: props/sci_fi/bench.png
+    size_px: [48, 16]
+    solid_px: [[0, 0, 48, 15]]
+  sci_fi_green_step:
+    sprite: props/sci_fi/green_step.png
+    size_px: [32, 16]
+    solid_px: [[0, 0, 32, 13]]
   sci_fi_hover_pad_left:
     sprite: props/sci_fi/hover_pad_left.png
     size_px: [48, 16]
@@ -80,11 +218,62 @@ props:
     sprite: props/sci_fi/hover_pad_right.png
     size_px: [48, 16]
     solid_px: [[6, 0, 42, 13]]
-  sci_fi_bench:
-    sprite: props/sci_fi/bench.png
-    size_px: [48, 16]
-    solid_px: [[0, 0, 48, 15]]
+  sci_fi_small_crate:
+    sprite: props/sci_fi/small_crate.png
+    size_px: [16, 16]
+    solid_px: [[0, 6, 16, 10]]
+  sci_fi_crate_stack:
+    sprite: props/sci_fi/crate_stack.png
+    size_px: [32, 32]
+    solid_px: [[9, 12, 16, 10], [3, 22, 27, 10]]
+  sci_fi_barrel:
+    sprite: props/sci_fi/barrel.png
+    size_px: [16, 16]
+    solid_px: [[2, 3, 13, 13]]
+  sci_fi_terminal:
+    sprite: props/sci_fi/terminal.png
+    size_px: [32, 32]
+    solid_px: [[4, 9, 26, 23]]
+  sci_fi_lamp_off:
+    sprite: props/sci_fi/lamp_off.png
+    size_px: [32, 16]
+  sci_fi_ceiling_lamp:
+    sprite: props/sci_fi/ceiling_lamp.png
+    size_px: [32, 32]
+  sci_fi_spikes:
+    sprite: props/sci_fi/spikes.png
+    size_px: [96, 16]
+  sci_fi_fan:
+    sprite: props/sci_fi/fan.png
+    size_px: [32, 32]
+    animation: { frames: 4, fps: 12 }
+  sci_fi_framed_fan:
+    sprite: props/sci_fi/framed_fan.png
+    size_px: [32, 32]
+    animation: { frames: 4, fps: 12 }
   sci_fi_laser:
     sprite: props/sci_fi/laser.png
     size_px: [16, 48]
     animation: { frames: 4, fps: 8 }
+  sci_fi_hover_platform:
+    sprite: props/sci_fi/hover_platform.png
+    size_px: [64, 32]
+    animation: { frames: 5, fps: 10 }
+    solid_px: [[9, 0, 46, 11]]
+  sci_fi_hover_platform_small:
+    sprite: props/sci_fi/hover_platform_small.png
+    size_px: [32, 32]
+    animation: { frames: 5, fps: 10 }
+    solid_px: [[0, 0, 32, 10]]
+  sci_fi_wall_light_capsule:
+    sprite: props/sci_fi/wall_light_capsule.png
+    size_px: [32, 32]
+    animation: { frames: 2, fps: 1 }
+  sci_fi_wall_light_small:
+    sprite: props/sci_fi/wall_light_small.png
+    size_px: [32, 32]
+    animation: { frames: 2, fps: 1 }
+  sci_fi_wall_light_dashes:
+    sprite: props/sci_fi/wall_light_dashes.png
+    size_px: [32, 32]
+    animation: { frames: 2, fps: 1 }

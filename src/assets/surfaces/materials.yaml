@@ -89,7 +89,7 @@ materials:
     footstep: wood
 
   # Sci-fi: tiles cut from the sci-fi platformer pack (scripts/
-  # slice_sci_fi_tileset.py), drawn at 32 px per H, as the props are.
+  # slice_sci_fi.py), drawn at 32 px per H, as the props are.
   sci_fi_dark:
     texture: surfaces/textures/sci_fi/dark.png
     footstep: stone
@@ -102,13 +102,25 @@ materials:
     texture: surfaces/textures/sci_fi/riveted_wall.png
     footstep: stone
     tile_h: 0.5
-  # The green trim along the top of a floor, and a conveyor belt: one tile
-  # tall, so a platform 0.5 H high whose top is on the 0.5 H grid shows it once.
+  # The green trim along the top of a floor, a conveyor belt, and the trim
+  # along a ceiling and a wall's left or right face: one tile deep, so a platform 0.5 H high whose top is on the 0.5 H grid shows it once.
   sci_fi_green_edge:
     texture: surfaces/textures/sci_fi/green_edge.png
     footstep: stone
     tile_h: 0.5
   sci_fi_conveyor:
     texture: surfaces/textures/sci_fi/conveyor.png
+    footstep: stone
+    tile_h: 0.5
+  sci_fi_trim_ceiling:
+    texture: surfaces/textures/sci_fi/trim_ceiling.png
+    footstep: stone
+    tile_h: 0.5
+  sci_fi_trim_wall_left:
+    texture: surfaces/textures/sci_fi/trim_wall_left.png
+    footstep: stone
+    tile_h: 0.5
+  sci_fi_trim_wall_right:
+    texture: surfaces/textures/sci_fi/trim_wall_right.png
     footstep: stone
     tile_h: 0.5

@@ -64,11 +64,11 @@ monsters:
 black-knight:
     python3 scripts/slice_black_knight.py
 
-# Cut the sci-fi pack's tileset into materials (surfaces/textures/sci_fi/) and
-# props (props/sci_fi/). Needs ImageMagick; the PNGs are committed, so only
-# after the tileset or a piece changes.
+# Cut the sci-fi pack (packs/sci_fi/) into materials, props, devices, enemies,
+# effects and a background. Needs ImageMagick; the PNGs are committed, so only
+# after the pack or a piece changes.
 sci-fi:
-    python3 scripts/slice_sci_fi_tileset.py
+    python3 scripts/slice_sci_fi.py
 
 # Render the Typst pixel art in art/ to PNGs at the same path under src/assets/
 # (art/surfaces/textures/wood/planks.typ -> src/assets/surfaces/textures/wood/planks.png).
