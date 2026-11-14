@@ -18,7 +18,7 @@ fn the_chain_steps_through_its_blows_catches_two_bodies_and_drops_back_when_the_
 room_id: 1
 chapter_id: 1
 size: { width_h: 48, height_h: 13.5 }
-background_profiles: [clouds_bright_blue]
+background_profiles: [city_teal_evening]
 player_spawn: { x_h: 2.5, y_h: 1 }
 platforms:
   - { material: city_pavement, rect_h: { x: 0, y: 0, width: 48, height: 1 } }

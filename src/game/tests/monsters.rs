@@ -28,7 +28,7 @@ fn every_monster_reaches_a_standing_player_and_the_eye_beast_does_it_with_its_vo
 room_id: 1
 chapter_id: 1
 size: {{ width_h: 48, height_h: 13.5 }}
-background_profiles: [clouds_bright_blue]
+background_profiles: [city_teal_evening]
 player_spawn: {{ x_h: 10, y_h: 1 }}
 platforms:
   - {{ material: city_pavement, rect_h: {{ x: 0, y: 0, width: 48, height: 1 }} }}

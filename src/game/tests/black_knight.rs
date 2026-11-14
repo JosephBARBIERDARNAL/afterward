@@ -15,7 +15,7 @@ fn a_raised_guard_turns_the_chain_aside_and_answers_it() {
 room_id: 1
 chapter_id: 1
 size: { width_h: 48, height_h: 13.5 }
-background_profiles: [clouds_bright_blue]
+background_profiles: [city_teal_evening]
 player_spawn: { x_h: 10, y_h: 1 }
 platforms:
   - { material: city_pavement, rect_h: { x: 0, y: 0, width: 48, height: 1 } }
@@ -151,7 +151,7 @@ fn a_beaten_knight_rolls_through_the_player_untouched() {
 room_id: 1
 chapter_id: 1
 size: { width_h: 48, height_h: 13.5 }
-background_profiles: [clouds_bright_blue]
+background_profiles: [city_teal_evening]
 player_spawn: { x_h: 10, y_h: 1 }
 platforms:
   - { material: city_pavement, rect_h: { x: 0, y: 0, width: 48, height: 1 } }

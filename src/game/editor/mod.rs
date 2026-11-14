@@ -718,7 +718,7 @@ mod tests {
 room_id: 3
 chapter_id: 1
 size: { width_h: 48, height_h: 27 }
-background_profiles: [clouds_bright_blue]
+background_profiles: [city_teal_evening]
 player_spawn: { x_h: 2.5, y_h: 1 }
 platforms:
   - { label: floor, material: city_pavement, rect_h: { x: 0, y: 0, width: 48, height: 1 } }

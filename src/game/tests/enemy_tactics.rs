@@ -18,7 +18,7 @@ fn an_enemy_holds_its_ledge_until_the_player_stands_below_it() {
 room_id: 3
 chapter_id: 1
 size: { width_h: 48, height_h: 27 }
-background_profiles: [clouds_bright_blue]
+background_profiles: [city_teal_evening]
 player_spawn: { x_h: 11.5, y_h: 5 }
 platforms:
   - { material: city_pavement, rect_h: { x: 0, y: 0, width: 48, height: 1 } }
@@ -125,7 +125,7 @@ fn a_ranged_enemy_fires_at_a_player_standing_against_it_before_backing_away() {
 room_id: 3
 chapter_id: 1
 size: { width_h: 48, height_h: 27 }
-background_profiles: [clouds_bright_blue]
+background_profiles: [city_teal_evening]
 player_spawn: { x_h: 19, y_h: 1 }
 platforms:
   - { material: city_pavement, rect_h: { x: 0, y: 0, width: 48, height: 1 } }
@@ -226,7 +226,7 @@ fn a_blow_is_heard_by_the_idle_enemies_standing_near_the_one_it_lands_on() {
 room_id: 1
 chapter_id: 1
 size: { width_h: 48, height_h: 13.5 }
-background_profiles: [clouds_bright_blue]
+background_profiles: [city_teal_evening]
 player_spawn: { x_h: 2.5, y_h: 1 }
 platforms:
   - { material: city_pavement, rect_h: { x: 0, y: 0, width: 48, height: 1 } }

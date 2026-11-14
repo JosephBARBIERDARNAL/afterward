@@ -6,7 +6,7 @@ const HALL: &str = "
 room_id: 1
 chapter_id: 1
 size: { width_h: 24, height_h: 13.5 }
-background_profiles: [clouds_bright_blue]
+background_profiles: [city_teal_evening]
 player_spawn: { x_h: 3, y_h: 1 }
 platforms:
   - { material: city_pavement, rect_h: { x: 0, y: 0, width: 24, height: 1 } }

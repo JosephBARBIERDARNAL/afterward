@@ -16,7 +16,7 @@ fn ground_enemy_climbs_the_staircase_to_a_player_on_a_higher_platform() {
 room_id: 3
 chapter_id: 1
 size: { width_h: 48, height_h: 27 }
-background_profiles: [clouds_bright_blue]
+background_profiles: [city_teal_evening]
 player_spawn: { x_h: 2.5, y_h: 1 }
 platforms:
   - { material: city_pavement, rect_h: { x: 0, y: 0, width: 48, height: 1 } }
@@ -130,7 +130,7 @@ fn emitter_unit_jump_slam_damages_the_player_on_landing() {
 room_id: 10
 chapter_id: 1
 size: { width_h: 48, height_h: 22.5 }
-background_profiles: [clouds_thunderstorm]
+background_profiles: [city_peach_sunset]
 player_spawn: { x_h: 2.5, y_h: 1 }
 platforms:
   - { material: city_pavement, rect_h: { x: 0, y: 0, width: 48, height: 1 } }

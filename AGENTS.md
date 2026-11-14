@@ -275,7 +275,7 @@ Five more types of `enemies/enemy_types.yaml`, drawn from two packs: `abominatio
 
 ### Typst pixel art
 
-Every surface texture is drawn in code with [Typst](https://typst.app) instead of a paint program, as are the HUD pieces in `src/assets/ui/`, the health drop in `src/assets/pickups/`, and the backdrop bands in `src/assets/background/drowned-city/`: the surface families are `city`, `metal`, `carved`, and `wood`. Sources live in `art/`, mirroring their output path under `src/assets/` (`art/surfaces/textures/wood/planks.typ` renders `src/assets/surfaces/textures/wood/planks.png`).
+Every surface texture is drawn in code with [Typst](https://typst.app) instead of a paint program, as are the HUD pieces in `src/assets/ui/`, the health drop in `src/assets/pickups/`: the surface families are `city`, `metal`, `carved`, and `wood`. Sources live in `art/`, mirroring their output path under `src/assets/` (`art/surfaces/textures/wood/planks.typ` renders `src/assets/surfaces/textures/wood/planks.png`).
 
 - `just art` renders every source (needs `typst` 0.15.1). The PNGs are committed, so building the game never needs Typst; rerun `just art` and commit both after editing a source. CI (`.github/workflows/art.yml`) re-renders with the same pinned Typst version and fails if any PNG differs from its source; bump `TYPST_VERSION` there when upgrading Typst locally.
 - `art/_pixel.typ` makes a page exactly the image's size and draws 1 pt squares, rendered at 72 ppi: one square per pixel, no anti-aliasing. `pixels` draws text art (one character per pixel, looked up in a palette); `pixels-by` computes each pixel from a function.
