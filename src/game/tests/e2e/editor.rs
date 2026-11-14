@@ -1,5 +1,5 @@
 use super::*;
-use crate::data::RoomConfig;
+use crate::data::{DeviceKind, RoomConfig};
 
 /// Presses Cmd+`letter` as an AZERTY Mac sends it: the key is reported by its
 /// QWERTY position (`code`) and typed as `letter`, and while Cmd is held macOS
@@ -347,4 +347,43 @@ fn the_editor_places_a_prop_swaps_its_sprite_saves_and_deletes_it() {
     assert_eq!(saved.props, props(&game));
     game.tap(KeyCode::Delete);
     assert_eq!(props(&game).len(), authored);
+}
+
+#[test]
+fn the_editor_places_a_device_tunes_it_saves_and_deletes_it() {
+    let mut game = HeadlessGame::with_copied_data();
+    game.tap(KeyCode::KeyD);
+    game.tap(KeyCode::PageDown);
+    let devices = |game: &HeadlessGame| game.data().rooms[&1].devices.clone();
+    let authored = devices(&game).len();
+
+    // T places a laser, the kind picked when nothing else was; its rows run
+    // Label, X, Y, then its colour, its orientation and its length.
+    game.tap(KeyCode::KeyT);
+    assert_eq!(devices(&game).len(), authored + 1);
+    let length = |game: &HeadlessGame| match &devices(game)[authored].kind {
+        DeviceKind::Laser(laser) => laser.length_h,
+        other => panic!("T added a {}, not a laser", other.tag()),
+    };
+    let before = length(&game);
+    for _ in 0..5 {
+        game.tap(KeyCode::ArrowDown);
+    }
+    game.tap(KeyCode::ArrowRight);
+    assert_eq!(
+        length(&game),
+        before + 0.5,
+        "Right lengthens it by half an H"
+    );
+
+    // Cmd+S writes it to room 1's file, and Delete takes it out again.
+    command_presses(&mut game, KeyCode::KeyS, "s", 1);
+    let saved: RoomConfig = yaml_serde::from_str(
+        &fs::read_to_string(RoomConfig::file_path(&game.data().asset_root, 1))
+            .expect("the editor wrote the room file"),
+    )
+    .expect("the saved room is valid YAML");
+    assert_eq!(saved.devices, devices(&game));
+    game.tap(KeyCode::Delete);
+    assert_eq!(devices(&game).len(), authored);
 }

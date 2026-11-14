@@ -41,6 +41,7 @@ use std::{
 
 mod bonus;
 mod death;
+mod devices;
 mod difficulty;
 mod editor;
 mod hitboxes;
@@ -88,6 +89,7 @@ impl HeadlessGame {
                 "audio",
                 "surfaces",
                 "props",
+                "devices",
                 "doors",
                 "pickups",
                 "fonts",

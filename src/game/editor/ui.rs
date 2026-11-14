@@ -205,6 +205,7 @@ pub(super) fn spawn_editor_ui(
             button(bar, "+ Enemy", "E", EditorAction::Add(NewItem::Enemy));
             button(bar, "+ Vent", "G", EditorAction::Add(NewItem::Vent));
             button(bar, "+ Prop", "O", EditorAction::Add(NewItem::Prop));
+            button(bar, "+ Device", "T", EditorAction::Add(NewItem::Device));
             separator(bar);
             button(bar, "Undo", "", EditorAction::Undo);
             button(bar, "Redo", "", EditorAction::Redo);
@@ -443,8 +444,8 @@ fn spawn_help(commands: &mut Commands) {
             "Edit",
             vec![
                 (
-                    String::from("P / D / E / G / O"),
-                    "add platform / decoration / enemy / vent / prop",
+                    String::from("P / D / E / G / O / T"),
+                    "add platform / decoration / enemy / vent / prop / device",
                 ),
                 (String::from("Del"), "delete the selection"),
                 (format!("{COMMAND_KEY}+D"), "duplicate"),

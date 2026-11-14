@@ -1,35 +1,54 @@
-# Room coordinates use H from the lower-left. Platform and decoration `rect_h`
-# give each block's lower-left corner and size; player, enemy, and exit y
-# values mark the feet baseline on a platform top.
 room_id: 16
 chapter_id: 2
 size:
-  width_h: 24
+  width_h: 48
   height_h: 13.5
-background_profiles: [city_teal_evening]
+background_profiles: [sci_fi_industrial]
 player_spawn:
-  x_h: 4.25
-  y_h: 1
-# Solid platforms: land on their top, stop against their sides, bump
-# your head on their underside. They stop shots too.
+  x_h: 2.5
+  y_h: 2
 platforms:
-  - label: placeholder floor
-    color: "#1C1A2E"
-    rect_h: { x: 1, y: 0, width: 23, height: 1 }
-  - label: placeholder wall
-    color: "#1C1A2E"
-    rect_h: { x: 23, y: 0, width: 1, height: 13.5 }
-  - label: placeholder wall
-    color: "#1C1A2E"
-    rect_h: { x: 0, y: 0, width: 1, height: 13.5 }
-# Decorations: non-solid panels behind the platforms or in front of the bodies.
+  - { label: start floor, material: sci_fi_riveted_wall, rect_h: { x: 0, y: 0, width: 9.5, height: 1.5 } }
+  - { label: start trim, material: sci_fi_green_edge, rect_h: { x: 0, y: 1.5, width: 9.5, height: 0.5 } }
+  - { label: under the fire, material: sci_fi_riveted_wall, rect_h: { x: 9.5, y: 0, width: 1, height: 1.5 } }
+  - { label: after the fire, material: sci_fi_riveted_wall, rect_h: { x: 10.5, y: 0, width: 1.5, height: 1.5 } }
+  - { label: after the fire trim, material: sci_fi_green_edge, rect_h: { x: 10.5, y: 1.5, width: 1.5, height: 0.5 } }
+  - { label: spike pit, material: sci_fi_riveted_wall, rect_h: { x: 12, y: 0, width: 3, height: 1 } }
+  - { label: before the belt, material: sci_fi_riveted_wall, rect_h: { x: 15, y: 0, width: 1, height: 1.5 } }
+  - { label: before the belt trim, material: sci_fi_green_edge, rect_h: { x: 15, y: 1.5, width: 1, height: 0.5 } }
+  - { label: under the belt, material: sci_fi_riveted_wall, rect_h: { x: 16, y: 0, width: 4, height: 1.75 } }
+  - { label: gap floor, material: sci_fi_dark, rect_h: { x: 20, y: 0, width: 7, height: 0.5 } }
+  - { label: island, material: sci_fi_riveted_wall, rect_h: { x: 27, y: 0, width: 1.5, height: 1.5 } }
+  - { label: island trim, material: sci_fi_green_edge, rect_h: { x: 27, y: 1.5, width: 1.5, height: 0.5 } }
+  - { label: second gap floor, material: sci_fi_dark, rect_h: { x: 28.5, y: 0, width: 5, height: 0.5 } }
+  - { label: last floor, material: sci_fi_riveted_wall, rect_h: { x: 33.5, y: 0, width: 14.5, height: 1.5 } }
+  - { label: last floor trim, material: sci_fi_green_edge, rect_h: { x: 33.5, y: 1.5, width: 14.5, height: 0.5 } }
+  - { label: press ceiling, material: sci_fi_riveted_wall, rect_h: { x: 35, y: 4.25, width: 2, height: 1.75 } }
+  - { label: press ceiling trim, material: sci_fi_trim_ceiling, rect_h: { x: 35, y: 4.25, width: 2, height: 0.5 } }
+  - { label: turret pedestal, material: sci_fi_riveted_wall, rect_h: { x: 41.5, y: 2, width: 1, height: 1 } }
+  - { label: wall over the door, material: sci_fi_riveted_wall, rect_h: { x: 44.5, y: 4, width: 1, height: 9.5 } }
+  - { label: left wall, material: sci_fi_riveted_wall, rect_h: { x: 0, y: 2, width: 0.5, height: 11.5 } }
+  - { label: right wall, material: sci_fi_riveted_wall, rect_h: { x: 47.5, y: 2, width: 0.5, height: 11.5 } }
 decorations: []
+devices:
+  - { label: laser gate, kind: laser, position_h: { x: 7, y: 2 }, length_h: 3 }
+  - { label: grates in the floor, kind: fire_trap, position_h: { x: 10, y: 1.5 }, cells: 2 }
+  - { label: spike pit, kind: spikes, position_h: { x: 13.5, y: 1 }, cells: 6 }
+  - { label: belt, kind: conveyor, position_h: { x: 18, y: 1.75 }, cells: 8, speed_h_s: 2 }
+  - { label: gap spikes, kind: spikes, position_h: { x: 23.5, y: 0.5 }, cells: 14 }
+  - { label: ferry, kind: hover_platform, position_h: { x: 21.5, y: 1 }, travel_x_h: 4 }
+  - { label: fold 1, kind: folding_platform, position_h: { x: 29.5, y: 2.5 } }
+  - { label: fold 2, kind: folding_platform, position_h: { x: 31.75, y: 2.5 }, color: steel }
+  - { label: press, kind: press, position_h: { x: 36, y: 2 } }
+  - { label: blade, kind: blade, position_h: { x: 39, y: 2 }, travel_x_h: 0, travel_y_h: 2.5 }
+  - { label: turret, kind: turret, position_h: { x: 42, y: 3 } }
+  - { label: button, kind: button, position_h: { x: 43.25, y: 2 }, link: 1 }
+  - { label: door, kind: door, position_h: { x: 45, y: 2 }, link: 1 }
 enemy_spawns: []
-# The bonus item, lying beside the door once every enemy is down.
 bonus:
-  x_h: 20.75
-  y_h: 1
+  x_h: 46
+  y_h: 2
 exit:
-  x_h: 22
-  y_h: 1
+  x_h: 46.75
+  y_h: 2
 next_room_id: 17

@@ -5,7 +5,11 @@
 //! `4c5a74`, `#ABC`) as well as a material or profile name.
 
 use super::*;
-use crate::data::{Backdrop, DecorationLayer, Facing, HexColor, MaterialId, RoomHazardConfig};
+use crate::data::{
+    Backdrop, DecorationLayer, DeviceKind, DeviceTag, Facing, HexColor, MaterialId,
+    RoomHazardConfig,
+};
+use std::sync::LazyLock;
 
 /// How far one Left/Right press grows or shrinks the room, in H.
 const ROOM_SIZE_STEP_H: f32 = 0.5;
@@ -32,6 +36,9 @@ pub(super) enum Field {
     Layer,
     /// Which sprite of `props/props.yaml` a prop is.
     PropType,
+    /// One of the values a kind of device lists (`DeviceKind::params`), by
+    /// its place in that list.
+    DeviceParam(DeviceTag, u8),
     EnemyType,
     EnemyFacing,
     X,
@@ -58,6 +65,23 @@ pub(super) enum Field {
     HitboxWidth,
     HitboxHeight,
 }
+
+/// The rows of each kind of device: its label and spot, then every value
+/// its kind lists.
+static DEVICE_FIELDS: LazyLock<BTreeMap<DeviceTag, Vec<Field>>> = LazyLock::new(|| {
+    DeviceTag::ALL
+        .into_iter()
+        .map(|tag| {
+            let count = DeviceKind::from(tag).params().len();
+            let params = (0..count).filter_map(|index| u8::try_from(index).ok());
+            let fields = [Field::Label, Field::X, Field::Y]
+                .into_iter()
+                .chain(params.map(|index| Field::DeviceParam(tag, index)))
+                .collect();
+            (tag, fields)
+        })
+        .collect()
+});
 
 impl Field {
     pub(super) fn for_selection(selection: &[EditorItem]) -> &'static [Self] {
@@ -136,6 +160,9 @@ impl Field {
             Some(EditorItem::Prop(_)) => {
                 &[Self::Label, Self::PropType, Self::Layer, Self::X, Self::Y]
             }
+            Some(EditorItem::Device(_, tag)) => DEVICE_FIELDS
+                .get(&tag)
+                .map_or(&[Self::Label, Self::X, Self::Y], Vec::as_slice),
             Some(EditorItem::Exit | EditorItem::Bonus) => &[Self::X, Self::Y],
         }
     }
@@ -173,6 +200,12 @@ impl Field {
             Self::HitboxY => "Hitbox y (H)",
             Self::HitboxWidth => "Hitbox width (H)",
             Self::HitboxHeight => "Hitbox height (H)",
+            Self::DeviceParam(tag, index) => {
+                let mut kind = DeviceKind::from(tag);
+                kind.params()
+                    .get(usize::from(index))
+                    .map_or("", |param| param.name)
+            }
         }
     }
 
@@ -223,6 +256,10 @@ impl Field {
                 .props
                 .get(index)
                 .and_then(|placed| placed.label.clone()),
+            (Self::Label, Some(EditorItem::Device(index, _))) => room
+                .devices
+                .get(index)
+                .and_then(|device| device.label.clone()),
             (Self::Fill, Some(item)) => item.fill(room).map(ToString::to_string),
             (Self::Background | Self::BackgroundOver, _) => room
                 .background_profiles
@@ -319,6 +356,11 @@ impl Field {
                     placed.label = text;
                 }
             }
+            Some(EditorItem::Device(index, _)) => {
+                if let Some(device) = room.devices.get_mut(index) {
+                    device.label = text;
+                }
+            }
             _ => {}
         }
     }
@@ -344,7 +386,7 @@ impl Field {
             };
         }
         let item = selection.last().copied();
-        let rect = item.and_then(|item| item.bounds(room, &data.props));
+        let rect = item.and_then(|item| item.bounds(room, Catalogs::from(data)));
         let placed = match item {
             Some(EditorItem::Prop(index)) => room.props.get(index),
             _ => None,
@@ -390,6 +432,17 @@ impl Field {
                 _ => placed.map_or_else(String::new, |placed| placed.layer.to_string()),
             },
             Self::PropType => placed.map_or_else(String::new, |placed| placed.prop.to_string()),
+            Self::DeviceParam(_, param) => match item {
+                Some(EditorItem::Device(index, _)) => {
+                    room.devices.get(index).map_or_else(String::new, |device| {
+                        let mut kind = device.kind.clone();
+                        kind.params()
+                            .get(usize::from(param))
+                            .map_or_else(String::new, |param| param.value.to_string())
+                    })
+                }
+                _ => String::new(),
+            },
             Self::EnemyType => spawn.map_or_else(String::new, |spawn| spawn.type_id.to_string()),
             Self::EnemyFacing => spawn.map_or_else(String::new, |spawn| spawn.facing.to_string()),
             Self::X => origin.map_or_else(String::new, |origin| origin.x.to_string()),
@@ -533,6 +586,15 @@ impl Field {
                         DecorationLayer::Background => DecorationLayer::Foreground,
                         DecorationLayer::Foreground => DecorationLayer::Background,
                     };
+                }
+            }
+            Self::DeviceParam(_, param) => {
+                if let Some(EditorItem::Device(index, _)) = item
+                    && let Some(device) = room.devices.get_mut(index)
+                    && let Some(mut param) =
+                        device.kind.params().into_iter().nth(usize::from(param))
+                {
+                    param.value.step(steps);
                 }
             }
             Self::PropType => {

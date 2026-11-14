@@ -1,6 +1,7 @@
 mod backgrounds;
 mod bonuses;
 mod color;
+mod devices;
 mod enemies;
 mod gameplay;
 mod player_animations;
@@ -12,6 +13,7 @@ mod surfaces;
 pub use backgrounds::*;
 pub use bonuses::*;
 pub use color::*;
+pub use devices::*;
 pub use enemies::*;
 pub use gameplay::*;
 pub use player_animations::*;
@@ -41,6 +43,7 @@ pub struct GameData {
     pub bonuses: BonusesConfig,
     pub surfaces: SurfaceMaterials,
     pub props: PropCatalog,
+    pub devices: DeviceArt,
     pub rooms: BTreeMap<u16, RoomConfig>,
 }
 
@@ -53,6 +56,7 @@ impl GameData {
         let bonuses = read_yaml(&asset_root.join("config/bonuses.yaml"))?;
         let surfaces = read_yaml(&asset_root.join("surfaces/materials.yaml"))?;
         let props = read_yaml(&asset_root.join("props/props.yaml"))?;
+        let devices = read_yaml(&asset_root.join("devices/devices.yaml"))?;
         let mut rooms = BTreeMap::new();
 
         // Room 0 is the run's empty opening room; the ten chapters are 1..=100.
@@ -70,6 +74,7 @@ impl GameData {
             bonuses,
             surfaces,
             props,
+            devices,
             rooms,
         };
         data.validate()?;
@@ -628,6 +633,31 @@ impl GameData {
                     placed.prop
                 )));
             }
+            if let Some(device) = room.devices.iter().find(|device| {
+                !self.devices.kinds.contains_key(&device.kind.tag())
+                    || match &device.kind {
+                        DeviceKind::Laser(laser) => laser.length_h < 1.5,
+                        DeviceKind::Ladder(ladder) => ladder.height_h <= 0.0,
+                        DeviceKind::FireTrap(fire) => {
+                            fire.cells == 0 || fire.arm_s + fire.burn_s + fire.rest_s <= 0.0
+                        }
+                        DeviceKind::Spikes(spikes) => spikes.cells == 0,
+                        DeviceKind::Conveyor(belt) => belt.cells < 2,
+                        DeviceKind::Press(press) => press.rest_s + press.hold_s <= 0.0,
+                        DeviceKind::Turret(turret) => turret.interval_s <= 0.0,
+                        DeviceKind::HoverPlatform(_)
+                        | DeviceKind::FoldingPlatform(_)
+                        | DeviceKind::Blade(_)
+                        | DeviceKind::Button(_)
+                        | DeviceKind::Door(_) => false,
+                    }
+            }) {
+                return Err(InvalidGameData::from(format!(
+                    "room {room_id} has a {} its kind cannot be: too short, empty, \
+                     or with no cycle",
+                    device.kind.tag()
+                )));
+            }
             for spawn in &room.enemy_spawns {
                 if !self.enemies.types.contains_key(&spawn.type_id) {
                     return Err(InvalidGameData::from(format!(
@@ -687,6 +717,32 @@ impl GameData {
                     "surface texture {} needs a positive tile size",
                     material.texture
                 )));
+            }
+        }
+
+        let devices = &self.devices;
+        for tag in DeviceTag::ALL {
+            let Some(kind) = devices.kinds.get(&tag) else {
+                return Err(InvalidGameData::from(format!(
+                    "devices/devices.yaml has no {tag}"
+                )));
+            };
+            if kind.sheets.is_empty()
+                || kind.frame_px.contains(&0)
+                || !(kind.fps.is_finite() && kind.fps > 0.0)
+                || !(devices.px_per_h(tag).is_finite() && devices.px_per_h(tag) > 0.0)
+            {
+                return Err(InvalidGameData::from(format!(
+                    "the {tag} device needs a sheet, a frame size, a pace and a scale"
+                )));
+            }
+            for sheet in kind.sheets.values() {
+                if sheet.frames == 0 || !asset_root.join(&sheet.sheet).is_file() {
+                    return Err(InvalidGameData::from(format!(
+                        "missing or empty device sheet: {}",
+                        sheet.sheet
+                    )));
+                }
             }
         }
 

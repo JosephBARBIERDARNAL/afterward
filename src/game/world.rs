@@ -203,6 +203,7 @@ pub(super) fn draw_room(
 
     spawn_room_platforms(commands, room, data);
     room_art::draw(commands, room, data, asset_server, sheets);
+    devices::spawn_devices(commands, room, data, asset_server);
 }
 
 /// Spawns the colliders of the room's platforms and solid props;

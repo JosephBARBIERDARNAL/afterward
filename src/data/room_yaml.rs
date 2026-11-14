@@ -4,8 +4,8 @@
 use std::fmt::{self, Display, Formatter};
 
 use super::{
-    Backdrop, DecorationConfig, DecorationLayer, EnemySpawnConfig, Facing, Fill, PlatformConfig,
-    PropConfig, RectH, RoomConfig, RoomHazardConfig, SizeH,
+    Backdrop, DecorationConfig, DecorationLayer, DeviceConfig, EnemySpawnConfig, Facing, Fill,
+    PlatformConfig, PropConfig, RectH, RoomConfig, RoomHazardConfig, SizeH,
 };
 
 const HEADER: &str = "\
@@ -64,6 +64,14 @@ impl Display for RoomConfig {
                 "# Props: sprites standing on a spot (the middle of their bottom edge)."
             )?;
             write!(formatter, "{}", YamlList("props", &self.props))?;
+        }
+        if !self.devices.is_empty() {
+            writeln!(
+                formatter,
+                "# Devices: traps, moving and folding platforms, buttons, doors and\n\
+                 # ladders, each standing on a spot (the middle of its bottom edge)."
+            )?;
+            write!(formatter, "{}", YamlList("devices", &self.devices))?;
         }
         write!(
             formatter,
@@ -194,6 +202,33 @@ impl Display for PropConfig {
     }
 }
 
+impl Display for DeviceConfig {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
+        let label = self
+            .label
+            .iter()
+            .map(|label| format!("label: {}", YamlText(label)));
+        // Every value its kind lists, in the order the kind lists them.
+        let mut kind = self.kind.clone();
+        let params = kind
+            .params()
+            .into_iter()
+            .map(|param| format!("{}: {}", param.key, param.value))
+            .collect::<Vec<_>>();
+        let fields = label
+            .chain([
+                format!("kind: {}", self.kind.tag()),
+                format!(
+                    "position_h: {{ x: {}, y: {} }}",
+                    self.position_h.x_h, self.position_h.y_h
+                ),
+            ])
+            .chain(params)
+            .collect();
+        write!(formatter, "{}", YamlEntry(fields))
+    }
+}
+
 impl Display for RoomHazardConfig {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
         let label = self
@@ -309,7 +344,7 @@ impl Display for YamlText<'_> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::data::GameData;
+    use crate::data::{DeviceKind, DeviceTag, GameData, SpawnPosition};
     use std::path::Path;
 
     #[test]
@@ -386,6 +421,52 @@ next_room_id: 4
         let read_back: RoomConfig =
             yaml_serde::from_str(&written).expect("the written room is valid YAML");
         assert_eq!(read_back, room);
+    }
+
+    #[test]
+    fn every_kind_of_device_keeps_all_its_values_through_a_round_trip() {
+        let mut room: RoomConfig = yaml_serde::from_str(
+            "
+room_id: 3
+chapter_id: 1
+size: { width_h: 24, height_h: 13.5 }
+background_profiles: [city_blue_day]
+player_spawn: { x_h: 2, y_h: 1 }
+platforms:
+  - { material: city_pavement, rect_h: { x: 0, y: 0, width: 24, height: 1 } }
+devices:
+  - { kind: laser, position_h: { x: 4, y: 1 }, length_h: 4.5, orientation: horizontal }
+enemy_spawns: []
+bonus: { x_h: 20, y_h: 1 }
+exit: { x_h: 22, y_h: 1 }
+next_room_id: 4
+",
+        )
+        .expect("a device with some of its values left out parses");
+        assert!(matches!(
+            &room.devices[0].kind,
+            DeviceKind::Laser(laser) if laser.length_h == 4.5 && laser.on_s == 1.0
+        ));
+        // Every kind, each value stepped off its default so a value the
+        // writer drops cannot pass for one left at its default.
+        for (index, tag) in DeviceTag::ALL.into_iter().enumerate() {
+            let mut kind = DeviceKind::from(tag);
+            for mut param in kind.params() {
+                param.value.step(1.0);
+            }
+            room.devices.push(DeviceConfig {
+                label: Some(format!("{tag}")),
+                position_h: SpawnPosition {
+                    x_h: index as f32,
+                    y_h: 1.0,
+                },
+                kind,
+            });
+        }
+        let written = room.to_string();
+        let read_back: RoomConfig =
+            yaml_serde::from_str(&written).expect("the written room is valid YAML");
+        assert_eq!(read_back, room, "{written}");
     }
 
     #[test]

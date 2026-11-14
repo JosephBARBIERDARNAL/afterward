@@ -19,6 +19,7 @@ mod camera;
 mod collision;
 mod combat;
 mod controls;
+mod devices;
 #[cfg(debug_assertions)]
 mod editor;
 mod flow;
@@ -116,246 +117,254 @@ impl Plugin for GamePlugin {
         } else {
             app.init_asset::<audio::MusicStream>();
         }
-        app.add_plugins((pause_blur::PauseBlurPlugin, shaders::ShaderPlugin))
-            .add_plugins(ripple::RipplePlugin)
-            .register_asset_loader(audio::MusicStreamLoader)
-            .init_state::<GameScreen>()
-            .init_resource::<RunSession>()
-            .init_resource::<RoomPan>()
-            .init_resource::<Prologue>()
-            .init_resource::<StartRoom>()
-            .init_resource::<AudioSettings>()
-            .init_resource::<PreferencesDir>()
-            .init_resource::<SettingsReturn>()
-            .init_resource::<MenuFocus>()
-            .init_resource::<InReach>()
-            .add_message::<menus::MenuPressed>()
-            .init_resource::<ControlBindings>()
-            .init_resource::<SoundQueue>()
-            .init_resource::<audio::SoundBank>()
-            .init_resource::<RandomState>()
-            .insert_resource(PhaseTimer(Timer::from_seconds(0.5, TimerMode::Once)))
-            .add_systems(
-                Startup,
+        app.add_plugins((
+            pause_blur::PauseBlurPlugin,
+            shaders::ShaderPlugin,
+            devices::DevicesPlugin,
+        ))
+        .add_plugins(ripple::RipplePlugin)
+        .register_asset_loader(audio::MusicStreamLoader)
+        .init_state::<GameScreen>()
+        .init_resource::<RunSession>()
+        .init_resource::<RoomPan>()
+        .init_resource::<Prologue>()
+        .init_resource::<StartRoom>()
+        .init_resource::<AudioSettings>()
+        .init_resource::<PreferencesDir>()
+        .init_resource::<SettingsReturn>()
+        .init_resource::<MenuFocus>()
+        .init_resource::<InReach>()
+        .add_message::<menus::MenuPressed>()
+        .init_resource::<ControlBindings>()
+        .init_resource::<SoundQueue>()
+        .init_resource::<audio::SoundBank>()
+        .init_resource::<RandomState>()
+        .insert_resource(PhaseTimer(Timer::from_seconds(0.5, TimerMode::Once)))
+        .add_systems(
+            Startup,
+            (
+                ui_style::use_the_game_font,
+                camera::spawn_camera,
+                interface::spawn_interface,
+                bonus_screen::spawn_bonus_screen,
+                menus::spawn_menu,
+                prologue::spawn_prologue_text,
+                assets::load_sprites,
+                settings::initialize_settings,
+                controls::initialize_control_bindings,
+                (audio::initialize_sound_bank, audio::start_intro_music).chain(),
+            ),
+        )
+        .add_systems(
+            OnEnter(GameScreen::Playing),
+            (
+                world::spawn_room,
+                audio::start_chapter_music,
+                audio::start_run_ambience,
+            ),
+        )
+        .add_systems(
+            OnEnter(GameScreen::RoomClear),
+            combat::clear_room_combat_effects,
+        )
+        .add_systems(
+            OnEnter(GameScreen::RoomIntro),
+            (
+                world::spawn_room,
+                room_intro::start_room_intro,
+                audio::start_chapter_music,
+                audio::start_run_ambience,
+            ),
+        )
+        .add_systems(
+            OnEnter(GameScreen::BossIntro),
+            (flow::start_boss_intro, audio::queue_boss_intro),
+        )
+        .add_systems(
+            OnEnter(GameScreen::RoomLoading),
+            (
+                room_pan::send_off_the_departing_room,
+                world::spawn_room,
+                room_pan::start_room_pan,
+            )
+                .chain(),
+        )
+        .add_systems(
+            OnEnter(GameScreen::MainMenu),
+            (
+                world::cleanup_room,
+                audio::stop_run_audio,
+                audio::start_intro_music,
+            ),
+        )
+        .add_systems(
+            OnEnter(GameScreen::Transitioning),
+            audio::fade_out_intro_music,
+        )
+        .add_systems(OnEnter(GameScreen::Prologue), prologue::start_prologue)
+        .add_systems(
+            Update,
+            (
+                prologue::update_prologue.run_if(in_state(GameScreen::Prologue)),
+                prologue::drain_the_veil.run_if(not(in_state(GameScreen::Prologue))),
+                prologue::show_prologue_text,
+            ),
+        )
+        .add_systems(
+            OnEnter(GameScreen::Dead),
+            (
+                world::cleanup_room,
+                audio::stop_run_audio,
+                audio::start_intro_music,
+            ),
+        )
+        .add_systems(
+            OnEnter(GameScreen::Complete),
+            (audio::stop_run_audio, audio::queue_victory_cue),
+        )
+        .add_systems(
+            Update,
+            (
+                interface::update_letterbox,
+                screens::update_screen_text,
                 (
-                    ui_style::use_the_game_font,
-                    camera::spawn_camera,
-                    interface::spawn_interface,
-                    bonus_screen::spawn_bonus_screen,
-                    menus::spawn_menu,
-                    prologue::spawn_prologue_text,
-                    assets::load_sprites,
-                    settings::initialize_settings,
-                    controls::initialize_control_bindings,
-                    (audio::initialize_sound_bank, audio::start_intro_music).chain(),
-                ),
-            )
-            .add_systems(
-                OnEnter(GameScreen::Playing),
-                (
-                    world::spawn_room,
-                    audio::start_chapter_music,
-                    audio::start_run_ambience,
-                ),
-            )
-            .add_systems(
-                OnEnter(GameScreen::RoomClear),
-                combat::clear_room_combat_effects,
-            )
-            .add_systems(
-                OnEnter(GameScreen::RoomIntro),
-                (
-                    world::spawn_room,
-                    room_intro::start_room_intro,
-                    audio::start_chapter_music,
-                    audio::start_run_ambience,
-                ),
-            )
-            .add_systems(
-                OnEnter(GameScreen::BossIntro),
-                (flow::start_boss_intro, audio::queue_boss_intro),
-            )
-            .add_systems(
-                OnEnter(GameScreen::RoomLoading),
-                (
-                    room_pan::send_off_the_departing_room,
-                    world::spawn_room,
-                    room_pan::start_room_pan,
+                    menus::navigate_menus,
+                    screens::handle_screen_input,
+                    menus::update_menu,
+                    (menus::highlight_menu_buttons, menus::update_volume_bars),
                 )
                     .chain(),
-            )
-            .add_systems(
-                OnEnter(GameScreen::MainMenu),
-                (
-                    world::cleanup_room,
-                    audio::stop_run_audio,
-                    audio::start_intro_music,
-                ),
-            )
-            .add_systems(
-                OnEnter(GameScreen::Transitioning),
-                audio::fade_out_intro_music,
-            )
-            .add_systems(OnEnter(GameScreen::Prologue), prologue::start_prologue)
-            .add_systems(
-                Update,
-                (
-                    prologue::update_prologue.run_if(in_state(GameScreen::Prologue)),
-                    prologue::drain_the_veil.run_if(not(in_state(GameScreen::Prologue))),
-                    prologue::show_prologue_text,
-                ),
-            )
-            .add_systems(
-                OnEnter(GameScreen::Dead),
-                (
-                    world::cleanup_room,
-                    audio::stop_run_audio,
-                    audio::start_intro_music,
-                ),
-            )
-            .add_systems(
-                OnEnter(GameScreen::Complete),
-                (audio::stop_run_audio, audio::queue_victory_cue),
-            )
-            .add_systems(
-                Update,
-                (
-                    interface::update_letterbox,
-                    screens::update_screen_text,
-                    (
-                        menus::navigate_menus,
-                        screens::handle_screen_input,
-                        menus::update_menu,
-                        (menus::highlight_menu_buttons, menus::update_volume_bars),
-                    )
-                        .chain(),
-                    interface::update_room_clear_overlay,
-                    interface::update_boss_intro_overlay,
-                    interface::update_room_transition_overlay,
-                    interface::update_menu_modal,
-                    bonus_screen::update_bonus_screen,
-                    camera::update_background_parallax,
-                    interface::update_hud,
-                    shaders::attach_glows,
-                    interact::show_the_interact_badge,
-                    shaders::show_the_flood,
-                ),
-            )
-            .add_systems(
-                Update,
-                (camera::follow_camera, player::update_player)
-                    .chain()
-                    .before(combat::plant_decoy)
-                    .run_if(
-                        in_state(GameScreen::Playing)
-                            .or_else(in_state(GameScreen::RoomClear))
-                            .or_else(in_state(GameScreen::Bonus)),
-                    ),
-            )
-            .add_systems(
-                Update,
-                (
-                    // Before the melee and the AI: it takes the spot the roll
-                    // `update_player` just set off from, and the AI then marks
-                    // the double it left standing there.
-                    combat::plant_decoy,
-                    combat::player_melee,
-                    combat::update_enemy_ai,
-                    combat::update_enemy_platform_physics,
-                    combat::update_falls,
-                    (combat::update_projectiles, combat::update_hazards).chain(),
-                    // A tuple holds twenty systems at most: what a fight
-                    // leaves on screen is one of them.
-                    (
-                        combat::update_damage_numbers,
-                        combat::update_dead_enemies,
-                        combat::update_impact_effects,
-                        combat::update_health_bars,
-                        combat::update_enemy_shields,
-                        combat::update_health_pickups,
-                        combat::update_healing_over_time,
-                    )
-                        .chain(),
-                    combat::update_player_death,
-                    (combat::send_in_the_next_wave, combat::raise_the_arriving).chain(),
-                    bonus_pickup::spawn_bonus_pickup,
-                    interact::mark_what_is_in_reach,
-                    bonus_pickup::update_bonus_pickup,
-                    (
-                        bonus_pickup::promise_the_next_bonus,
-                        shaders::light_the_unlocked_door,
-                    )
-                        .chain(),
-                    flow::handle_door_touch,
-                    flow::room_clear_check,
-                )
-                    .chain()
-                    .run_if(in_state(GameScreen::Playing)),
-            )
-            // On every screen, so a freeze a blow began always ends, whatever
-            // the screen has turned to meanwhile.
-            .add_systems(
-                Update,
-                impact::feel_the_impacts.before(camera::follow_camera),
-            )
-            .add_systems(
-                Update,
-                flow::update_room_clear.run_if(in_state(GameScreen::RoomClear)),
-            )
-            .add_systems(
-                Update,
-                flow::handle_bonus_input.run_if(in_state(GameScreen::Bonus)),
-            )
-            .add_systems(
-                Update,
-                (
-                    room_intro::update_room_intro.run_if(in_state(GameScreen::RoomIntro)),
-                    (room_intro::pose_room_intro, room_intro::open_the_entry_door).run_if(
-                        in_state(GameScreen::RoomLoading)
-                            .or_else(in_state(GameScreen::Panning))
-                            .or_else(in_state(GameScreen::TransitioningOut))
-                            .or_else(in_state(GameScreen::RoomIntro)),
-                    ),
-                )
-                    .chain(),
-            )
-            .add_systems(
-                Update,
-                flow::update_boss_intro.run_if(in_state(GameScreen::BossIntro)),
-            )
-            .add_systems(
-                Update,
-                flow::update_room_transition.run_if(in_state(GameScreen::Transitioning)),
-            )
-            .add_systems(
-                Update,
-                (flow::animate_exit_door, room_pan::step_into_the_door)
-                    .run_if(in_state(GameScreen::Transitioning)),
-            )
-            .add_systems(
-                Update,
-                room_pan::update_room_pan.run_if(in_state(GameScreen::Panning)),
-            )
-            .add_systems(
-                Update,
-                flow::update_room_transition_fade_out
-                    .run_if(in_state(GameScreen::TransitioningOut)),
-            )
-            .add_systems(
-                Update,
-                (assets::animate_sprites, combat::update_hit_effects).run_if(
+                interface::update_room_clear_overlay,
+                interface::update_boss_intro_overlay,
+                interface::update_room_transition_overlay,
+                interface::update_menu_modal,
+                bonus_screen::update_bonus_screen,
+                camera::update_background_parallax,
+                interface::update_hud,
+                shaders::attach_glows,
+                interact::show_the_interact_badge,
+                shaders::show_the_flood,
+            ),
+        )
+        .add_systems(
+            Update,
+            (camera::follow_camera, player::update_player)
+                .chain()
+                .before(combat::plant_decoy)
+                .run_if(
                     in_state(GameScreen::Playing)
-                        .or_else(in_state(GameScreen::RoomIntro))
-                        .or_else(in_state(GameScreen::Transitioning))
-                        .or_else(in_state(GameScreen::Panning))
                         .or_else(in_state(GameScreen::RoomClear))
                         .or_else(in_state(GameScreen::Bonus)),
                 ),
+        )
+        .add_systems(
+            Update,
+            (
+                // Before the melee and the AI: it takes the spot the roll
+                // `update_player` just set off from, and the AI then marks
+                // the double it left standing there.
+                combat::plant_decoy,
+                combat::player_melee,
+                combat::update_enemy_ai,
+                combat::update_enemy_platform_physics,
+                combat::update_falls,
+                (
+                    combat::update_projectiles,
+                    combat::update_hazards,
+                    combat::hurt_by_devices,
+                )
+                    .chain(),
+                // A tuple holds twenty systems at most: what a fight
+                // leaves on screen is one of them.
+                (
+                    combat::update_damage_numbers,
+                    combat::update_dead_enemies,
+                    combat::update_impact_effects,
+                    combat::update_health_bars,
+                    combat::update_enemy_shields,
+                    combat::update_health_pickups,
+                    combat::update_healing_over_time,
+                )
+                    .chain(),
+                combat::update_player_death,
+                (combat::send_in_the_next_wave, combat::raise_the_arriving).chain(),
+                bonus_pickup::spawn_bonus_pickup,
+                interact::mark_what_is_in_reach,
+                (bonus_pickup::update_bonus_pickup, devices::press_buttons),
+                (
+                    bonus_pickup::promise_the_next_bonus,
+                    shaders::light_the_unlocked_door,
+                )
+                    .chain(),
+                flow::handle_door_touch,
+                flow::room_clear_check,
             )
-            .add_systems(
-                PostUpdate,
-                (audio::update_audio_volume, audio::play_sound_queue),
-            );
+                .chain()
+                .run_if(in_state(GameScreen::Playing)),
+        )
+        // On every screen, so a freeze a blow began always ends, whatever
+        // the screen has turned to meanwhile.
+        .add_systems(
+            Update,
+            impact::feel_the_impacts.before(camera::follow_camera),
+        )
+        .add_systems(
+            Update,
+            flow::update_room_clear.run_if(in_state(GameScreen::RoomClear)),
+        )
+        .add_systems(
+            Update,
+            flow::handle_bonus_input.run_if(in_state(GameScreen::Bonus)),
+        )
+        .add_systems(
+            Update,
+            (
+                room_intro::update_room_intro.run_if(in_state(GameScreen::RoomIntro)),
+                (room_intro::pose_room_intro, room_intro::open_the_entry_door).run_if(
+                    in_state(GameScreen::RoomLoading)
+                        .or_else(in_state(GameScreen::Panning))
+                        .or_else(in_state(GameScreen::TransitioningOut))
+                        .or_else(in_state(GameScreen::RoomIntro)),
+                ),
+            )
+                .chain(),
+        )
+        .add_systems(
+            Update,
+            flow::update_boss_intro.run_if(in_state(GameScreen::BossIntro)),
+        )
+        .add_systems(
+            Update,
+            flow::update_room_transition.run_if(in_state(GameScreen::Transitioning)),
+        )
+        .add_systems(
+            Update,
+            (flow::animate_exit_door, room_pan::step_into_the_door)
+                .run_if(in_state(GameScreen::Transitioning)),
+        )
+        .add_systems(
+            Update,
+            room_pan::update_room_pan.run_if(in_state(GameScreen::Panning)),
+        )
+        .add_systems(
+            Update,
+            flow::update_room_transition_fade_out.run_if(in_state(GameScreen::TransitioningOut)),
+        )
+        .add_systems(
+            Update,
+            (assets::animate_sprites, combat::update_hit_effects).run_if(
+                in_state(GameScreen::Playing)
+                    .or_else(in_state(GameScreen::RoomIntro))
+                    .or_else(in_state(GameScreen::Transitioning))
+                    .or_else(in_state(GameScreen::Panning))
+                    .or_else(in_state(GameScreen::RoomClear))
+                    .or_else(in_state(GameScreen::Bonus)),
+            ),
+        )
+        .add_systems(
+            PostUpdate,
+            (audio::update_audio_volume, audio::play_sound_queue),
+        );
     }
 }
 

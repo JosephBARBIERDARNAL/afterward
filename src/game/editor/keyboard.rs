@@ -159,6 +159,8 @@ pub(super) fn handle_editor_keys(
         EditorAction::Add(NewItem::Vent)
     } else if letter('o') {
         EditorAction::Add(NewItem::Prop)
+    } else if letter('t') {
+        EditorAction::Add(NewItem::Device)
     } else if pressed(KeyCode::Tab) {
         EditorAction::SelectNextOfKind
     } else if pressed(KeyCode::Delete) || pressed(KeyCode::Backspace) {

@@ -176,7 +176,8 @@ STRIPS = {
         row("traps/turret.png", 0, 0, 32, 16, 5) + row("traps/turret.png", 0, 32, 32, 16, 4),
     ),
     "conveyor_belt": ("devices/sci_fi", row("traps/conveyor-belt.png", 0, 0, 48, 16, 4)),
-    "spikes": ("devices/sci_fi", row("traps/spikes.png", 0, 0, 16, 16, 1)),
+    # Six cells of spikes, laid one after the other along a row of them.
+    "spikes": ("devices/sci_fi", row("traps/spikes.png", 0, 0, 16, 16, 6)),
     "folding_green": ("devices/sci_fi", row("platforms/folding-platforms.png", 0, 0, 48, 16, 4)),
     "folding_steel": ("devices/sci_fi", row("platforms/folding-platforms.png", 0, 16, 48, 16, 4)),
     "button": ("devices/sci_fi", row("interactables/button.png", 0, 14, 16, 16, 4)),

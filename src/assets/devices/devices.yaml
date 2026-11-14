@@ -1,0 +1,122 @@
+# Devices: how every device of a kind looks, and which boxes of its frame
+# hurt, hold a body up, or are climbed. A room places devices and tunes them
+# (`devices:` of a room file, see src/data/devices.rs); everything here is
+# shared by every device of a kind.
+#
+# Each look of a kind (a colour, a style or a size, as a room names it, or
+# `default`) is a strip of frames laid left to right (cut by `just sci-fi`).
+# Boxes are `[left, top, width, height]` in pixels from a frame's top-left.
+
+# Pixels per H of every device, as for the props; a kind may set its own.
+px_per_h: 32
+
+kinds:
+  # Frames: off (emitters only), warning (thin beam), on, on (bright). The
+  # emitters stay at both ends and the beam between them stretches to the
+  # laser's length.
+  laser:
+    sheets:
+      red: { sheet: devices/sci_fi/laser_red.png, frames: 4 }
+      blue: { sheet: devices/sci_fi/laser_blue.png, frames: 4 }
+    frame_px: [16, 48]
+    fps: 12
+    boxes:
+      top_cap: [0, 0, 16, 5]
+      bottom_cap: [0, 43, 16, 5]
+      beam: [6, 5, 4, 38]
+  # Frames: 3 lighting up (the warning), 5 burning (looped), 4 dying out.
+  fire_trap:
+    sheets:
+      orange: { sheet: devices/sci_fi/fire_orange.png, frames: 12 }
+      blue: { sheet: devices/sci_fi/fire_blue.png, frames: 12 }
+    frame_px: [16, 32]
+    fps: 10
+    boxes:
+      base: [0, 16, 16, 16]
+      flame: [1, 2, 14, 14]
+  # One frame per cell of the pack's row of spikes, used in turn.
+  spikes:
+    sheets:
+      default: { sheet: devices/sci_fi/spikes.png, frames: 6 }
+    frame_px: [16, 16]
+    fps: 1
+    boxes:
+      hurt: [0, 9, 16, 7]
+  # A belt 48 px long with its two ends; a longer one repeats its middle.
+  conveyor:
+    sheets:
+      default: { sheet: devices/sci_fi/conveyor_belt.png, frames: 4 }
+    frame_px: [48, 16]
+    fps: 12
+    boxes:
+      solid: [0, 8, 48, 8]
+  hover_platform:
+    sheets:
+      large: { sheet: props/sci_fi/hover_platform.png, frames: 5 }
+      small: { sheet: props/sci_fi/hover_platform_small.png, frames: 5, frame_px: [32, 32] }
+    frame_px: [64, 32]
+    fps: 10
+    boxes:
+      solid: [9, 0, 46, 11]
+      solid_small: [0, 0, 32, 10]
+  # Frames: whole, then giving way as it is stood on.
+  folding_platform:
+    sheets:
+      green: { sheet: devices/sci_fi/folding_green.png, frames: 4 }
+      steel: { sheet: devices/sci_fi/folding_steel.png, frames: 4 }
+    frame_px: [48, 16]
+    fps: 10
+    boxes:
+      solid: [0, 3, 48, 12]
+  # Frames: up, 3 slamming down, 5 held down, 6 rising.
+  press:
+    sheets:
+      default: { sheet: devices/sci_fi/press.png, frames: 15 }
+    frame_px: [48, 80]
+    fps: 20
+    boxes:
+      body: [5, 9, 38, 43]
+      head: [5, 52, 38, 28]
+  blade:
+    sheets:
+      gear: { sheet: devices/sci_fi/blade_gear.png, frames: 3 }
+      disc: { sheet: devices/sci_fi/blade_disc.png, frames: 2 }
+    frame_px: [32, 32]
+    fps: 16
+    boxes:
+      hurt: [6, 6, 20, 20]
+  # Frames: 5 charging (its lights filling), 4 firing. Drawn facing left.
+  turret:
+    sheets:
+      default: { sheet: devices/sci_fi/turret.png, frames: 9 }
+    frame_px: [32, 16]
+    fps: 12
+    boxes:
+      body: [8, 1, 21, 13]
+      muzzle: [6, 6, 2, 3]
+  # The button and the door are drawn twice the size of the rest, so the
+  # door is a doorway for the hero.
+  button:
+    sheets:
+      default: { sheet: devices/sci_fi/button.png, frames: 4 }
+    frame_px: [16, 16]
+    fps: 12
+    px_per_h: 16
+  # Frames: closed (red light), unlocked (green), 3 opening to fully open,
+  # 2 closing.
+  door:
+    sheets:
+      default: { sheet: devices/sci_fi/door.png, frames: 7 }
+    frame_px: [16, 32]
+    fps: 12
+    px_per_h: 16
+    boxes:
+      solid: [1, 0, 14, 32]
+  # Frames: its top, then a rung repeated down to its foot.
+  ladder:
+    sheets:
+      default: { sheet: devices/sci_fi/ladder.png, frames: 2 }
+    frame_px: [16, 16]
+    fps: 1
+    boxes:
+      climb: [2, 0, 12, 16]

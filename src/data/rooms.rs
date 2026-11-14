@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use bevy::math::Vec2;
 use serde::Deserialize;
 
-use super::{Backdrop, BackgroundLayerRef, EnemyTypeId, Fill, ProfileLayer, PropId};
+use super::{Backdrop, BackgroundLayerRef, DeviceConfig, EnemyTypeId, Fill, ProfileLayer, PropId};
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct RoomConfig {
@@ -30,6 +30,9 @@ pub struct RoomConfig {
     /// Sprites standing at a spot: crates, lamps, lasers. Scenery only.
     #[serde(default)]
     pub props: Vec<PropConfig>,
+    /// Traps, moving and folding platforms, buttons, doors and ladders.
+    #[serde(default)]
+    pub devices: Vec<DeviceConfig>,
     pub enemy_spawns: Vec<EnemySpawnConfig>,
     /// Vents: patches of the room that burn on a cycle, enemies or not.
     #[serde(default)]

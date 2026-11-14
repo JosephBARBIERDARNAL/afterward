@@ -2,6 +2,7 @@
 //! outlines of every editable item over it (the panels are ui.rs).
 
 use super::*;
+use crate::data::DeviceKind;
 
 const ROOM_BOUNDS_COLOR: Color = Color::srgb(0.95, 0.3, 0.3);
 const GRID_COLOR: Color = Color::srgba(1.0, 1.0, 1.0, 0.06);
@@ -16,6 +17,7 @@ const ENEMY_COLOR: Color = Color::srgb(1.0, 0.35, 0.45);
 const BONUS_COLOR: Color = Color::srgb(1.0, 0.78, 0.3);
 const VENT_COLOR: Color = Color::srgb(1.0, 0.45, 0.1);
 const PROP_COLOR: Color = Color::srgb(0.75, 0.55, 1.0);
+const DEVICE_COLOR: Color = Color::srgb(0.3, 1.0, 0.6);
 const HOVER_COLOR: Color = Color::WHITE;
 pub(super) const SELECTED_COLOR: Color = Color::srgb(1.0, 0.9, 0.2);
 // The selected body's hitboxes, colored as in the B overlay.
@@ -58,7 +60,7 @@ pub(super) fn refresh_room_view(
     if editor
         .selected
         .iter()
-        .any(|item| item.bounds(room, &data.props).is_none())
+        .any(|item| item.bounds(room, Catalogs::from(&*data)).is_none())
     {
         editor.select(None);
     }
@@ -79,6 +81,23 @@ pub(super) fn draw_overlay(mut gizmos: Gizmos, editor: Res<RoomEditor>, data: Re
         let y = y as f32 * H_WORLD_UNITS;
         gizmos.line_2d(Vec2::new(0.0, y), Vec2::new(room_size.x, y), GRID_COLOR);
     }
+    // Where each hovering platform and blade travels to and back.
+    for device in &room.devices {
+        let travel = match &device.kind {
+            DeviceKind::HoverPlatform(platform) => {
+                Vec2::new(platform.travel_x_h, platform.travel_y_h)
+            }
+            DeviceKind::Blade(blade) => Vec2::new(blade.travel_x_h, blade.travel_y_h),
+            _ => continue,
+        };
+        let start = device.bounds_h(&data.devices).center();
+        gizmos.line_2d(
+            start * H_WORLD_UNITS,
+            (start + travel) * H_WORLD_UNITS,
+            DEVICE_COLOR,
+        );
+    }
+
     let mut outline = |rect: RectH, color: Color| {
         let min = Vec2::new(rect.x, rect.y) * H_WORLD_UNITS;
         let size = Vec2::new(rect.width, rect.height) * H_WORLD_UNITS;
@@ -182,7 +201,7 @@ pub(super) fn draw_overlay(mut gizmos: Gizmos, editor: Res<RoomEditor>, data: Re
             _ if editor.hovered == Some(item) => HOVER_COLOR,
             item => item.outline_color(),
         };
-        if let Some(corners) = item.corners(room, &data.props) {
+        if let Some(corners) = item.corners(room, Catalogs::from(&*data)) {
             // Corner to corner and back to the first, so a turned platform
             // is outlined where it stands.
             gizmos.linestrip_2d(
@@ -196,7 +215,11 @@ pub(super) fn draw_overlay(mut gizmos: Gizmos, editor: Res<RoomEditor>, data: Re
         if selected && editor.selected.len() == 1 && !item.is_turned(room) {
             // Corner handles mark the edges a drag resizes.
             let handle_h = 0.16;
-            for corner in item.corners(room, &data.props).into_iter().flatten() {
+            for corner in item
+                .corners(room, Catalogs::from(&*data))
+                .into_iter()
+                .flatten()
+            {
                 gizmos.rect_2d(
                     corner * H_WORLD_UNITS,
                     Vec2::splat(handle_h * H_WORLD_UNITS),
@@ -219,6 +242,7 @@ impl EditorItem {
             Self::Bonus => BONUS_COLOR,
             Self::Hazard(_) => VENT_COLOR,
             Self::Prop(_) => PROP_COLOR,
+            Self::Device(..) => DEVICE_COLOR,
         }
     }
 }

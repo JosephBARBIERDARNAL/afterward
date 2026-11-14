@@ -8,15 +8,16 @@
 //! stands on, else Background 1.
 
 use super::*;
-use crate::data::{Backdrop, HexColor, MaterialId, PropId};
+use crate::data::{Backdrop, DeviceTag, HexColor, MaterialId, PropId};
 use bevy::ui::RelativeCursorPosition;
 
 const SWATCH_PX: f32 = 26.0;
 const SWATCH_GAP_PX: f32 = 4.0;
 const COLUMNS: usize = 9;
-/// Props are pictures rather than patterns, so they get bigger swatches.
-const PROP_SWATCH_PX: f32 = 40.0;
-const PROP_COLUMNS: usize = 6;
+/// Props and devices are pictures rather than patterns, so they get bigger
+/// swatches; there are many, so not much bigger.
+const PROP_SWATCH_PX: f32 = 29.0;
+const PROP_COLUMNS: usize = 8;
 /// The color picker's swatches, in a denser grid than the materials.
 const COLOR_SWATCH_PX: f32 = 18.0;
 const HUES: usize = 12;
@@ -37,6 +38,8 @@ pub(super) enum PaletteSwatch {
     Material(MaterialId),
     /// A prop's sprite, as big as the swatch allows.
     Prop(PropId),
+    /// A kind of device: clicking it makes it what T adds.
+    Device(DeviceTag),
 }
 
 /// A hue of the color picker, in degrees: clicking it mixes the shade grid
@@ -160,7 +163,7 @@ pub(super) fn spawn_palette(
                     for (id, prop) in &data.props.props {
                         // The sprite at its own proportions.
                         let [width_px, height_px] = prop.size_px.map(|side| side as f32);
-                        let inner = PROP_SWATCH_PX - 8.0;
+                        let inner = PROP_SWATCH_PX - 6.0;
                         let scale = (inner / width_px).min(inner / height_px);
                         grid.spawn((
                             Node {
@@ -183,6 +186,48 @@ pub(super) fn spawn_palette(
                             ImageNode {
                                 rect: Some(Rect::new(0.0, 0.0, width_px, height_px)),
                                 ..ImageNode::new(room_art::load_texture(asset_server, &prop.sprite))
+                            },
+                        ));
+                    }
+                });
+            panel.spawn(ui::heading("Devices (T adds)"));
+            panel
+                .spawn(grid(PROP_COLUMNS, PROP_SWATCH_PX))
+                .with_children(|grid| {
+                    for tag in DeviceTag::ALL {
+                        // The first frame of its first look.
+                        let Some(kind) = data.devices.kinds.get(&tag) else {
+                            continue;
+                        };
+                        let Some(sheet) = kind.sheets.values().next() else {
+                            continue;
+                        };
+                        let [width_px, height_px] = sheet
+                            .frame_px
+                            .unwrap_or(kind.frame_px)
+                            .map(|side| side as f32);
+                        let inner = PROP_SWATCH_PX - 6.0;
+                        let scale = (inner / width_px).min(inner / height_px);
+                        grid.spawn((
+                            Node {
+                                justify_content: JustifyContent::Center,
+                                align_items: AlignItems::Center,
+                                ..cell(PROP_SWATCH_PX)
+                            },
+                            BorderColor::all(SWATCH_BORDER),
+                            BackgroundColor(Color::srgba(0.0, 0.0, 0.0, 0.35)),
+                            RelativeCursorPosition::default(),
+                            PaletteSwatch::Device(tag),
+                        ))
+                        .with_child((
+                            Node {
+                                width: px(width_px * scale),
+                                height: px(height_px * scale),
+                                ..default()
+                            },
+                            ImageNode {
+                                rect: Some(Rect::new(0.0, 0.0, width_px, height_px)),
+                                ..ImageNode::new(room_art::load_texture(asset_server, &sheet.sheet))
                             },
                         ));
                     }
@@ -288,6 +333,10 @@ pub(super) fn handle_palette(
         .iter()
         .find(|(cursor, _)| cursor.cursor_over())
         .map(|(_, swatch)| swatch);
+    if let Some(PaletteSwatch::Device(tag)) = swatch {
+        editor.device = *tag;
+        return;
+    }
     if let Some(PaletteSwatch::Prop(prop)) = swatch {
         let selection = editor.selected.clone();
         if selection
@@ -403,6 +452,7 @@ pub(super) fn refresh_palette(
                 let kind = if solid { "solid" } else { "scenery" };
                 (format!("{prop}  ({kind})"), current_prop == Some(prop))
             }
+            PaletteSwatch::Device(tag) => (format!("device: {tag}"), editor.device == *tag),
         };
         if cursor.cursor_over() {
             hovered = Some(name);

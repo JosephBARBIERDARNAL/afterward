@@ -4,12 +4,12 @@
 
 use super::*;
 use crate::data::{
-    BackgroundLayerRef, DecorationConfig, DecorationLayer, EnemySpawnConfig, Facing, PropConfig,
-    RoomHazardConfig, SpawnPosition,
+    BackgroundLayerRef, DecorationConfig, DecorationLayer, DeviceConfig, DeviceKind,
+    EnemySpawnConfig, Facing, PropConfig, RoomHazardConfig, SpawnPosition,
 };
 use std::fs;
 
-/// What a new item added with P, D, E, G or O (or the toolbar) is.
+/// What a new item added with P, D, E, G, O or T (or the toolbar) is.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum NewItem {
     Platform,
@@ -17,6 +17,7 @@ pub(super) enum NewItem {
     Enemy,
     Vent,
     Prop,
+    Device,
 }
 
 /// The vent G adds to a room that has none to copy: the size and cycle of
@@ -209,11 +210,9 @@ pub(super) fn run_actions(resources: EditorActionResources) {
             EditorAction::Undo => editor.step_history(&mut data, true),
             EditorAction::Redo => editor.step_history(&mut data, false),
             EditorAction::Duplicate => {
-                let Some(copied) = data
-                    .rooms
-                    .get(&editor.room_id)
-                    .and_then(|room| Clipboard::copy(room, &data.props, &editor.selected))
-                else {
+                let Some(copied) = data.rooms.get(&editor.room_id).and_then(|room| {
+                    Clipboard::copy(room, Catalogs::from(&*data), &editor.selected)
+                }) else {
                     continue;
                 };
                 let mut duplicates = Vec::new();
@@ -226,9 +225,9 @@ pub(super) fn run_actions(resources: EditorActionResources) {
             }
             EditorAction::Copy | EditorAction::Cut => {
                 let room = data.rooms.get(&editor.room_id);
-                let Some(copied) =
-                    room.and_then(|room| Clipboard::copy(room, &data.props, &editor.selected))
-                else {
+                let Some(copied) = room.and_then(|room| {
+                    Clipboard::copy(room, Catalogs::from(&*data), &editor.selected)
+                }) else {
                     continue;
                 };
                 editor.clipboard = Some(copied);
@@ -274,7 +273,7 @@ pub(super) fn run_actions(resources: EditorActionResources) {
                     continue;
                 };
                 let middle = |item: EditorItem| {
-                    item.bounds(room, &data.props).map(|rect| {
+                    item.bounds(room, Catalogs::from(&*data)).map(|rect| {
                         Vec2::new(rect.x + rect.width / 2.0, rect.y + rect.height / 2.0)
                     })
                 };
@@ -470,6 +469,24 @@ impl RoomEditor {
                     wave: 0,
                 });
                 added = Some(EditorItem::Enemy(room.enemy_spawns.len() - 1));
+            });
+            self.select(added);
+            return;
+        }
+        if new == NewItem::Device {
+            // A new device of the kind placed or picked last, standing on
+            // the cursor.
+            let tag = self.device;
+            self.edit(data, |room| {
+                room.devices.push(DeviceConfig {
+                    label: None,
+                    position_h: SpawnPosition {
+                        x_h: snap(at_h.x, false),
+                        y_h: snap(at_h.y, false),
+                    },
+                    kind: DeviceKind::from(tag),
+                });
+                added = Some(EditorItem::Device(room.devices.len() - 1, tag));
             });
             self.select(added);
             return;

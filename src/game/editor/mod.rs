@@ -3,7 +3,9 @@
 //! runs the edits right away, and saves them back to `rooms/room_NNN.yaml`.
 
 use super::*;
-use crate::data::{Fill, PlatformConfig, PropCatalog, PropId, RectH, RoomConfig};
+use crate::data::{
+    DeviceArt, DeviceTag, Fill, PlatformConfig, PropCatalog, PropId, RectH, RoomConfig,
+};
 
 mod actions;
 mod clipboard;
@@ -102,12 +104,33 @@ enum EditorItem {
     /// A vent of the room's `hazards`.
     Hazard(usize),
     Prop(usize),
+    /// A device of the room, with its kind: a device keeps the kind it was
+    /// added as, which decides its inspector rows.
+    Device(usize, DeviceTag),
+}
+
+/// What sizes the props and devices a room places: the room file gives only
+/// where they stand.
+#[derive(Clone, Copy)]
+struct Catalogs<'a> {
+    props: &'a PropCatalog,
+    devices: &'a DeviceArt,
+}
+
+impl<'a> From<&'a GameData> for Catalogs<'a> {
+    fn from(data: &'a GameData) -> Self {
+        Self {
+            props: &data.props,
+            devices: &data.devices,
+        }
+    }
 }
 
 impl EditorItem {
     /// The item's outline in H: a block's rectangle, a body standing on a
-    /// spawn, or a prop's sprite (the size `props` gives it) standing on its spot.
-    fn bounds(self, room: &RoomConfig, props: &PropCatalog) -> Option<RectH> {
+    /// spawn, or a prop's sprite or a device (the size `catalogs` gives it)
+    /// standing on its spot.
+    fn bounds(self, room: &RoomConfig, catalogs: Catalogs) -> Option<RectH> {
         let body = |x_h: f32, y_h: f32| RectH {
             x: x_h - PLAYER_COLLISION_WIDTH_H / 2.0,
             y: y_h,
@@ -129,7 +152,7 @@ impl EditorItem {
                 .map(|decoration| decoration.rect_h),
             Self::Hazard(index) => room.hazards.get(index).map(|vent| vent.rect_h),
             Self::Prop(index) => room.props.get(index).and_then(|placed| {
-                let size = props.size_h(&placed.prop)?;
+                let size = catalogs.props.size_h(&placed.prop)?;
                 Some(RectH {
                     x: placed.position_h.x_h - size.x / 2.0,
                     y: placed.position_h.y_h,
@@ -137,15 +160,24 @@ impl EditorItem {
                     height: size.y,
                 })
             }),
+            Self::Device(index, _) => room.devices.get(index).map(|device| {
+                let bounds = device.bounds_h(catalogs.devices);
+                RectH {
+                    x: bounds.min.x,
+                    y: bounds.min.y,
+                    width: bounds.width(),
+                    height: bounds.height(),
+                }
+            }),
         }
     }
 
     /// The item's outline in H, corner by corner and counter-clockwise: its
     /// `bounds`, turned as the room turns it when it is a platform.
-    fn corners(self, room: &RoomConfig, props: &PropCatalog) -> Option<[Vec2; 4]> {
+    fn corners(self, room: &RoomConfig, catalogs: Catalogs) -> Option<[Vec2; 4]> {
         match self {
             Self::Platform(index) => room.platforms.get(index).map(PlatformConfig::corners_h),
-            _ => self.bounds(room, props).map(|rect| {
+            _ => self.bounds(room, catalogs).map(|rect| {
                 [
                     Vec2::new(rect.x, rect.y),
                     Vec2::new(rect.right(), rect.y),
@@ -179,6 +211,10 @@ impl EditorItem {
                 .props
                 .get(index)
                 .map(|placed| Vec2::new(placed.position_h.x_h, placed.position_h.y_h)),
+            Self::Device(index, _) => room
+                .devices
+                .get(index)
+                .map(|device| Vec2::new(device.position_h.x_h, device.position_h.y_h)),
             Self::Platform(_) | Self::Decoration(_) | Self::Hazard(_) => {
                 self.rect(room).map(|rect| Vec2::new(rect.x, rect.y))
             }
@@ -200,6 +236,11 @@ impl EditorItem {
                     (placed.position_h.x_h, placed.position_h.y_h) = origin.into();
                 }
             }
+            Self::Device(index, _) => {
+                if let Some(device) = room.devices.get_mut(index) {
+                    (device.position_h.x_h, device.position_h.y_h) = origin.into();
+                }
+            }
             Self::Platform(_) | Self::Decoration(_) | Self::Hazard(_) => {
                 if let Some(rect) = self.rect_mut(room) {
                     (rect.x, rect.y) = origin.into();
@@ -216,7 +257,12 @@ impl EditorItem {
                 .get_mut(index)
                 .map(|decoration| &mut decoration.rect_h),
             Self::Hazard(index) => room.hazards.get_mut(index).map(|vent| &mut vent.rect_h),
-            Self::PlayerSpawn | Self::Exit | Self::Bonus | Self::Enemy(_) | Self::Prop(_) => None,
+            Self::PlayerSpawn
+            | Self::Exit
+            | Self::Bonus
+            | Self::Enemy(_)
+            | Self::Prop(_)
+            | Self::Device(..) => None,
         }
     }
 
@@ -229,7 +275,12 @@ impl EditorItem {
                 .get(index)
                 .map(|decoration| decoration.rect_h),
             Self::Hazard(index) => room.hazards.get(index).map(|vent| vent.rect_h),
-            Self::PlayerSpawn | Self::Exit | Self::Bonus | Self::Enemy(_) | Self::Prop(_) => None,
+            Self::PlayerSpawn
+            | Self::Exit
+            | Self::Bonus
+            | Self::Enemy(_)
+            | Self::Prop(_)
+            | Self::Device(..) => None,
         }
     }
 
@@ -246,7 +297,8 @@ impl EditorItem {
             | Self::Bonus
             | Self::Enemy(_)
             | Self::Hazard(_)
-            | Self::Prop(_) => None,
+            | Self::Prop(_)
+            | Self::Device(..) => None,
         }
     }
 
@@ -262,7 +314,8 @@ impl EditorItem {
             | Self::Bonus
             | Self::Enemy(_)
             | Self::Hazard(_)
-            | Self::Prop(_) => None,
+            | Self::Prop(_)
+            | Self::Device(..) => None,
         };
         if let Some(slot) = slot {
             slot.clone_from(fill);
@@ -279,7 +332,8 @@ impl EditorItem {
                 | Self::Enemy(index)
                 | Self::Decoration(index)
                 | Self::Hazard(index)
-                | Self::Prop(index) => *index,
+                | Self::Prop(index)
+                | Self::Device(index, _) => *index,
                 Self::PlayerSpawn | Self::Exit | Self::Bonus => 0,
             })
         });
@@ -300,6 +354,9 @@ impl EditorItem {
                 Self::Prop(index) if index < room.props.len() => {
                     room.props.remove(index);
                 }
+                Self::Device(index, _) if index < room.devices.len() => {
+                    room.devices.remove(index);
+                }
                 _ => {}
             }
         }
@@ -312,16 +369,30 @@ impl EditorItem {
             .chain((0..room.decorations.len()).map(Self::Decoration))
             .chain((0..room.hazards.len()).map(Self::Hazard))
             .chain((0..room.props.len()).map(Self::Prop))
+            .chain(Self::devices(room))
             .chain((0..room.enemy_spawns.len()).map(Self::Enemy))
             .chain([Self::PlayerSpawn, Self::Exit, Self::Bonus])
     }
 
-    /// Spawns are a body's size and props their sprite's; only blocks,
-    /// decorations and vents resize.
+    /// Every device of the room, with its kind.
+    fn devices(room: &RoomConfig) -> impl Iterator<Item = Self> + '_ {
+        room.devices
+            .iter()
+            .enumerate()
+            .map(|(index, device)| Self::Device(index, device.kind.tag()))
+    }
+
+    /// Spawns are a body's size, props their sprite's and devices what their
+    /// values make them; only blocks, decorations and vents resize.
     fn is_body(self) -> bool {
         matches!(
             self,
-            Self::PlayerSpawn | Self::Exit | Self::Bonus | Self::Enemy(_) | Self::Prop(_)
+            Self::PlayerSpawn
+                | Self::Exit
+                | Self::Bonus
+                | Self::Enemy(_)
+                | Self::Prop(_)
+                | Self::Device(..)
         )
     }
 
@@ -347,6 +418,10 @@ impl EditorItem {
                 .props
                 .get(index)
                 .and_then(|placed| placed.label.as_deref()),
+            Self::Device(index, _) => room
+                .devices
+                .get(index)
+                .and_then(|device| device.label.as_deref()),
             Self::PlayerSpawn | Self::Exit | Self::Bonus => None,
         };
         let name = match self {
@@ -370,6 +445,7 @@ impl EditorItem {
             Self::Prop(index) => room.props.get(index).map_or_else(String::new, |placed| {
                 format!("prop #{} {} ({})", index + 1, placed.prop, placed.layer)
             }),
+            Self::Device(index, tag) => format!("device #{} {tag}", index + 1),
         };
         match label {
             Some(label) => format!("{name} \"{label}\""),
@@ -380,10 +456,10 @@ impl EditorItem {
     /// The item under `point`: spawns first, then a vent or a prop (which
     /// usually stand in front of something bigger than themselves), then the
     /// smallest block or decoration.
-    fn at(room: &RoomConfig, props: &PropCatalog, point: Vec2) -> Option<Self> {
+    fn at(room: &RoomConfig, catalogs: Catalogs, point: Vec2) -> Option<Self> {
         // Inside the outline: on the inner side of each of its four edges.
         let contains = |item: &Self| {
-            item.corners(room, props).is_some_and(|corners| {
+            item.corners(room, catalogs).is_some_and(|corners| {
                 (0..4).all(|index| {
                     let (from, to) = (corners[index], corners[(index + 1) % 4]);
                     (to - from).perp_dot(point - from) >= 0.0
@@ -394,14 +470,15 @@ impl EditorItem {
             .into_iter()
             .chain((0..room.enemy_spawns.len()).rev().map(Self::Enemy))
             .chain((0..room.hazards.len()).map(Self::Hazard))
-            .chain((0..room.props.len()).rev().map(Self::Prop));
+            .chain((0..room.props.len()).rev().map(Self::Prop))
+            .chain(Self::devices(room));
         let blocks = (0..room.platforms.len())
             .map(Self::Platform)
             .chain((0..room.decorations.len()).map(Self::Decoration));
         spawns.into_iter().find(contains).or_else(|| {
             blocks.filter(contains).min_by(|a, b| {
                 let area = |item: &Self| {
-                    item.bounds(room, props)
+                    item.bounds(room, catalogs)
                         .map_or(f32::INFINITY, |rect| rect.width * rect.height)
                 };
                 area(a).total_cmp(&area(b))
@@ -470,6 +547,8 @@ struct RoomEditor {
     fill: Option<Fill>,
     /// The prop O adds: the last one placed or picked in the palette.
     prop: Option<PropId>,
+    /// The kind of device T adds: the last one placed or picked.
+    device: DeviceTag,
     /// The hue the color picker's shades are mixed from, in degrees.
     hue: f32,
     /// Items copied with Cmd+C or Cmd+X, ready to paste into any room.
@@ -513,6 +592,7 @@ impl Default for RoomEditor {
             enemy_type: None,
             fill: None,
             prop: None,
+            device: DeviceTag::Laser,
             hue: 0.0,
             clipboard: None,
             pointer_over_panel: false,
@@ -737,19 +817,26 @@ next_room_id: 4
             )]
             .into(),
         };
+        let catalogs = Catalogs {
+            props,
+            devices: &DeviceArt {
+                px_per_h: 32.0,
+                kinds: BTreeMap::new(),
+            },
+        };
 
         let feet = Vec2::new(room.player_spawn.x_h, room.player_spawn.y_h + 0.5);
         assert_eq!(
-            EditorItem::at(room, props, feet),
+            EditorItem::at(room, catalogs, feet),
             Some(EditorItem::PlayerSpawn)
         );
         // The crate stands in front of the floor, and is picked over it.
         assert_eq!(
-            EditorItem::at(room, props, Vec2::new(6.4, 1.9)),
+            EditorItem::at(room, catalogs, Vec2::new(6.4, 1.9)),
             Some(EditorItem::Prop(0))
         );
         assert_eq!(
-            EditorItem::at(room, props, Vec2::new(6.6, 1.9)),
+            EditorItem::at(room, catalogs, Vec2::new(6.6, 1.9)),
             None,
             "past the crate's right edge there is only air"
         );
@@ -760,16 +847,19 @@ next_room_id: 4
             .iter()
             .position(|block| block.label.as_deref() == Some("step"))
             .map(EditorItem::Platform);
-        assert_eq!(EditorItem::at(room, props, Vec2::new(29.0, 1.0)), step);
-        assert_eq!(EditorItem::at(room, props, Vec2::new(-5.0, -5.0)), None);
+        assert_eq!(EditorItem::at(room, catalogs, Vec2::new(29.0, 1.0)), step);
+        assert_eq!(EditorItem::at(room, catalogs, Vec2::new(-5.0, -5.0)), None);
 
         // Turned a quarter, the walkway (14 x 1 around 20, 6.5) stands on
         // end: a click finds it where it is drawn, not where it lay.
         let mut room = room.clone();
         room.platforms[1].rotation_deg = 90.0;
         let walkway = Some(EditorItem::Platform(1));
-        assert_eq!(EditorItem::at(&room, props, Vec2::new(20.0, 12.0)), walkway);
-        assert_eq!(EditorItem::at(&room, props, Vec2::new(14.0, 6.5)), None);
+        assert_eq!(
+            EditorItem::at(&room, catalogs, Vec2::new(20.0, 12.0)),
+            walkway
+        );
+        assert_eq!(EditorItem::at(&room, catalogs, Vec2::new(14.0, 6.5)), None);
     }
 
     #[test]
@@ -909,8 +999,8 @@ next_room_id: 4
             EditorItem::Enemy(0),
             EditorItem::PlayerSpawn,
         ];
-        let copied =
-            Clipboard::copy(&room, &data.props, &selection).expect("blocks and enemies copy");
+        let copied = Clipboard::copy(&room, Catalogs::from(&data), &selection)
+            .expect("blocks and enemies copy");
 
         let offset = Vec2::new(5.0, 2.0);
         let pasted = copied.paste(&mut room, copied.origin + offset);
