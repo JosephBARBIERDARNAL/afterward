@@ -1,7 +1,7 @@
 // The hero, shared by every sheet of art/player/sheets/. Each sheet is a row
 // of 128 x 128 frames drawn as text art, one character per pixel. A sheet only
 // says which part of the body a pixel belongs to; how that part is coloured
-// and lit is decided here, so redesigning the hero is changing `body`, and
+// and bordered is decided here, so redesigning the hero is changing `body`, and
 // every clip follows.
 
 #import "../_pixel.typ": canvas
@@ -9,17 +9,24 @@
 #let frame-width = 128
 #let frame-height = 128
 
-// The hero's body, one ramp per part: the tone of an edge that faces the
-// light (up, then left), the tone of the part itself, and the tone of an edge
-// that faces away. A hooded figure in crimson over violet limbs, the far arm
-// and leg sunk into the dark so the near ones read in front of them.
+// The hero's body, one pair of tones per part: the part itself, and the
+// shade it takes just inside an edge facing down or right. A figure in white,
+// the far arm and leg in grey so the near ones read in front of them.
 #let body = (
-  "h": (rgb("#ff7a86"), rgb("#d42a44"), rgb("#8c1838")), // head and chest
-  "m": (rgb("#c66ad8"), rgb("#8a34a8"), rgb("#541c74")), // near arm
-  "l": (rgb("#e0508c"), rgb("#a82668"), rgb("#6a1650")), // near leg
-  "d": (rgb("#8a3c9c"), rgb("#5c2278"), rgb("#381252")), // far leg
-  "s": (rgb("#6e2c84"), rgb("#441a60"), rgb("#280c40")), // far arm
+  "h": (rgb("#ffffff"), rgb("#d9dbe3")), // head and chest
+  "m": (rgb("#f6f7fa"), rgb("#d0d2db")), // near arm
+  "l": (rgb("#eff0f5"), rgb("#c9cbd5")), // near leg
+  "d": (rgb("#b3b6c1"), rgb("#9497a4")), // far leg
+  "s": (rgb("#a5a8b4"), rgb("#878a98")), // far arm
 )
+
+// The border drawn around the figure, and between a part and one drawn in
+// front of it.
+#let border = rgb("#34363e")
+
+// Which part stands in front of which, from the furthest: a part is bordered
+// where it meets one that stands nearer.
+#let depth = ("s": 0, "d": 1, "h": 2, "l": 3, "m": 4)
 
 // What the hero's moves throw off: sparks, flames, glows and dust. These are
 // the colours several sheets share; one a single sheet uses is declared in
@@ -52,24 +59,36 @@
     let flat = effects + own
     for (index, frame) in frames.enumerate() {
       let rows = frame.text.split("\n").map(row => row.clusters())
-      // Whether the body covers a pixel: its silhouette is what gets lit.
-      let solid = rows.map(row => row.map(key => key in body))
-      let empty = solid.first().map(_ => false)
+      let key-at(x, y) = if x < 0 or y < 0 { "." } else {
+        rows.at(y, default: ()).at(x, default: ".")
+      }
+      // A body pixel is border where a side of it meets nothing or a nearer
+      // part.
+      let is-border(x, y) = {
+        let key = key-at(x, y)
+        ((-1, 0), (1, 0), (0, -1), (0, 1)).any(((dx, dy)) => {
+          let next = key-at(x + dx, y + dy)
+          not (next in body) or depth.at(next) > depth.at(key)
+        })
+      }
+      let borders = rows
+        .enumerate()
+        .map(((y, row)) => row
+          .enumerate()
+          .map(((x, key)) => key in body and is-border(x, y)))
       for (y, row) in rows.enumerate() {
-        let above = if y == 0 { empty } else { solid.at(y - 1) }
-        let below = solid.at(y + 1, default: empty)
-        let here = solid.at(y)
-        let last = row.len() - 1
         let fills = row
           .enumerate()
           .map(((x, key)) => {
-            if here.at(x) {
-              let tone = if not above.at(x) { 0 } else if not below.at(x) {
-                2
-              } else if x == 0 or not here.at(x - 1) { 0 } else if (
-                x == last or not here.at(x + 1)
-              ) { 2 } else { 1 }
-              body.at(key).at(tone)
+            if key in body {
+              if borders.at(y).at(x) { border } else {
+                // Shaded just inside a border below or to the right.
+                let shaded = (
+                  borders.at(y + 1, default: ()).at(x, default: false)
+                    or row.len() > x + 1 and borders.at(y).at(x + 1)
+                )
+                body.at(key).at(if shaded { 1 } else { 0 })
+              }
             } else { flat.at(key, default: none) }
           })
         // One rectangle per run of the same colour rather than per pixel.
