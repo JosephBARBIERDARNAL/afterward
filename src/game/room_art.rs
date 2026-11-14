@@ -1,8 +1,8 @@
 //! Room art: platforms and decoration panels, painted with their
-//! material's texture tiled in world space (so neighboring blocks line up),
-//! with a prop's sprite laid from their top-left corner, or with a plain
-//! color, and outlined and highlighted along every edge no other platform
-//! covers. Drawing only: collision lives in `collision.rs`.
+//! material's texture tiled in world space (so neighboring blocks line up) or
+//! with a plain color, and outlined and highlighted along every edge no other
+//! platform covers; and the room's props, each one sprite at its own size.
+//! Drawing only: collision lives in `collision.rs`.
 
 use super::*;
 use crate::data::{DecorationLayer, Fill, RectH, RoomConfig};
@@ -17,6 +17,10 @@ const HIGHLIGHT_Z_OFFSET: f32 = 0.03;
 const OUTLINE_Z_OFFSET: f32 = 0.04;
 const BACKGROUND_DECORATION_Z: f32 = -10.0;
 const FOREGROUND_DECORATION_Z: f32 = 6.0;
+/// Background props stand over the platforms and behind the bodies;
+/// foreground ones over the foreground decorations.
+const BACKGROUND_PROP_Z: f32 = 1.0;
+const FOREGROUND_PROP_Z: f32 = 7.0;
 
 /// A side of a platform, for finding the parts of its edges left uncovered.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -118,7 +122,7 @@ pub(super) fn load_texture(asset_server: &AssetServer, path: &str) -> Handle<Ima
         .load(path.to_string())
 }
 
-/// Draws the room's platforms and decoration panels.
+/// Draws the room's platforms, decoration panels and props.
 pub(super) fn draw(
     commands: &mut Commands,
     room: &RoomConfig,
@@ -129,8 +133,7 @@ pub(super) fn draw(
     let texel_h = surfaces.texel_h();
     // A sprite painted with `fill`: the material's texture sampled at the
     // rectangle's world position, so every block of one material shares one
-    // continuous pattern, a prop's sprite repeated from the rectangle's
-    // top-left corner, or a plain color. `tint` multiplies all three.
+    // continuous pattern, or a plain color. `tint` multiplies both.
     let painted = |fill: &Fill, rect: RectH, tint: Color| match fill {
         Fill::Material(material) => match surfaces.materials.get(material) {
             Some(material) => {
@@ -147,19 +150,6 @@ pub(super) fn draw(
                     ..Sprite::from_image(load_texture(asset_server, &material.texture))
                 }
             }
-            None => Sprite::from_color(tint, Vec2::ONE),
-        },
-        Fill::Prop(prop) => match surfaces.props.get(prop) {
-            Some(prop) => Sprite {
-                rect: Some(Rect::new(
-                    0.0,
-                    0.0,
-                    rect.width * surfaces.prop_px_per_h,
-                    rect.height * surfaces.prop_px_per_h,
-                )),
-                color: tint,
-                ..Sprite::from_image(load_texture(asset_server, &prop.sprite))
-            },
             None => Sprite::from_color(tint, Vec2::ONE),
         },
         Fill::Color(color) => {
@@ -217,10 +207,6 @@ pub(super) fn draw(
             pivot,
             turn,
         ));
-        // A prop is drawn with its own outline, and transparent round it.
-        if matches!(block.fill, Fill::Prop(_)) {
-            continue;
-        }
         let below_outline = RectH {
             height: rect.height - edges.outline_px * texel_h,
             ..rect
@@ -264,6 +250,33 @@ pub(super) fn draw(
             z,
             Vec2::ZERO,
             0.0,
+        ));
+    }
+
+    for (index, placed) in room.props.iter().enumerate() {
+        let (Some(sprite), Some(size_h)) = (
+            data.props.props.get(&placed.prop),
+            data.props.size_h(&placed.prop),
+        ) else {
+            continue;
+        };
+        let base_z = match placed.layer {
+            DecorationLayer::Background => BACKGROUND_PROP_Z,
+            DecorationLayer::Foreground => FOREGROUND_PROP_Z,
+        };
+        let middle = Vec2::new(
+            placed.position_h.x_h,
+            placed.position_h.y_h + size_h.y / 2.0,
+        );
+        commands.spawn((
+            Sprite {
+                custom_size: Some(size_h * H_WORLD_UNITS),
+                ..Sprite::from_image(load_texture(asset_server, &sprite.sprite))
+            },
+            Transform::from_translation(
+                (middle * H_WORLD_UNITS).extend(base_z + index as f32 * BLOCK_Z_STEP),
+            ),
+            RoomEntity,
         ));
     }
 }

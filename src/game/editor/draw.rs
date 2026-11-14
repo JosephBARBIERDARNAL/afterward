@@ -15,6 +15,7 @@ const EXIT_COLOR: Color = Color::srgb(0.35, 0.8, 1.0);
 const ENEMY_COLOR: Color = Color::srgb(1.0, 0.35, 0.45);
 const BONUS_COLOR: Color = Color::srgb(1.0, 0.78, 0.3);
 const VENT_COLOR: Color = Color::srgb(1.0, 0.45, 0.1);
+const PROP_COLOR: Color = Color::srgb(0.75, 0.55, 1.0);
 const HOVER_COLOR: Color = Color::WHITE;
 pub(super) const SELECTED_COLOR: Color = Color::srgb(1.0, 0.9, 0.2);
 // The selected body's hitboxes, colored as in the B overlay.
@@ -50,7 +51,7 @@ pub(super) fn refresh_room_view(
     if editor
         .selected
         .iter()
-        .any(|item| item.bounds(room).is_none())
+        .any(|item| item.bounds(room, &data.props).is_none())
     {
         editor.select(None);
     }
@@ -174,7 +175,7 @@ pub(super) fn draw_overlay(mut gizmos: Gizmos, editor: Res<RoomEditor>, data: Re
             _ if editor.hovered == Some(item) => HOVER_COLOR,
             item => item.outline_color(),
         };
-        if let Some(corners) = item.corners(room) {
+        if let Some(corners) = item.corners(room, &data.props) {
             // Corner to corner and back to the first, so a turned platform
             // is outlined where it stands.
             gizmos.linestrip_2d(
@@ -188,7 +189,7 @@ pub(super) fn draw_overlay(mut gizmos: Gizmos, editor: Res<RoomEditor>, data: Re
         if selected && editor.selected.len() == 1 && !item.is_turned(room) {
             // Corner handles mark the edges a drag resizes.
             let handle_h = 0.16;
-            for corner in item.corners(room).into_iter().flatten() {
+            for corner in item.corners(room, &data.props).into_iter().flatten() {
                 gizmos.rect_2d(
                     corner * H_WORLD_UNITS,
                     Vec2::splat(handle_h * H_WORLD_UNITS),
@@ -210,6 +211,7 @@ impl EditorItem {
             Self::Exit => EXIT_COLOR,
             Self::Bonus => BONUS_COLOR,
             Self::Hazard(_) => VENT_COLOR,
+            Self::Prop(_) => PROP_COLOR,
         }
     }
 }

@@ -1,9 +1,11 @@
-//! Copy and paste: the selected platforms, decorations, vents and enemies, kept
+//! Copy and paste: the selected platforms, decorations, vents, props and enemies, kept
 //! relative to their lower-left corner so they paste at the cursor of any
 //! room.
 
 use super::*;
-use crate::data::{DecorationConfig, EnemySpawnConfig, PlatformConfig, RoomHazardConfig};
+use crate::data::{
+    DecorationConfig, EnemySpawnConfig, PlatformConfig, PropCatalog, PropConfig, RoomHazardConfig,
+};
 
 #[derive(Clone)]
 pub(super) struct Clipboard {
@@ -12,13 +14,18 @@ pub(super) struct Clipboard {
     platforms: Vec<PlatformConfig>,
     decorations: Vec<DecorationConfig>,
     vents: Vec<RoomHazardConfig>,
+    props: Vec<PropConfig>,
     enemies: Vec<EnemySpawnConfig>,
 }
 
 impl Clipboard {
     /// Copies `items` of `room`; the player spawn, exit and bonus are left out.
     /// `None` when nothing copyable is selected.
-    pub(super) fn copy(room: &RoomConfig, items: &[EditorItem]) -> Option<Self> {
+    pub(super) fn copy(
+        room: &RoomConfig,
+        props: &PropCatalog,
+        items: &[EditorItem],
+    ) -> Option<Self> {
         let anchor = items
             .iter()
             .filter(|item| {
@@ -27,7 +34,7 @@ impl Clipboard {
                     EditorItem::PlayerSpawn | EditorItem::Exit | EditorItem::Bonus
                 )
             })
-            .filter_map(|item| item.bounds(room))
+            .filter_map(|item| item.bounds(room, props))
             .map(|rect| Vec2::new(rect.x, rect.y))
             .reduce(Vec2::min)?;
         let mut clipboard = Self {
@@ -35,6 +42,7 @@ impl Clipboard {
             platforms: Vec::new(),
             decorations: Vec::new(),
             vents: Vec::new(),
+            props: Vec::new(),
             enemies: Vec::new(),
         };
         for item in items {
@@ -51,6 +59,9 @@ impl Clipboard {
                 }
                 EditorItem::Hazard(index) => {
                     clipboard.vents.extend(room.hazards.get(index).cloned());
+                }
+                EditorItem::Prop(index) => {
+                    clipboard.props.extend(room.props.get(index).cloned());
                 }
                 EditorItem::Enemy(index) => {
                     clipboard
@@ -73,17 +84,20 @@ impl Clipboard {
             room.platforms.len(),
             room.decorations.len(),
             room.hazards.len(),
+            room.props.len(),
             room.enemy_spawns.len(),
         );
         room.platforms.extend(pasted.platforms);
         room.decorations.extend(pasted.decorations);
         room.hazards.extend(pasted.vents);
+        room.props.extend(pasted.props);
         room.enemy_spawns.extend(pasted.enemies);
         (start.0..room.platforms.len())
             .map(EditorItem::Platform)
             .chain((start.1..room.decorations.len()).map(EditorItem::Decoration))
             .chain((start.2..room.hazards.len()).map(EditorItem::Hazard))
-            .chain((start.3..room.enemy_spawns.len()).map(EditorItem::Enemy))
+            .chain((start.3..room.props.len()).map(EditorItem::Prop))
+            .chain((start.4..room.enemy_spawns.len()).map(EditorItem::Enemy))
             .collect()
     }
 
@@ -102,9 +116,14 @@ impl Clipboard {
             rect.x += offset.x;
             rect.y += offset.y;
         }
-        for spawn in &mut self.enemies {
-            spawn.position_h.x_h += offset.x;
-            spawn.position_h.y_h += offset.y;
+        let positions = self
+            .enemies
+            .iter_mut()
+            .map(|spawn| &mut spawn.position_h)
+            .chain(self.props.iter_mut().map(|placed| &mut placed.position_h));
+        for position in positions {
+            position.x_h += offset.x;
+            position.y_h += offset.y;
         }
     }
 }

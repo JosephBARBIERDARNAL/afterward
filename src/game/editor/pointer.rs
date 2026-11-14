@@ -116,7 +116,9 @@ pub(super) fn handle_pointer(resources: EditorPointerResources) {
     }
 
     let room_id = editor.room_id;
-    let Some(room) = data.rooms.get_mut(&room_id) else {
+    let GameData { rooms, props, .. } = &mut *data;
+    let props = &*props;
+    let Some(room) = rooms.get_mut(&room_id) else {
         return;
     };
     let shift = keys.any_pressed([KeyCode::ShiftLeft, KeyCode::ShiftRight]);
@@ -132,7 +134,7 @@ pub(super) fn handle_pointer(resources: EditorPointerResources) {
             _ => None,
         };
         let resize = only
-            .and_then(|item| item.bounds(room).map(|rect| (item, rect)))
+            .and_then(|item| item.bounds(room, props).map(|rect| (item, rect)))
             .and_then(|(item, rect)| {
                 let reach = Rect::new(rect.x, rect.y, rect.right(), rect.top()).inflate(grab_h);
                 let near = |edge: f32, at: f32| (edge - at).abs() <= grab_h;
@@ -151,7 +153,7 @@ pub(super) fn handle_pointer(resources: EditorPointerResources) {
                 before: room.clone(),
             });
         } else {
-            let picked = EditorItem::at(room, cursor_h);
+            let picked = EditorItem::at(room, props, cursor_h);
             editor.text_entry = None;
             match picked {
                 // Shift+click adds the item to the selection or takes it out.
@@ -181,6 +183,9 @@ pub(super) fn handle_pointer(resources: EditorPointerResources) {
                     }
                     if let Some(fill) = item.fill(room) {
                         editor.fill = Some(fill.clone());
+                    }
+                    if let EditorItem::Prop(index) = item {
+                        editor.prop = room.props.get(index).map(|placed| placed.prop.clone());
                     }
                     let starts = editor
                         .selected
@@ -269,7 +274,7 @@ pub(super) fn handle_pointer(resources: EditorPointerResources) {
                 let area = Rect::from_corners(start, cursor_h);
                 let boxed = EditorItem::all(room)
                     .filter(|item| {
-                        item.corners(room).is_some_and(|corners| {
+                        item.corners(room, props).is_some_and(|corners| {
                             corners.into_iter().all(|corner| area.contains(corner))
                         })
                     })
@@ -288,7 +293,7 @@ pub(super) fn handle_pointer(resources: EditorPointerResources) {
     editor.hovered = if editor.drag.is_none() && !editor.pointer_over_panel {
         data.rooms
             .get(&room_id)
-            .and_then(|room| EditorItem::at(room, cursor_h))
+            .and_then(|room| EditorItem::at(room, &data.props, cursor_h))
     } else {
         None
     };

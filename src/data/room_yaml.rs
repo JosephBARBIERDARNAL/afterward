@@ -5,7 +5,7 @@ use std::fmt::{self, Display, Formatter};
 
 use super::{
     Backdrop, DecorationConfig, DecorationLayer, EnemySpawnConfig, Facing, Fill, PlatformConfig,
-    RectH, RoomConfig, RoomHazardConfig, SizeH,
+    PropConfig, RectH, RoomConfig, RoomHazardConfig, SizeH,
 };
 
 const HEADER: &str = "\
@@ -58,6 +58,13 @@ impl Display for RoomConfig {
             "# Decorations: non-solid panels behind the platforms or in front of the bodies."
         )?;
         write!(formatter, "{}", YamlList("decorations", &self.decorations))?;
+        if !self.props.is_empty() {
+            writeln!(
+                formatter,
+                "# Props: sprites standing on a spot (the middle of their bottom edge)."
+            )?;
+            write!(formatter, "{}", YamlList("props", &self.props))?;
+        }
         write!(
             formatter,
             "{}",
@@ -164,6 +171,29 @@ impl Display for EnemySpawnConfig {
     }
 }
 
+impl Display for PropConfig {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
+        let label = self
+            .label
+            .iter()
+            .map(|label| format!("label: {}", YamlText(label)));
+        let fields = label
+            .chain([
+                format!("prop: {}", self.prop),
+                format!(
+                    "position_h: {{ x: {}, y: {} }}",
+                    self.position_h.x_h, self.position_h.y_h
+                ),
+            ])
+            .chain(
+                (self.layer != DecorationLayer::default())
+                    .then(|| format!("layer: {}", self.layer)),
+            )
+            .collect();
+        write!(formatter, "{}", YamlEntry(fields))
+    }
+}
+
 impl Display for RoomHazardConfig {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
         let label = self
@@ -184,7 +214,7 @@ impl Display for RoomHazardConfig {
     }
 }
 
-/// The field a fill is written as: `material: <id>`, `prop: <id>` or a quoted `color:`,
+/// The field a fill is written as: `material: <id>` or a quoted `color:`,
 /// since an unquoted `#RRGGBB` would read back as a comment.
 struct YamlFill<'a>(&'a Fill);
 
@@ -193,7 +223,6 @@ impl Display for YamlFill<'_> {
         match self.0 {
             Fill::Material(material) => write!(formatter, "material: {material}"),
             Fill::Color(color) => write!(formatter, "color: \"{color}\""),
-            Fill::Prop(prop) => write!(formatter, "prop: {prop}"),
         }
     }
 }
@@ -354,6 +383,37 @@ next_room_id: 4
             "only the turned platform carries it: {written}"
         );
         assert!(written.contains("rotation_deg: -20"), "{written}");
+        let read_back: RoomConfig =
+            yaml_serde::from_str(&written).expect("the written room is valid YAML");
+        assert_eq!(read_back, room);
+    }
+
+    #[test]
+    fn props_keep_their_spot_and_layer_through_a_round_trip() {
+        let room: RoomConfig = yaml_serde::from_str(
+            "
+room_id: 3
+chapter_id: 1
+size: { width_h: 24, height_h: 13.5 }
+background_profiles: [city_blue_day]
+player_spawn: { x_h: 2, y_h: 1 }
+platforms:
+  - { material: city_pavement, rect_h: { x: 0, y: 0, width: 24, height: 1 } }
+props:
+  - { prop: sci_fi_small_crate, position_h: { x: 6.5, y: 1 } }
+  - { label: lamp, prop: sci_fi_ceiling_lamp, position_h: { x: 10, y: 8 }, layer: foreground }
+enemy_spawns: []
+bonus: { x_h: 20, y_h: 1 }
+exit: { x_h: 22, y_h: 1 }
+next_room_id: 4
+",
+        )
+        .expect("props parse");
+        let written = room.to_string();
+        assert!(
+            !written.contains("layer: background"),
+            "the default layer is left out: {written}"
+        );
         let read_back: RoomConfig =
             yaml_serde::from_str(&written).expect("the written room is valid YAML");
         assert_eq!(read_back, room);

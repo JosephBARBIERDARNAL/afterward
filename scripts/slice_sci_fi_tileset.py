@@ -2,14 +2,15 @@
 """Cuts the sci-fi platformer pack's tileset into one PNG per piece.
 
 The pack ships everything in one 288x160 sheet, `source_tileset.png`, drawn on
-a 16 px grid at 16 px per H (its robot is one tile tall, like the hero is 1 H).
+a 16 px grid, its robot one tile tall. The tiles keep that scale (16 px per H);
+the props are drawn at `px_per_h` of `props/props.yaml`.
 Each piece below is cut out as it stands, with no padding:
 
 - `TILES` are seamless 16 px squares, written under
   `src/assets/surfaces/textures/sci_fi/` and listed as materials in
   `surfaces/materials.yaml` (with `tile_h: 1`, the pack's scale).
 - `PROPS` are everything else, written under `src/assets/props/sci_fi/` and
-  listed under `props:` of the same file, with the size printed here.
+  listed in `props/props.yaml`, with the size printed here.
 
 Run it with `just sci-fi` after the sheet or a piece changes. Needs
 ImageMagick.

@@ -4,6 +4,7 @@ mod color;
 mod enemies;
 mod gameplay;
 mod player_animations;
+mod props;
 mod room_yaml;
 mod rooms;
 mod surfaces;
@@ -14,6 +15,7 @@ pub use color::*;
 pub use enemies::*;
 pub use gameplay::*;
 pub use player_animations::*;
+pub use props::*;
 pub use rooms::*;
 pub use surfaces::*;
 
@@ -38,6 +40,7 @@ pub struct GameData {
     pub backgrounds: BackgroundProfiles,
     pub bonuses: BonusesConfig,
     pub surfaces: SurfaceMaterials,
+    pub props: PropCatalog,
     pub rooms: BTreeMap<u16, RoomConfig>,
 }
 
@@ -49,6 +52,7 @@ impl GameData {
         let backgrounds = read_yaml(&asset_root.join("background/background_profiles.yaml"))?;
         let bonuses = read_yaml(&asset_root.join("config/bonuses.yaml"))?;
         let surfaces = read_yaml(&asset_root.join("surfaces/materials.yaml"))?;
+        let props = read_yaml(&asset_root.join("props/props.yaml"))?;
         let mut rooms = BTreeMap::new();
 
         // Room 0 is the run's empty opening room; the ten chapters are 1..=100.
@@ -65,6 +69,7 @@ impl GameData {
             backgrounds,
             bonuses,
             surfaces,
+            props,
             rooms,
         };
         data.validate()?;
@@ -605,16 +610,23 @@ impl GameData {
                 .map(|block| &block.fill)
                 .chain(room.decorations.iter().map(|decoration| &decoration.fill));
             for fill in fills {
-                let known = match fill {
-                    Fill::Material(material) => self.surfaces.materials.contains_key(material),
-                    Fill::Prop(prop) => self.surfaces.props.contains_key(prop),
-                    Fill::Color(_) => true,
-                };
-                if !known {
+                if let Fill::Material(material) = fill
+                    && !self.surfaces.materials.contains_key(material)
+                {
                     return Err(InvalidGameData::from(format!(
-                        "room {room_id} references unknown material or prop {fill}"
+                        "room {room_id} references unknown material {material}"
                     )));
                 }
+            }
+            if let Some(placed) = room
+                .props
+                .iter()
+                .find(|placed| !self.props.props.contains_key(&placed.prop))
+            {
+                return Err(InvalidGameData::from(format!(
+                    "room {room_id} references unknown prop {}",
+                    placed.prop
+                )));
             }
             for spawn in &room.enemy_spawns {
                 if !self.enemies.types.contains_key(&spawn.type_id) {
@@ -677,21 +689,14 @@ impl GameData {
                 )));
             }
         }
-        if !(surfaces.prop_px_per_h.is_finite() && surfaces.prop_px_per_h > 0.0) {
+
+        let props = &self.props;
+        if !(props.px_per_h.is_finite() && props.px_per_h > 0.0) {
             return Err(InvalidGameData::from(
                 "props need a positive number of pixels per H",
             ));
         }
-        if let Some(name) = surfaces
-            .props
-            .keys()
-            .find(|name| surfaces.materials.contains_key(*name))
-        {
-            return Err(InvalidGameData::from(format!(
-                "{name} names both a material and a prop"
-            )));
-        }
-        for prop in surfaces.props.values() {
+        for prop in props.props.values() {
             if !asset_root.join(&prop.sprite).is_file() {
                 return Err(InvalidGameData::from(format!(
                     "missing prop sprite: {}",

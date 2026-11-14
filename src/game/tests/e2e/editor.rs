@@ -1,5 +1,5 @@
 use super::*;
-use crate::data::{Fill, RoomConfig};
+use crate::data::RoomConfig;
 
 /// Presses Cmd+`letter` as an AZERTY Mac sends it: the key is reported by its
 /// QWERTY position (`code`) and typed as `letter`, and while Cmd is held macOS
@@ -316,41 +316,35 @@ fn the_editor_adds_tunes_saves_and_deletes_a_vent() {
 }
 
 #[test]
-fn the_editor_adds_a_prop_at_its_own_size_repaints_it_and_saves_it() {
+fn the_editor_places_a_prop_swaps_its_sprite_saves_and_deletes_it() {
     let mut game = HeadlessGame::with_copied_data();
     game.tap(KeyCode::KeyD);
     game.tap(KeyCode::PageDown);
-    let decorations = |game: &HeadlessGame| game.data().rooms[&1].decorations.clone();
-    let authored = decorations(&game).len();
+    let props = |game: &HeadlessGame| game.data().rooms[&1].props.clone();
+    let authored = props(&game).len();
 
-    // O adds the catalog's first prop as a background decoration exactly the
-    // size of its sprite.
+    // O places the catalog's first prop and selects it; its rows run Label,
+    // Prop, Layer, X, Y.
     game.tap(KeyCode::KeyO);
-    assert_eq!(decorations(&game).len(), authored + 1);
-    let added = decorations(&game)[authored].clone();
-    let Fill::Prop(prop) = &added.fill else {
-        panic!("O adds a prop, not {}", added.fill);
-    };
-    let surfaces = &game.data().surfaces;
-    let [width_px, height_px] = surfaces.props[prop].size_px;
-    assert_eq!(added.rect_h.width, width_px as f32 / surfaces.prop_px_per_h);
-    assert_eq!(
-        added.rect_h.height,
-        height_px as f32 / surfaces.prop_px_per_h
-    );
+    assert_eq!(props(&game).len(), authored + 1);
+    let placed = props(&game)[authored].clone();
+    assert_eq!(game.data().props.props.keys().next(), Some(&placed.prop));
 
-    // Down to its Fill row, and Right paints it with the next prop.
+    // Down to Prop, and Right swaps it for the next sprite on the same spot.
     game.tap(KeyCode::ArrowDown);
     game.tap(KeyCode::ArrowRight);
-    let repainted = decorations(&game)[authored].fill.clone();
-    assert!(matches!(&repainted, Fill::Prop(next) if next != prop));
+    let swapped = props(&game)[authored].clone();
+    assert_ne!(swapped.prop, placed.prop);
+    assert_eq!(swapped.position_h, placed.position_h);
 
-    // Cmd+S writes it to room 1's file as `prop:`, and reads back the same.
+    // Cmd+S writes it to room 1's file, and Delete takes it out again.
     command_presses(&mut game, KeyCode::KeyS, "s", 1);
     let saved: RoomConfig = yaml_serde::from_str(
         &fs::read_to_string(RoomConfig::file_path(&game.data().asset_root, 1))
             .expect("the editor wrote the room file"),
     )
     .expect("the saved room is valid YAML");
-    assert_eq!(saved.decorations[authored].fill, repainted);
+    assert_eq!(saved.props, props(&game));
+    game.tap(KeyCode::Delete);
+    assert_eq!(props(&game).len(), authored);
 }

@@ -4,7 +4,7 @@
 
 use super::*;
 use crate::data::{
-    BackgroundLayerRef, DecorationConfig, DecorationLayer, EnemySpawnConfig, Facing,
+    BackgroundLayerRef, DecorationConfig, DecorationLayer, EnemySpawnConfig, Facing, PropConfig,
     RoomHazardConfig, SpawnPosition,
 };
 use std::fs;
@@ -16,7 +16,6 @@ pub(super) enum NewItem {
     Decoration,
     Enemy,
     Vent,
-    /// A background decoration painted with a prop, at the prop's own size.
     Prop,
 }
 
@@ -213,7 +212,7 @@ pub(super) fn run_actions(resources: EditorActionResources) {
                 let Some(copied) = data
                     .rooms
                     .get(&editor.room_id)
-                    .and_then(|room| Clipboard::copy(room, &editor.selected))
+                    .and_then(|room| Clipboard::copy(room, &data.props, &editor.selected))
                 else {
                     continue;
                 };
@@ -227,7 +226,8 @@ pub(super) fn run_actions(resources: EditorActionResources) {
             }
             EditorAction::Copy | EditorAction::Cut => {
                 let room = data.rooms.get(&editor.room_id);
-                let Some(copied) = room.and_then(|room| Clipboard::copy(room, &editor.selected))
+                let Some(copied) =
+                    room.and_then(|room| Clipboard::copy(room, &data.props, &editor.selected))
                 else {
                     continue;
                 };
@@ -274,7 +274,7 @@ pub(super) fn run_actions(resources: EditorActionResources) {
                     continue;
                 };
                 let middle = |item: EditorItem| {
-                    item.bounds(room).map(|rect| {
+                    item.bounds(room, &data.props).map(|rect| {
                         Vec2::new(rect.x + rect.width / 2.0, rect.y + rect.height / 2.0)
                     })
                 };
@@ -474,6 +474,31 @@ impl RoomEditor {
             self.select(added);
             return;
         }
+        if new == NewItem::Prop {
+            // The prop placed or picked last, else the catalog's first,
+            // standing on the cursor.
+            let Some(prop) = self
+                .prop
+                .clone()
+                .or_else(|| data.props.props.keys().next().cloned())
+            else {
+                return;
+            };
+            self.edit(data, |room| {
+                room.props.push(PropConfig {
+                    label: None,
+                    prop,
+                    position_h: SpawnPosition {
+                        x_h: snap(at_h.x, false),
+                        y_h: snap(at_h.y, false),
+                    },
+                    layer: DecorationLayer::default(),
+                });
+                added = Some(EditorItem::Prop(room.props.len() - 1));
+            });
+            self.select(added);
+            return;
+        }
         if new == NewItem::Vent {
             // A copy of the room's last vent, so a row of them is laid
             // quickly, standing with its foot where the cursor is.
@@ -484,39 +509,6 @@ impl RoomEditor {
             self.edit(data, |room| {
                 room.hazards.push(vent);
                 added = Some(EditorItem::Hazard(room.hazards.len() - 1));
-            });
-            self.select(added);
-            return;
-        }
-        if new == NewItem::Prop {
-            // The prop picked last, else the catalog's first, standing with
-            // its foot where the cursor is.
-            let picked = match &self.fill {
-                Some(Fill::Prop(prop)) => Some(prop.clone()),
-                _ => data.surfaces.props.keys().next().cloned(),
-            };
-            let Some((id, prop)) =
-                picked.and_then(|id| data.surfaces.props.get(&id).map(|prop| (id, prop)))
-            else {
-                return;
-            };
-            let [width, height] = prop
-                .size_px
-                .map(|side| side as f32 / data.surfaces.prop_px_per_h);
-            let rect_h = RectH {
-                x: snap(at_h.x - width / 2.0, false),
-                y: snap(at_h.y, false),
-                width,
-                height,
-            };
-            self.edit(data, |room| {
-                room.decorations.push(DecorationConfig {
-                    label: None,
-                    fill: Fill::Prop(id),
-                    layer: DecorationLayer::Background,
-                    rect_h,
-                });
-                added = Some(EditorItem::Decoration(room.decorations.len() - 1));
             });
             self.select(added);
             return;
@@ -625,6 +617,15 @@ impl RoomEditor {
                         .get(&self.room_id)
                         .and_then(|room| room.enemy_spawns.get(index))
                         .map(|spawn| spawn.type_id.clone());
+                }
+                if let Some(EditorItem::Prop(index)) = item
+                    && field == Field::PropType
+                {
+                    self.prop = data
+                        .rooms
+                        .get(&self.room_id)
+                        .and_then(|room| room.props.get(index))
+                        .map(|placed| placed.prop.clone());
                 }
                 if field == Field::Fill {
                     self.fill = data

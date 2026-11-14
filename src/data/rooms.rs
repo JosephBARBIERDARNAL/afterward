@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use bevy::math::Vec2;
 use serde::Deserialize;
 
-use super::{Backdrop, BackgroundLayerRef, EnemyTypeId, Fill, ProfileLayer};
+use super::{Backdrop, BackgroundLayerRef, EnemyTypeId, Fill, ProfileLayer, PropId};
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct RoomConfig {
@@ -27,6 +27,9 @@ pub struct RoomConfig {
     /// Non-solid panels behind the platforms or in front of the bodies.
     #[serde(default)]
     pub decorations: Vec<DecorationConfig>,
+    /// Sprites standing at a spot: crates, lamps, lasers. Scenery only.
+    #[serde(default)]
+    pub props: Vec<PropConfig>,
     pub enemy_spawns: Vec<EnemySpawnConfig>,
     /// Vents: patches of the room that burn on a cycle, enemies or not.
     #[serde(default)]
@@ -169,10 +172,25 @@ pub struct DecorationConfig {
     pub rect_h: RectH,
 }
 
-/// Where a decoration panel is drawn: behind the platforms, or over the bodies.
-#[derive(Debug, Clone, Copy, Deserialize, Eq, PartialEq)]
+/// A prop placed in a room: `prop` of `props/props.yaml`, drawn once at its
+/// own size, with the middle of its bottom edge on `position_h`.
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+pub struct PropConfig {
+    #[serde(default)]
+    pub label: Option<String>,
+    pub prop: PropId,
+    pub position_h: SpawnPosition,
+    /// Behind the bodies (over the platforms) when left out, or over them.
+    #[serde(default)]
+    pub layer: DecorationLayer,
+}
+
+/// Where a decoration panel is drawn: behind the platforms, or over the
+/// bodies. A prop's background is behind the bodies but over the platforms.
+#[derive(Debug, Clone, Copy, Default, Deserialize, Eq, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum DecorationLayer {
+    #[default]
     Background,
     Foreground,
 }

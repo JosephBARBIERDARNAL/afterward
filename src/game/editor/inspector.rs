@@ -5,7 +5,7 @@
 //! `4c5a74`, `#ABC`) as well as a material or profile name.
 
 use super::*;
-use crate::data::{Backdrop, DecorationLayer, Facing, HexColor, RoomHazardConfig};
+use crate::data::{Backdrop, DecorationLayer, Facing, HexColor, MaterialId, RoomHazardConfig};
 
 /// How far one Left/Right press grows or shrinks the room, in H.
 const ROOM_SIZE_STEP_H: f32 = 0.5;
@@ -30,6 +30,8 @@ pub(super) enum Field {
     Label,
     Fill,
     Layer,
+    /// Which sprite of `props/props.yaml` a prop is.
+    PropType,
     EnemyType,
     EnemyFacing,
     X,
@@ -131,6 +133,9 @@ impl Field {
                 Self::RestTime,
                 Self::Offset,
             ],
+            Some(EditorItem::Prop(_)) => {
+                &[Self::Label, Self::PropType, Self::Layer, Self::X, Self::Y]
+            }
             Some(EditorItem::Exit | EditorItem::Bonus) => &[Self::X, Self::Y],
         }
     }
@@ -145,6 +150,7 @@ impl Field {
             Self::Label => "Label",
             Self::Fill => "Fill",
             Self::Layer => "Layer",
+            Self::PropType => "Prop",
             Self::EnemyType => "Type",
             Self::EnemyFacing => "Facing",
             Self::X => "X (H)",
@@ -213,6 +219,10 @@ impl Field {
             (Self::Label, Some(EditorItem::Hazard(index))) => {
                 room.hazards.get(index).and_then(|vent| vent.label.clone())
             }
+            (Self::Label, Some(EditorItem::Prop(index))) => room
+                .props
+                .get(index)
+                .and_then(|placed| placed.label.clone()),
             (Self::Fill, Some(item)) => item.fill(room).map(ToString::to_string),
             (Self::Background | Self::BackgroundOver, _) => room
                 .background_profiles
@@ -240,9 +250,11 @@ impl Field {
                 Self::set_label(room, selection.last().copied(), label);
             }
             Self::Fill => {
-                let fill = data
-                    .surfaces
-                    .fill(text)
+                let fill = text
+                    .parse::<MaterialId>()
+                    .ok()
+                    .filter(|material| data.surfaces.materials.contains_key(material))
+                    .map(Fill::Material)
                     .or_else(|| text.parse().ok().map(Fill::Color));
                 if let Some(fill) = fill {
                     for item in selection {
@@ -302,6 +314,11 @@ impl Field {
                     vent.label = text;
                 }
             }
+            Some(EditorItem::Prop(index)) => {
+                if let Some(placed) = room.props.get_mut(index) {
+                    placed.label = text;
+                }
+            }
             _ => {}
         }
     }
@@ -327,7 +344,11 @@ impl Field {
             };
         }
         let item = selection.last().copied();
-        let rect = item.and_then(|item| item.bounds(room));
+        let rect = item.and_then(|item| item.bounds(room, &data.props));
+        let placed = match item {
+            Some(EditorItem::Prop(index)) => room.props.get(index),
+            _ => None,
+        };
         let origin = item.and_then(|item| item.origin(room));
         let spawn = match item {
             Some(EditorItem::Enemy(index)) => room.enemy_spawns.get(index),
@@ -366,8 +387,9 @@ impl Field {
                     .decorations
                     .get(index)
                     .map_or_else(String::new, |decoration| decoration.layer.to_string()),
-                _ => String::new(),
+                _ => placed.map_or_else(String::new, |placed| placed.layer.to_string()),
             },
+            Self::PropType => placed.map_or_else(String::new, |placed| placed.prop.to_string()),
             Self::EnemyType => spawn.map_or_else(String::new, |spawn| spawn.type_id.to_string()),
             Self::EnemyFacing => spawn.map_or_else(String::new, |spawn| spawn.facing.to_string()),
             Self::X => origin.map_or_else(String::new, |origin| origin.x.to_string()),
@@ -475,35 +497,54 @@ impl Field {
                     self.set_backdrop(room, backdrop);
                 }
             }
-            // Materials, then props: their names never clash.
             Self::Fill => {
-                let names = data
+                let materials = data
                     .surfaces
                     .materials
                     .keys()
-                    .chain(data.surfaces.props.keys())
                     .map(ToString::to_string)
                     .collect();
                 let current = match selection.iter().rev().find_map(|item| item.fill(room)) {
-                    Some(Fill::Material(name) | Fill::Prop(name)) => name.to_string(),
+                    Some(Fill::Material(material)) => material.to_string(),
                     Some(Fill::Color(_)) | None => String::new(),
                 };
-                if let Some(fill) =
-                    cycle(names, &current).and_then(|name| data.surfaces.fill(&name))
+                if let Some(material) =
+                    cycle(materials, &current).and_then(|material| material.parse().ok())
                 {
+                    let fill = Fill::Material(material);
                     for item in selection {
                         item.set_fill(room, &fill);
                     }
                 }
             }
             Self::Layer => {
-                if let Some(EditorItem::Decoration(index)) = item
-                    && let Some(decoration) = room.decorations.get_mut(index)
-                {
-                    decoration.layer = match decoration.layer {
+                let layer = match item {
+                    Some(EditorItem::Decoration(index)) => room
+                        .decorations
+                        .get_mut(index)
+                        .map(|decoration| &mut decoration.layer),
+                    Some(EditorItem::Prop(index)) => {
+                        room.props.get_mut(index).map(|placed| &mut placed.layer)
+                    }
+                    _ => None,
+                };
+                if let Some(layer) = layer {
+                    *layer = match layer {
                         DecorationLayer::Background => DecorationLayer::Foreground,
                         DecorationLayer::Foreground => DecorationLayer::Background,
                     };
+                }
+            }
+            Self::PropType => {
+                if let Some(EditorItem::Prop(index)) = item
+                    && let Some(placed) = room.props.get_mut(index)
+                {
+                    let names = data.props.props.keys().map(ToString::to_string).collect();
+                    if let Some(prop) =
+                        cycle(names, &placed.prop).and_then(|prop| prop.parse().ok())
+                    {
+                        placed.prop = prop;
+                    }
                 }
             }
             Self::EnemyType => {

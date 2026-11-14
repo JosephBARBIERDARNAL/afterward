@@ -1,12 +1,14 @@
-//! The fill palette: a swatch for every surface material and every prop,
-//! then a color picker (a field to type any hex code into, and a hue strip over a grid of
-//! shades mixed from it). Clicking any of them paints the selected platforms
-//! and decorations and becomes the fill new ones use. With nothing selected,
+//! The fill palette: a swatch for every surface material, then every prop,
+//! then a color picker (a field to type any hex code into, and a hue strip
+//! over a grid of shades mixed from it). Clicking a material or a color
+//! paints the selected platforms and decorations and becomes the fill new
+//! ones use; clicking a prop turns the selected props into it and makes it
+//! the one O adds. With nothing selected,
 //! a color paints the room's background instead: the one the inspector
 //! stands on, else Background 1.
 
 use super::*;
-use crate::data::{Backdrop, HexColor};
+use crate::data::{Backdrop, HexColor, MaterialId, PropId};
 use bevy::ui::RelativeCursorPosition;
 
 const SWATCH_PX: f32 = 26.0;
@@ -30,9 +32,12 @@ const HOVER_BORDER: Color = Color::WHITE;
 #[derive(Component)]
 pub(super) struct PalettePanel;
 
-/// A material's or a prop's swatch: clicking it paints with that fill.
 #[derive(Component)]
-pub(super) struct PaletteSwatch(Fill);
+pub(super) enum PaletteSwatch {
+    Material(MaterialId),
+    /// A prop's sprite, as big as the swatch allows.
+    Prop(PropId),
+}
 
 /// A hue of the color picker, in degrees: clicking it mixes the shade grid
 /// from that hue without painting anything.
@@ -144,17 +149,16 @@ pub(super) fn spawn_palette(
                         BorderColor::all(SWATCH_BORDER),
                         ImageNode::new(room_art::load_texture(asset_server, &material.texture)),
                         RelativeCursorPosition::default(),
-                        PaletteSwatch(Fill::Material(id.clone())),
+                        PaletteSwatch::Material(id.clone()),
                     ));
                 }
             });
-            panel.spawn(ui::heading("Props"));
+            panel.spawn(ui::heading("Props (O adds)"));
             panel
                 .spawn(grid(PROP_COLUMNS, PROP_SWATCH_PX))
                 .with_children(|grid| {
-                    for (id, prop) in &data.surfaces.props {
-                        // The sprite as big as the swatch allows, at its own
-                        // proportions.
+                    for (id, prop) in &data.props.props {
+                        // The sprite at its own proportions.
                         let [width_px, height_px] = prop.size_px.map(|side| side as f32);
                         let inner = PROP_SWATCH_PX - 8.0;
                         let scale = (inner / width_px).min(inner / height_px);
@@ -167,7 +171,7 @@ pub(super) fn spawn_palette(
                             BorderColor::all(SWATCH_BORDER),
                             BackgroundColor(Color::srgba(0.0, 0.0, 0.0, 0.35)),
                             RelativeCursorPosition::default(),
-                            PaletteSwatch(Fill::Prop(id.clone())),
+                            PaletteSwatch::Prop(id.clone()),
                         ))
                         .with_child((
                             Node {
@@ -238,14 +242,14 @@ pub(super) fn spawn_palette(
         });
 }
 
-/// Paints the selection with a clicked material, prop or shade and remembers
-/// it for new blocks; a clicked hue only remixes the shades.
+/// Paints the selection with a clicked material or shade and remembers it for
+/// new blocks; a clicked hue only remixes the shades.
 pub(super) fn handle_palette(
     mouse: Res<ButtonInput<MouseButton>>,
     mut editor: ResMut<RoomEditor>,
     mut data: ResMut<GameData>,
     panels: PanelParts,
-    materials: Query<(&RelativeCursorPosition, &PaletteSwatch)>,
+    swatches: Query<(&RelativeCursorPosition, &PaletteSwatch)>,
     hues: Query<(&RelativeCursorPosition, &HueSwatch)>,
     shades: Query<(&RelativeCursorPosition, &ShadeSwatch)>,
 ) {
@@ -276,28 +280,48 @@ pub(super) fn handle_palette(
         editor.hue = *hue;
         return;
     }
-    let picked = materials
+    let swatch = swatches
         .iter()
         .find(|(cursor, _)| cursor.cursor_over())
-        .map(|(_, PaletteSwatch(fill))| fill.clone())
-        .or_else(|| {
-            let hue = editor.hue;
-            shades
-                .iter()
-                .find(|(cursor, _)| cursor.cursor_over())
-                .map(|(_, shade)| Fill::Color(HexColor::from(shade.color(hue))))
-        });
+        .map(|(_, swatch)| swatch);
+    if let Some(PaletteSwatch::Prop(prop)) = swatch {
+        let selection = editor.selected.clone();
+        if selection
+            .iter()
+            .any(|item| matches!(item, EditorItem::Prop(_)))
+        {
+            editor.edit(&mut data, |room| {
+                for item in &selection {
+                    if let EditorItem::Prop(index) = item
+                        && let Some(placed) = room.props.get_mut(*index)
+                    {
+                        placed.prop = prop.clone();
+                    }
+                }
+            });
+        }
+        editor.prop = Some(prop.clone());
+        return;
+    }
+    let picked = match swatch {
+        Some(PaletteSwatch::Material(material)) => Some(Fill::Material(material.clone())),
+        _ => None,
+    }
+    .or_else(|| {
+        let hue = editor.hue;
+        shades
+            .iter()
+            .find(|(cursor, _)| cursor.cursor_over())
+            .map(|(_, shade)| Fill::Color(HexColor::from(shade.color(hue))))
+    });
     let Some(fill) = picked else {
         return;
     };
     if let Some(field) = editor.painted_background() {
-        // A color paints the background; a material or a prop is only
-        // picked for what P, D and O add next.
-        match fill {
-            Fill::Color(color) => editor.edit(&mut data, |room| {
+        if let Fill::Color(color) = fill {
+            editor.edit(&mut data, |room| {
                 field.set_backdrop(room, Some(Backdrop::Color(color)));
-            }),
-            fill => editor.fill = Some(fill),
+            });
         }
         return;
     }
@@ -316,7 +340,7 @@ pub(super) fn handle_palette(
 pub(super) fn refresh_palette(
     editor: Res<RoomEditor>,
     data: Res<GameData>,
-    mut materials: Query<(&RelativeCursorPosition, &PaletteSwatch, &mut BorderColor)>,
+    mut swatches: Query<(&RelativeCursorPosition, &PaletteSwatch, &mut BorderColor)>,
     mut hues: Query<
         (&RelativeCursorPosition, &HueSwatch, &mut BorderColor),
         Without<PaletteSwatch>,
@@ -353,11 +377,24 @@ pub(super) fn refresh_palette(
             SWATCH_BORDER
         }
     };
-    for (cursor, PaletteSwatch(fill), mut outline) in &mut materials {
+    // The selected prop, else the one O adds next.
+    let current_prop = room
+        .and_then(|room| match editor.primary() {
+            Some(EditorItem::Prop(index)) => room.props.get(index).map(|placed| &placed.prop),
+            _ => None,
+        })
+        .or(editor.prop.as_ref());
+    for (cursor, swatch, mut outline) in &mut swatches {
+        let (name, is_current) = match swatch {
+            PaletteSwatch::Material(material) => (
+                material.to_string(),
+                matches!(current, Some(Fill::Material(picked)) if picked == material),
+            ),
+            PaletteSwatch::Prop(prop) => (prop.to_string(), current_prop == Some(prop)),
+        };
         if cursor.cursor_over() {
-            hovered = Some(fill.to_string());
+            hovered = Some(name);
         }
-        let is_current = current == Some(fill);
         *outline = BorderColor::all(border(cursor, is_current));
     }
     for (cursor, HueSwatch(hue), mut outline) in &mut hues {
@@ -400,16 +437,19 @@ pub(super) fn refresh_palette(
 }
 
 /// Shows the palette while it has something to paint: the room's background
-/// with nothing selected, or a selection holding a platform or decoration.
+/// with nothing selected, or a selection holding a platform, a decoration or
+/// a prop.
 pub(super) fn show_palette(
     editor: Res<RoomEditor>,
     mut panels: Query<&mut Node, With<PalettePanel>>,
 ) {
     let paints = editor.selected.is_empty()
-        || editor
-            .selected
-            .iter()
-            .any(|item| matches!(item, EditorItem::Platform(_) | EditorItem::Decoration(_)));
+        || editor.selected.iter().any(|item| {
+            matches!(
+                item,
+                EditorItem::Platform(_) | EditorItem::Decoration(_) | EditorItem::Prop(_)
+            )
+        });
     let display = if paints { Display::Flex } else { Display::None };
     for mut node in &mut panels {
         if node.display != display {
