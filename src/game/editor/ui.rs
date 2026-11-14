@@ -6,10 +6,7 @@
 
 use super::*;
 use actions::{NewItem, PLAYTEST_ROWS};
-use bevy::{
-    text::LineHeight,
-    ui::{ComputedNode, RelativeCursorPosition},
-};
+use bevy::ui::{ComputedNode, RelativeCursorPosition};
 
 pub(super) const PANEL_BG: Color = Color::srgba(0.055, 0.062, 0.09, 0.97);
 pub(super) const PANEL_BORDER: Color = Color::srgba(1.0, 1.0, 1.0, 0.09);
@@ -24,8 +21,6 @@ const BUTTON_LIT: Color = Color::srgba(1.0, 0.82, 0.32, 0.2);
 const BUTTON_LIT_HOVER: Color = Color::srgba(1.0, 0.82, 0.32, 0.32);
 pub(super) const FONT_PX: f32 = 14.0;
 pub(super) const SMALL_PX: f32 = 12.0;
-/// The height of a line of the inspector's title.
-const TITLE_LINE_PX: f32 = 18.0;
 /// How many rows the inspector holds: the most any selection shows.
 pub(super) const INSPECTOR_ROWS: usize = 16;
 const LEFT_COLUMN_PX: f32 = 400.0;
@@ -329,20 +324,10 @@ fn spawn_inspector(commands: &mut Commands, left: Entity) {
                     BackgroundColor(ACCENT),
                     Part::Chip,
                 ));
-                // Always two lines tall, whatever it names, so the rows
-                // under it never move as the selection changes; a name
-                // longer than that is cut.
                 header.spawn((
                     Text::new(""),
                     font(FONT_PX + 1.0),
-                    LineHeight::Px(TITLE_LINE_PX),
                     TextColor(TEXT),
-                    Node {
-                        flex_grow: 1.0,
-                        height: px(2.0 * TITLE_LINE_PX),
-                        overflow: Overflow::clip(),
-                        ..default()
-                    },
                     Part::Title,
                 ));
             });
