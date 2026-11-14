@@ -22,6 +22,8 @@ The game is in development, focused on Chapter 1 (rooms 1–10). Content and sys
 
 The project is at an early, experimental stage. Many choices (assets, room layouts and materials, tuning values, editor features, even parts of the core design above) are trials that may be reworked or dropped soon. Expect them to change: prefer simple, easy-to-replace solutions over heavy abstractions or polish, don't treat the current state as a settled design, and when something looks like a placeholder or a half-made decision, ask rather than build on it as final.
 
+Rooms are part of that exploration: change them freely, breaking changes included (rename or drop pieces they use, rework their layouts), and put each new feature into a room where it can be seen and tried right away rather than leaving it only in the editor.
+
 ## Run and check
 
 Once you finish making a change (fixing a bug or adding a feature), make sure all code is well formatted, linted and tested. Everything should be green. This will run in CI too. Common commands:
