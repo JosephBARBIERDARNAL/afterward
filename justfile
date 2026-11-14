@@ -71,7 +71,7 @@ sci-fi:
     python3 scripts/slice_sci_fi.py
 
 # Render the Typst pixel art in art/ to PNGs at the same path under src/assets/
-# (art/surfaces/textures/wood/planks.typ -> src/assets/surfaces/textures/wood/planks.png).
+# (art/ui/enemy_shield.typ -> src/assets/ui/enemy_shield.png).
 # Files starting with `_` are shared libraries, not images.
 art:
     #!/usr/bin/env sh

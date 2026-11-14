@@ -2,9 +2,9 @@
 # sound. Room files name one material per block (`material:`), or paint a
 # plain color instead (`color: "#RRGGBB"`).
 #
-# Every texture is a seamless 16 px square, drawn in Typst (art/surfaces/,
-# rendered by `just art`) or cut from a pack (`sci_fi_*`). They tile in world
-# space, so neighboring blocks of one material line up.
+# Every texture is a seamless 16 px square cut from the sci-fi pack
+# (`just sci-fi`). They tile in world space, so neighboring blocks of one
+# material line up.
 
 texture_px: 16
 # One 16 px tile spans 0.25 H (64 px per H), close to the player sprite's
