@@ -6,8 +6,8 @@ chapter_id: 1
 size:
   width_h: 24
   height_h: 13.5
-background_profiles: [city_peach_sunset]
-hidden_background_layers: [city_peach_sunset/4, city_peach_sunset/5]
+background_profiles: [sci_fi_industrial]
+hidden_background_layers: [sci_fi_industrial/1, sci_fi_industrial/4, sci_fi_industrial/5]
 player_spawn:
   x_h: 2.5
   y_h: 1

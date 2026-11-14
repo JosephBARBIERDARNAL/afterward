@@ -41,53 +41,6 @@ decoration_layers:
 color_footstep: stone
 
 materials:
-  # City: the streets and floors of the drowned city.
-  city_pavement:
-    texture: surfaces/textures/city/pavement.png
-    footstep: stone
-  city_conduit_grid:
-    texture: surfaces/textures/city/conduit_grid.png
-    footstep: stone
-  city_plating:
-    texture: surfaces/textures/city/plating.png
-    footstep: stone
-
-  # Metal.
-  metal_plates:
-    texture: surfaces/textures/metal/plates.png
-    footstep: stone
-  metal_corroded_plates:
-    texture: surfaces/textures/metal/corroded_plates.png
-    footstep: stone
-  metal_tread:
-    texture: surfaces/textures/metal/tread.png
-    footstep: stone
-  metal_grate:
-    texture: surfaces/textures/metal/grate.png
-    footstep: stone
-
-  # Carved stone.
-  carved_ashlar:
-    texture: surfaces/textures/carved/ashlar.png
-    footstep: stone
-  carved_frieze:
-    texture: surfaces/textures/carved/frieze.png
-    footstep: stone
-  carved_pillar:
-    texture: surfaces/textures/carved/pillar.png
-    footstep: stone
-
-  # Wood.
-  wood_planks:
-    texture: surfaces/textures/wood/planks.png
-    footstep: wood
-  wood_dark_planks:
-    texture: surfaces/textures/wood/dark_planks.png
-    footstep: wood
-  wood_crate:
-    texture: surfaces/textures/wood/crate.png
-    footstep: wood
-
   # Sci-fi: tiles cut from the sci-fi platformer pack (scripts/
   # slice_sci_fi.py), drawn at 32 px per H, as the props are.
   sci_fi_dark:

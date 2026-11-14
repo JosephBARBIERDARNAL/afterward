@@ -144,11 +144,6 @@ pub(super) fn update_layers_card(
                     }
                 }
             }
-            card.spawn((
-                Text::new("Click a layer to hide or show it, - and + to fade it."),
-                font(SMALL_PX),
-                TextColor(MUTED),
-            ));
         });
     }
     for (LayerTick(layer), mut visibility) in &mut ticks {
