@@ -4,7 +4,7 @@
 
 use super::*;
 use crate::data::{
-    DeviceArt, DeviceTag, Fill, PlatformConfig, PropCatalog, PropId, RectH, RoomConfig,
+    DeviceArt, DeviceTag, Fill, Placement, PlatformConfig, PropCatalog, PropId, RectH, RoomConfig,
 };
 
 mod actions;
@@ -172,11 +172,53 @@ impl EditorItem {
         }
     }
 
+    /// How the item is mirrored, turned and faded: the platforms,
+    /// decorations, props and devices have one.
+    fn placement(self, room: &RoomConfig) -> Option<&Placement> {
+        match self {
+            Self::Platform(index) => room.platforms.get(index).map(|block| &block.placement),
+            Self::Decoration(index) => room
+                .decorations
+                .get(index)
+                .map(|decoration| &decoration.placement),
+            Self::Prop(index) => room.props.get(index).map(|placed| &placed.placement),
+            Self::Device(index, _) => room.devices.get(index).map(|device| &device.placement),
+            Self::PlayerSpawn | Self::Exit | Self::Bonus | Self::Enemy(_) | Self::Hazard(_) => None,
+        }
+    }
+
+    fn placement_mut(self, room: &mut RoomConfig) -> Option<&mut Placement> {
+        match self {
+            Self::Platform(index) => room
+                .platforms
+                .get_mut(index)
+                .map(|block| &mut block.placement),
+            Self::Decoration(index) => room
+                .decorations
+                .get_mut(index)
+                .map(|decoration| &mut decoration.placement),
+            Self::Prop(index) => room
+                .props
+                .get_mut(index)
+                .map(|placed| &mut placed.placement),
+            Self::Device(index, _) => room
+                .devices
+                .get_mut(index)
+                .map(|device| &mut device.placement),
+            Self::PlayerSpawn | Self::Exit | Self::Bonus | Self::Enemy(_) | Self::Hazard(_) => None,
+        }
+    }
+
     /// The item's outline in H, corner by corner and counter-clockwise: its
-    /// `bounds`, turned as the room turns it when it is a platform.
+    /// `bounds`, turned about their middle as the room turns it.
     fn corners(self, room: &RoomConfig, catalogs: Catalogs) -> Option<[Vec2; 4]> {
         match self {
             Self::Platform(index) => room.platforms.get(index).map(PlatformConfig::corners_h),
+            _ if self.is_turned(room) => {
+                let rect = self.bounds(room, catalogs)?;
+                let placement = self.placement(room)?;
+                Some(placement.corners(Rect::new(rect.x, rect.y, rect.right(), rect.top())))
+            }
             _ => self.bounds(room, catalogs).map(|rect| {
                 [
                     Vec2::new(rect.x, rect.y),
@@ -188,12 +230,12 @@ impl EditorItem {
         }
     }
 
-    /// Whether this is a platform its room turned. Its edges no longer lie
+    /// Whether this is an item its room turned. Its edges no longer lie
     /// where `bounds` says, so they are not dragged: it is resized from the
     /// inspector.
     fn is_turned(self, room: &RoomConfig) -> bool {
-        matches!(self, Self::Platform(index)
-            if room.platforms.get(index).is_some_and(|block| block.rotation_deg != 0.0))
+        self.placement(room)
+            .is_some_and(|placement| placement.rotation_deg != 0.0)
     }
 
     /// The point a drag moves: a block's lower-left corner, or a spawn's or a
@@ -853,7 +895,7 @@ next_room_id: 4
         // Turned a quarter, the walkway (14 x 1 around 20, 6.5) stands on
         // end: a click finds it where it is drawn, not where it lay.
         let mut room = room.clone();
-        room.platforms[1].rotation_deg = 90.0;
+        room.platforms[1].placement.rotation_deg = 90.0;
         let walkway = Some(EditorItem::Platform(1));
         assert_eq!(
             EditorItem::at(&room, catalogs, Vec2::new(20.0, 12.0)),

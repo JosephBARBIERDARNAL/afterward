@@ -5,7 +5,7 @@ use std::fmt::{self, Display, Formatter};
 
 use super::{
     Backdrop, DecorationConfig, DecorationLayer, DeviceConfig, EnemySpawnConfig, Facing, Fill,
-    PlatformConfig, PropConfig, RectH, RoomConfig, RoomHazardConfig, SizeH,
+    Placement, PlatformConfig, PropConfig, RectH, RoomConfig, RoomHazardConfig, SizeH,
 };
 
 const HEADER: &str = "\
@@ -127,12 +127,7 @@ impl Display for PlatformConfig {
                 YamlFill(&self.fill).to_string(),
                 format!("rect_h: {}", self.rect_h),
             ])
-            .chain(
-                // Adding 0.0 turns -0.0 into 0.0, which is no turn at all.
-                Some(self.rotation_deg + 0.0)
-                    .filter(|rotation| *rotation != 0.0)
-                    .map(|rotation| format!("rotation_deg: {rotation}")),
-            )
+            .chain(placement_fields(&self.placement))
             .collect();
         write!(formatter, "{}", YamlEntry(fields))
     }
@@ -150,6 +145,7 @@ impl Display for DecorationConfig {
                 format!("layer: {}", self.layer),
                 format!("rect_h: {}", self.rect_h),
             ])
+            .chain(placement_fields(&self.placement))
             .collect();
         write!(formatter, "{}", YamlEntry(fields))
     }
@@ -197,6 +193,7 @@ impl Display for PropConfig {
                 (self.layer != DecorationLayer::default())
                     .then(|| format!("layer: {}", self.layer)),
             )
+            .chain(placement_fields(&self.placement))
             .collect();
         write!(formatter, "{}", YamlEntry(fields))
     }
@@ -224,6 +221,7 @@ impl Display for DeviceConfig {
                 ),
             ])
             .chain(params)
+            .chain(placement_fields(&self.placement))
             .collect();
         write!(formatter, "{}", YamlEntry(fields))
     }
@@ -247,6 +245,19 @@ impl Display for RoomHazardConfig {
             .collect();
         write!(formatter, "{}", YamlEntry(fields))
     }
+}
+
+/// The fields of a placement that differ from an item as drawn.
+fn placement_fields(placement: &Placement) -> impl Iterator<Item = String> {
+    // Adding 0.0 turns -0.0 into 0.0, which is no turn at all.
+    let rotation = placement.rotation_deg + 0.0;
+    [
+        placement.mirrored.then(|| String::from("mirrored: true")),
+        (rotation != 0.0).then(|| format!("rotation_deg: {rotation}")),
+        (placement.opacity != 1.0).then(|| format!("opacity: {}", placement.opacity)),
+    ]
+    .into_iter()
+    .flatten()
 }
 
 /// The field a fill is written as: `material: <id>` or a quoted `color:`,
@@ -410,7 +421,7 @@ next_room_id: 4
 ",
         )
         .expect("a turned platform parses");
-        assert_eq!(room.platforms[0].rotation_deg, 0.0);
+        assert_eq!(room.platforms[0].placement.rotation_deg, 0.0);
         let written = room.to_string();
         assert_eq!(
             written.matches("rotation_deg").count(),
@@ -461,6 +472,13 @@ next_room_id: 4
                     y_h: 1.0,
                 },
                 kind,
+                // Mirrored, turned and faded, so a placement the writer
+                // drops cannot pass for one left as drawn.
+                placement: Placement {
+                    mirrored: true,
+                    rotation_deg: 15.0 * index as f32,
+                    opacity: 0.5,
+                },
             });
         }
         let written = room.to_string();

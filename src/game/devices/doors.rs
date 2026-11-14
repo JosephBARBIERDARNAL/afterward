@@ -131,8 +131,8 @@ pub(super) fn open_doors(
             if device.frame >= 3 && solid {
                 commands.entity(entity).remove::<PlatformSurface>();
                 for name in ["open_top", "open_bottom"] {
-                    if let Some(area) = device_box(&device.config, &data.devices, name, center) {
-                        commands.spawn((surface(area, &data), DoorStub, ChildOf(entity)));
+                    if let Some(corners) = placed_box(&device.config, &data.devices, name, center) {
+                        commands.spawn((surface(corners, &data), DoorStub, ChildOf(entity)));
                     }
                 }
             }
@@ -141,9 +141,9 @@ pub(super) fn open_doors(
             device.frame = if step < 2 { 5 + step } else { 0 };
             if device.frame == 0
                 && !solid
-                && let Some(area) = device_box(&device.config, &data.devices, "solid", center)
+                && let Some(corners) = placed_box(&device.config, &data.devices, "solid", center)
             {
-                commands.entity(entity).insert(surface(area, &data));
+                commands.entity(entity).insert(surface(corners, &data));
                 for child in children.into_iter().flatten() {
                     if stubs.contains(*child) {
                         commands.entity(*child).despawn();

@@ -244,16 +244,21 @@ fn device_box(config: &DeviceConfig, art: &DeviceArt, name: &str, center: Vec2) 
     ))
 }
 
-/// The collider of a solid box.
-fn surface(area: Rect, data: &GameData) -> PlatformSurface {
-    PlatformSurface {
-        left: area.min.x,
-        right: area.max.x,
-        bottom: area.min.y,
-        top: area.max.y,
-        footstep: data.surfaces.color_footstep,
-        tilt: None,
-    }
+/// A box of a device's frame (`device_box`) as the device is placed:
+/// mirrored and turned about its middle `center`, as its corners in world
+/// units, counter-clockwise from its lower-left.
+fn placed_box(
+    config: &DeviceConfig,
+    art: &DeviceArt,
+    name: &str,
+    center: Vec2,
+) -> Option<[Vec2; 4]> {
+    device_box(config, art, name, center).map(|rect| config.placement.corners_about(rect, center))
+}
+
+/// The collider of a solid box, given as its corners.
+fn surface(corners: [Vec2; 4], data: &GameData) -> PlatformSurface {
+    PlatformSurface::from_corners(corners, data.surfaces.color_footstep, data)
 }
 
 /// Builds every device of `room`, as it stands the moment the room opens.
@@ -288,6 +293,7 @@ pub(super) fn spawn_devices(
             }
             _ => 0.0,
         };
+        let placement = config.placement;
         let mut device = commands.spawn((
             Device {
                 config: config.clone(),
@@ -297,8 +303,16 @@ pub(super) fn spawn_devices(
                 fps: kind_art.fps,
                 frame_px,
             },
+            // Mirrored in its own frame, then turned: as its boxes are.
             Transform::from_translation(center.extend(DEVICE_Z))
-                .with_rotation(Quat::from_rotation_z(turn)),
+                .with_rotation(Quat::from_rotation_z(
+                    turn + placement.rotation_deg.to_radians(),
+                ))
+                .with_scale(Vec3::new(
+                    if placement.mirrored { -1.0 } else { 1.0 },
+                    1.0,
+                    1.0,
+                )),
             Visibility::default(),
             RoomEntity,
         ));
@@ -309,9 +323,9 @@ pub(super) fn spawn_devices(
             DeviceTag::Press => Some("head"),
             _ => None,
         };
-        if let Some(area) = hurt_box.and_then(|name| device_box(config, art, name, center)) {
+        if let Some(corners) = hurt_box.and_then(|name| placed_box(config, art, name, center)) {
             device.insert(combat::Hurts {
-                area,
+                corners,
                 damage: match &config.kind {
                     DeviceKind::Laser(laser) => laser.damage,
                     DeviceKind::FireTrap(fire) => fire.damage,
@@ -332,8 +346,8 @@ pub(super) fn spawn_devices(
             DeviceTag::Press | DeviceTag::Turret => Some("body"),
             _ => None,
         };
-        if let Some(area) = solid_box.and_then(|name| device_box(config, art, name, center)) {
-            device.insert(surface(area, data));
+        if let Some(corners) = solid_box.and_then(|name| placed_box(config, art, name, center)) {
+            device.insert(surface(corners, data));
         }
         match &config.kind {
             DeviceKind::HoverPlatform(_) | DeviceKind::Blade(_) => {
@@ -352,15 +366,21 @@ pub(super) fn spawn_devices(
                 device.insert(traps::TurretState::default());
             }
             DeviceKind::Ladder(_) => {
-                // Its column, from its foot to its top.
+                // Its column, from its foot to its top, as placed: one turned
+                // is climbed straight up the room's height it spans.
                 let width = device_box(config, art, "climb", center)
                     .map_or(H_WORLD_UNITS / 2.0, |climb| climb.width());
+                let column = Rect::new(
+                    center.x - width / 2.0,
+                    bounds.min.y * H_WORLD_UNITS,
+                    center.x + width / 2.0,
+                    bounds.max.y * H_WORLD_UNITS,
+                );
+                let corners = placement.corners_about(column, center);
                 device.insert(Ladder {
-                    area: Rect::new(
-                        center.x - width / 2.0,
-                        bounds.min.y * H_WORLD_UNITS,
-                        center.x + width / 2.0,
-                        bounds.max.y * H_WORLD_UNITS,
+                    area: Rect::from_corners(
+                        corners.into_iter().reduce(Vec2::min).unwrap_or_default(),
+                        corners.into_iter().reduce(Vec2::max).unwrap_or_default(),
                     ),
                 });
             }
@@ -390,6 +410,7 @@ pub(super) fn spawn_devices(
                             piece.sub.max.y,
                         )),
                         custom_size: Some(size * H_WORLD_UNITS),
+                        color: Color::WHITE.with_alpha(placement.opacity),
                         flip_x: matches!(&config.kind, DeviceKind::Turret(turret)
                             if turret.facing == Facing::Right),
                         ..default()

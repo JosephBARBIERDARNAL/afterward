@@ -600,14 +600,25 @@ impl GameData {
                     )));
                 }
             }
-            if room
+            let placements = room
                 .platforms
                 .iter()
-                .any(|block| !block.rotation_deg.is_finite())
-            {
-                return Err(InvalidGameData::from(format!(
-                    "room {room_id} has a platform turned by something that is not an angle"
-                )));
+                .map(|block| &block.placement)
+                .chain(
+                    room.decorations
+                        .iter()
+                        .map(|decoration| &decoration.placement),
+                )
+                .chain(room.props.iter().map(|placed| &placed.placement))
+                .chain(room.devices.iter().map(|device| &device.placement));
+            for placement in placements {
+                if !placement.rotation_deg.is_finite() || !(0.0..=1.0).contains(&placement.opacity)
+                {
+                    return Err(InvalidGameData::from(format!(
+                        "room {room_id} has an item turned by something that is not an angle, \
+                         or with an opacity outside 0..=1"
+                    )));
+                }
             }
             let fills = room
                 .platforms

@@ -5,7 +5,7 @@
 use super::*;
 use crate::data::{
     BackgroundLayerRef, DecorationConfig, DecorationLayer, DeviceConfig, DeviceKind,
-    EnemySpawnConfig, Facing, PropConfig, RoomHazardConfig, SpawnPosition,
+    EnemySpawnConfig, Facing, Placement, PropConfig, RoomHazardConfig, SpawnPosition,
 };
 use std::fs;
 
@@ -485,6 +485,7 @@ impl RoomEditor {
                         y_h: snap(at_h.y, false),
                     },
                     kind: DeviceKind::from(tag),
+                    placement: Placement::default(),
                 });
                 added = Some(EditorItem::Device(room.devices.len() - 1, tag));
             });
@@ -510,6 +511,7 @@ impl RoomEditor {
                         y_h: snap(at_h.y, false),
                     },
                     layer: DecorationLayer::default(),
+                    placement: Placement::default(),
                 });
                 added = Some(EditorItem::Prop(room.props.len() - 1));
             });
@@ -566,6 +568,7 @@ impl RoomEditor {
                     fill,
                     layer: DecorationLayer::Background,
                     rect_h,
+                    placement: Placement::default(),
                 });
                 EditorItem::Decoration(room.decorations.len() - 1)
             } else {
@@ -573,7 +576,7 @@ impl RoomEditor {
                     label: None,
                     fill,
                     rect_h,
-                    rotation_deg: 0.0,
+                    placement: Placement::default(),
                 });
                 EditorItem::Platform(room.platforms.len() - 1)
             });

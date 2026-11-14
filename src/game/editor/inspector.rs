@@ -6,7 +6,7 @@
 
 use super::*;
 use crate::data::{
-    Backdrop, DecorationLayer, DeviceKind, DeviceTag, Facing, HexColor, MaterialId,
+    Backdrop, DecorationLayer, DeviceKind, DeviceTag, Facing, HexColor, MaterialId, Placement,
     RoomHazardConfig,
 };
 use std::sync::LazyLock;
@@ -15,6 +15,8 @@ use std::sync::LazyLock;
 const ROOM_SIZE_STEP_H: f32 = 0.5;
 /// How far one Left/Right press turns a platform, in degrees.
 const ROTATION_STEP_DEG: f32 = 5.0;
+/// How much one Left/Right press fades an item in or out.
+const OPACITY_STEP: f32 = 0.05;
 /// The most layers of armor Left/Right gives an enemy: more than this and the
 /// row of icons over its health bar outgrows the bar by too much to read.
 const MAX_ARMOR_LAYERS: u8 = 5;
@@ -46,6 +48,9 @@ pub(super) enum Field {
     Width,
     Height,
     Rotation,
+    /// Flipped left to right, and how opaque: of anything a room places.
+    Mirrored,
+    Opacity,
     Armor,
     Wave,
     // A vent's cycle: it warns, burns, rests, and starts over.
@@ -74,10 +79,17 @@ static DEVICE_FIELDS: LazyLock<BTreeMap<DeviceTag, Vec<Field>>> = LazyLock::new(
         .map(|tag| {
             let count = DeviceKind::from(tag).params().len();
             let params = (0..count).filter_map(|index| u8::try_from(index).ok());
-            let fields = [Field::Label, Field::X, Field::Y]
-                .into_iter()
-                .chain(params.map(|index| Field::DeviceParam(tag, index)))
-                .collect();
+            let fields = [
+                Field::Label,
+                Field::X,
+                Field::Y,
+                Field::Rotation,
+                Field::Mirrored,
+                Field::Opacity,
+            ]
+            .into_iter()
+            .chain(params.map(|index| Field::DeviceParam(tag, index)))
+            .collect();
             (tag, fields)
         })
         .collect()
@@ -112,6 +124,8 @@ impl Field {
                 Self::Width,
                 Self::Height,
                 Self::Rotation,
+                Self::Mirrored,
+                Self::Opacity,
             ],
             Some(EditorItem::Decoration(_)) => &[
                 Self::Label,
@@ -121,6 +135,9 @@ impl Field {
                 Self::Y,
                 Self::Width,
                 Self::Height,
+                Self::Rotation,
+                Self::Mirrored,
+                Self::Opacity,
             ],
             Some(EditorItem::Enemy(_)) => &[
                 Self::Label,
@@ -157,9 +174,16 @@ impl Field {
                 Self::RestTime,
                 Self::Offset,
             ],
-            Some(EditorItem::Prop(_)) => {
-                &[Self::Label, Self::PropType, Self::Layer, Self::X, Self::Y]
-            }
+            Some(EditorItem::Prop(_)) => &[
+                Self::Label,
+                Self::PropType,
+                Self::Layer,
+                Self::X,
+                Self::Y,
+                Self::Rotation,
+                Self::Mirrored,
+                Self::Opacity,
+            ],
             Some(EditorItem::Device(_, tag)) => DEVICE_FIELDS
                 .get(&tag)
                 .map_or(&[Self::Label, Self::X, Self::Y], Vec::as_slice),
@@ -185,6 +209,8 @@ impl Field {
             Self::Width => "Width (H)",
             Self::Height => "Height (H)",
             Self::Rotation => "Rotation (deg)",
+            Self::Mirrored => "Mirrored",
+            Self::Opacity => "Opacity",
             Self::Armor => "Armor layers",
             Self::Wave => "Wave",
             Self::Damage => "Damage",
@@ -225,7 +251,13 @@ impl Field {
     pub(super) fn clears(self) -> bool {
         matches!(
             self,
-            Self::Label | Self::BackgroundOver | Self::Rotation | Self::Armor | Self::Offset
+            Self::Label
+                | Self::BackgroundOver
+                | Self::Rotation
+                | Self::Mirrored
+                | Self::Opacity
+                | Self::Armor
+                | Self::Offset
         )
     }
 
@@ -454,19 +486,32 @@ impl Field {
                     room.platforms.get(index).map_or_else(String::new, |block| {
                         // How far its gentler upper face leans, which is what
                         // decides whether a body walks it.
-                        let lean = block.rotation_deg.abs() % 90.0;
+                        let lean = block.placement.rotation_deg.abs() % 90.0;
                         let lean = lean.min(90.0 - lean);
                         if lean == 0.0 {
-                            block.rotation_deg.to_string()
+                            block.placement.rotation_deg.to_string()
                         } else if lean <= data.gameplay.player.walkable_slope_deg {
-                            format!("{}  (a slope to walk)", block.rotation_deg)
+                            format!("{}  (a slope to walk)", block.placement.rotation_deg)
                         } else {
-                            format!("{}  (too steep to walk: a wall)", block.rotation_deg)
+                            format!(
+                                "{}  (too steep to walk: a wall)",
+                                block.placement.rotation_deg
+                            )
                         }
                     })
                 }
-                _ => String::new(),
+                _ => item
+                    .and_then(|item| item.placement(room))
+                    .map_or_else(String::new, |placement| placement.rotation_deg.to_string()),
             },
+            Self::Mirrored => item
+                .and_then(|item| item.placement(room))
+                .map_or_else(String::new, |placement| {
+                    String::from(if placement.mirrored { "yes" } else { "no" })
+                }),
+            Self::Opacity => item
+                .and_then(|item| item.placement(room))
+                .map_or_else(String::new, |placement| placement.opacity.to_string()),
             Self::Armor => match spawn.map(|spawn| spawn.armor_layers) {
                 Some(0) => String::from("none"),
                 Some(layers) => layers.to_string(),
@@ -653,14 +698,32 @@ impl Field {
                 }
             }
             Self::Rotation => {
-                if let Some(EditorItem::Platform(index)) = item
-                    && let Some(block) = room.platforms.get_mut(index)
-                {
-                    // Half a turn brings a rectangle back onto itself, so the
-                    // angle stays within a quarter turn either way. Adding
-                    // 0.0 turns -0.0 into 0.0.
-                    let turned = block.rotation_deg + steps * ROTATION_STEP_DEG;
-                    block.rotation_deg = (turned + 90.0).rem_euclid(180.0) - 90.0 + 0.0;
+                // Half a turn brings a platform's rectangle back onto
+                // itself, so its angle stays within a quarter turn either
+                // way; anything else is turned all the way round. Adding 0.0
+                // turns -0.0 into 0.0.
+                let half_turn = if matches!(item, Some(EditorItem::Platform(_))) {
+                    90.0
+                } else {
+                    180.0
+                };
+                if let Some(placement) = item.and_then(|item| item.placement_mut(room)) {
+                    let turned = placement.rotation_deg + steps * ROTATION_STEP_DEG;
+                    placement.rotation_deg =
+                        (turned + half_turn).rem_euclid(2.0 * half_turn) - half_turn + 0.0;
+                }
+            }
+            Self::Mirrored => {
+                if let Some(placement) = item.and_then(|item| item.placement_mut(room)) {
+                    placement.mirrored = !placement.mirrored;
+                }
+            }
+            Self::Opacity => {
+                if let Some(placement) = item.and_then(|item| item.placement_mut(room)) {
+                    // Rounded to the step, so repeated presses don't drift.
+                    let faded = ((placement.opacity + steps * OPACITY_STEP) / OPACITY_STEP).round()
+                        * OPACITY_STEP;
+                    placement.opacity = faded.clamp(0.0, 1.0);
                 }
             }
             Self::Armor => {
@@ -732,10 +795,15 @@ impl Field {
             self.set_backdrop(room, None);
             return;
         }
-        if let (Self::Rotation, Some(EditorItem::Platform(index))) = (self, item)
-            && let Some(block) = room.platforms.get_mut(index)
+        if matches!(self, Self::Rotation | Self::Mirrored | Self::Opacity)
+            && let Some(placement) = item.and_then(|item| item.placement_mut(room))
         {
-            block.rotation_deg = 0.0;
+            let as_drawn = Placement::default();
+            match self {
+                Self::Rotation => placement.rotation_deg = as_drawn.rotation_deg,
+                Self::Mirrored => placement.mirrored = as_drawn.mirrored,
+                _ => placement.opacity = as_drawn.opacity,
+            }
             return;
         }
         if let (Self::Armor, Some(EditorItem::Enemy(index))) = (self, item)

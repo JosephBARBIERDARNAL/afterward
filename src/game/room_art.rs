@@ -183,7 +183,7 @@ pub(super) fn draw(
     let occluders = room
         .platforms
         .iter()
-        .filter(|block| block.rotation_deg == 0.0)
+        .filter(|block| block.placement.rotation_deg == 0.0)
         .map(|block| block.rect_h)
         .collect::<Vec<_>>();
     let edges = &surfaces.edges;
@@ -193,21 +193,20 @@ pub(super) fn draw(
         let z = PLATFORM_Z + index as f32 * BLOCK_Z_STEP;
         let rect = block.rect_h;
         let pivot = Vec2::new(rect.x + rect.width / 2.0, rect.y + rect.height / 2.0);
-        let turn = block.rotation_deg.to_radians();
+        let turn = block.placement.rotation_deg.to_radians();
         let uncovered = |side: Side| {
-            if block.rotation_deg == 0.0 {
+            if block.placement.rotation_deg == 0.0 {
                 side.uncovered(&rect, &occluders)
             } else {
                 side.uncovered(&rect, &[])
             }
         };
-        commands.spawn(placed(
-            painted(&block.fill, rect, Color::WHITE),
-            rect,
-            z,
-            pivot,
-            turn,
-        ));
+        let opacity = block.placement.opacity;
+        let mut fill = painted(&block.fill, rect, Color::WHITE.with_alpha(opacity));
+        fill.flip_x = block.placement.mirrored;
+        commands.spawn(placed(fill, rect, z, pivot, turn));
+        let highlight = highlight.with_alpha(edges.highlight_alpha * opacity);
+        let outline = outline.with_alpha(edges.outline_alpha * opacity);
         let below_outline = RectH {
             height: rect.height - edges.outline_px * texel_h,
             ..rect
@@ -243,14 +242,17 @@ pub(super) fn draw(
             DecorationLayer::Foreground => (&layers.foreground, FOREGROUND_DECORATION_Z),
         };
         let z = base_z + index as f32 * BLOCK_Z_STEP;
-        let tint = Color::from(style.tint).with_alpha(style.alpha);
+        let placement = decoration.placement;
+        let tint = Color::from(style.tint).with_alpha(style.alpha * placement.opacity);
         let rect = decoration.rect_h;
+        let mut panel = painted(&decoration.fill, rect, tint);
+        panel.flip_x = placement.mirrored;
         commands.spawn(placed(
-            painted(&decoration.fill, rect, tint),
+            panel,
             rect,
             z,
-            Vec2::ZERO,
-            0.0,
+            Vec2::new(rect.x + rect.width / 2.0, rect.y + rect.height / 2.0),
+            placement.rotation_deg.to_radians(),
         ));
     }
 
@@ -270,9 +272,12 @@ pub(super) fn draw(
             placed.position_h.x_h,
             placed.position_h.y_h + size_h.y / 2.0,
         );
+        let placement = placed.placement;
         commands.spawn((
             Sprite {
                 custom_size: Some(size_h * H_WORLD_UNITS),
+                flip_x: placement.mirrored,
+                color: Color::WHITE.with_alpha(placement.opacity),
                 ..Sprite::from_atlas_image(
                     sheet.image.clone(),
                     TextureAtlas {
@@ -290,7 +295,8 @@ pub(super) fn draw(
             },
             Transform::from_translation(
                 (middle * H_WORLD_UNITS).extend(base_z + index as f32 * BLOCK_Z_STEP),
-            ),
+            )
+            .with_rotation(Quat::from_rotation_z(placement.rotation_deg.to_radians())),
             RoomEntity,
         ));
     }

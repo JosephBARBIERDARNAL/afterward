@@ -9,10 +9,10 @@ use std::{
     str::FromStr,
 };
 
-use bevy::math::Vec2;
+use bevy::math::{Rect, Vec2};
 use serde::{Deserialize, Deserializer, de::Error as DeserializeError};
 
-use super::{PropConfig, RectH};
+use super::PropConfig;
 
 #[derive(Debug, Deserialize)]
 pub struct PropCatalog {
@@ -30,22 +30,29 @@ impl PropCatalog {
     }
 
     /// The parts of `placed` bodies stand on and bump into, in H: its sprite's
-    /// `solid_px` boxes, set where it stands. None for a prop that is scenery.
-    pub(crate) fn solid_rects_h(&self, placed: &PropConfig) -> Vec<RectH> {
+    /// `solid_px` boxes, set where it stands and mirrored and turned about
+    /// its middle with it, each as its corners counter-clockwise from its
+    /// lower-left. None for a prop that is scenery.
+    pub(crate) fn solid_corners_h(&self, placed: &PropConfig) -> Vec<[Vec2; 4]> {
         let (Some(sprite), Some(size)) = (self.props.get(&placed.prop), self.size_h(&placed.prop))
         else {
             return Vec::new();
         };
         let left = placed.position_h.x_h - size.x / 2.0;
         let top = placed.position_h.y_h + size.y;
+        let middle = Vec2::new(placed.position_h.x_h, placed.position_h.y_h + size.y / 2.0);
         sprite
             .solid_px
             .iter()
-            .map(|[x, y, width, height]| RectH {
-                x: left + *x as f32 / self.px_per_h,
-                y: top - (y + height) as f32 / self.px_per_h,
-                width: *width as f32 / self.px_per_h,
-                height: *height as f32 / self.px_per_h,
+            .map(|[x, y, width, height]| {
+                let min = Vec2::new(
+                    left + *x as f32 / self.px_per_h,
+                    top - (y + height) as f32 / self.px_per_h,
+                );
+                let max = min + Vec2::new(*width as f32, *height as f32) / self.px_per_h;
+                placed
+                    .placement
+                    .corners_about(Rect::from_corners(min, max), middle)
             })
             .collect()
     }
@@ -133,7 +140,7 @@ impl Display for PropId {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::data::{DecorationLayer, GameData, SpawnPosition};
+    use crate::data::{DecorationLayer, GameData, Placement, SpawnPosition};
     use std::path::Path;
 
     #[test]
@@ -142,30 +149,62 @@ mod tests {
         let props = GameData::load(&asset_root)
             .expect("game data should load")
             .props;
-        let placed = |prop: &str| PropConfig {
+        let placed = |prop: &str, placement: Placement| PropConfig {
             label: None,
             prop: prop.parse().expect("a valid prop ID"),
             position_h: SpawnPosition { x_h: 5.0, y_h: 1.0 },
             layer: DecorationLayer::Background,
+            placement,
+        };
+        let as_drawn = Placement::default();
+        // The lower-left and upper-right corners of each solid box.
+        let spans = |placed: &PropConfig| {
+            props
+                .solid_corners_h(placed)
+                .into_iter()
+                .map(|corners| {
+                    (
+                        corners.into_iter().reduce(Vec2::min).unwrap_or_default(),
+                        corners.into_iter().reduce(Vec2::max).unwrap_or_default(),
+                    )
+                })
+                .collect::<Vec<_>>()
         };
 
         // The small crate fills the lower 10 px of its 16 px cell: half an H
         // wide, standing on the spot.
-        let crate_rects = props.solid_rects_h(&placed("sci_fi_small_crate"));
         assert_eq!(
-            crate_rects,
-            vec![RectH {
-                x: 4.75,
-                y: 1.0,
-                width: 0.5,
-                height: 10.0 / 32.0,
-            }]
+            spans(&placed("sci_fi_small_crate", as_drawn)),
+            vec![(Vec2::new(4.75, 1.0), Vec2::new(5.25, 1.0 + 10.0 / 32.0))]
         );
-        // The stack is two boxes: the crate on top and the pair under it.
-        assert_eq!(props.solid_rects_h(&placed("sci_fi_crate_stack")).len(), 2);
+        // Turned a quarter about its middle (5, 1.25), it stands on its side.
+        let turned = spans(&placed(
+            "sci_fi_small_crate",
+            Placement {
+                rotation_deg: 90.0,
+                ..as_drawn
+            },
+        ));
+        let (low, high) = turned[0];
+        assert!(low.abs_diff_eq(Vec2::new(4.9375, 1.0), 1e-4), "{low}");
+        assert!(high.abs_diff_eq(Vec2::new(5.25, 1.5), 1e-4), "{high}");
+        // The stack is two boxes: the crate on top and the pair under it, the
+        // top one off its middle, and mirrored to the other side of it.
+        let top_crate = |placement| spans(&placed("sci_fi_crate_stack", placement))[0];
+        assert_eq!(spans(&placed("sci_fi_crate_stack", as_drawn)).len(), 2);
+        assert_eq!(top_crate(as_drawn).0.x, 4.5 + 9.0 / 32.0);
+        assert_eq!(
+            top_crate(Placement {
+                mirrored: true,
+                ..as_drawn
+            })
+            .0
+            .x,
+            4.5 + 7.0 / 32.0
+        );
         assert!(
             props
-                .solid_rects_h(&placed("sci_fi_ceiling_lamp"))
+                .solid_corners_h(&placed("sci_fi_ceiling_lamp", as_drawn))
                 .is_empty()
         );
     }

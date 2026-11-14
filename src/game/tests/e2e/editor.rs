@@ -358,7 +358,8 @@ fn the_editor_places_a_device_tunes_it_saves_and_deletes_it() {
     let authored = devices(&game).len();
 
     // T places a laser, the kind picked when nothing else was; its rows run
-    // Label, X, Y, then its colour, its orientation and its length.
+    // Label, X, Y, Rotation, Mirrored, Opacity, then its colour, its
+    // orientation and its length.
     game.tap(KeyCode::KeyT);
     assert_eq!(devices(&game).len(), authored + 1);
     let length = |game: &HeadlessGame| match &devices(game)[authored].kind {
@@ -366,7 +367,7 @@ fn the_editor_places_a_device_tunes_it_saves_and_deletes_it() {
         other => panic!("T added a {}, not a laser", other.tag()),
     };
     let before = length(&game);
-    for _ in 0..5 {
+    for _ in 0..8 {
         game.tap(KeyCode::ArrowDown);
     }
     game.tap(KeyCode::ArrowRight);

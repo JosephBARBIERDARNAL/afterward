@@ -83,46 +83,75 @@ impl PlatformSurface {
         let props = room
             .props
             .iter()
-            .flat_map(|placed| data.props.solid_rects_h(placed))
-            .map(|rect| Self {
-                left: rect.x * H_WORLD_UNITS,
-                right: rect.right() * H_WORLD_UNITS,
-                bottom: rect.y * H_WORLD_UNITS,
-                top: rect.top() * H_WORLD_UNITS,
-                footstep: data.surfaces.color_footstep,
-                tilt: None,
+            .flat_map(|placed| data.props.solid_corners_h(placed))
+            .map(|corners| {
+                Self::from_corners(
+                    corners.map(|corner| corner * H_WORLD_UNITS),
+                    data.surfaces.color_footstep,
+                    data,
+                )
             });
         room.platforms
             .iter()
             .map(|block| {
-                let corners = block.corners_h().map(|corner| corner * H_WORLD_UNITS);
-                let low = corners.into_iter().reduce(Vec2::min).unwrap_or_default();
-                let high = corners.into_iter().reduce(Vec2::max).unwrap_or_default();
-                // A quarter turn leaves the platform square: its bounds are its shape.
-                let tilt = (block.rotation_deg % 90.0 != 0.0).then(|| {
-                    let steepest = data.gameplay.player.walkable_slope_deg.to_radians().tan();
-                    let rise =
-                        |(from, to): &(Vec2, Vec2)| ((to.y - from.y) / (to.x - from.x)).abs();
-                    // Going round counter-clockwise, the faces that look up are the
-                    // ones running right to left.
-                    let floor = (0..4)
-                        .map(|index| (corners[(index + 1) % 4], corners[index]))
-                        .filter(|(from, to)| from.x < to.x)
-                        .min_by(|first, second| rise(first).total_cmp(&rise(second)))
-                        .filter(|face| rise(face) <= steepest);
-                    Tilt { corners, floor }
-                });
-                Self {
-                    left: low.x,
-                    right: high.x,
-                    bottom: low.y,
-                    top: high.y,
-                    footstep: data.surfaces.footstep(&block.fill),
-                    tilt,
-                }
+                Self::from_corners(
+                    block.corners_h().map(|corner| corner * H_WORLD_UNITS),
+                    data.surfaces.footstep(&block.fill),
+                    data,
+                )
             })
             .chain(props)
             .collect()
+    }
+
+    /// The collider of a solid box whose corners, in world units, run
+    /// counter-clockwise from its lower-left: square while its sides run
+    /// along the axes (unturned, or turned a quarter), tilted otherwise.
+    pub(super) fn from_corners(
+        corners: [Vec2; 4],
+        footstep: FootstepSound,
+        data: &GameData,
+    ) -> Self {
+        let low = corners.into_iter().reduce(Vec2::min).unwrap_or_default();
+        let high = corners.into_iter().reduce(Vec2::max).unwrap_or_default();
+        // Turning by a quarter leaves a hair of rounding, which is no tilt.
+        let along_axes = (0..4).all(|index| {
+            let edge = corners[(index + 1) % 4] - corners[index];
+            edge.x.abs() < 0.01 || edge.y.abs() < 0.01
+        });
+        let tilt = (!along_axes).then(|| {
+            let steepest = data.gameplay.player.walkable_slope_deg.to_radians().tan();
+            let rise = |(from, to): &(Vec2, Vec2)| ((to.y - from.y) / (to.x - from.x)).abs();
+            // Going round counter-clockwise, the faces that look up are the
+            // ones running right to left.
+            let floor = (0..4)
+                .map(|index| (corners[(index + 1) % 4], corners[index]))
+                .filter(|(from, to)| from.x < to.x)
+                .min_by(|first, second| rise(first).total_cmp(&rise(second)))
+                .filter(|face| rise(face) <= steepest);
+            Tilt { corners, floor }
+        });
+        Self {
+            left: low.x,
+            right: high.x,
+            bottom: low.y,
+            top: high.y,
+            footstep,
+            tilt,
+        }
+    }
+
+    /// Moves the collider by `delta`, its slope with it: a platform that
+    /// travels.
+    pub(super) fn shift(&mut self, delta: Vec2) {
+        self.left += delta.x;
+        self.right += delta.x;
+        self.bottom += delta.y;
+        self.top += delta.y;
+        if let Some(tilt) = &mut self.tilt {
+            tilt.corners = tilt.corners.map(|corner| corner + delta);
+            tilt.floor = tilt.floor.map(|(from, to)| (from + delta, to + delta));
+        }
     }
 
     /// The height the feet of a body centered at `x` stand at on this

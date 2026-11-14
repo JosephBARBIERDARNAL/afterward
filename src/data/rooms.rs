@@ -2,7 +2,7 @@
 
 use std::path::{Path, PathBuf};
 
-use bevy::math::Vec2;
+use bevy::math::{Rect, Vec2};
 use serde::Deserialize;
 
 use super::{Backdrop, BackgroundLayerRef, DeviceConfig, EnemyTypeId, Fill, ProfileLayer, PropId};
@@ -115,10 +115,9 @@ pub struct PlatformConfig {
     #[serde(flatten)]
     pub fill: Fill,
     pub rect_h: RectH,
-    /// How far the platform is turned about the middle of `rect_h`, in
-    /// degrees counter-clockwise. Left out, it stands square.
-    #[serde(default)]
-    pub rotation_deg: f32,
+    /// Mirrored, turned about the middle of `rect_h`, and faded.
+    #[serde(flatten)]
+    pub placement: Placement,
 }
 
 impl PlatformConfig {
@@ -126,20 +125,75 @@ impl PlatformConfig {
     /// the one that is its lower-left while it stands square.
     pub(crate) fn corners_h(&self) -> [Vec2; 4] {
         let rect = self.rect_h;
-        let corners = [
-            Vec2::new(rect.x, rect.y),
-            Vec2::new(rect.right(), rect.y),
-            Vec2::new(rect.right(), rect.top()),
-            Vec2::new(rect.x, rect.top()),
-        ];
-        // A platform left square keeps the corners it was authored with,
-        // exactly: turning them by nothing would still round them.
-        if self.rotation_deg == 0.0 {
-            return corners;
+        self.placement
+            .corners(Rect::new(rect.x, rect.y, rect.right(), rect.top()))
+    }
+}
+
+/// How an item a room places is mirrored, turned and faded: every platform,
+/// decoration, prop and device has one, left out of its room entry while it
+/// stands as drawn.
+#[derive(Debug, Clone, Copy, PartialEq, Deserialize)]
+#[serde(default)]
+pub struct Placement {
+    /// Flipped left to right about its middle, what holds a body up or hurts
+    /// it included.
+    pub mirrored: bool,
+    /// How far it is turned about its middle, in degrees counter-clockwise.
+    pub rotation_deg: f32,
+    /// How opaque it is drawn, from 0 (unseen) to 1.
+    pub opacity: f32,
+}
+
+impl Default for Placement {
+    /// As drawn: neither mirrored nor turned, and fully opaque.
+    fn default() -> Self {
+        Self {
+            mirrored: false,
+            rotation_deg: 0.0,
+            opacity: 1.0,
         }
-        let middle = Vec2::new(rect.x + rect.width / 2.0, rect.y + rect.height / 2.0);
-        let turn = Vec2::from_angle(self.rotation_deg.to_radians());
-        corners.map(|corner| middle + turn.rotate(corner - middle))
+    }
+}
+
+impl Placement {
+    /// Where `point` lands once mirrored and turned about `pivot`.
+    pub(crate) fn place(&self, point: Vec2, pivot: Vec2) -> Vec2 {
+        let mirrored = if self.mirrored {
+            Vec2::new(2.0 * pivot.x - point.x, point.y)
+        } else {
+            point
+        };
+        // An item left square keeps the points it was given, exactly:
+        // turning them by nothing would still round them.
+        if self.rotation_deg == 0.0 {
+            return mirrored;
+        }
+        pivot + Vec2::from_angle(self.rotation_deg.to_radians()).rotate(mirrored - pivot)
+    }
+
+    /// The corners of `rect`, a part of an item whose middle is the middle
+    /// of `rect`, once placed: counter-clockwise from its lower-left.
+    pub(crate) fn corners(&self, rect: Rect) -> [Vec2; 4] {
+        self.corners_about(rect, rect.center())
+    }
+
+    /// The corners of `rect`, a part of an item whose middle is `pivot`, once
+    /// placed: counter-clockwise from its lower-left, so a mirrored one is
+    /// read the other way round.
+    pub(crate) fn corners_about(&self, rect: Rect, pivot: Vec2) -> [Vec2; 4] {
+        let corners = [
+            rect.min,
+            Vec2::new(rect.max.x, rect.min.y),
+            rect.max,
+            Vec2::new(rect.min.x, rect.max.y),
+        ]
+        .map(|corner| self.place(corner, pivot));
+        if self.mirrored {
+            [corners[1], corners[0], corners[3], corners[2]]
+        } else {
+            corners
+        }
     }
 }
 
@@ -173,6 +227,8 @@ pub struct DecorationConfig {
     pub fill: Fill,
     pub layer: DecorationLayer,
     pub rect_h: RectH,
+    #[serde(flatten)]
+    pub placement: Placement,
 }
 
 /// A prop placed in a room: `prop` of `props/props.yaml`, drawn once at its
@@ -186,6 +242,8 @@ pub struct PropConfig {
     /// Behind the bodies (over the platforms) when left out, or over them.
     #[serde(default)]
     pub layer: DecorationLayer,
+    #[serde(flatten)]
+    pub placement: Placement,
 }
 
 /// Where a decoration panel is drawn: behind the platforms, or over the

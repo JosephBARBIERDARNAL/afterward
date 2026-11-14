@@ -81,14 +81,10 @@ pub(super) fn move_platforms(time: Res<Time>, mut movers: Movers) {
         transform.translation.x = at.x;
         transform.translation.y = at.y;
         if let Some(mut surface) = surface {
-            surface.left += delta.x;
-            surface.right += delta.x;
-            surface.bottom += delta.y;
-            surface.top += delta.y;
+            surface.shift(delta);
         }
         if let Some(mut hurts) = hurts {
-            hurts.area.min += delta;
-            hurts.area.max += delta;
+            hurts.corners = hurts.corners.map(|corner| corner + delta);
         }
     }
 }
@@ -110,10 +106,17 @@ pub(super) fn carry_riders(
                 mover.previous = at;
                 (delta, surface.top - delta.y)
             }
-            (DeviceKind::Conveyor(belt), _) => (
-                Vec2::new(belt.speed_h_s * H_WORLD_UNITS * dt, 0.0),
-                surface.top,
-            ),
+            (DeviceKind::Conveyor(belt), _) => {
+                // Along the belt as it is placed: mirrored, it runs the other
+                // way; turned, up or down its slope.
+                let placement = device.config.placement;
+                let way = if placement.mirrored { -1.0 } else { 1.0 };
+                let along = Vec2::from_angle(placement.rotation_deg.to_radians());
+                (
+                    along * way * belt.speed_h_s * H_WORLD_UNITS * dt,
+                    surface.top,
+                )
+            }
             _ => continue,
         };
         if delta == Vec2::ZERO {

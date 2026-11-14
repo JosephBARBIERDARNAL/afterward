@@ -94,7 +94,11 @@ fn fire_shot(
     let Some(muzzle) = device_box(config, &data.devices, "muzzle", center) else {
         return;
     };
-    let direction = f32::from(turret.facing);
+    // The way it faces, mirrored and turned as the turret is.
+    let placement = config.placement;
+    let muzzle = placement.place(muzzle.center(), center);
+    let facing = f32::from(turret.facing) * if placement.mirrored { -1.0 } else { 1.0 };
+    let heading = Vec2::from_angle(placement.rotation_deg.to_radians()) * facing;
     let px = data.devices.px_per_h;
     let size = Vec2::splat(16.0 / px) * H_WORLD_UNITS;
     let speed = turret.shot_speed_h_s * H_WORLD_UNITS;
@@ -108,13 +112,14 @@ fn fire_shot(
                 16.0,
             )),
             custom_size: Some(size),
-            flip_x: direction < 0.0,
             ..default()
         },
-        Transform::from_translation(muzzle.center().extend(DEVICE_Z + 0.1)),
+        // The shot is drawn heading right, and turned the way it flies.
+        Transform::from_translation(muzzle.extend(DEVICE_Z + 0.1))
+            .with_rotation(Quat::from_rotation_z(heading.to_angle())),
         combat::CombatProjectile {
-            velocity_x: direction * speed,
-            velocity_y: 0.0,
+            velocity_x: heading.x * speed,
+            velocity_y: heading.y * speed,
             damage: turret.damage,
             life_s: SHOT_LIFE_S,
             remaining_range: speed * SHOT_LIFE_S,

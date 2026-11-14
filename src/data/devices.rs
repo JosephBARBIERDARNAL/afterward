@@ -17,7 +17,7 @@ use std::{
 use bevy::math::{Rect, Vec2};
 use serde::Deserialize;
 
-use super::{Facing, SpawnPosition};
+use super::{Facing, Placement, SpawnPosition};
 
 /// A device placed in a room.
 #[derive(Debug, Clone, PartialEq, Deserialize)]
@@ -28,6 +28,10 @@ pub struct DeviceConfig {
     pub position_h: SpawnPosition,
     #[serde(flatten)]
     pub kind: DeviceKind,
+    /// Mirrored, turned about its middle, and faded: what of it hurts and
+    /// holds a body up turns and mirrors with it.
+    #[serde(flatten)]
+    pub placement: Placement,
 }
 
 /// What a device is, and the values that tune it.
