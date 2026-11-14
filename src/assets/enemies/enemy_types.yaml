@@ -50,10 +50,9 @@ jumping:
 # armoured chassis (metal) and a light frame (polymer). The sprite sheets
 # they currently wear are placeholders from a fantasy pack and do not match
 # these names yet
-# A ranged_keep_distance type closes in to the far end of its
-# preferred_distance_h and fires as soon as its shot is ready, however close
-# the player stands. It only backs away, toward the near end, while the shot
-# cools down.
+# A ranged_keep_distance type closes in to its preferred_distance_h and
+# fires as soon as its shot is ready, however close the player stands. It
+# never backs away: it holds its ground while the shot cools down.
 # An attack may name the `clip` it plays (the sheet `<type>_<clip>`) and the
 # `strike_frame` of it the blow lands on: the frames before that one are then
 # spread over windup_s, so the telegraph ends exactly as it hits, and the
@@ -94,7 +93,7 @@ types:
     material: metal
     movement_speed_h_s: 1.5
     behavior: ranged_keep_distance
-    preferred_distance_h: { min: 5, max: 8 }
+    preferred_distance_h: 8
     attack:
       kind: projectile
       damage: 8
@@ -109,7 +108,7 @@ types:
     material: metal
     movement_speed_h_s: 0.8
     behavior: ranged_keep_distance
-    preferred_distance_h: { min: 6, max: 10 }
+    preferred_distance_h: 10
     attack:
       kind: charged_projectile
       damage: 14
@@ -155,7 +154,7 @@ types:
     material: metal
     movement_speed_h_s: 2
     behavior: ranged_keep_distance
-    preferred_distance_h: { min: 5, max: 8 }
+    preferred_distance_h: 8
     attack:
       kind: projectile
       damage: 12
@@ -169,7 +168,7 @@ types:
     material: metal
     movement_speed_h_s: 1.1
     behavior: ranged_keep_distance
-    preferred_distance_h: { min: 6, max: 10 }
+    preferred_distance_h: 10
     attack:
       kind: charged_projectile
       damage: 20
@@ -335,7 +334,7 @@ types:
         bottom_padding_px: 0,
         origin_above_feet_px: 15,
       }
-    preferred_distance_h: { min: 4, max: 7.5 }
+    preferred_distance_h: 7.5
     attack:
       kind: hazard
       clip: attack
@@ -420,7 +419,7 @@ types:
     material: polymer
     movement_speed_h_s: 1.8
     behavior: ranged_keep_distance
-    preferred_distance_h: { min: 5, max: 8 }
+    preferred_distance_h: 8
     sprite:
       {
         scale: 1.4,
@@ -543,7 +542,7 @@ types:
         bottom_padding_px: 0,
         origin_above_feet_px: 15,
       }
-    preferred_distance_h: { min: 4, max: 7.5 }
+    preferred_distance_h: 7.5
     attack:
       kind: hazard
       clip: attack
@@ -569,7 +568,7 @@ types:
         bottom_padding_px: 0,
         origin_above_feet_px: 15,
       }
-    preferred_distance_h: { min: 4, max: 7.5 }
+    preferred_distance_h: 7.5
     attack:
       kind: hazard
       clip: attack
@@ -594,7 +593,7 @@ types:
         bottom_padding_px: 0,
         origin_above_feet_px: 15,
       }
-    preferred_distance_h: { min: 4, max: 7.5 }
+    preferred_distance_h: 7.5
     attack:
       kind: hazard
       clip: attack

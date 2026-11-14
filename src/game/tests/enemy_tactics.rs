@@ -114,12 +114,12 @@ next_room_id: 4
 }
 
 #[test]
-fn a_ranged_enemy_fires_at_a_player_standing_against_it_before_backing_away() {
+fn a_ranged_enemy_fires_at_a_player_standing_against_it_and_holds_its_ground() {
     let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
     let mut data = GameData::load(&asset_root).expect("Chapter 1 data should load");
     // A fixed layout, independent of the authored rooms: a flat floor, and a
     // rifle unit with the player 1 H in front of it, far inside the distance
-    // it likes to keep.
+    // it closes to.
     *data.rooms.get_mut(&3).expect("room 3 should exist") = yaml_serde::from_str(
         "
 room_id: 3
@@ -204,13 +204,14 @@ next_room_id: 4
         "the enemy should fire from where it stands, without backing away first"
     );
 
-    // With the shot cooling down it takes its distance again.
+    // With the shot cooling down it holds its ground rather than backing away.
     for _ in 0..10 {
         app.update();
     }
-    assert!(
-        enemy_x_h(&mut app) > 20.5,
-        "the enemy should back away while its next shot cools down"
+    assert_eq!(
+        enemy_x_h(&mut app),
+        20.0,
+        "the enemy should not back away while its next shot cools down"
     );
 }
 

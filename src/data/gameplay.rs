@@ -593,9 +593,3 @@ pub enum WindowStartMode {
     /// A regular window at the platform's default size.
     Windowed,
 }
-
-#[derive(Debug, Deserialize)]
-pub struct RangeConfig {
-    pub min: f32,
-    pub max: f32,
-}

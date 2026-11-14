@@ -10,7 +10,7 @@ use std::{
 
 use serde::{Deserialize, Deserializer, de::Error as DeserializeError};
 
-use super::{RangeConfig, RectH, SizeH};
+use super::{RectH, SizeH};
 
 #[derive(Debug, Deserialize)]
 pub struct EnemyTypes {
@@ -131,7 +131,7 @@ pub struct EnemyTypeConfig {
     /// Where bullets hit the enemy: centered on the body, from the feet up.
     pub hurtbox_h: SizeH,
     pub procedural_movement: Option<ProceduralMovementConfig>,
-    pub preferred_distance_h: Option<RangeConfig>,
+    pub preferred_distance_h: Option<f32>,
     pub attack: Option<EnemyAttackConfig>,
     #[serde(default)]
     pub attacks: Vec<EnemyAttackConfig>,

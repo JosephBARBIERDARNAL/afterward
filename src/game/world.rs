@@ -392,10 +392,6 @@ pub(super) fn spawn_enemies(
         };
         let health = profile.health;
         let armor = spawn.armor_layers + profile.armor_layers;
-        let preferred_distance_h = profile
-            .preferred_distance_h
-            .as_ref()
-            .map(|range| (range.min, range.max));
         let phase_two = profile
             .phase_two
             .as_ref()
@@ -462,7 +458,7 @@ pub(super) fn spawn_enemies(
                             lean_radians: movement.lean_degrees.to_radians(),
                         }
                     }),
-                    preferred_distance_h,
+                    preferred_distance_h: profile.preferred_distance_h,
                     attacks,
                     facing,
                     engaged: arriving,

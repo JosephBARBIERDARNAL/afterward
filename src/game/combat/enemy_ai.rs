@@ -560,10 +560,9 @@ pub(in crate::game) fn update_enemy_ai(
         // it is its way there.
         let other_level = on_another_floor && attack.kind != "blink";
         let opens_at_h = attack.start_range_h.unwrap_or(attack.reach_h) + player_half_width_h;
-        let (minimum_distance, maximum_distance) = if enemy.behavior == "ranged_keep_distance" {
-            enemy.preferred_distance_h.unwrap_or((0.0, opens_at_h))
-        } else {
-            (0.0, opens_at_h)
+        let maximum_distance = match enemy.preferred_distance_h {
+            Some(preferred) if enemy.behavior == "ranged_keep_distance" => preferred,
+            _ => opens_at_h,
         };
         let standing = surfaces
             .standing_on(feet.x, feet.y, SLOPE_STRIDE)
@@ -571,14 +570,8 @@ pub(in crate::game) fn update_enemy_ai(
             .map(|(platform, _)| platform);
         let should_approach = distance_h > maximum_distance || other_level;
         // A shot that is ready is fired from wherever the enemy stands, however
-        // close the player is: it only backs away while the next one cools.
-        let should_retreat =
-            !other_level && distance_h < minimum_distance && enemy.attack_cooldown > 0.0;
-        let mut direction = if should_approach {
-            dx.signum()
-        } else {
-            -dx.signum()
-        };
+        // close the player is, and it never backs away: it holds its ground.
+        let mut direction = dx.signum();
         let route = JumpRoute {
             feet,
             target_feet: mark.feet,
@@ -588,7 +581,6 @@ pub(in crate::game) fn update_enemy_ai(
             gravity,
             level_change_threshold,
         };
-        // Only the way to the player is worth a leap: backing away never is.
         let plan = standing
             .filter(|_| should_approach)
             .and_then(|platform| route.plan(platform, &surfaces));
@@ -641,7 +633,7 @@ pub(in crate::game) fn update_enemy_ai(
                     && floor >= mark.feet.y - level_change_threshold
             });
         waiting |= !(keeps_its_floor || drops_after_the_player);
-        if (should_approach || should_retreat) && !waiting {
+        if should_approach && !waiting {
             enemy.movement_sound_timer = (enemy.movement_sound_timer - dt).max(0.0);
             if enemy.movement_sound_timer == 0.0 {
                 sounds.push(SoundCue::EnemyMovement(audio::EnemySoundStyle::from(
@@ -649,9 +641,7 @@ pub(in crate::game) fn update_enemy_ai(
                 )));
                 enemy.movement_sound_timer = data.gameplay.audio.footstep_interval_s;
             }
-            if should_approach {
-                sprite.flip_x = direction < 0.0;
-            }
+            sprite.flip_x = direction < 0.0;
             transform.translation.x = next_x;
             let movement_speed_h_s = enemy.movement_speed_h_s;
             let home_y = enemy.home_y;
