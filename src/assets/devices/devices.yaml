@@ -94,24 +94,30 @@ kinds:
     boxes:
       body: [8, 1, 21, 13]
       muzzle: [6, 6, 2, 3]
-  # The button and the door are drawn twice the size of the rest, so the
-  # door is a doorway for the hero.
+  # Frames: up, then sinking in as it is pressed; it rises again when
+  # pressed a second time.
   button:
     sheets:
       default: { sheet: devices/sci_fi/button.png, frames: 4 }
     frame_px: [16, 16]
     fps: 12
-    px_per_h: 16
+    px_per_h: 48
   # Frames: closed (red light), unlocked (green), 3 opening to fully open,
-  # 2 closing.
+  # 2 closing. Drawn a little bigger than the rest, so that once open the gap
+  # between the stubs left at its top and bottom (which stay solid) is just
+  # taller than the hero. Its spot is the top of its bottom stub: the frame
+  # stands `sink_px` lower, that stub sunk into the floor it stands on.
   door:
     sheets:
       default: { sheet: devices/sci_fi/door.png, frames: 7 }
     frame_px: [16, 32]
     fps: 12
-    px_per_h: 16
+    px_per_h: 25.6
+    sink_px: 3
     boxes:
       solid: [1, 0, 14, 32]
+      open_top: [1, 0, 14, 3]
+      open_bottom: [1, 29, 14, 3]
   # Frames: its top, then a rung repeated down to its foot.
   ladder:
     sheets:

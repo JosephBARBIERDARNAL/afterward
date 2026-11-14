@@ -467,7 +467,8 @@ impl Default for TurretConfig {
     }
 }
 
-/// A button, pressed with Interact, that opens every door sharing its `link`.
+/// A button, pressed with Interact, that opens every door sharing its `link`,
+/// and closes them again when pressed a second time.
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(default)]
 pub struct ButtonConfig {
@@ -480,7 +481,9 @@ impl Default for ButtonConfig {
     }
 }
 
-/// A sliding door, solid until a button sharing its `link` is pressed.
+/// A sliding door, solid until a button sharing its `link` is pressed, and
+/// again once it is pressed a second time; open, the stubs left at its top
+/// and bottom are still solid.
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(default)]
 pub struct DoorConfig {
@@ -732,7 +735,9 @@ impl DeviceConfig {
     /// The rectangle the device takes up in the room, in H.
     pub(crate) fn bounds_h(&self, art: &DeviceArt) -> Rect {
         let size = self.kind.size_h(art);
-        let feet = Vec2::new(self.position_h.x_h, self.position_h.y_h);
+        let tag = self.kind.tag();
+        let sink = art.kinds.get(&tag).map_or(0.0, |kind| kind.sink_px as f32) / art.px_per_h(tag);
+        let feet = Vec2::new(self.position_h.x_h, self.position_h.y_h - sink);
         Rect::from_corners(
             feet - Vec2::new(size.x / 2.0, 0.0),
             feet + Vec2::new(size.x / 2.0, size.y),
@@ -759,6 +764,9 @@ pub struct DeviceKindArt {
     /// Its own pixels per H, drawn bigger or smaller than the others.
     #[serde(default)]
     pub px_per_h: Option<f32>,
+    /// How many of its frame's bottom rows stand below its spot.
+    #[serde(default)]
+    pub sink_px: u32,
     /// Named boxes of the frame, `[left, top, width, height]` in pixels from
     /// its top-left corner: which part hurts, which part is solid.
     #[serde(default)]

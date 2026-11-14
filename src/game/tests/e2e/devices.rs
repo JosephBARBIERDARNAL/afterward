@@ -79,13 +79,20 @@ fn a_laser_costs_nothing_while_off_or_warning_and_hurts_once_on() {
 }
 
 #[test]
-fn a_button_opens_the_door_sharing_its_link() {
+fn a_button_opens_the_doors_sharing_its_link_and_closes_them_again() {
     let mut game = play_in(hall(
-        "  - { kind: button, position_h: { x: 3.5, y: 1 }, link: 4 }
+        "  - { kind: button, position_h: { x: 3.25, y: 1 }, link: 4 }
   - { kind: door, position_h: { x: 8, y: 1 }, link: 4 }
   - { kind: door, position_h: { x: 12, y: 1 }, link: 5 }",
     ));
+    // Every collider of the hall: its floor, and its doors or what is left
+    // of them.
+    let colliders = |game: &mut HeadlessGame| {
+        let world = game.app.world_mut();
+        world.query::<&PlatformSurface>().iter(world).count()
+    };
     assert_eq!(solid_devices(&mut game), 2, "both doors stand closed");
+    let closed = colliders(&mut game);
     game.tap(KeyCode::KeyE);
     game.run_seconds(1.0);
     assert_eq!(
@@ -93,6 +100,37 @@ fn a_button_opens_the_door_sharing_its_link() {
         1,
         "the door of link 4 opened, the other did not"
     );
+    assert_eq!(
+        colliders(&mut game),
+        closed + 1,
+        "open, its whole body gave way to the two stubs at its top and bottom"
+    );
+    game.tap(KeyCode::KeyE);
+    game.run_seconds(1.0);
+    assert_eq!(solid_devices(&mut game), 2, "pressed again, it closed");
+    assert_eq!(colliders(&mut game), closed, "and its stubs went with it");
+}
+
+#[test]
+fn the_hero_walks_through_an_open_door_between_its_stubs() {
+    let mut game = play_in(hall(
+        "  - { kind: button, position_h: { x: 5.25, y: 1 }, link: 1 }
+  - { kind: door, position_h: { x: 6, y: 1 }, link: 1 }",
+    ));
+    // Shut, it stops the hero, beside its button.
+    game.key(KeyCode::KeyD, ButtonState::Pressed);
+    game.run_seconds(1.0);
+    game.key(KeyCode::KeyD, ButtonState::Released);
+    let x = player_x(&mut game) / H_WORLD_UNITS;
+    assert!(x < 6.0, "the closed door let the hero through to x {x} H");
+    // The button, and through the open door.
+    game.tap(KeyCode::KeyE);
+    game.run_seconds(1.0);
+    game.key(KeyCode::KeyD, ButtonState::Pressed);
+    game.run_seconds(1.5);
+    game.key(KeyCode::KeyD, ButtonState::Released);
+    let x = player_x(&mut game) / H_WORLD_UNITS;
+    assert!(x > 7.0, "the open door stopped the hero at x {x} H");
 }
 
 #[test]
