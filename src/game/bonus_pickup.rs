@@ -103,6 +103,7 @@ pub(super) fn spawn_bonus_pickup(
                 } else {
                     1.0
                 },
+            brightness: 1.0,
         },
         RoomEntity,
     ));

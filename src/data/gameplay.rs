@@ -510,6 +510,8 @@ pub struct GlowConfig {
     pub bonus_radius_h: f32,
     pub health_radius_h: f32,
     pub door_radius_h: f32,
+    /// How bright a health drop's light burns, as a share of `strength`.
+    pub health_brightness: f32,
     pub health_color: HexColor,
     pub door_color: HexColor,
     /// How much brighter the aura of the thing within reach of Interact burns.

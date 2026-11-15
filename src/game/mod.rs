@@ -327,6 +327,7 @@ impl Plugin for GamePlugin {
                     combat::update_impact_effects,
                     combat::update_health_bars,
                     combat::update_enemy_shields,
+                    combat::drop_health_pickups,
                     combat::update_health_pickups,
                     combat::update_healing_over_time,
                 )

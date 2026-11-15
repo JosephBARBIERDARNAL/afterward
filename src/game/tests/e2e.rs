@@ -53,6 +53,7 @@ mod menus;
 mod move_bonuses;
 mod opening_room;
 mod pause;
+mod pickups;
 mod prologue;
 mod room_pan;
 mod run;

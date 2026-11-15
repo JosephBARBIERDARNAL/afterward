@@ -307,8 +307,10 @@ effects:
     pulse_period_s: 2.8
     # How far the light reaches past what it wraps, in H.
     bonus_radius_h: 0.8
-    health_radius_h: 0.6
+    health_radius_h: 0.45
     door_radius_h: 1.2
+    # A health drop is lit more softly than what the player must walk to.
+    health_brightness: 0.45
     # How much brighter the aura of the thing within reach of Interact burns.
     reach_boost: 1.6
     # A bonus item lights in its category's colour; these two light in their own.

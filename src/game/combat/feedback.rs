@@ -274,6 +274,31 @@ pub(in crate::game) fn update_health_bars(
     }
 }
 
+/// Drops each health drop from where the body was struck down to the floor
+/// under it, so it always lies on the ground.
+pub(in crate::game) fn drop_health_pickups(
+    data: Res<GameData>,
+    time: Res<Time>,
+    platforms: Query<&PlatformSurface>,
+    mut pickups: Query<(&mut Transform, &mut HealthPickup)>,
+) {
+    let surfaces = Platforms(platforms.iter().collect());
+    let half_height = data.gameplay.health_pickup.size_h * H_WORLD_UNITS / 2.0;
+    let gravity = data.gameplay.player.gravity_h_s2 * H_WORLD_UNITS;
+    for (mut transform, mut pickup) in &mut pickups {
+        let bottom = transform.translation.y - half_height;
+        let Some(floor) = surfaces.floor_below(transform.translation.x, bottom) else {
+            continue;
+        };
+        if bottom <= floor {
+            continue;
+        }
+        pickup.fall_speed += gravity * time.delta_secs();
+        transform.translation.y =
+            (bottom - pickup.fall_speed * time.delta_secs()).max(floor) + half_height;
+    }
+}
+
 pub(in crate::game) fn update_health_pickups(
     mut commands: Commands,
     data: Res<GameData>,

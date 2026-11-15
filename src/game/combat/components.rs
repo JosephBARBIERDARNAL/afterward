@@ -40,6 +40,9 @@ pub(crate) struct DamageNumber {
 #[derive(Component)]
 pub(crate) struct HealthPickup {
     pub(crate) healing: f32,
+    /// How fast it is falling, in world units a second: it drops from where
+    /// the body fell to the floor under it, and lies there.
+    pub(crate) fall_speed: f32,
 }
 
 /// The green plusses drifting off something being healed: they hang over a

@@ -368,14 +368,16 @@ pub(super) fn land_the_blow(
                     .spawn((
                         pickup,
                         Transform::from_translation(
-                            enemy_transform.translation + Vec3::new(0.0, 20.0, 0.8),
+                            enemy_transform.translation + Vec3::new(0.0, 0.0, 0.8),
                         ),
                         HealthPickup {
                             healing: item.healing,
+                            fall_speed: 0.0,
                         },
                         Glowing {
                             color: Color::from(data.gameplay.effects.glow.health_color),
                             radius_h: data.gameplay.effects.glow.health_radius_h,
+                            brightness: data.gameplay.effects.glow.health_brightness,
                         },
                         RoomEntity,
                     ))

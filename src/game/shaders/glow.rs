@@ -15,6 +15,8 @@ pub(in crate::game) struct Glowing {
     pub(in crate::game) color: Color,
     /// How far the light reaches past the thing it belongs to, in H.
     pub(in crate::game) radius_h: f32,
+    /// How bright it burns, as a share of `effects.glow.strength`.
+    pub(in crate::game) brightness: f32,
 }
 
 /// Marks a `Glowing` whose aura has been hung, so it is only built once.
@@ -62,7 +64,8 @@ pub(in crate::game) fn attach_glows(
         let phase = (entity.index_u32() % 97) as f32 / 97.0;
         let material = assets.glows.add(GlowMaterial {
             settings: GlowSettings {
-                color: LinearRgba::from(glow.color.with_alpha(config.strength)).to_vec4(),
+                color: LinearRgba::from(glow.color.with_alpha(config.strength * glow.brightness))
+                    .to_vec4(),
                 pulse: Vec4::new(config.pulse, config.pulse_period_s, phase, 0.0),
             },
         });
@@ -80,16 +83,18 @@ pub(super) fn brighten_what_is_in_reach(
     data: Res<GameData>,
     in_reach: Res<InReach>,
     mut glows: ResMut<Assets<GlowMaterial>>,
-    glowing: Query<(Entity, &Children), With<GlowAttached>>,
+    glowing: Query<(Entity, &Glowing, &Children), With<GlowAttached>>,
     auras: Query<&MeshMaterial2d<GlowMaterial>>,
 ) {
     let config = &data.gameplay.effects.glow;
-    for (entity, children) in &glowing {
-        let strength = if in_reach.0 == Some(entity) {
-            config.strength * config.reach_boost
-        } else {
-            config.strength
-        };
+    for (entity, glowing, children) in &glowing {
+        let strength = config.strength
+            * glowing.brightness
+            * if in_reach.0 == Some(entity) {
+                config.reach_boost
+            } else {
+                1.0
+            };
         for aura in children.iter().filter_map(|child| auras.get(child).ok()) {
             // Only an aura whose brightness has to move is touched, so the
             // others are not uploaded again every frame.
@@ -128,6 +133,7 @@ pub(in crate::game) fn light_the_unlocked_door(
                     }),
             ),
             radius_h: data.gameplay.effects.glow.door_radius_h,
+            brightness: 1.0,
         });
     }
 }

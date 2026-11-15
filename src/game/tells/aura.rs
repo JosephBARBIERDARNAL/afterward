@@ -72,6 +72,7 @@ pub(crate) fn wear_the_aura(
         Glowing {
             color,
             radius_h: data.gameplay.effects.tells.aura_radius_h,
+            brightness: 1.0,
         },
         Transform::default(),
         Visibility::default(),

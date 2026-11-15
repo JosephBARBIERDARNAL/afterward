@@ -39,8 +39,8 @@ pub(super) use falls::update_falls;
 pub(in crate::game) use feedback::play_effect;
 pub(super) use feedback::{HEALTH_BAR, SHIELDED_HEALTH_BAR};
 pub(super) use feedback::{
-    update_damage_numbers, update_dead_enemies, update_healing_over_time, update_health_bars,
-    update_health_pickups, update_hit_effects, update_impact_effects,
+    drop_health_pickups, update_damage_numbers, update_dead_enemies, update_healing_over_time,
+    update_health_bars, update_health_pickups, update_hit_effects, update_impact_effects,
 };
 pub(super) use hazards::{Hazard, update_hazards};
 use hitboxes::blow_area;
