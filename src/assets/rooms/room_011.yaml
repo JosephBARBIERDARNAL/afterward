@@ -124,7 +124,7 @@ props:
     colorway: dusk
   - label: fan
     prop: sci_fi_framed_fan
-    position_h: { x: 7, y: 4 }
+    position_h: { x: 5, y: 1.5 }
     colorway: dusk
   - label: lamp
     prop: sci_fi_lamp_off
@@ -150,6 +150,8 @@ props:
     prop: sci_fi_grate_panel
     position_h: { x: 39, y: 4 }
     colorway: dusk
+# Devices: traps, moving and folding platforms, buttons, doors and
+# ladders, each standing on a spot (the middle of its bottom edge).
 devices:
   - label: light strip
     kind: light_strip

@@ -75,7 +75,7 @@ props:
 devices:
   - kind: terminal
     position_h: { x: 1.75, y: 3.5 }
-    text: "BLUEPRINT 10. SEALED. WHAT GUARDS THIS DOOR WAS NEVER DRAWN ON THE PLANS."
+    text: BLUEPRINT 10. SEALED. WHAT GUARDS THIS DOOR WAS NEVER DRAWN ON THE PLANS.
   - kind: laser
     position_h: { x: 3, y: 1 }
     color: red
@@ -102,6 +102,10 @@ devices:
     travel_y_h: 0
     speed_h_s: 2
     damage: 15
+  - kind: light_strip
+    position_h: { x: 9, y: 1.25 }
+    orientation: horizontal
+    length_h: 4.5
 enemy_spawns:
   - type_id: dark_blade_unit
     position_h: { x: 4, y: 3.5 }

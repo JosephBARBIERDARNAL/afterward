@@ -115,7 +115,7 @@ platforms:
     rect_h: { x: 31.5, y: 11.5, width: 8.5, height: 0.5 }
   - label: the ramp down from the middle roof to the west roof
     material: sci_fi_green_edge
-    rect_h: { x: 25.25, y: 10.75, width: 5.85, height: 0.5 }
+    rect_h: { x: 25.25, y: 10.5, width: 6.1, height: 0.5 }
     rotation_deg: 20
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
@@ -263,7 +263,7 @@ props:
 devices:
   - kind: terminal
     position_h: { x: 5.5, y: 8 }
-    text: "CITY ACCESS LOG. 'IF YOU READ THIS, TURN BACK. NOBODY CAME BACK FROM ROOM 10.'"
+    text: CITY ACCESS LOG. 'IF YOU READ THIS, TURN BACK. NOBODY CAME BACK FROM ROOM 10.'
     mirrored: true
   - kind: laser
     position_h: { x: 22, y: 1 }
@@ -297,6 +297,14 @@ devices:
     travel_y_h: 0
     speed_h_s: 2
     damage: 15
+  - kind: light_strip
+    position_h: { x: 16.5, y: 1.25 }
+    orientation: horizontal
+    length_h: 7.5
+  - kind: light_strip
+    position_h: { x: 45, y: 1.25 }
+    orientation: horizontal
+    length_h: 6.5
 enemy_spawns:
   - type_id: blade_unit
     position_h: { x: 14, y: 1 }

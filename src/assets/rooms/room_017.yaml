@@ -1,35 +1,106 @@
+# Room coordinates use H from the lower-left. Platform and decoration `rect_h`
+# give each block's lower-left corner and size; player, enemy, and exit y
+# values mark the feet baseline on a platform top.
 room_id: 17
 chapter_id: 2
 size:
   width_h: 28
   height_h: 13.5
-background_profiles: [sci_fi_industrial]
+background_profiles: [dead_city_ephemeral]
+hidden_background_layers: [dead_city_ephemeral/4, dead_city_ephemeral/5]
 player_spawn:
   x_h: 2.5
   y_h: 2
+# Solid platforms: land on their top, stop against their sides, bump
+# your head on their underside. They stop shots too.
 platforms:
-  - { label: floor, material: sci_fi_riveted_wall, rect_h: { x: 0, y: 0, width: 28, height: 1.5 }, colorway: dusk }
-  - { label: floor trim, material: sci_fi_green_edge, rect_h: { x: 0, y: 1.5, width: 28, height: 0.5 }, colorway: dusk }
-  - { label: left ledge, material: sci_fi_riveted_wall, rect_h: { x: 6, y: 5, width: 5, height: 0.5 }, colorway: dusk }
-  - { label: left ledge trim, material: sci_fi_green_edge, rect_h: { x: 6, y: 5.25, width: 5, height: 0.25 }, colorway: dusk }
-  - { label: right ledge, material: sci_fi_riveted_wall, rect_h: { x: 17, y: 5, width: 5, height: 0.5 }, colorway: dusk }
-  - { label: right ledge trim, material: sci_fi_green_edge, rect_h: { x: 17, y: 5.25, width: 5, height: 0.25 }, colorway: dusk }
-  - { label: left wall, material: sci_fi_riveted_wall, rect_h: { x: 0, y: 2, width: 0.5, height: 11.5 }, colorway: dusk }
-  - { label: right wall, material: sci_fi_riveted_wall, rect_h: { x: 27.5, y: 2, width: 0.5, height: 11.5 }, colorway: dusk }
+  - label: floor
+    material: sci_fi_riveted_wall
+    rect_h: { x: 0, y: 0, width: 28, height: 1.5 }
+    colorway: dusk
+  - label: floor trim
+    material: sci_fi_green_edge
+    rect_h: { x: 0, y: 1.5, width: 28, height: 0.5 }
+    colorway: dusk
+  - label: left ledge
+    material: sci_fi_riveted_wall
+    rect_h: { x: 6, y: 5, width: 5, height: 0.5 }
+    colorway: dusk
+  - label: left ledge trim
+    material: sci_fi_green_edge
+    rect_h: { x: 6, y: 5.25, width: 5, height: 0.25 }
+    colorway: dusk
+  - label: right ledge
+    material: sci_fi_riveted_wall
+    rect_h: { x: 17, y: 5, width: 5, height: 0.5 }
+    colorway: dusk
+  - label: right ledge trim
+    material: sci_fi_green_edge
+    rect_h: { x: 17, y: 5.25, width: 5, height: 0.25 }
+    colorway: dusk
+  - label: left wall
+    material: sci_fi_riveted_wall
+    rect_h: { x: 0, y: 2, width: 0.5, height: 11.5 }
+    colorway: dusk
+  - label: right wall
+    material: sci_fi_riveted_wall
+    rect_h: { x: 27.5, y: 2, width: 0.5, height: 11.5 }
+    colorway: dusk
+# Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
+# Props: sprites standing on a spot (the middle of their bottom edge).
 props:
-  - { prop: sci_fi_crate_stack, position_h: { x: 13.5, y: 2 }, colorway: dusk }
+  - prop: sci_fi_crate_stack
+    position_h: { x: 13.5, y: 2 }
+    colorway: dusk
+# Devices: traps, moving and folding platforms, buttons, doors and
+# ladders, each standing on a spot (the middle of its bottom edge).
 devices:
-  - { label: warning terminal, kind: terminal, position_h: { x: 4.5, y: 2 }, text: "DEFENCE GRID ONLINE. WALKERS, MINES AND DRONES ARE ON PATROL.", colorway: dusk }
-  - { label: ladder to the right ledge, kind: ladder, position_h: { x: 16.5, y: 2 }, height_h: 3.5, colorway: dusk }
+  - label: warning terminal
+    kind: terminal
+    position_h: { x: 4.5, y: 2 }
+    text: DEFENCE GRID ONLINE. WALKERS, MINES AND DRONES ARE ON PATROL.
+    colorway: dusk
+  - label: ladder to the right ledge
+    kind: ladder
+    position_h: { x: 16.5, y: 2 }
+    height_h: 3.5
+    colorway: dusk
 enemy_spawns:
-  - { label: gun walker, type_id: sci_fi_walker, position_h: { x: 20, y: 2 } }
-  - { label: gun walker, type_id: sci_fi_walker, position_h: { x: 24, y: 2 } }
-  - { label: mine, type_id: sci_fi_orb, position_h: { x: 14, y: 8 }, wave: 1 }
-  - { label: mine, type_id: sci_fi_orb, position_h: { x: 20, y: 9 }, wave: 1 }
-  - { label: mine, type_id: sci_fi_orb, position_h: { x: 8, y: 9 }, wave: 1 }
-  - { label: drone, type_id: sci_fi_drone, position_h: { x: 10, y: 9 }, wave: 2 }
-  - { label: drone, type_id: sci_fi_drone, position_h: { x: 19, y: 10 }, wave: 2 }
+  - label: gun walker
+    type_id: sci_fi_walker
+    position_h: { x: 20, y: 2 }
+    facing: left
+  - label: gun walker
+    type_id: sci_fi_walker
+    position_h: { x: 24, y: 2 }
+    facing: left
+  - label: mine
+    type_id: sci_fi_orb
+    position_h: { x: 14, y: 8 }
+    facing: left
+    wave: 1
+  - label: mine
+    type_id: sci_fi_orb
+    position_h: { x: 20, y: 9 }
+    facing: left
+    wave: 1
+  - label: mine
+    type_id: sci_fi_orb
+    position_h: { x: 8, y: 9 }
+    facing: left
+    wave: 1
+  - label: drone
+    type_id: sci_fi_drone
+    position_h: { x: 10, y: 9 }
+    facing: left
+    wave: 2
+  - label: drone
+    type_id: sci_fi_drone
+    position_h: { x: 19, y: 10 }
+    facing: left
+    wave: 2
+# The bonus item, lying beside the door once every enemy is down.
 bonus:
   x_h: 25.5
   y_h: 2

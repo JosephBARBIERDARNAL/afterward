@@ -253,6 +253,10 @@ devices:
     position_h: { x: 17.5, y: 1.25 }
     orientation: horizontal
     length_h: 8.5
+  - kind: light_strip
+    position_h: { x: 28.75, y: 1.25 }
+    orientation: horizontal
+    length_h: 4
 enemy_spawns:
   - type_id: blade_unit
     position_h: { x: 8.5, y: 5 }

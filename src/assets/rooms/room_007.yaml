@@ -199,8 +199,8 @@ platforms:
     rotation_deg: -30
   - label: fire escape, the ramp down to the roof
     material: sci_fi_green_edge
-    rect_h: { x: 20.66, y: 19.52, width: 9, height: 0.5 }
-    rotation_deg: 30
+    rect_h: { x: 20.75, y: 19.5, width: 9, height: 0.5 }
+    rotation_deg: 25
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
 # Props: sprites standing on a spot (the middle of their bottom edge).
@@ -483,6 +483,14 @@ devices:
     travel_y_h: 0
     speed_h_s: 2
     damage: 15
+  - kind: light_strip
+    position_h: { x: 7.75, y: 1.25 }
+    orientation: horizontal
+    length_h: 6
+  - kind: light_strip
+    position_h: { x: 16.5, y: 8.25 }
+    orientation: horizontal
+    length_h: 6.5
 enemy_spawns:
   - type_id: blade_unit
     position_h: { x: 10, y: 33 }

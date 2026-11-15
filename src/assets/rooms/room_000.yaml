@@ -138,6 +138,12 @@ props:
   - prop: sci_fi_barrel
     position_h: { x: 41.5, y: 2.5 }
     opacity: 0.8
+  - prop: sci_fi_framed_fan
+    position_h: { x: 9, y: 0.25 }
+    opacity: 0.90000004
+  - prop: sci_fi_framed_fan
+    position_h: { x: 31.25, y: 0.25 }
+    opacity: 0.90000004
 # Devices: traps, moving and folding platforms, buttons, doors and
 # ladders, each standing on a spot (the middle of its bottom edge).
 devices:
