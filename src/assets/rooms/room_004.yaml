@@ -713,10 +713,10 @@ props:
 # ladders, each standing on a spot (the middle of its bottom edge).
 devices:
   - kind: laser
-    position_h: { x: 16, y: 25 }
+    position_h: { x: 15, y: 25 }
     color: red
     orientation: vertical
-    length_h: 2
+    length_h: 4
     off_s: 1.2
     warn_s: 0.5
     on_s: 1
@@ -726,7 +726,7 @@ devices:
     position_h: { x: 6.5, y: 17 }
     color: red
     orientation: vertical
-    length_h: 2
+    length_h: 4
     off_s: 1.2
     warn_s: 0.5
     on_s: 1
@@ -736,7 +736,7 @@ devices:
     position_h: { x: 13, y: 9 }
     color: red
     orientation: vertical
-    length_h: 2
+    length_h: 4
     off_s: 1.2
     warn_s: 0.5
     on_s: 1
@@ -746,7 +746,7 @@ devices:
     position_h: { x: 14, y: 1 }
     color: red
     orientation: vertical
-    length_h: 2
+    length_h: 4
     off_s: 1.2
     warn_s: 0.5
     on_s: 1
@@ -756,7 +756,7 @@ devices:
     position_h: { x: 26, y: 1 }
     color: red
     orientation: vertical
-    length_h: 2
+    length_h: 6
     off_s: 1.2
     warn_s: 0.5
     on_s: 1
@@ -779,6 +779,18 @@ enemy_spawns:
     type_id: rifle_unit
     position_h: { x: 18.5, y: 25 }
     facing: left
+  - label: fodder on floor A
+    type_id: blade_unit
+    position_h: { x: 10, y: 33 }
+    facing: left
+  - label: fodder on floor B
+    type_id: blade_unit
+    position_h: { x: 6, y: 25 }
+    facing: right
+  - label: fodder on floor B
+    type_id: blade_unit
+    position_h: { x: 17, y: 25 }
+    facing: left
   - label: fodder on floor C
     type_id: blade_unit
     position_h: { x: 4.5, y: 17 }
@@ -799,6 +811,21 @@ enemy_spawns:
     position_h: { x: 16, y: 9 }
     facing: left
     armor_layers: 1
+    wave: 1
+  - label: fodder on floor C
+    type_id: blade_unit
+    position_h: { x: 13.5, y: 17 }
+    facing: left
+    wave: 1
+  - label: fodder on floor D
+    type_id: blade_unit
+    position_h: { x: 6, y: 9 }
+    facing: right
+    wave: 1
+  - label: shooter on the cover of floor D
+    type_id: rifle_unit
+    position_h: { x: 9, y: 10 }
+    facing: right
     wave: 1
   - label: fodder in the street
     type_id: blade_unit
@@ -821,6 +848,32 @@ enemy_spawns:
     position_h: { x: 25.5, y: 9 }
     facing: left
     wave: 2
+  - label: fodder in the street
+    type_id: blade_unit
+    position_h: { x: 17, y: 1 }
+    facing: left
+    wave: 2
+  - label: fodder on floor R2
+    type_id: blade_unit
+    position_h: { x: 28, y: 17 }
+    facing: left
+    wave: 3
+  - label: shooter on floor R2
+    type_id: rifle_unit
+    position_h: { x: 31, y: 17 }
+    facing: left
+    wave: 3
+  - label: the tough one, on floor R3
+    type_id: heavy_unit
+    position_h: { x: 25, y: 25 }
+    facing: right
+    armor_layers: 1
+    wave: 3
+  - label: shooter on floor R4
+    type_id: rifle_unit
+    position_h: { x: 29, y: 33 }
+    facing: left
+    wave: 3
 # Vents: each warns for arm_s, burns for burn_s, rests for rest_s, and
 # starts over, offset_s into that cycle as the room opens.
 hazards:
