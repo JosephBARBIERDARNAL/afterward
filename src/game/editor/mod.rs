@@ -41,7 +41,7 @@ const COMMAND_KEY: &str = if cfg!(target_os = "macos") {
 const MAX_ZOOM: f32 = 4.0;
 /// What the playtest settings offer a run to open with: no bonus, a few at
 /// random, or every one of them.
-const STARTING_BONUSES: [usize; 3] = [0, 5, usize::MAX];
+const STARTING_BONUSES: [usize; 5] = [0, 5, 10, 15, usize::MAX];
 
 pub(super) struct EditorPlugin;
 

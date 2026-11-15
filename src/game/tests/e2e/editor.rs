@@ -255,15 +255,14 @@ fn a_playtest_is_played_the_way_its_settings_ask() {
     assert!(!game.data().rooms[&1].enemy_spawns.is_empty());
 
     // Cmd+R opens the settings on their first row. Right turns infinite
-    // health on, Down and Right turn the enemies off, and Down and two
-    // Rights ask for every bonus.
+    // health on, Down and Right turn the enemies off, and Down and a Left
+    // (wrapping round from none) ask for every bonus.
     command_presses(&mut game, KeyCode::KeyR, "r", 1);
     game.tap(KeyCode::ArrowRight);
     game.tap(KeyCode::ArrowDown);
     game.tap(KeyCode::ArrowRight);
     game.tap(KeyCode::ArrowDown);
-    game.tap(KeyCode::ArrowRight);
-    game.tap(KeyCode::ArrowRight);
+    game.tap(KeyCode::ArrowLeft);
     // Escape puts the settings away without leaving the editor or playing.
     game.tap(KeyCode::Escape);
     assert_eq!(game.screen(), GameScreen::Editor);
