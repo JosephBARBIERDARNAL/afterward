@@ -53,6 +53,7 @@ impl Plugin for VisualWalkthroughPlugin {
             action_started: false,
             // The pause menu is only opened when the menus were asked for.
             pause_shown: self.scope != WalkthroughScope::Menus,
+            build_shown: false,
         })
         .add_systems(Startup, initialize_visual_walkthrough)
         .add_systems(
@@ -80,6 +81,8 @@ struct VisualWalkthrough {
     capture_completed: bool,
     action_started: bool,
     pause_shown: bool,
+    /// The build window has had its shot, on the first door of the walk.
+    build_shown: bool,
 }
 
 #[derive(Clone, Copy, Eq, PartialEq)]
@@ -187,7 +190,7 @@ fn drive_visual_walkthrough(resources: VisualWalkthroughResources) {
         | GameScreen::Settings
         | GameScreen::Controls => 0.35,
         GameScreen::RoomClear => 0.2,
-        GameScreen::Bonus => 0.5,
+        GameScreen::Bonus | GameScreen::Build => 0.5,
         GameScreen::BossIntro => 0.35,
         GameScreen::Transitioning | GameScreen::TransitioningOut => 0.15,
         // Halfway across the gap, with both rooms in frame. How long the
@@ -227,6 +230,7 @@ fn drive_visual_walkthrough(resources: VisualWalkthroughResources) {
             GameScreen::Controls => String::from("controls"),
             GameScreen::RoomClear => format!("room_{:03}_clear", scene.room_id),
             GameScreen::Bonus => format!("room_{:03}_bonus", scene.room_id),
+            GameScreen::Build => String::from("build"),
             GameScreen::BossIntro => format!("room_{:03}_boss-intro", scene.room_id),
             GameScreen::Transitioning => format!("room_{:03}_transition", scene.room_id),
             GameScreen::Panning => format!("room_{:03}_pan", scene.room_id),
@@ -283,6 +287,12 @@ fn drive_visual_walkthrough(resources: VisualWalkthroughResources) {
         }
         // Nobody is holding the keyboard: the walkthrough walks in itself.
         GameScreen::Prologue => next_screen.set(GameScreen::RoomLoading),
+        // Once, with the first bonus owned: the window listing the build.
+        GameScreen::Playing if scene.door_open && !walkthrough.build_shown => {
+            walkthrough.build_shown = true;
+            next_screen.set(GameScreen::Build);
+        }
+        GameScreen::Build => next_screen.set(GameScreen::Playing),
         GameScreen::Playing if scene.door_open => {
             if let (Some(room), Ok(mut player)) =
                 (data.rooms.get(&scene.room_id), players.single_mut())

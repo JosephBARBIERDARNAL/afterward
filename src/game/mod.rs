@@ -15,6 +15,7 @@ mod assets;
 mod audio;
 mod bonus_pickup;
 mod bonus_screen;
+mod build_window;
 mod camera;
 mod collision;
 mod colorways;
@@ -173,6 +174,7 @@ impl Plugin for GamePlugin {
         .init_resource::<MenuFocus>()
         .init_resource::<PendingLeave>()
         .init_resource::<InReach>()
+        .init_resource::<build_window::BuildFocus>()
         .add_message::<menus::MenuPressed>()
         .add_message::<BonusTell>()
         .init_resource::<ControlBindings>()
@@ -190,6 +192,7 @@ impl Plugin for GamePlugin {
                 tells::spawn_the_tray,
                 bonus_screen::spawn_bonus_screen,
                 glossary::spawn_glossary,
+                build_window::spawn_build_window,
                 menus::spawn_menu,
                 prologue::spawn_prologue_text,
                 assets::load_sprites,
@@ -260,6 +263,16 @@ impl Plugin for GamePlugin {
             audio::fade_out_intro_music,
         )
         .add_systems(OnEnter(GameScreen::Prologue), prologue::start_prologue)
+        .add_systems(OnEnter(GameScreen::Build), build_window::open_build_window)
+        .add_systems(
+            Update,
+            (
+                build_window::navigate_build_window.run_if(in_state(GameScreen::Build)),
+                build_window::update_build_window,
+                glossary::update_glossary,
+            )
+                .chain(),
+        )
         .add_systems(
             Update,
             (
@@ -300,7 +313,6 @@ impl Plugin for GamePlugin {
                 interface::update_room_transition_overlay,
                 interface::update_menu_modal,
                 bonus_screen::update_bonus_screen,
-                glossary::update_glossary,
                 camera::update_background_parallax,
                 interface::update_hud,
                 enemy_markers::update_enemy_markers.after(camera::follow_camera),
@@ -475,6 +487,9 @@ enum GameScreen {
     ConfirmLeave,
     RoomClear,
     Bonus,
+    /// Every bonus the run owns and what each is doing, over the paused
+    /// room: `GameAction::ShowBuild` opens and closes it.
+    Build,
     BossIntro,
     Transitioning,
     /// The words the city is entered on, written over the water.

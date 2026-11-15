@@ -67,10 +67,12 @@ pub(super) enum GameAction {
     ChooseSecondBonus,
     ChooseThirdBonus,
     RerollBonus,
+    /// Opens the window listing the run's bonuses, and closes it.
+    ShowBuild,
 }
 
 impl GameAction {
-    pub const ALL: [Self; 16] = [
+    pub const ALL: [Self; 17] = [
         Self::MoveLeft,
         Self::MoveRight,
         Self::MoveUp,
@@ -87,6 +89,7 @@ impl GameAction {
         Self::ChooseSecondBonus,
         Self::ChooseThirdBonus,
         Self::RerollBonus,
+        Self::ShowBuild,
     ];
 
     pub fn label(self) -> &'static str {
@@ -107,6 +110,7 @@ impl GameAction {
             Self::ChooseSecondBonus => "SECOND BONUS",
             Self::ChooseThirdBonus => "THIRD BONUS",
             Self::RerollBonus => "REROLL BONUSES",
+            Self::ShowBuild => "SHOW BONUSES",
         }
     }
 }
@@ -132,6 +136,7 @@ impl FromStr for GameAction {
             "choose_second_bonus" => Ok(Self::ChooseSecondBonus),
             "choose_third_bonus" => Ok(Self::ChooseThirdBonus),
             "reroll_bonus" => Ok(Self::RerollBonus),
+            "show_build" => Ok(Self::ShowBuild),
             _ => Err("unknown game action"),
         }
     }
@@ -156,6 +161,7 @@ impl Display for GameAction {
             Self::ChooseSecondBonus => "choose_second_bonus",
             Self::ChooseThirdBonus => "choose_third_bonus",
             Self::RerollBonus => "reroll_bonus",
+            Self::ShowBuild => "show_build",
         })
     }
 }
@@ -211,6 +217,7 @@ impl From<&ControlsConfig> for DefaultBindings {
                 parse_keys(&controls.choose_third_bonus),
             ),
             (GameAction::RerollBonus, parse_keys(&controls.reroll_bonus)),
+            (GameAction::ShowBuild, parse_keys(&controls.show_build)),
         ]))
     }
 }

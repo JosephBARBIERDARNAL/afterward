@@ -149,3 +149,48 @@ fn the_focused_offer_is_explained_at_the_bottom_right() {
         "and go with the bonus screen"
     );
 }
+
+/// Tab opens the build window over the paused room, listing every bonus the
+/// run owns; the arrows walk it, and Tab or Escape goes back to the fight.
+#[test]
+fn the_build_window_lists_the_run_and_closes_with_its_key_or_escape() {
+    let mut game = HeadlessGame::new();
+    game.start_run();
+    let owned = game.session().owned_bonuses.len();
+    assert!(owned >= 1, "room 0 paid out a bonus");
+
+    game.tap(KeyCode::Tab);
+    assert_eq!(game.screen(), GameScreen::Build);
+    let chips = |game: &mut HeadlessGame| {
+        let world = game.app.world_mut();
+        world.query::<&BuildChip>().iter(world).count()
+    };
+    assert_eq!(chips(&mut game), owned, "one chip per owned bonus");
+    let focus = |game: &HeadlessGame| game.app.world().resource::<BuildFocus>().index;
+    assert_eq!(focus(&game), 0, "the window opens on its first bonus");
+
+    game.tap(KeyCode::Tab);
+    assert_eq!(game.screen(), GameScreen::Playing, "its own key closes it");
+
+    // Holding more, the arrows walk the list and Escape closes it as well.
+    let more = game
+        .data()
+        .bonuses
+        .bonuses
+        .iter()
+        .map(|bonus| bonus.id.clone())
+        .filter(|id| !game.session().has_bonus(id))
+        .take(2)
+        .collect::<Vec<_>>();
+    game.app
+        .world_mut()
+        .resource_mut::<RunSession>()
+        .owned_bonuses
+        .extend(more);
+    game.tap(KeyCode::Tab);
+    assert_eq!(chips(&mut game), owned + 2, "the chips are laid again");
+    game.tap(KeyCode::ArrowDown);
+    assert_eq!(focus(&game), 1);
+    game.tap(KeyCode::Escape);
+    assert_eq!(game.screen(), GameScreen::Playing, "Escape does not pause");
+}

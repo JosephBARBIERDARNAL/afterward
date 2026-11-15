@@ -121,6 +121,7 @@ pub struct ControlsConfig {
     pub choose_second_bonus: Vec<String>,
     pub choose_third_bonus: Vec<String>,
     pub reroll_bonus: Vec<String>,
+    pub show_build: Vec<String>,
 }
 
 #[derive(Debug, Deserialize)]

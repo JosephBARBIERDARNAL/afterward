@@ -232,6 +232,7 @@ pub(super) fn gameplay_effects_muted(screen: GameScreen) -> bool {
         screen,
         GameScreen::Paused
             | GameScreen::ConfirmLeave
+            | GameScreen::Build
             | GameScreen::Settings
             | GameScreen::Controls
             | GameScreen::MainMenu

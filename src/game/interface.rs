@@ -189,11 +189,15 @@ pub(super) fn update_menu_modal(
             | GameScreen::Dead
             | GameScreen::Complete
     );
-    let is_veiled = is_modal || *screen.get() == GameScreen::Bonus;
+    // The build window dims the room without blurring it: it is the run
+    // being looked over, and stays in sight behind the list.
+    let is_veiled = is_modal || matches!(screen.get(), GameScreen::Bonus | GameScreen::Build);
     // The blur muffles the room behind a menu. The screens standing over the
     // flood have no room behind them, but that water, which is pixel art and
     // stays crisp.
-    let is_blurred = is_veiled && !settings_return.over_the_flood(*screen.get());
+    let is_blurred = is_veiled
+        && *screen.get() != GameScreen::Build
+        && !settings_return.over_the_flood(*screen.get());
 
     for (mut color, mut visibility) in &mut backdrop {
         if is_veiled {

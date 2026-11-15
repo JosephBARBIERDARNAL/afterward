@@ -538,3 +538,5 @@ controls:
   choose_second_bonus: [Digit2, Numpad2]
   choose_third_bonus: [Digit3, Numpad3]
   reroll_bonus: [KeyR]
+  # Opens the window listing the run's bonuses and what each is doing.
+  show_build: [Tab]

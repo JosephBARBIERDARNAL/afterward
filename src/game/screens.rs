@@ -36,7 +36,8 @@ pub(super) fn update_screen_text(
         | GameScreen::RoomLoading
         | GameScreen::Panning
         | GameScreen::Prologue
-        | GameScreen::Bonus => String::new(),
+        | GameScreen::Bonus
+        | GameScreen::Build => String::new(),
         #[cfg(debug_assertions)]
         GameScreen::Editor => String::new(),
     };
@@ -105,8 +106,20 @@ pub(super) fn handle_screen_input(
         return;
     }
 
-    // Pausing and resuming belong to no button.
+    // Pausing and resuming belong to no button, and neither does the build
+    // window, which its own key opens and closes (and Escape closes too).
+    let showing_build = controls.just_pressed(GameAction::ShowBuild, &keys);
     match screen {
+        GameScreen::Playing if showing_build => {
+            next_screen.set(GameScreen::Build);
+            sounds.push(SoundCue::UiConfirm);
+            return;
+        }
+        GameScreen::Build if showing_build || pausing => {
+            next_screen.set(GameScreen::Playing);
+            sounds.push(SoundCue::UiCancel);
+            return;
+        }
         GameScreen::Playing if pausing => {
             next_screen.set(GameScreen::Paused);
             sounds.push(SoundCue::UiCancel);

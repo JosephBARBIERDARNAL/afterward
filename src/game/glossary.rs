@@ -43,6 +43,7 @@ pub(super) fn update_glossary(
     mut commands: Commands,
     screen: Res<State<GameScreen>>,
     session: Res<RunSession>,
+    build: Res<build_window::BuildFocus>,
     data: Res<GameData>,
     mut shown: Local<Option<String>>,
     columns: Query<Entity, With<Glossary>>,
@@ -52,11 +53,15 @@ pub(super) fn update_glossary(
         (GameScreen::Bonus, bonus_screen::BonusChoice::Offer(index))
             if session.bonus_reroll_animation_remaining_s <= 0.0 =>
         {
-            session.offered_bonuses.get(index)
+            session
+                .offered_bonuses
+                .get(index)
+                .and_then(|id| data.bonuses.bonuses.iter().find(|bonus| bonus.id == *id))
         }
+        // The owned bonus the build window's focus stands on.
+        (GameScreen::Build, _) => build.focused(&data),
         _ => None,
-    }
-    .and_then(|id| data.bonuses.bonuses.iter().find(|bonus| bonus.id == *id));
+    };
     if explained.map(|bonus| &bonus.id) == shown.as_ref() {
         return;
     }

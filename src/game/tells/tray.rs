@@ -99,21 +99,23 @@ pub(crate) fn spawn_the_tray(mut commands: Commands) {
         });
 }
 
-/// One line of the tray.
-struct Line {
-    bonus: &'static str,
+/// One line of the tray: a bonus at work. The build window reads them too,
+/// to say what each bonus is doing.
+pub(crate) struct Line {
+    pub(crate) bonus: &'static str,
     /// What the bonus is worth now, or that it is ready.
-    value: String,
+    pub(crate) value: String,
     /// What is left of it, for one that runs out.
-    left: Option<f32>,
+    pub(crate) left: Option<f32>,
 }
 
 fn percent_of(value: f32) -> String {
     format!("{:+.0}%", value * 100.0)
 }
 
-/// The lines the run's state calls for, in a fixed order.
-fn lines(
+/// The lines the run's state calls for, in a fixed order. `wounded_at_rest`:
+/// the player is hurt and no enemy is engaged, which is when Recovery heals.
+pub(crate) fn lines(
     session: &RunSession,
     data: &GameData,
     player: &PlayerBody,

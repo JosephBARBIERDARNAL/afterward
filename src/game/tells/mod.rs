@@ -21,7 +21,7 @@ pub(super) use aura::{show_the_combo_window, wear_the_aura};
 pub(super) use overhead::update_overheads;
 #[cfg(test)]
 pub(super) use overhead::{Overhead, OverheadKind};
-pub(super) use tray::{spawn_the_tray, update_the_tray};
+pub(super) use tray::{Line, lines, spawn_the_tray, update_the_tray};
 
 /// A bonus has just done its thing.
 #[derive(Message, Clone, Debug)]
