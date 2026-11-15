@@ -5,3 +5,9 @@ target
 *.gif
 !art/previews/*.gif
 *.rar
+
+# Art packs are kept as they ship but only what is cut from them is tracked:
+# the sheets `just vfx` reads are added with `git add -f`, and a pack's
+# licence with them. The sci-fi pack is tracked whole.
+/src/assets/packs/*
+!/src/assets/packs/sci_fi/

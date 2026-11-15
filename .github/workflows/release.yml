@@ -56,6 +56,9 @@ jobs:
           name="afterward-${GITHUB_REF_NAME}-${{ matrix.target }}"
           mkdir -p "dist/$name"
           cp -R src/assets "dist/$name/assets"
+          # The art packs are only cut from (`just sci-fi`, `just vfx`): the
+          # game reads the pieces cut out of them, never the packs.
+          rm -rf "dist/$name/assets/packs"
           if [ "$RUNNER_OS" = "Windows" ]; then
             cp "target/${{ matrix.target }}/release/afterward.exe" "dist/$name/"
             (cd dist && 7z a -tzip "$name.zip" "$name" > /dev/null)
