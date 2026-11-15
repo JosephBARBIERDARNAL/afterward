@@ -138,7 +138,7 @@ fn the_camera_slides_into_the_next_room_and_the_entry_door_goes_once_it_lands() 
     game.wait_for_screen(GameScreen::Playing, 5.0);
     assert_eq!(
         game.platform_colliders(),
-        game.data().rooms[&1].platforms.len(),
+        PlatformSurface::of_room(&game.data().rooms[&1], game.data()).len(),
         "the room being played is the only one the player can walk into: a \
          platform of the room left behind would stand in this one as an \
          invisible wall"
