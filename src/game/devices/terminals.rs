@@ -174,7 +174,10 @@ fn spawn_bubble(commands: &mut Commands, point: Vec2, text: &str) -> Entity {
                     },
                     TextLayout::justify(Justify::Left),
                     TextBounds::new_horizontal(WRAP_H * H_WORLD_UNITS),
-                    Anchor::CENTER,
+                    // Held by its left edge: Bevy anchors bounded text by its
+                    // wrap width rather than by the words, so a centred line
+                    // shorter than `WRAP_H` would stand off the box's middle.
+                    Anchor::CENTER_LEFT,
                     Transform::from_xyz(0.0, 0.0, 0.02),
                     BubblePart::Words,
                 ))
@@ -283,7 +286,7 @@ pub(crate) fn type_terminal_text(
         };
         match (part, sprite) {
             (BubblePart::Words, _) => {
-                transform.translation = middle.extend(0.02);
+                transform.translation = (middle - Vec2::new(size.x / 2.0, 0.0)).extend(0.02);
                 transform.scale = Vec3::splat(TEXT_SCALE);
             }
             (BubblePart::Edge, Some(mut sprite)) => {

@@ -6,6 +6,7 @@ use crate::{
         devices::{BubblePart, Device},
     },
 };
+use bevy::{sprite::Anchor, text::TextBounds};
 
 /// A small hall of its own holding `devices`, so the scenarios survive edits
 /// to the authored rooms: a floor, the player on it at x 3, and no enemies.
@@ -238,6 +239,30 @@ fn a_terminal_types_its_text_in_a_bubble_with_the_typing_heard_until_it_is_writt
         typing(&mut game),
         0,
         "the typing stops with the last character"
+    );
+    // Bevy lays bounded text out from the left of its wrap width, which is
+    // wider than these words: the words must still start inside the box.
+    let world = game.app.world_mut();
+    let words_left = world
+        .query::<(&BubblePart, &Anchor, &TextBounds, &Transform)>()
+        .iter(world)
+        .find(|(part, ..)| matches!(part, BubblePart::Words))
+        .map(|(_, anchor, bounds, transform)| {
+            transform.translation.x
+                - (anchor.as_vec().x + 0.5) * bounds.width.unwrap_or(0.0) * transform.scale.x
+        })
+        .expect("the words stand in the bubble");
+    let box_left = world
+        .query::<(&BubblePart, &Sprite, &Transform)>()
+        .iter(world)
+        .find(|(part, ..)| matches!(part, BubblePart::Fill))
+        .map(|(_, sprite, transform)| {
+            transform.translation.x - sprite.custom_size.unwrap_or_default().x / 2.0
+        })
+        .expect("the bubble has a box");
+    assert!(
+        words_left >= box_left,
+        "the words start inside the box ({words_left} against {box_left})"
     );
     game.tap(KeyCode::KeyE);
     assert_eq!(bubble(&mut game), None, "Interact again closes it");
