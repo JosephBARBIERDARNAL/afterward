@@ -22,7 +22,7 @@ use bevy::text::FontSize;
 mod actions;
 mod input;
 
-pub(super) use actions::{MenuAction, MenuFocus, VolumeChannel};
+pub(super) use actions::{MenuAction, MenuFocus, PendingLeave, VolumeChannel};
 pub(super) use input::{MenuPressed, navigate_menus};
 
 #[derive(Component)]
@@ -166,6 +166,7 @@ pub(super) struct MenuState<'w> {
     session: Res<'w, RunSession>,
     controls: Res<'w, ControlBindings>,
     data: Res<'w, GameData>,
+    pending_leave: Res<'w, PendingLeave>,
 }
 
 impl MenuState<'_> {
@@ -204,6 +205,14 @@ impl MenuState<'_> {
                 two_columns: false,
             },
             GameScreen::Paused => plain("PAUSED", None),
+            GameScreen::ConfirmLeave => plain(
+                if self.pending_leave.0 == Some(MenuAction::Restart) {
+                    "RESTART?"
+                } else {
+                    "LEAVE THE RUN?"
+                },
+                Some(String::from("Your current run will be lost.")),
+            ),
             GameScreen::Settings => MenuView {
                 title: "SETTINGS",
                 subtitle: None,
@@ -272,6 +281,10 @@ impl MenuState<'_> {
             MenuAction::OpenSettings => row(String::from("S"), "Settings"),
             MenuAction::OpenEditor => row(String::from("D"), "Debug editor"),
             MenuAction::LeaveRun => row(String::from("M"), "Main menu"),
+            MenuAction::ConfirmLeave => match self.pending_leave.0 {
+                Some(MenuAction::Restart) => row(String::from("R"), "Restart"),
+                _ => row(String::from("M"), "Main menu"),
+            },
             MenuAction::Quit => row(String::from("Q"), "Quit"),
             MenuAction::Volume(VolumeChannel::Music) => {
                 MenuRow::volume("Music", VolumeChannel::Music).opening("AUDIO")
@@ -304,6 +317,7 @@ impl MenuState<'_> {
                     row(String::from("ENTER"), "Return to menu")
                 }
                 GameScreen::Difficulty => row(key(GameAction::Pause), "Main menu"),
+                GameScreen::ConfirmLeave => row(key(GameAction::Pause), "Keep playing"),
                 _ => row(key(GameAction::Pause), "Back"),
             },
         }

@@ -23,6 +23,8 @@ pub(in crate::game) enum MenuAction {
     /// Debug builds only; the editor is compiled out of release builds.
     OpenEditor,
     LeaveRun,
+    /// Gives up the run, the way `PendingLeave` holds: restarted or left.
+    ConfirmLeave,
     Quit,
     /// A volume slider, which the left and right keys move.
     Volume(VolumeChannel),
@@ -35,6 +37,11 @@ pub(in crate::game) enum MenuAction {
     /// Back to whichever menu opened this one.
     Back,
 }
+
+/// What the run would be given up for, while `GameScreen::ConfirmLeave`
+/// asks: `MenuAction::Restart` or `MenuAction::LeaveRun`.
+#[derive(Resource, Default)]
+pub(in crate::game) struct PendingLeave(pub(in crate::game) Option<MenuAction>);
 
 /// The two volume sliders of the settings screen.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -84,6 +91,8 @@ impl MenuAction {
                 .chain([Self::Back])
                 .collect(),
             GameScreen::Prologue => vec![Self::EnterTheCity],
+            // The way back first, so a press made by mistake keeps the run.
+            GameScreen::ConfirmLeave => vec![Self::Back, Self::ConfirmLeave],
             GameScreen::Dead | GameScreen::Complete => vec![Self::Back],
             _ => Vec::new(),
         }

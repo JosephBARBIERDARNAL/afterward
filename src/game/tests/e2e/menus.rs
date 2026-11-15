@@ -15,9 +15,13 @@ fn the_arrows_walk_a_menu_and_the_confirm_key_presses_the_button_reached() {
     game.tap(KeyCode::Enter);
     assert_eq!(game.screen(), GameScreen::Playing);
 
-    // Two buttons down from Continue is Restart; Enter presses that instead.
+    // Two buttons down from Continue is Restart; Enter presses that instead,
+    // and once more on the button under it confirms it.
     game.tap(KeyCode::Escape);
     game.tap(KeyCode::ArrowDown);
+    game.tap(KeyCode::ArrowDown);
+    game.tap(KeyCode::Enter);
+    assert_eq!(game.screen(), GameScreen::ConfirmLeave);
     game.tap(KeyCode::ArrowDown);
     game.tap(KeyCode::Enter);
     game.wait_for_screen(GameScreen::Playing, 10.0);

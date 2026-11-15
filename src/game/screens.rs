@@ -26,6 +26,7 @@ pub(super) fn update_screen_text(
         GameScreen::MainMenu
         | GameScreen::Difficulty
         | GameScreen::Paused
+        | GameScreen::ConfirmLeave
         | GameScreen::Settings
         | GameScreen::Controls
         | GameScreen::Dead
@@ -58,6 +59,7 @@ pub(super) struct ScreenInputResources<'w> {
     controls: ResMut<'w, ControlBindings>,
     settings_return: ResMut<'w, SettingsReturn>,
     prologue: ResMut<'w, Prologue>,
+    pending_leave: ResMut<'w, PendingLeave>,
     sounds: ResMut<'w, SoundQueue>,
 }
 
@@ -87,6 +89,7 @@ pub(super) fn handle_screen_input(
         mut controls,
         mut settings_return,
         mut prologue,
+        mut pending_leave,
         mut sounds,
     } = resources;
     let screen = *screen.get();
@@ -129,12 +132,24 @@ pub(super) fn handle_screen_input(
         GameScreen::MainMenu | GameScreen::Paused if letter('d') => Some(MenuAction::OpenEditor),
         GameScreen::Paused if letter('m') => Some(MenuAction::LeaveRun),
         GameScreen::Paused if letter('r') => Some(MenuAction::Restart),
+        // The letter that asked confirms it.
+        GameScreen::ConfirmLeave
+            if letter('r') && pending_leave.0 == Some(MenuAction::Restart)
+                || letter('m') && pending_leave.0 == Some(MenuAction::LeaveRun) =>
+        {
+            Some(MenuAction::ConfirmLeave)
+        }
         GameScreen::Settings if letter('c') => Some(MenuAction::OpenControls),
         GameScreen::Settings if controls.just_pressed(GameAction::ToggleFullscreen, &keys) => {
             Some(MenuAction::ToggleFullscreen)
         }
         GameScreen::Controls if letter('r') => Some(MenuAction::RestoreDefaultBindings),
-        GameScreen::Settings | GameScreen::Controls | GameScreen::Difficulty if pausing => {
+        GameScreen::Settings
+        | GameScreen::Controls
+        | GameScreen::Difficulty
+        | GameScreen::ConfirmLeave
+            if pausing =>
+        {
             Some(MenuAction::Back)
         }
         GameScreen::Dead | GameScreen::Complete if keys.just_pressed(KeyCode::Escape) => {
@@ -151,7 +166,22 @@ pub(super) fn handle_screen_input(
             along_bar: None,
         }))
     {
-        match press.action {
+        // Confirming carries out what was asked for on the pause menu.
+        let action = match press.action {
+            MenuAction::ConfirmLeave => match pending_leave.0.take() {
+                Some(action) => action,
+                None => continue,
+            },
+            action => action,
+        };
+        match action {
+            // Restarting or leaving gives the run up, so the pause menu asks
+            // first.
+            MenuAction::Restart | MenuAction::LeaveRun if screen == GameScreen::Paused => {
+                pending_leave.0 = Some(action);
+                next_screen.set(GameScreen::ConfirmLeave);
+                sounds.push(SoundCue::UiConfirm);
+            }
             MenuAction::BeginRun => {
                 // The run begins on the difficulty screen, not in a room.
                 next_screen.set(GameScreen::Difficulty);
@@ -210,6 +240,8 @@ pub(super) fn handle_screen_input(
             MenuAction::Quit => {
                 exit.write(AppExit::Success);
             }
+            // Turned into what it confirms above.
+            MenuAction::ConfirmLeave => {}
             MenuAction::Volume(channel) => {
                 // Only a click that landed inside the bar moves it; one on the
                 // row's name just walks the focus there.
@@ -247,6 +279,7 @@ pub(super) fn handle_screen_input(
                 next_screen.set(match screen {
                     GameScreen::Settings => settings_return.0,
                     GameScreen::Controls => GameScreen::Settings,
+                    GameScreen::ConfirmLeave => GameScreen::Paused,
                     _ => GameScreen::MainMenu,
                 });
                 sounds.push(SoundCue::UiCancel);

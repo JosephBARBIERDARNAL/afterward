@@ -36,6 +36,7 @@ fn begin_asks_for_a_difficulty_over_the_water_and_opens_on_the_one_already_chose
     // so one down from Normal is Hard.
     game.tap(KeyCode::Escape);
     game.tap(KeyCode::KeyM);
+    game.tap(KeyCode::KeyM);
     assert_eq!(game.screen(), GameScreen::MainMenu);
     game.tap(KeyCode::Enter);
     game.tap(KeyCode::ArrowDown);
@@ -45,6 +46,7 @@ fn begin_asks_for_a_difficulty_over_the_water_and_opens_on_the_one_already_chose
 
     // And the next one opens on Hard, where the run before left it.
     game.tap(KeyCode::Escape);
+    game.tap(KeyCode::KeyM);
     game.tap(KeyCode::KeyM);
     game.tap(KeyCode::Enter);
     assert_eq!(game.screen(), GameScreen::Difficulty);

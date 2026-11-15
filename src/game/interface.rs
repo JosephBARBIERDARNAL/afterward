@@ -183,6 +183,7 @@ pub(super) fn update_menu_modal(
         GameScreen::MainMenu
             | GameScreen::Difficulty
             | GameScreen::Paused
+            | GameScreen::ConfirmLeave
             | GameScreen::Settings
             | GameScreen::Controls
             | GameScreen::Dead

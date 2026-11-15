@@ -30,15 +30,31 @@ fn the_pause_menu_adjusts_settings_resumes_restarts_and_leaves() {
     game.tap(KeyCode::Enter);
     assert_eq!(game.screen(), GameScreen::Playing);
 
-    // Restart begins the run again in the start room, at full health.
+    // Restart asks first, and Escape keeps the run.
     game.tap(KeyCode::Escape);
+    game.tap(KeyCode::KeyR);
+    assert_eq!(game.screen(), GameScreen::ConfirmLeave);
+    game.tap(KeyCode::Escape);
+    assert_eq!(game.screen(), GameScreen::Paused);
+    assert!(game.session().health < max_health, "the run goes on");
+
+    // Its own letter again restarts the run in the start room, at full health.
+    game.tap(KeyCode::KeyR);
     game.tap(KeyCode::KeyR);
     game.wait_for_screen(GameScreen::Playing, 10.0);
     assert_eq!(game.session().room_id, 0, "back in the opening room");
     assert_eq!(game.session().health, max_health);
 
+    // Leaving asks too: Enter stands on the way back, and the second
+    // button gives the run up.
     game.tap(KeyCode::Escape);
     game.tap(KeyCode::KeyM);
+    assert_eq!(game.screen(), GameScreen::ConfirmLeave);
+    game.tap(KeyCode::Enter);
+    assert_eq!(game.screen(), GameScreen::Paused, "Enter keeps playing");
+    game.tap(KeyCode::KeyM);
+    game.tap(KeyCode::ArrowDown);
+    game.tap(KeyCode::Enter);
     assert_eq!(game.screen(), GameScreen::MainMenu);
     assert!(game.enemies().is_empty(), "leaving the run clears the room");
 }
@@ -50,6 +66,20 @@ fn menu_letters_follow_the_keyboard_layout_and_q_quits() {
 
     // AZERTY: the key labeled M sits at QWERTY's semicolon.
     game.tap(KeyCode::Escape);
+    game.typed_key(
+        KeyCode::Semicolon,
+        Key::Character("m".into()),
+        ButtonState::Pressed,
+    );
+    game.app.update();
+    game.typed_key(
+        KeyCode::Semicolon,
+        Key::Character("m".into()),
+        ButtonState::Released,
+    );
+    game.app.update();
+    assert_eq!(game.screen(), GameScreen::ConfirmLeave);
+    // The same key again confirms it.
     game.typed_key(
         KeyCode::Semicolon,
         Key::Character("m".into()),

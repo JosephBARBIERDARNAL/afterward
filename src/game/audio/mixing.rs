@@ -29,7 +29,10 @@ impl AudioMix {
         // stand over one: opened from the main menu, they leave its music be.
         let over_a_paused_run = matches!(
             screen,
-            GameScreen::Paused | GameScreen::Settings | GameScreen::Controls
+            GameScreen::Paused
+                | GameScreen::ConfirmLeave
+                | GameScreen::Settings
+                | GameScreen::Controls
         ) && !settings_return.over_the_flood(screen);
         Self {
             music: match screen {
@@ -228,6 +231,7 @@ pub(super) fn gameplay_effects_muted(screen: GameScreen) -> bool {
     matches!(
         screen,
         GameScreen::Paused
+            | GameScreen::ConfirmLeave
             | GameScreen::Settings
             | GameScreen::Controls
             | GameScreen::MainMenu

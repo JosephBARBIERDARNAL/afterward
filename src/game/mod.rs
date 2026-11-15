@@ -69,7 +69,7 @@ use controls::{ControlBindings, GameAction};
 use flow::PhaseTimer;
 use fonts::FontRole;
 use interact::{InReach, Interactable};
-use menus::{MenuAction, MenuFocus, VolumeChannel};
+use menus::{MenuAction, MenuFocus, PendingLeave, VolumeChannel};
 use player::{BonusAura, PlayerAction, PlayerBody, Strike};
 use prologue::Prologue;
 use random::RandomState;
@@ -170,6 +170,7 @@ impl Plugin for GamePlugin {
         .init_resource::<PreferencesDir>()
         .init_resource::<SettingsReturn>()
         .init_resource::<MenuFocus>()
+        .init_resource::<PendingLeave>()
         .init_resource::<InReach>()
         .add_message::<menus::MenuPressed>()
         .add_message::<BonusTell>()
@@ -452,6 +453,9 @@ enum GameScreen {
     RoomIntro,
     Playing,
     Paused,
+    /// Asks, over the paused run, whether to give it up: the pause menu's
+    /// Restart and Main menu both end the run being played.
+    ConfirmLeave,
     RoomClear,
     Bonus,
     BossIntro,

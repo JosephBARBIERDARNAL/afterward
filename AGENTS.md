@@ -188,6 +188,7 @@ presses it from anywhere on that screen.
   dimmed until the focus stands on it (`MenuEdge`). Choosing one writes
   `RunSession::difficulty` and opens the run. Nothing reads that choice yet: it
   outlives a run so the next one opens on it, and changes nothing else.
+- Restart and Main menu on the pause menu give the run up, so they ask first: `GameScreen::ConfirmLeave` stands over the paused run with `Keep playing` (focused, and Escape) and the action itself, which `PendingLeave` holds; its own letter pressed again confirms it.
 - `menus/input.rs` decides _which_ button and _that_ it was pressed; it leaves
   a `MenuPressed`, which `screens::handle_screen_input` carries out beside the
   letter shortcuts, so a click and a shortcut run the same code.

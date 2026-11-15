@@ -25,6 +25,7 @@ fn the_flood_shows_only_while_the_main_menu_is_up() {
 
     game.tap(KeyCode::Escape);
     game.tap(KeyCode::KeyM);
+    game.tap(KeyCode::KeyM);
     assert_eq!(game.screen(), GameScreen::MainMenu);
     game.app.update();
     let (visibility, place) = water(&mut game);

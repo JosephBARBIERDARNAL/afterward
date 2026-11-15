@@ -182,7 +182,10 @@ fn drive_visual_walkthrough(resources: VisualWalkthroughResources) {
         GameScreen::Playing if scene.door_open => 0.35,
         GameScreen::Playing if scene.room_cleared => 0.35,
         GameScreen::Playing => 0.75,
-        GameScreen::Paused | GameScreen::Settings | GameScreen::Controls => 0.35,
+        GameScreen::Paused
+        | GameScreen::ConfirmLeave
+        | GameScreen::Settings
+        | GameScreen::Controls => 0.35,
         GameScreen::RoomClear => 0.2,
         GameScreen::Bonus => 0.5,
         GameScreen::BossIntro => 0.35,
@@ -219,6 +222,7 @@ fn drive_visual_walkthrough(resources: VisualWalkthroughResources) {
             }
             GameScreen::Playing => format!("room_{:03}_combat", scene.room_id),
             GameScreen::Paused => String::from("paused-overlay"),
+            GameScreen::ConfirmLeave => String::from("confirm-leave"),
             GameScreen::Settings => String::from("settings"),
             GameScreen::Controls => String::from("controls"),
             GameScreen::RoomClear => format!("room_{:03}_clear", scene.room_id),
@@ -306,7 +310,8 @@ fn drive_visual_walkthrough(resources: VisualWalkthroughResources) {
             walkthrough.pause_shown = true;
             next_screen.set(GameScreen::Paused);
         }
-        GameScreen::Paused => {
+        GameScreen::Paused => next_screen.set(GameScreen::ConfirmLeave),
+        GameScreen::ConfirmLeave => {
             // The walkthrough steps between screens rather than pressing the
             // menu's buttons, so it says for itself where the settings were
             // opened from: that is what decides the backdrop behind them.
