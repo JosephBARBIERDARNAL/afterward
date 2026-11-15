@@ -272,6 +272,10 @@ pub struct PropConfig {
     /// Behind the bodies (over the platforms) when left out, or over them.
     #[serde(default)]
     pub layer: DecorationLayer,
+    /// Whether bodies stand on it and bump into it, over what its sprite says
+    /// (`PropCatalog::is_solid`): left out, it is as its sprite is.
+    #[serde(default)]
+    pub solid: Option<bool>,
     #[serde(flatten)]
     pub placement: Placement,
 }

@@ -38,6 +38,8 @@ pub(super) enum Field {
     Layer,
     /// Which sprite of `props/props.yaml` a prop is.
     PropType,
+    /// Whether bodies stand on a prop and bump into it.
+    Solid,
     /// One of the values a kind of device lists (`DeviceKind::params`), by
     /// its place in that list.
     DeviceParam(DeviceTag, u8),
@@ -178,6 +180,7 @@ impl Field {
                 Self::Label,
                 Self::PropType,
                 Self::Layer,
+                Self::Solid,
                 Self::X,
                 Self::Y,
                 Self::Rotation,
@@ -202,6 +205,7 @@ impl Field {
             Self::Fill => "Fill",
             Self::Layer => "Layer",
             Self::PropType => "Prop",
+            Self::Solid => "Solid",
             Self::EnemyType => "Type",
             Self::EnemyFacing => "Facing",
             Self::X => "X (H)",
@@ -268,6 +272,7 @@ impl Field {
                 | Self::Rotation
                 | Self::Mirrored
                 | Self::Opacity
+                | Self::Solid
                 | Self::Armor
                 | Self::Offset
         )
@@ -499,6 +504,17 @@ impl Field {
                 _ => placed.map_or_else(String::new, |placed| placed.layer.to_string()),
             },
             Self::PropType => placed.map_or_else(String::new, |placed| placed.prop.to_string()),
+            Self::Solid => placed.map_or_else(String::new, |placed| {
+                let solid = if data.props.is_solid(placed) {
+                    "yes"
+                } else {
+                    "no"
+                };
+                match placed.solid {
+                    None => format!("{solid}  (as its sprite)"),
+                    Some(_) => solid.to_string(),
+                }
+            }),
             Self::DeviceParam(_, param) => match item {
                 Some(EditorItem::Device(index, _)) => {
                     room.devices.get(index).map_or_else(String::new, |device| {
@@ -689,6 +705,19 @@ impl Field {
                     }
                 }
             }
+            Self::Solid => {
+                if let Some(EditorItem::Prop(index)) = item
+                    && let Some(placed) = room.props.get_mut(index)
+                {
+                    // Back to what its sprite says is no choice at all, and
+                    // is left out of the file.
+                    let solid = !data.props.is_solid(placed);
+                    placed.solid = None;
+                    if data.props.is_solid(placed) != solid {
+                        placed.solid = Some(solid);
+                    }
+                }
+            }
             Self::EnemyType => {
                 if let Some(EditorItem::Enemy(index)) = item
                     && let Some(spawn) = room.enemy_spawns.get_mut(index)
@@ -819,8 +848,8 @@ impl Field {
     }
 
     /// Removes a label or Background 2, strips an enemy's armor, stands a
-    /// turned platform square again, or starts a vent's cycle as the room
-    /// opens.
+    /// turned platform square again, leaves a prop as solid as its sprite
+    /// is, or starts a vent's cycle as the room opens.
     pub(super) fn clear(self, room: &mut RoomConfig, item: Option<EditorItem>) {
         if self == Self::Label {
             Self::set_label(room, item, None);
@@ -839,6 +868,12 @@ impl Field {
                 Self::Mirrored => placement.mirrored = as_drawn.mirrored,
                 _ => placement.opacity = as_drawn.opacity,
             }
+            return;
+        }
+        if let (Self::Solid, Some(EditorItem::Prop(index))) = (self, item)
+            && let Some(placed) = room.props.get_mut(index)
+        {
+            placed.solid = None;
             return;
         }
         if let (Self::Armor, Some(EditorItem::Enemy(index))) = (self, item)

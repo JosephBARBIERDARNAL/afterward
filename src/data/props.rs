@@ -29,20 +29,36 @@ impl PropCatalog {
         })
     }
 
+    /// Whether bodies stand on `placed` and bump into it: as its room entry
+    /// says, else as its sprite is.
+    pub(crate) fn is_solid(&self, placed: &PropConfig) -> bool {
+        placed.solid.unwrap_or_else(|| {
+            self.props
+                .get(&placed.prop)
+                .is_some_and(PropSprite::solid_by_default)
+        })
+    }
+
     /// The parts of `placed` bodies stand on and bump into, in H: its sprite's
-    /// `solid_px` boxes, set where it stands and mirrored and turned about
-    /// its middle with it, each as its corners counter-clockwise from its
-    /// lower-left. None for a prop that is scenery.
+    /// `solid_px` boxes (its whole frame, for a scenery sprite made solid),
+    /// set where it stands and mirrored and turned about its middle with it,
+    /// each as its corners counter-clockwise from its lower-left. None for a
+    /// prop that is scenery.
     pub(crate) fn solid_corners_h(&self, placed: &PropConfig) -> Vec<[Vec2; 4]> {
         let (Some(sprite), Some(size)) = (self.props.get(&placed.prop), self.size_h(&placed.prop))
         else {
             return Vec::new();
         };
+        let whole_frame = [[0, 0, sprite.size_px[0], sprite.size_px[1]]];
+        let boxes: &[[u32; 4]] = match placed.solid {
+            Some(false) => &[],
+            Some(true) if sprite.solid_px.is_empty() => &whole_frame,
+            _ => &sprite.solid_px,
+        };
         let left = placed.position_h.x_h - size.x / 2.0;
         let top = placed.position_h.y_h + size.y;
         let middle = Vec2::new(placed.position_h.x_h, placed.position_h.y_h + size.y / 2.0);
-        sprite
-            .solid_px
+        boxes
             .iter()
             .map(|[x, y, width, height]| {
                 let min = Vec2::new(
@@ -72,6 +88,13 @@ pub struct PropSprite {
     /// the prop is scenery.
     #[serde(default)]
     pub solid_px: Vec<[u32; 4]>,
+}
+
+impl PropSprite {
+    /// Whether a prop of this sprite is solid unless its room says otherwise.
+    pub(crate) fn solid_by_default(&self) -> bool {
+        !self.solid_px.is_empty()
+    }
 }
 
 /// How an animated prop's strip is played: looped at `fps`.
@@ -154,6 +177,7 @@ mod tests {
             prop: prop.parse().expect("a valid prop ID"),
             position_h: SpawnPosition { x_h: 5.0, y_h: 1.0 },
             layer: DecorationLayer::Background,
+            solid: None,
             placement,
         };
         let as_drawn = Placement::default();
@@ -206,6 +230,26 @@ mod tests {
             props
                 .solid_corners_h(&placed("sci_fi_ceiling_lamp", as_drawn))
                 .is_empty()
+        );
+
+        // A room may say otherwise: a solid crate made scenery has nothing to
+        // stand on, and a scenery lamp made solid is solid over its whole
+        // frame.
+        let mut crate_made_scenery = placed("sci_fi_small_crate", as_drawn);
+        crate_made_scenery.solid = Some(false);
+        assert!(!props.is_solid(&crate_made_scenery));
+        assert!(props.solid_corners_h(&crate_made_scenery).is_empty());
+        let mut lamp_made_solid = placed("sci_fi_ceiling_lamp", as_drawn);
+        lamp_made_solid.solid = Some(true);
+        let size = props
+            .size_h(&lamp_made_solid.prop)
+            .expect("the lamp is in the catalog");
+        assert_eq!(
+            spans(&lamp_made_solid),
+            vec![(
+                Vec2::new(5.0 - size.x / 2.0, 1.0),
+                Vec2::new(5.0 + size.x / 2.0, 1.0 + size.y)
+            )]
         );
     }
 }

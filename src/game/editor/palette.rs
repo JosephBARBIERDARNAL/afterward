@@ -8,7 +8,7 @@
 //! stands on, else Background 1.
 
 use super::*;
-use crate::data::{Backdrop, DeviceTag, HexColor, MaterialId, PropId};
+use crate::data::{Backdrop, DeviceTag, HexColor, MaterialId, PropId, PropSprite};
 use bevy::{text::LineHeight, ui::RelativeCursorPosition};
 
 const SWATCH_PX: f32 = 26.0;
@@ -456,7 +456,7 @@ pub(super) fn refresh_palette(
                     .props
                     .props
                     .get(prop)
-                    .is_some_and(|sprite| !sprite.solid_px.is_empty());
+                    .is_some_and(PropSprite::solid_by_default);
                 let kind = if solid { "solid" } else { "scenery" };
                 (format!("{prop}  ({kind})"), current_prop == Some(prop))
             }

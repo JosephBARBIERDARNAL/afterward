@@ -201,6 +201,7 @@ impl Display for PropConfig {
                 (self.layer != DecorationLayer::default())
                     .then(|| format!("layer: {}", self.layer)),
             )
+            .chain(self.solid.map(|solid| format!("solid: {solid}")))
             .chain(placement_fields(&self.placement))
             .collect();
         write!(formatter, "{}", YamlEntry(fields))
@@ -554,6 +555,7 @@ platforms:
 props:
   - { prop: sci_fi_small_crate, position_h: { x: 6.5, y: 1 } }
   - { label: lamp, prop: sci_fi_ceiling_lamp, position_h: { x: 10, y: 8 }, layer: foreground }
+  - { prop: sci_fi_crate_stack, position_h: { x: 14, y: 1 }, solid: false }
 enemy_spawns: []
 bonus: { x_h: 20, y_h: 1 }
 exit: { x_h: 22, y_h: 1 }
@@ -565,6 +567,11 @@ next_room_id: 4
         assert!(
             !written.contains("layer: background"),
             "the default layer is left out: {written}"
+        );
+        assert_eq!(
+            written.matches("solid:").count(),
+            1,
+            "only the prop that says whether it is solid writes it: {written}"
         );
         let read_back: RoomConfig =
             yaml_serde::from_str(&written).expect("the written room is valid YAML");

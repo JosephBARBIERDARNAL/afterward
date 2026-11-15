@@ -517,6 +517,7 @@ impl RoomEditor {
                         y_h: snap(at_h.y, false),
                     },
                     layer: DecorationLayer::default(),
+                    solid: None,
                     placement: Placement::default(),
                 });
                 added = Some(EditorItem::Prop(room.props.len() - 1));
