@@ -40,6 +40,70 @@ rarities:
 #   bonus of its category, `per_combo` with every owned combo.
 synergy: { color: "#F2C14E", weight_multiplier: 3 }
 
+# The words bonus descriptions lean on, each explained in a box at the bottom
+# right of the bonus screen and the build window while a bonus using it is
+# under the focus. `words` are what is looked for in a description: whole
+# words, in lower case, any of them (list the plural too). Another bonus named
+# in a description gets a box of its own, with its own description.
+glossary:
+  - term: Chain
+    words: [chain, "chain's"]
+    definition: Your melee combo. Each press of Attack throws its next blow; wait too long between them and it starts again from the first.
+  - term: Blow
+    words: [blow, blows, strike]
+    definition: One hit of the chain. It hurts everything its reach touches, so one blow can catch two enemies standing together.
+  - term: Charged blow
+    words: [charged blow]
+    definition: Hold Attack, then let go once it is ready. One heavy blow that costs a shield and wounds the body behind it too.
+  - term: Slam
+    words: [slam]
+    definition: Attack with Down held in mid-air drives you into the floor, which breaks to both sides of you.
+  - term: Roll
+    words: [roll, rolling, "roll's"]
+    definition: Down with Jump on the ground. Nothing can touch you through the middle of it, which is how a shot is gone through.
+  - term: Airborne
+    words: [airborne, mid-air]
+    definition: Off the ground, jumping or falling. A mid-air jump is one taken before landing.
+  - term: Wind-up
+    words: [wind-up, wind-ups]
+    definition: The moment an enemy warms up before it strikes, glowing brighter until the blow lands. The longer it lasts, the more time to get out of the way.
+  - term: Shield
+    words: [shield, shields]
+    definition: A layer of armor over an enemy's health bar. Each soaks one ordinary blow whole, and while one is up the enemy is never interrupted.
+  - term: Cover
+    words: [cover]
+    definition: Hold Cover on the ground to take less damage from blows and shots on the side you face. You cannot strike while covering.
+  - term: Health pickup
+    words: [health pickup, health pickups, healing pickups]
+    definition: A drop a dying enemy may leave, taken by walking over it. Healing is scarce inside a room.
+  - term: Engaged
+    words: [engaged]
+    definition: An enemy that has seen you, or been woken by a blow, and is coming after you.
+  - term: Unnoticed
+    words: [noticed]
+    definition: An enemy still standing idle. It sees far in front of it and only a little behind, and a blow nearby wakes it.
+  - term: Double
+    words: [double]
+    definition: A standing copy of you. Enemies nearer to it than to you go after it, and what it takes costs you nothing.
+  - term: Mark
+    words: [marks, marked]
+    definition: Marked Prey's reticle over an enemy you hit, while it lasts.
+  - term: Combo
+    words: [combo, combos]
+    definition: A bonus that is what two others do together, offered only once you own both.
+  - term: Damage event
+    words: [damage event]
+    definition: One hit taken, however much it would have cost.
+  - term: Projectile
+    words: [projectile, shot]
+    definition: What an enemy or a turret fires. Platforms stop it, and a roll goes through it.
+  - term: Reroll
+    words: [reroll]
+    definition: Draws three new bonuses on the bonus screen. A run has only a few.
+  - term: H
+    words: [h]
+    definition: The hero's height, the unit every distance in the game is measured in.
+
 # Every bonus here is read by the game: one that nothing reads is taken out
 # rather than left to thin the draw. Rarity follows what a bonus does: a plain
 # number is common, one with a condition uncommon, one that changes what a

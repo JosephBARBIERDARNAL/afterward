@@ -456,6 +456,17 @@ impl GameData {
                 "a bonus references an unknown category, or requires or works with an unknown bonus",
             ));
         }
+        if self.bonuses.glossary.iter().any(|term| {
+            term.words.is_empty()
+                || term
+                    .words
+                    .iter()
+                    .any(|word| word.is_empty() || word.to_lowercase() != *word)
+        }) {
+            return Err(InvalidGameData::from(
+                "every glossary term needs words to be found by, written in lower case",
+            ));
+        }
         if self.bonuses.synergy.weight_multiplier == 0 {
             return Err(InvalidGameData::from(
                 "the synergy weight multiplier must be above zero",

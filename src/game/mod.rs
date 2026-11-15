@@ -26,6 +26,7 @@ mod editor;
 mod enemy_markers;
 mod flow;
 mod fonts;
+mod glossary;
 #[cfg(debug_assertions)]
 mod hitbox_overlay;
 mod impact;
@@ -188,6 +189,7 @@ impl Plugin for GamePlugin {
                 interact::spawn_interact_prompt,
                 tells::spawn_the_tray,
                 bonus_screen::spawn_bonus_screen,
+                glossary::spawn_glossary,
                 menus::spawn_menu,
                 prologue::spawn_prologue_text,
                 assets::load_sprites,
@@ -298,6 +300,7 @@ impl Plugin for GamePlugin {
                 interface::update_room_transition_overlay,
                 interface::update_menu_modal,
                 bonus_screen::update_bonus_screen,
+                glossary::update_glossary,
                 camera::update_background_parallax,
                 interface::update_hud,
                 enemy_markers::update_enemy_markers.after(camera::follow_camera),

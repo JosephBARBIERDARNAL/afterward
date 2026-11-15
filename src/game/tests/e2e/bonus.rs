@@ -79,3 +79,73 @@ fn a_reroll_replaces_every_offer_and_the_keyboard_picks_the_second() {
         "picking the second offer adds it to the build"
     );
 }
+
+/// The words the focused offer leans on are explained in boxes at the bottom
+/// right, and they follow the focus to the next offer.
+#[test]
+fn the_focused_offer_is_explained_at_the_bottom_right() {
+    let mut game = HeadlessGame::new();
+    game.begin_run();
+    game.defeat_enemies();
+    game.take_bonus();
+    // The title of each box, in the order the column stands them: a box
+    // holds one text, whose first span names what it explains.
+    let glossed = |game: &mut HeadlessGame| {
+        let world = game.app.world_mut();
+        let column = world
+            .query_filtered::<Entity, With<Glossary>>()
+            .single(world)
+            .expect("the glossary column is laid at startup");
+        let children = |entity: Entity| {
+            world
+                .get::<Children>(entity)
+                .map(|children| children.to_vec())
+                .unwrap_or_default()
+        };
+        children(column)
+            .into_iter()
+            .map(|card| {
+                let text = children(card)[0];
+                let title = children(text)[0];
+                world
+                    .get::<TextSpan>(title)
+                    .expect("a box's text opens on its title")
+                    .0
+                    .trim()
+                    .to_owned()
+            })
+            .collect::<Vec<_>>()
+    };
+    let expected = |game: &HeadlessGame, index: usize| {
+        let data = game.data();
+        let offer = &game.session().offered_bonuses[index];
+        let bonus = data
+            .bonuses
+            .bonuses
+            .iter()
+            .find(|bonus| bonus.id == *offer)
+            .expect("every offer is a bonus of the pool");
+        data.bonuses
+            .explain(bonus)
+            .into_iter()
+            .take(4)
+            .map(|explanation| match explanation {
+                crate::data::Explanation::Term(term) => term.term.clone(),
+                crate::data::Explanation::Bonus(named) => named.name.clone(),
+            })
+            .collect::<Vec<_>>()
+    };
+
+    let first = expected(&game, 0);
+    assert_eq!(glossed(&mut game), first, "the first offer is explained");
+    game.tap(KeyCode::ArrowDown);
+    let second = expected(&game, 1);
+    assert_eq!(glossed(&mut game), second, "the boxes follow the focus");
+
+    game.tap(KeyCode::Digit1);
+    game.wait_for_screen(GameScreen::Playing, 3.0);
+    assert!(
+        glossed(&mut game).is_empty(),
+        "and go with the bonus screen"
+    );
+}

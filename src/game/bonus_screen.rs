@@ -68,8 +68,10 @@ pub(super) fn spawn_bonus_screen(mut commands: Commands) {
         .spawn((overlay_root(), BonusScreenRoot))
         .with_children(|parent| {
             parent
+                // Narrow enough that the boxes explaining the focused offer
+                // (`glossary.rs`) stand clear of it at the bottom right.
                 .spawn(Node {
-                    width: percent(78),
+                    width: percent(48),
                     max_width: px(760),
                     flex_direction: FlexDirection::Column,
                     align_items: AlignItems::Stretch,
