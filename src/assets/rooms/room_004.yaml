@@ -6,107 +6,709 @@ chapter_id: 1
 size:
   width_h: 34
   height_h: 40
-background_profiles: [city_peach_sunset]
-hidden_background_layers: [city_peach_sunset/4, city_peach_sunset/5]
+background_profiles: [sci_fi_industrial]
+hidden_background_layers: [sci_fi_industrial/4, sci_fi_industrial/5]
+layer_opacity: { sci_fi_industrial/1: 0.8, sci_fi_industrial/2: 0.8 }
 player_spawn:
   x_h: 2.5
   y_h: 37
 # Solid platforms: land on their top, stop against their sides, bump
 # your head on their underside. They stop shots too.
 platforms:
-  - label: the ledge the whole room stands on
-    color: "#1C1A2E"
-    rect_h: { x: 1, y: 0, width: 32, height: 1 }
-  - label: the ledge the whole room stands on
-    color: "#1C1A2E"
-    rect_h: { x: 33, y: 0, width: 1, height: 40 }
-  - label: the ledge the whole room stands on
-    color: "#1C1A2E"
-    rect_h: { x: 0, y: 0, width: 1, height: 40 }
-  - color: "#1C1A2E"
-    rect_h: { x: 28, y: 36, width: 5, height: 1 }
-  - color: "#1C1A2E"
-    rect_h: { x: 1, y: 36, width: 5, height: 1 }
-  - label: the wall between the way down and the way up
-    color: "#1C1A2E"
-    rect_h: { x: 20, y: 5, width: 3, height: 35 }
-  - label: the mass under the spawn ledge
-    color: "#1C1A2E"
-    rect_h: { x: 1, y: 29, width: 5, height: 7 }
-  - label: the step down to floor A
-    color: "#1C1A2E"
-    rect_h: { x: 6, y: 29, width: 3, height: 6 }
-  - label: floor A
-    color: "#1C1A2E"
-    rect_h: { x: 9, y: 29, width: 9, height: 4 }
-  - label: the lip that makes the shaft from A to B climbable
-    color: "#1C1A2E"
-    rect_h: { x: 16, y: 27, width: 2, height: 2 }
-  - label: the perch over floor A
-    color: "#1C1A2E"
-    rect_h: { x: 11.5, y: 35, width: 3, height: 0.25 }
-  - label: floor B
-    color: "#1C1A2E"
-    rect_h: { x: 3, y: 21, width: 17, height: 4 }
-  - label: cover on floor B
-    color: "#1C1A2E"
-    rect_h: { x: 9, y: 25, width: 2, height: 2 }
-  - label: the lip of the shaft from B to C
-    color: "#1C1A2E"
-    rect_h: { x: 3, y: 19, width: 2, height: 2 }
-  - label: floor C
-    color: "#1C1A2E"
-    rect_h: { x: 1, y: 13, width: 17, height: 4 }
-  - label: the hump on floor C
-    color: "#1C1A2E"
-    rect_h: { x: 8, y: 17, width: 5, height: 2 }
-  - label: the lip of the shaft from C to D
-    color: "#1C1A2E"
-    rect_h: { x: 16, y: 11, width: 2, height: 2 }
-  - label: floor D
-    color: "#1C1A2E"
-    rect_h: { x: 3, y: 5, width: 17, height: 4 }
-  - label: cover on floor D
-    color: "#1C1A2E"
-    rect_h: { x: 8, y: 9, width: 2, height: 1 }
-  - label: the lip of the shaft from D to the street
-    color: "#1C1A2E"
-    rect_h: { x: 3, y: 3, width: 2, height: 2 }
-  - label: way up, step 1
-    color: "#1C1A2E"
-    rect_h: { x: 31, y: 1, width: 2, height: 2 }
-  - label: way up, step 2
-    color: "#1C1A2E"
-    rect_h: { x: 28, y: 4.75, width: 2, height: 0.25 }
-  - label: way up, step 3
-    color: "#1C1A2E"
-    rect_h: { x: 31, y: 6.75, width: 2, height: 0.25 }
-  - label: floor R1
-    color: "#1C1A2E"
-    rect_h: { x: 23, y: 7, width: 6, height: 2 }
-  - label: floor R2
-    color: "#1C1A2E"
-    rect_h: { x: 25, y: 13, width: 8, height: 4 }
-  - label: the lip of the shaft from R1 to R2
-    color: "#1C1A2E"
-    rect_h: { x: 25, y: 11, width: 2, height: 2 }
-  - label: floor R3
-    color: "#1C1A2E"
-    rect_h: { x: 23, y: 21, width: 8, height: 4 }
-  - label: the lip of the shaft from R2 to R3
-    color: "#1C1A2E"
-    rect_h: { x: 29, y: 19, width: 2, height: 2 }
-  - label: floor R4
-    color: "#1C1A2E"
-    rect_h: { x: 25, y: 29, width: 8, height: 4 }
-  - label: the lip of the shaft from R3 to the door
-    color: "#1C1A2E"
-    rect_h: { x: 25, y: 27, width: 2, height: 2 }
-  - label: the step up to the door ledge
-    color: "#1C1A2E"
-    rect_h: { x: 25, y: 33, width: 2, height: 2 }
+  - label: the ledge the whole room stands on, trim
+    material: sci_fi_green_edge
+    rect_h: { x: 1, y: 0.5, width: 7.5, height: 0.5 }
+  - label: the ledge the whole room stands on, trim
+    material: sci_fi_green_edge
+    rect_h: { x: 9, y: 0.5, width: 7, height: 0.5 }
+  - label: the ledge the whole room stands on, trim
+    material: sci_fi_green_edge
+    rect_h: { x: 16.5, y: 0.5, width: 7, height: 0.5 }
+  - label: the ledge the whole room stands on, trim
+    material: sci_fi_green_edge
+    rect_h: { x: 24, y: 0.5, width: 7, height: 0.5 }
+  - label: the ledge the whole room stands on, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 31.5, y: 0.5, width: 1.5, height: 0.5 }
+  - label: the ledge the whole room stands on, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 1, y: 0, width: 32, height: 0.5 }
+  - label: the ledge the whole room stands on, face left
+    material: sci_fi_trim_wall_left
+    rect_h: { x: 33, y: 37, width: 0.5, height: 3 }
+  - label: the ledge the whole room stands on, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 33.5, y: 2.5, width: 0.5, height: 37.5 }
+  - label: the ledge the whole room stands on, face left
+    material: sci_fi_trim_wall_left
+    rect_h: { x: 33, y: 33, width: 0.5, height: 3 }
+  - label: the ledge the whole room stands on, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 33, y: 29.5, width: 0.5, height: 3 }
+  - label: the ledge the whole room stands on, face left
+    material: sci_fi_trim_wall_left
+    rect_h: { x: 33, y: 17, width: 0.5, height: 12 }
+  - label: the ledge the whole room stands on, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 33, y: 13.5, width: 0.5, height: 3 }
+  - label: the ledge the whole room stands on, face left
+    material: sci_fi_trim_wall_left
+    rect_h: { x: 33, y: 7, width: 0.5, height: 6 }
+  - label: the ledge the whole room stands on, face left
+    material: sci_fi_trim_wall_left
+    rect_h: { x: 33, y: 3, width: 0.5, height: 3.5 }
+  - label: the ledge the whole room stands on, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 33, y: 0, width: 1, height: 2.5 }
+  - label: the ledge the whole room stands on, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 0, y: 0.5, width: 0.5, height: 39.5 }
+  - label: the ledge the whole room stands on, face right
+    material: sci_fi_trim_wall_right
+    rect_h: { x: 0.5, y: 37, width: 0.5, height: 3 }
+  - label: the ledge the whole room stands on, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 0.5, y: 29.5, width: 0.5, height: 7 }
+  - label: the ledge the whole room stands on, face right
+    material: sci_fi_trim_wall_right
+    rect_h: { x: 0.5, y: 17, width: 0.5, height: 12 }
+  - label: the ledge the whole room stands on, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 0.5, y: 13.5, width: 0.5, height: 3 }
+  - label: the ledge the whole room stands on, face right
+    material: sci_fi_trim_wall_right
+    rect_h: { x: 0.5, y: 1, width: 0.5, height: 12 }
+  - label: the ledge the whole room stands on, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 0, y: 0, width: 1, height: 0.5 }
+  - label: trim
+    material: sci_fi_green_edge
+    rect_h: { x: 28.5, y: 36.5, width: 4.5, height: 0.5 }
+  - label: underside
+    material: sci_fi_trim_ceiling
+    rect_h: { x: 28.5, y: 36, width: 4.5, height: 0.5 }
+  - label: trim
+    material: sci_fi_green_edge
+    rect_h: { x: 1, y: 36.5, width: 4.5, height: 0.5 }
+  - label: base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 1, y: 36, width: 4.5, height: 0.5 }
+  - label: face right
+    material: sci_fi_trim_wall_right
+    rect_h: { x: 5.5, y: 36, width: 0.5, height: 0.5 }
+  - label: the wall between the way down and the way up, face left
+    material: sci_fi_trim_wall_left
+    rect_h: { x: 20, y: 25, width: 0.5, height: 15 }
+  - label: the wall between the way down and the way up, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 20.5, y: 8.5, width: 2, height: 31.5 }
+  - label: the wall between the way down and the way up, face right
+    material: sci_fi_trim_wall_right
+    rect_h: { x: 22.5, y: 25, width: 0.5, height: 15 }
+  - label: the wall between the way down and the way up, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 20, y: 21.5, width: 0.5, height: 3 }
+  - label: the wall between the way down and the way up, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 22.5, y: 21.5, width: 0.5, height: 3 }
+  - label: the wall between the way down and the way up, face left
+    material: sci_fi_trim_wall_left
+    rect_h: { x: 20, y: 9, width: 0.5, height: 12 }
+  - label: the wall between the way down and the way up, face right
+    material: sci_fi_trim_wall_right
+    rect_h: { x: 22.5, y: 9, width: 0.5, height: 12 }
+  - label: the wall between the way down and the way up, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 20, y: 5.5, width: 2.5, height: 3 }
+  - label: the wall between the way down and the way up, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 22.5, y: 7.5, width: 0.5, height: 1 }
+  - label: the wall between the way down and the way up, face right
+    material: sci_fi_trim_wall_right
+    rect_h: { x: 22.5, y: 5.5, width: 0.5, height: 1.5 }
+  - label: the wall between the way down and the way up, underside
+    material: sci_fi_trim_ceiling
+    rect_h: { x: 20, y: 5, width: 2.5, height: 0.5 }
+  - label: the mass under the spawn ledge, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 1, y: 34.5, width: 4.5, height: 1.5 }
+  - label: the mass under the spawn ledge, face right
+    material: sci_fi_trim_wall_right
+    rect_h: { x: 5.5, y: 35, width: 0.5, height: 1 }
+  - label: the mass under the spawn ledge, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 1, y: 29.5, width: 5, height: 5 }
+  - label: the mass under the spawn ledge, underside
+    material: sci_fi_trim_ceiling
+    rect_h: { x: 1, y: 29, width: 5, height: 0.5 }
+  - label: the step down to floor A, trim
+    material: sci_fi_green_edge
+    rect_h: { x: 6, y: 34.5, width: 2.5, height: 0.5 }
+  - label: the step down to floor A, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 6, y: 32.5, width: 2.5, height: 2 }
+  - label: the step down to floor A, face right
+    material: sci_fi_trim_wall_right
+    rect_h: { x: 8.5, y: 33, width: 0.5, height: 1.5 }
+  - label: the step down to floor A, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 6, y: 29.5, width: 3, height: 3 }
+  - label: the step down to floor A, underside
+    material: sci_fi_trim_ceiling
+    rect_h: { x: 6, y: 29, width: 3, height: 0.5 }
+  - label: floor A, trim
+    material: sci_fi_green_edge
+    rect_h: { x: 9, y: 32.5, width: 8.5, height: 0.5 }
+  - label: floor A, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 9, y: 29.5, width: 7.5, height: 3 }
+  - label: floor A, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 16.5, y: 29, width: 1, height: 3.5 }
+  - label: floor A, face right
+    material: sci_fi_trim_wall_right
+    rect_h: { x: 17.5, y: 29, width: 0.5, height: 3.5 }
+  - label: floor A, underside
+    material: sci_fi_trim_ceiling
+    rect_h: { x: 9, y: 29, width: 7, height: 0.5 }
+  - label: the lip that makes the shaft from A to B climbable, face left
+    material: sci_fi_trim_wall_left
+    rect_h: { x: 16, y: 27.5, width: 0.5, height: 1.5 }
+  - label: the lip that makes the shaft from A to B climbable, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 16.5, y: 27.5, width: 1, height: 1.5 }
+  - label: the lip that makes the shaft from A to B climbable, face right
+    material: sci_fi_trim_wall_right
+    rect_h: { x: 17.5, y: 27.5, width: 0.5, height: 1.5 }
+  - label: the lip that makes the shaft from A to B climbable, underside
+    material: sci_fi_trim_ceiling
+    rect_h: { x: 16.5, y: 27, width: 1, height: 0.5 }
+  - label: the perch over floor A, trim
+    material: sci_fi_green_edge
+    rect_h: { x: 12, y: 35, width: 2, height: 0.5 }
+  - label: floor B, trim
+    material: sci_fi_green_edge
+    rect_h: { x: 3.5, y: 24.5, width: 5.5, height: 0.5 }
+  - label: floor B, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 9.5, y: 24.5, width: 1, height: 0.5 }
+  - label: floor B, trim
+    material: sci_fi_green_edge
+    rect_h: { x: 11, y: 24.5, width: 9, height: 0.5 }
+  - label: floor B, face left
+    material: sci_fi_trim_wall_left
+    rect_h: { x: 3, y: 21, width: 0.5, height: 3.5 }
+  - label: floor B, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 3.5, y: 21, width: 1, height: 3.5 }
+  - label: floor B, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 4.5, y: 21.5, width: 15.5, height: 3 }
+  - label: floor B, underside
+    material: sci_fi_trim_ceiling
+    rect_h: { x: 5, y: 21, width: 15, height: 0.5 }
+  - label: cover on floor B, trim
+    material: sci_fi_green_edge
+    rect_h: { x: 9.5, y: 26.5, width: 1, height: 0.5 }
+  - label: cover on floor B, face left
+    material: sci_fi_trim_wall_left
+    rect_h: { x: 9, y: 25, width: 0.5, height: 1.5 }
+  - label: cover on floor B, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 9.5, y: 25, width: 1, height: 1.5 }
+  - label: cover on floor B, face right
+    material: sci_fi_trim_wall_right
+    rect_h: { x: 10.5, y: 25, width: 0.5, height: 1.5 }
+  - label: the lip of the shaft from B to C, face left
+    material: sci_fi_trim_wall_left
+    rect_h: { x: 3, y: 19.5, width: 0.5, height: 1.5 }
+  - label: the lip of the shaft from B to C, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 3.5, y: 19.5, width: 1, height: 1.5 }
+  - label: the lip of the shaft from B to C, face right
+    material: sci_fi_trim_wall_right
+    rect_h: { x: 4.5, y: 19.5, width: 0.5, height: 1.5 }
+  - label: the lip of the shaft from B to C, underside
+    material: sci_fi_trim_ceiling
+    rect_h: { x: 3.5, y: 19, width: 1, height: 0.5 }
+  - label: floor C, trim
+    material: sci_fi_green_edge
+    rect_h: { x: 1, y: 16.5, width: 7, height: 0.5 }
+  - label: floor C, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 8.5, y: 16.5, width: 4, height: 0.5 }
+  - label: floor C, trim
+    material: sci_fi_green_edge
+    rect_h: { x: 13, y: 16.5, width: 4.5, height: 0.5 }
+  - label: floor C, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 1, y: 13.5, width: 15.5, height: 3 }
+  - label: floor C, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 16.5, y: 13, width: 1, height: 3.5 }
+  - label: floor C, face right
+    material: sci_fi_trim_wall_right
+    rect_h: { x: 17.5, y: 13, width: 0.5, height: 3.5 }
+  - label: floor C, underside
+    material: sci_fi_trim_ceiling
+    rect_h: { x: 1, y: 13, width: 15, height: 0.5 }
+  - label: the hump on floor C, trim
+    material: sci_fi_green_edge
+    rect_h: { x: 8.5, y: 18.5, width: 4, height: 0.5 }
+  - label: the hump on floor C, face left
+    material: sci_fi_trim_wall_left
+    rect_h: { x: 8, y: 17, width: 0.5, height: 1.5 }
+  - label: the hump on floor C, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 8.5, y: 17, width: 4, height: 1.5 }
+  - label: the hump on floor C, face right
+    material: sci_fi_trim_wall_right
+    rect_h: { x: 12.5, y: 17, width: 0.5, height: 1.5 }
+  - label: the lip of the shaft from C to D, face left
+    material: sci_fi_trim_wall_left
+    rect_h: { x: 16, y: 11.5, width: 0.5, height: 1.5 }
+  - label: the lip of the shaft from C to D, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 16.5, y: 11.5, width: 1, height: 1.5 }
+  - label: the lip of the shaft from C to D, face right
+    material: sci_fi_trim_wall_right
+    rect_h: { x: 17.5, y: 11.5, width: 0.5, height: 1.5 }
+  - label: the lip of the shaft from C to D, underside
+    material: sci_fi_trim_ceiling
+    rect_h: { x: 16.5, y: 11, width: 1, height: 0.5 }
+  - label: floor D, trim
+    material: sci_fi_green_edge
+    rect_h: { x: 3.5, y: 8.5, width: 4.5, height: 0.5 }
+  - label: floor D, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 8.5, y: 8.5, width: 1, height: 0.5 }
+  - label: floor D, trim
+    material: sci_fi_green_edge
+    rect_h: { x: 10, y: 8.5, width: 10, height: 0.5 }
+  - label: floor D, face left
+    material: sci_fi_trim_wall_left
+    rect_h: { x: 3, y: 5, width: 0.5, height: 3.5 }
+  - label: floor D, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 3.5, y: 5, width: 1, height: 3.5 }
+  - label: floor D, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 4.5, y: 5.5, width: 15.5, height: 3 }
+  - label: floor D, underside
+    material: sci_fi_trim_ceiling
+    rect_h: { x: 5, y: 5, width: 15, height: 0.5 }
+  - label: cover on floor D, trim
+    material: sci_fi_green_edge
+    rect_h: { x: 8.5, y: 9.5, width: 1, height: 0.5 }
+  - label: cover on floor D, face left
+    material: sci_fi_trim_wall_left
+    rect_h: { x: 8, y: 9, width: 0.5, height: 0.5 }
+  - label: cover on floor D, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 8.5, y: 9, width: 1, height: 0.5 }
+  - label: cover on floor D, face right
+    material: sci_fi_trim_wall_right
+    rect_h: { x: 9.5, y: 9, width: 0.5, height: 0.5 }
+  - label: the lip of the shaft from D to the street, face left
+    material: sci_fi_trim_wall_left
+    rect_h: { x: 3, y: 3.5, width: 0.5, height: 1.5 }
+  - label: the lip of the shaft from D to the street, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 3.5, y: 3.5, width: 1, height: 1.5 }
+  - label: the lip of the shaft from D to the street, face right
+    material: sci_fi_trim_wall_right
+    rect_h: { x: 4.5, y: 3.5, width: 0.5, height: 1.5 }
+  - label: the lip of the shaft from D to the street, underside
+    material: sci_fi_trim_ceiling
+    rect_h: { x: 3.5, y: 3, width: 1, height: 0.5 }
+  - label: way up, step 1, trim
+    material: sci_fi_green_edge
+    rect_h: { x: 31.5, y: 2.5, width: 1.5, height: 0.5 }
+  - label: way up, step 1, face left
+    material: sci_fi_trim_wall_left
+    rect_h: { x: 31, y: 1, width: 0.5, height: 1.5 }
+  - label: way up, step 1, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 31.5, y: 1, width: 1.5, height: 1.5 }
+  - label: way up, step 2, trim
+    material: sci_fi_green_edge
+    rect_h: { x: 28.5, y: 4.5, width: 1, height: 0.5 }
+  - label: way up, step 3, trim
+    material: sci_fi_green_edge
+    rect_h: { x: 31.5, y: 6.5, width: 1.5, height: 0.5 }
+  - label: floor R1, trim
+    material: sci_fi_green_edge
+    rect_h: { x: 23, y: 8.5, width: 5.5, height: 0.5 }
+  - label: floor R1, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 23, y: 7.5, width: 5.5, height: 1 }
+  - label: floor R1, face right
+    material: sci_fi_trim_wall_right
+    rect_h: { x: 28.5, y: 7.5, width: 0.5, height: 1 }
+  - label: floor R1, underside
+    material: sci_fi_trim_ceiling
+    rect_h: { x: 23, y: 7, width: 5.5, height: 0.5 }
+  - label: floor R2, trim
+    material: sci_fi_green_edge
+    rect_h: { x: 25.5, y: 16.5, width: 7.5, height: 0.5 }
+  - label: floor R2, face left
+    material: sci_fi_trim_wall_left
+    rect_h: { x: 25, y: 13, width: 0.5, height: 3.5 }
+  - label: floor R2, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 25.5, y: 13, width: 1, height: 3.5 }
+  - label: floor R2, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 26.5, y: 13.5, width: 6.5, height: 3 }
+  - label: floor R2, underside
+    material: sci_fi_trim_ceiling
+    rect_h: { x: 27, y: 13, width: 6, height: 0.5 }
+  - label: the lip of the shaft from R1 to R2, face left
+    material: sci_fi_trim_wall_left
+    rect_h: { x: 25, y: 11.5, width: 0.5, height: 1.5 }
+  - label: the lip of the shaft from R1 to R2, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 25.5, y: 11.5, width: 1, height: 1.5 }
+  - label: the lip of the shaft from R1 to R2, face right
+    material: sci_fi_trim_wall_right
+    rect_h: { x: 26.5, y: 11.5, width: 0.5, height: 1.5 }
+  - label: the lip of the shaft from R1 to R2, underside
+    material: sci_fi_trim_ceiling
+    rect_h: { x: 25.5, y: 11, width: 1, height: 0.5 }
+  - label: floor R3, trim
+    material: sci_fi_green_edge
+    rect_h: { x: 23, y: 24.5, width: 7.5, height: 0.5 }
+  - label: floor R3, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 23, y: 21.5, width: 6.5, height: 3 }
+  - label: floor R3, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 29.5, y: 21, width: 1, height: 3.5 }
+  - label: floor R3, face right
+    material: sci_fi_trim_wall_right
+    rect_h: { x: 30.5, y: 21, width: 0.5, height: 3.5 }
+  - label: floor R3, underside
+    material: sci_fi_trim_ceiling
+    rect_h: { x: 23, y: 21, width: 6, height: 0.5 }
+  - label: the lip of the shaft from R2 to R3, face left
+    material: sci_fi_trim_wall_left
+    rect_h: { x: 29, y: 19.5, width: 0.5, height: 1.5 }
+  - label: the lip of the shaft from R2 to R3, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 29.5, y: 19.5, width: 1, height: 1.5 }
+  - label: the lip of the shaft from R2 to R3, face right
+    material: sci_fi_trim_wall_right
+    rect_h: { x: 30.5, y: 19.5, width: 0.5, height: 1.5 }
+  - label: the lip of the shaft from R2 to R3, underside
+    material: sci_fi_trim_ceiling
+    rect_h: { x: 29.5, y: 19, width: 1, height: 0.5 }
+  - label: floor R4, face left
+    material: sci_fi_trim_wall_left
+    rect_h: { x: 25, y: 29, width: 0.5, height: 4 }
+  - label: floor R4, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 25.5, y: 29, width: 1, height: 4 }
+  - label: floor R4, trim
+    material: sci_fi_green_edge
+    rect_h: { x: 27, y: 32.5, width: 6, height: 0.5 }
+  - label: floor R4, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 26.5, y: 29.5, width: 6.5, height: 3 }
+  - label: floor R4, underside
+    material: sci_fi_trim_ceiling
+    rect_h: { x: 27, y: 29, width: 6, height: 0.5 }
+  - label: the lip of the shaft from R3 to the door, face left
+    material: sci_fi_trim_wall_left
+    rect_h: { x: 25, y: 27.5, width: 0.5, height: 1.5 }
+  - label: the lip of the shaft from R3 to the door, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 25.5, y: 27.5, width: 1, height: 1.5 }
+  - label: the lip of the shaft from R3 to the door, face right
+    material: sci_fi_trim_wall_right
+    rect_h: { x: 26.5, y: 27.5, width: 0.5, height: 1.5 }
+  - label: the lip of the shaft from R3 to the door, underside
+    material: sci_fi_trim_ceiling
+    rect_h: { x: 25.5, y: 27, width: 1, height: 0.5 }
+  - label: the step up to the door ledge, trim
+    material: sci_fi_green_edge
+    rect_h: { x: 25.5, y: 34.5, width: 1, height: 0.5 }
+  - label: the step up to the door ledge, face left
+    material: sci_fi_trim_wall_left
+    rect_h: { x: 25, y: 33, width: 0.5, height: 1.5 }
+  - label: the step up to the door ledge, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 25.5, y: 33, width: 1, height: 1.5 }
+  - label: the step up to the door ledge, face right
+    material: sci_fi_trim_wall_right
+    rect_h: { x: 26.5, y: 33, width: 0.5, height: 1.5 }
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
+# Props: sprites standing on a spot (the middle of their bottom edge).
+props:
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 0.75, y: 0.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 8.75, y: 0.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 16.25, y: 0.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 23.75, y: 0.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 31.25, y: 0.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 31.25, y: 2.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 33.25, y: 2.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 3.25, y: 3 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 4.75, y: 3 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 28.25, y: 4.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 29.75, y: 4.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 4.75, y: 5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 22.75, y: 5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 31.25, y: 6.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 33.25, y: 6.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 22.75, y: 7 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 28.75, y: 7 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 3.25, y: 8.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 8.25, y: 8.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 9.75, y: 8.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 20.25, y: 8.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 22.75, y: 8.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 28.75, y: 8.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 8.25, y: 9.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 9.75, y: 9.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 16.25, y: 11 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 17.75, y: 11 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 25.25, y: 11 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 26.75, y: 11 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 0.75, y: 13 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 16.25, y: 13 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 26.75, y: 13 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 33.25, y: 13 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 0.75, y: 16.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 8.25, y: 16.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 12.75, y: 16.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 17.75, y: 16.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 25.25, y: 16.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 33.25, y: 16.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 8.25, y: 18.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 12.75, y: 18.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 3.25, y: 19 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 4.75, y: 19 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 29.25, y: 19 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 30.75, y: 19 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 4.75, y: 21 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 20.25, y: 21 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 22.75, y: 21 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 29.25, y: 21 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 3.25, y: 24.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 9.25, y: 24.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 10.75, y: 24.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 20.25, y: 24.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 22.75, y: 24.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 30.75, y: 24.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 9.25, y: 26.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 10.75, y: 26.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 16.25, y: 27 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 17.75, y: 27 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 25.25, y: 27 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 26.75, y: 27 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 0.75, y: 29 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 16.25, y: 29 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 26.75, y: 29 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 33.25, y: 29 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 8.75, y: 32.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 17.75, y: 32.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 26.75, y: 32.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 33.25, y: 32.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 5.75, y: 34.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 8.75, y: 34.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 25.25, y: 34.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 26.75, y: 34.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 11.75, y: 35 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 14.25, y: 35 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 28.25, y: 36 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 33.25, y: 36 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 0.75, y: 36.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 5.75, y: 36.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 28.25, y: 36.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 33.25, y: 36.5 }
+  - prop: sci_fi_small_crate
+    position_h: { x: 17.25, y: 25 }
+    solid: false
+    opacity: 0.8
+  - prop: sci_fi_barrel
+    position_h: { x: 31.75, y: 17 }
+    solid: false
+    opacity: 0.8
+  - prop: sci_fi_crate_stack
+    position_h: { x: 17.5, y: 1 }
+    solid: false
+    opacity: 0.8
+  - prop: sci_fi_small_crate
+    position_h: { x: 3.75, y: 37 }
+    solid: false
+    mirrored: true
+    opacity: 0.8
+  - prop: sci_fi_pipe_vertical
+    position_h: { x: 0.5, y: 38 }
+  - prop: sci_fi_pipe_vertical
+    position_h: { x: 33.5, y: 22 }
 enemy_spawns: []
 # Vents: each warns for arm_s, burns for burn_s, rests for rest_s, and
 # starts over, offset_s into that cycle as the room opens.

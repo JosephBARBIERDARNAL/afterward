@@ -6,29 +6,102 @@ chapter_id: 1
 size:
   width_h: 33
   height_h: 16
-background_profiles: [city_peach_sunset]
-hidden_background_layers: [city_peach_sunset/4, city_peach_sunset/5]
+background_profiles: [sci_fi_industrial]
+hidden_background_layers: [sci_fi_industrial/4, sci_fi_industrial/5]
+layer_opacity: { sci_fi_industrial/1: 0.8, sci_fi_industrial/2: 0.8 }
 player_spawn:
   x_h: 2.5
   y_h: 1
 # Solid platforms: land on their top, stop against their sides, bump
 # your head on their underside. They stop shots too.
 platforms:
-  - label: the ledge the whole room stands on
-    color: "#1C1A2E"
-    rect_h: { x: 1, y: 0, width: 32, height: 1 }
-  - label: the ledge the whole room stands on
-    color: "#1C1A2E"
-    rect_h: { x: 32, y: 0, width: 1, height: 16 }
-  - label: the ledge the whole room stands on
-    color: "#1C1A2E"
-    rect_h: { x: 0, y: 0, width: 1, height: 16 }
-  - color: "#1C1A2E"
-    rect_h: { x: 16, y: 3.75, width: 8.25, height: 0.25 }
-  - color: "#1C1A2E"
-    rect_h: { x: 11, y: 6, width: 4.25, height: 0.25 }
+  - label: the ledge the whole room stands on, trim
+    material: sci_fi_green_edge
+    rect_h: { x: 1, y: 0.5, width: 8, height: 0.5 }
+  - label: the ledge the whole room stands on, trim
+    material: sci_fi_green_edge
+    rect_h: { x: 9.5, y: 0.5, width: 7, height: 0.5 }
+  - label: the ledge the whole room stands on, trim
+    material: sci_fi_green_edge
+    rect_h: { x: 17, y: 0.5, width: 7, height: 0.5 }
+  - label: the ledge the whole room stands on, trim
+    material: sci_fi_green_edge
+    rect_h: { x: 24.5, y: 0.5, width: 7.5, height: 0.5 }
+  - label: the ledge the whole room stands on, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 32.5, y: 0.5, width: 0.5, height: 0.5 }
+  - label: the ledge the whole room stands on, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 1, y: 0, width: 32, height: 0.5 }
+  - label: the ledge the whole room stands on, face left
+    material: sci_fi_trim_wall_left
+    rect_h: { x: 32, y: 1, width: 0.5, height: 15 }
+  - label: the ledge the whole room stands on, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 32.5, y: 1, width: 0.5, height: 15 }
+  - label: the ledge the whole room stands on, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 0, y: 0.5, width: 0.5, height: 15.5 }
+  - label: the ledge the whole room stands on, face right
+    material: sci_fi_trim_wall_right
+    rect_h: { x: 0.5, y: 1, width: 0.5, height: 15 }
+  - label: the ledge the whole room stands on, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 0, y: 0, width: 1, height: 0.5 }
+  - label: trim
+    material: sci_fi_green_edge
+    rect_h: { x: 16.5, y: 3.5, width: 7.5, height: 0.5 }
+  - label: trim
+    material: sci_fi_green_edge
+    rect_h: { x: 11.5, y: 6, width: 3.5, height: 0.5 }
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
+# Props: sprites standing on a spot (the middle of their bottom edge).
+props:
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 0.75, y: 0.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 9.25, y: 0.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 16.75, y: 0.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 24.25, y: 0.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 32.25, y: 0.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 16.25, y: 3.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 24.25, y: 3.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 11.25, y: 6 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 15.25, y: 6 }
+  - prop: sci_fi_crate_stack
+    position_h: { x: 6, y: 1 }
+    solid: false
+    opacity: 0.8
+  - prop: sci_fi_barrel
+    position_h: { x: 25.25, y: 1 }
+    solid: false
+    opacity: 0.8
+  - prop: sci_fi_small_crate
+    position_h: { x: 26.75, y: 1 }
+    solid: false
+    mirrored: true
+    opacity: 0.8
+  - prop: sci_fi_pipe_vertical
+    position_h: { x: 0.5, y: 3 }
+  - prop: sci_fi_pipe_vertical
+    position_h: { x: 32.5, y: 8 }
 enemy_spawns:
   - type_id: heavy_unit
     position_h: { x: 17.5, y: 4 }
@@ -39,7 +112,7 @@ enemy_spawns:
     facing: left
     armor_layers: 3
   - type_id: dark_blade_unit
-    position_h: { x: 13.55, y: 6.25 }
+    position_h: { x: 13.55, y: 6.5 }
     facing: right
     armor_layers: 3
   - type_id: dark_blade_unit

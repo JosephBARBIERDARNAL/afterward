@@ -6,55 +6,426 @@ chapter_id: 1
 size:
   width_h: 48
   height_h: 16
-background_profiles: [city_peach_sunset]
-hidden_background_layers: [city_peach_sunset/4, city_peach_sunset/5]
+background_profiles: [sci_fi_industrial]
+hidden_background_layers: [sci_fi_industrial/4, sci_fi_industrial/5]
+layer_opacity: { sci_fi_industrial/1: 0.8, sci_fi_industrial/2: 0.8 }
 player_spawn:
   x_h: 3
   y_h: 1
 # Solid platforms: land on their top, stop against their sides, bump
 # your head on their underside. They stop shots too.
 platforms:
-  - label: the ledge the whole room stands on
-    color: "#1C1A2E"
-    rect_h: { x: 1, y: 0, width: 46, height: 1 }
-  - label: the ledge the whole room stands on
-    color: "#1C1A2E"
-    rect_h: { x: 47, y: 0, width: 1, height: 16 }
-  - label: the ledge the whole room stands on
-    color: "#1C1A2E"
-    rect_h: { x: 0, y: 0, width: 1, height: 16 }
-  - color: "#1C1A2E"
-    rect_h: { x: 1, y: 3, width: 8, height: 2 }
-  - color: "#1C1A2E"
-    rect_h: { x: 11, y: 6, width: 8, height: 4 }
-  - color: "#1C1A2E"
-    rect_h: { x: 3, y: 7, width: 6, height: 3 }
-  - color: "#1C1A2E"
-    rect_h: { x: 9, y: 7, width: 2, height: 3 }
-  - color: "#1C1A2E"
-    rect_h: { x: 42, y: 1, width: 5, height: 11 }
-  - color: "#1C1A2E"
-    rect_h: { x: 36, y: 3, width: 4, height: 9 }
-  - color: "#1C1A2E"
-    rect_h: { x: 13, y: 10, width: 8, height: 2 }
-  - color: "#1C1A2E"
-    rect_h: { x: 23, y: 11, width: 13, height: 5 }
-  - color: "#1C1A2E"
-    rect_h: { x: 21, y: 3, width: 2, height: 5 }
-  - color: "#1C1A2E"
-    rect_h: { x: 11, y: 1, width: 8, height: 3 }
-  - color: "#1C1A2E"
-    rect_h: { x: 11, y: 4, width: 1, height: 2 }
-  - color: "#1C1A2E"
-    rect_h: { x: 25, y: 1, width: 8.25, height: 2 }
-  - color: "#1C1A2E"
-    rect_h: { x: 23, y: 5, width: 8, height: 2 }
-  - color: "#1C1A2E"
-    rect_h: { x: 23, y: 7, width: 5, height: 2 }
-  - color: "#1C1A2E"
-    rect_h: { x: 33, y: 5, width: 3, height: 4 }
+  - label: the ledge the whole room stands on, trim
+    material: sci_fi_green_edge
+    rect_h: { x: 1, y: 0.5, width: 10, height: 0.5 }
+  - label: the ledge the whole room stands on, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 11.5, y: 0.5, width: 7, height: 0.5 }
+  - label: the ledge the whole room stands on, trim
+    material: sci_fi_green_edge
+    rect_h: { x: 19, y: 0.5, width: 6, height: 0.5 }
+  - label: the ledge the whole room stands on, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 25.5, y: 0.5, width: 7.5, height: 0.5 }
+  - label: the ledge the whole room stands on, trim
+    material: sci_fi_green_edge
+    rect_h: { x: 33.5, y: 0.5, width: 8.5, height: 0.5 }
+  - label: the ledge the whole room stands on, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 42.5, y: 0.5, width: 4.5, height: 0.5 }
+  - label: the ledge the whole room stands on, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 1, y: 0, width: 46, height: 0.5 }
+  - label: the ledge the whole room stands on, face left
+    material: sci_fi_trim_wall_left
+    rect_h: { x: 47, y: 12, width: 0.5, height: 4 }
+  - label: the ledge the whole room stands on, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 47.5, y: 11.5, width: 0.5, height: 4.5 }
+  - label: the ledge the whole room stands on, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 47, y: 0, width: 1, height: 11.5 }
+  - label: the ledge the whole room stands on, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 0, y: 0.5, width: 0.5, height: 15.5 }
+  - label: the ledge the whole room stands on, face right
+    material: sci_fi_trim_wall_right
+    rect_h: { x: 0.5, y: 5, width: 0.5, height: 11 }
+  - label: the ledge the whole room stands on, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 0.5, y: 3.5, width: 0.5, height: 1 }
+  - label: the ledge the whole room stands on, face right
+    material: sci_fi_trim_wall_right
+    rect_h: { x: 0.5, y: 1, width: 0.5, height: 2 }
+  - label: the ledge the whole room stands on, base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 0, y: 0, width: 1, height: 0.5 }
+  - label: trim
+    material: sci_fi_green_edge
+    rect_h: { x: 1, y: 4.5, width: 7.5, height: 0.5 }
+  - label: base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 1, y: 3.5, width: 7.5, height: 1 }
+  - label: face right
+    material: sci_fi_trim_wall_right
+    rect_h: { x: 8.5, y: 3.5, width: 0.5, height: 1 }
+  - label: underside
+    material: sci_fi_trim_ceiling
+    rect_h: { x: 1, y: 3, width: 7.5, height: 0.5 }
+  - label: trim
+    material: sci_fi_green_edge
+    rect_h: { x: 11, y: 9.5, width: 2, height: 0.5 }
+  - label: base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 13.5, y: 9.5, width: 5, height: 0.5 }
+  - label: face right
+    material: sci_fi_trim_wall_right
+    rect_h: { x: 18.5, y: 6.5, width: 0.5, height: 3.5 }
+  - label: base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 11, y: 7.5, width: 0.5, height: 2 }
+  - label: base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 11.5, y: 6.5, width: 7, height: 3 }
+  - label: face left
+    material: sci_fi_trim_wall_left
+    rect_h: { x: 11, y: 6, width: 0.5, height: 1 }
+  - label: underside
+    material: sci_fi_trim_ceiling
+    rect_h: { x: 12, y: 6, width: 6.5, height: 0.5 }
+  - label: trim
+    material: sci_fi_green_edge
+    rect_h: { x: 3.5, y: 9.5, width: 5.5, height: 0.5 }
+  - label: face left
+    material: sci_fi_trim_wall_left
+    rect_h: { x: 3, y: 7.5, width: 0.5, height: 2 }
+  - label: base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 3.5, y: 7.5, width: 5.5, height: 2 }
+  - label: underside
+    material: sci_fi_trim_ceiling
+    rect_h: { x: 3.5, y: 7, width: 5.5, height: 0.5 }
+  - label: trim
+    material: sci_fi_green_edge
+    rect_h: { x: 9, y: 9.5, width: 2, height: 0.5 }
+  - label: base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 9, y: 7.5, width: 2, height: 2 }
+  - label: underside
+    material: sci_fi_trim_ceiling
+    rect_h: { x: 9, y: 7, width: 2, height: 0.5 }
+  - label: trim
+    material: sci_fi_green_edge
+    rect_h: { x: 42.5, y: 11.5, width: 4.5, height: 0.5 }
+  - label: face left
+    material: sci_fi_trim_wall_left
+    rect_h: { x: 42, y: 1, width: 0.5, height: 10.5 }
+  - label: base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 42.5, y: 1, width: 4.5, height: 10.5 }
+  - label: trim
+    material: sci_fi_green_edge
+    rect_h: { x: 36, y: 11.5, width: 3.5, height: 0.5 }
+  - label: base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 36.5, y: 3.5, width: 3, height: 8 }
+  - label: face right
+    material: sci_fi_trim_wall_right
+    rect_h: { x: 39.5, y: 3.5, width: 0.5, height: 8 }
+  - label: face left
+    material: sci_fi_trim_wall_left
+    rect_h: { x: 36, y: 9, width: 0.5, height: 2 }
+  - label: base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 36, y: 5.5, width: 0.5, height: 3 }
+  - label: face left
+    material: sci_fi_trim_wall_left
+    rect_h: { x: 36, y: 3.5, width: 0.5, height: 1.5 }
+  - label: underside
+    material: sci_fi_trim_ceiling
+    rect_h: { x: 36.5, y: 3, width: 3, height: 0.5 }
+  - label: trim
+    material: sci_fi_green_edge
+    rect_h: { x: 13.5, y: 11.5, width: 7, height: 0.5 }
+  - label: face left
+    material: sci_fi_trim_wall_left
+    rect_h: { x: 13, y: 10, width: 0.5, height: 1.5 }
+  - label: base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 13.5, y: 10, width: 5, height: 1.5 }
+  - label: base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 18.5, y: 10.5, width: 2, height: 1 }
+  - label: face right
+    material: sci_fi_trim_wall_right
+    rect_h: { x: 20.5, y: 10.5, width: 0.5, height: 1 }
+  - label: underside
+    material: sci_fi_trim_ceiling
+    rect_h: { x: 19, y: 10, width: 1.5, height: 0.5 }
+  - label: face left
+    material: sci_fi_trim_wall_left
+    rect_h: { x: 23, y: 11.5, width: 0.5, height: 4.5 }
+  - label: base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 23.5, y: 11.5, width: 12, height: 4.5 }
+  - label: face right
+    material: sci_fi_trim_wall_right
+    rect_h: { x: 35.5, y: 12, width: 0.5, height: 4 }
+  - label: underside
+    material: sci_fi_trim_ceiling
+    rect_h: { x: 23.5, y: 11, width: 12.5, height: 0.5 }
+  - label: trim
+    material: sci_fi_green_edge
+    rect_h: { x: 21.5, y: 7.5, width: 1.5, height: 0.5 }
+  - label: face left
+    material: sci_fi_trim_wall_left
+    rect_h: { x: 21, y: 3.5, width: 0.5, height: 4 }
+  - label: base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 21.5, y: 3.5, width: 1, height: 4 }
+  - label: base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 22.5, y: 5.5, width: 0.5, height: 2 }
+  - label: face right
+    material: sci_fi_trim_wall_right
+    rect_h: { x: 22.5, y: 3.5, width: 0.5, height: 1.5 }
+  - label: underside
+    material: sci_fi_trim_ceiling
+    rect_h: { x: 21.5, y: 3, width: 1, height: 0.5 }
+  - label: face left
+    material: sci_fi_trim_wall_left
+    rect_h: { x: 11, y: 1, width: 0.5, height: 3 }
+  - label: trim
+    material: sci_fi_green_edge
+    rect_h: { x: 12, y: 3.5, width: 6.5, height: 0.5 }
+  - label: base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 11.5, y: 1, width: 7, height: 2.5 }
+  - label: face right
+    material: sci_fi_trim_wall_right
+    rect_h: { x: 18.5, y: 1, width: 0.5, height: 2.5 }
+  - label: face left
+    material: sci_fi_trim_wall_left
+    rect_h: { x: 11, y: 4, width: 0.5, height: 2 }
+  - label: face right
+    material: sci_fi_trim_wall_right
+    rect_h: { x: 11.5, y: 4, width: 0.5, height: 2 }
+  - label: trim
+    material: sci_fi_green_edge
+    rect_h: { x: 25.5, y: 2.5, width: 7.5, height: 0.5 }
+  - label: face left
+    material: sci_fi_trim_wall_left
+    rect_h: { x: 25, y: 1, width: 0.5, height: 1.5 }
+  - label: base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 25.5, y: 1, width: 7.5, height: 1.5 }
+  - label: face right
+    material: sci_fi_trim_wall_right
+    rect_h: { x: 33, y: 1, width: 0.5, height: 1.5 }
+  - label: base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 23, y: 6.5, width: 4.5, height: 0.5 }
+  - label: trim
+    material: sci_fi_green_edge
+    rect_h: { x: 28, y: 6.5, width: 2.5, height: 0.5 }
+  - label: base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 23, y: 5.5, width: 7.5, height: 1 }
+  - label: face right
+    material: sci_fi_trim_wall_right
+    rect_h: { x: 30.5, y: 5.5, width: 0.5, height: 1 }
+  - label: underside
+    material: sci_fi_trim_ceiling
+    rect_h: { x: 23, y: 5, width: 7.5, height: 0.5 }
+  - label: trim
+    material: sci_fi_green_edge
+    rect_h: { x: 23.5, y: 8.5, width: 4, height: 0.5 }
+  - label: face left
+    material: sci_fi_trim_wall_left
+    rect_h: { x: 23, y: 8, width: 0.5, height: 0.5 }
+  - label: base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 23.5, y: 7.5, width: 4, height: 1 }
+  - label: face right
+    material: sci_fi_trim_wall_right
+    rect_h: { x: 27.5, y: 7, width: 0.5, height: 1.5 }
+  - label: base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 23, y: 7, width: 4.5, height: 0.5 }
+  - label: trim
+    material: sci_fi_green_edge
+    rect_h: { x: 33.5, y: 8.5, width: 2.5, height: 0.5 }
+  - label: face left
+    material: sci_fi_trim_wall_left
+    rect_h: { x: 33, y: 5.5, width: 0.5, height: 3 }
+  - label: base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 33.5, y: 5.5, width: 2.5, height: 3 }
+  - label: underside
+    material: sci_fi_trim_ceiling
+    rect_h: { x: 33.5, y: 5, width: 2.5, height: 0.5 }
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
+# Props: sprites standing on a spot (the middle of their bottom edge).
+props:
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 0.75, y: 0.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 11.25, y: 0.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 18.75, y: 0.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 25.25, y: 0.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 33.25, y: 0.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 42.25, y: 0.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 25.25, y: 2.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 33.25, y: 2.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 0.75, y: 3 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 8.75, y: 3 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 21.25, y: 3 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 22.75, y: 3 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 36.25, y: 3 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 39.75, y: 3 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 11.75, y: 3.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 18.75, y: 3.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 0.75, y: 4.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 8.75, y: 4.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 22.75, y: 5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 30.75, y: 5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 33.25, y: 5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 36.25, y: 5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 11.75, y: 6 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 18.75, y: 6 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 27.75, y: 6.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 30.75, y: 6.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 3.25, y: 7 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 11.25, y: 7 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 21.25, y: 7.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 23.25, y: 7.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 23.25, y: 8.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 27.75, y: 8.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 33.25, y: 8.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 36.25, y: 8.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 3.25, y: 9.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 13.25, y: 9.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 18.75, y: 10 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 20.75, y: 10 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 23.25, y: 11 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 36.25, y: 11 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 13.25, y: 11.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 20.75, y: 11.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 35.75, y: 11.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 39.75, y: 11.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 42.25, y: 11.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 47.25, y: 11.5 }
+  - prop: sci_fi_crate_stack
+    position_h: { x: 6, y: 1 }
+    solid: false
+    opacity: 0.8
+  - prop: sci_fi_small_crate
+    position_h: { x: 34.75, y: 1 }
+    solid: false
+    opacity: 0.8
+  - prop: sci_fi_barrel
+    position_h: { x: 39, y: 1 }
+    solid: false
+    opacity: 0.8
+  - prop: sci_fi_small_crate
+    position_h: { x: 9.75, y: 10 }
+    solid: false
+    opacity: 0.8
+  - prop: sci_fi_pipe_vertical
+    position_h: { x: 0.5, y: 11 }
+  - prop: sci_fi_pipe_vertical
+    position_h: { x: 47.5, y: 13.5 }
 enemy_spawns:
   - type_id: blade_unit
     position_h: { x: 7.25, y: 5 }
