@@ -266,7 +266,9 @@ pub(super) fn update_player(
                 } else {
                     data.bonus_effect("double_jump", "extra_jump_impulse_factor")
                 };
-                // A jump a bonus lifts or gives shows the air it pushed off.
+                // A jump a bonus lifts or gives shows the air it pushed off,
+                // where it pushed off rather than where the player has risen
+                // to by the time it is shown.
                 let lifted_by = if player.jumps_used >= tuning.jumps_per_takeoff {
                     Some(if session.has_bonus("kick_off") {
                         ("kick_off", TellEffect::new("air_burst", 0.95).at_the_feet())
@@ -277,13 +279,20 @@ pub(super) fn update_player(
                         )
                     })
                 } else {
-                    session.has_bonus("high_jump").then_some((
-                        "high_jump",
-                        TellEffect::new("jump_dust", 0.75).on_the_floor(),
-                    ))
+                    session.has_bonus("high_jump").then(|| {
+                        let mut dust = TellEffect::new("jump_dust", 0.75).on_the_floor();
+                        // The dust's frame leaves its bottom quarter empty:
+                        // sunk by that much, the cloud sits on the floor.
+                        dust.rise_h -= dust.size_h / 4.0;
+                        ("high_jump", dust)
+                    })
                 };
                 if let Some((bonus, effect)) = lifted_by {
-                    tells.write(BonusTell::new(bonus, TellAt::Player).quiet().with(effect));
+                    tells.write(
+                        BonusTell::new(bonus, TellAt::Spot(transform.translation))
+                            .quiet()
+                            .with(effect),
+                    );
                 }
                 player.jump_buffer_s = 0.0;
                 player.velocity.y = tuning.jump_impulse_h_s * jump_factor * H_WORLD_UNITS;
