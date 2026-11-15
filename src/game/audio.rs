@@ -9,6 +9,7 @@ mod music;
 
 use mixing::gameplay_effects_muted;
 pub(super) use mixing::{AudioFade, update_audio_volume};
+use music::MusicStreamSettings;
 pub(super) use music::{MusicStream, MusicStreamLoader};
 
 #[derive(Resource, Default)]
@@ -196,7 +197,19 @@ pub(super) fn initialize_sound_bank(
     let audio = &data.gameplay.audio;
     let layer =
         |sound: &crate::data::AudioAsset| (asset_server.load(sound.asset.clone()), sound.gain);
-    bank.music_tracks = audio.music_tracks.iter().map(layer).collect();
+    // A chapter track plays once, and another follows it
+    // (`play_the_next_track`).
+    bank.music_tracks = audio
+        .music_tracks
+        .iter()
+        .map(|track| {
+            let source = asset_server
+                .load_builder()
+                .with_settings(|settings: &mut MusicStreamSettings| settings.loops = false)
+                .load(track.asset.clone());
+            (source, track.gain)
+        })
+        .collect();
     bank.intro_music = Some(layer(&audio.intro_music));
     bank.ambience = Some(layer(&audio.ambience));
     let typing = &data.gameplay.prologue.typing_sound;
@@ -226,17 +239,17 @@ pub(super) fn start_typing(commands: &mut Commands, bank: &SoundBank, settings: 
     ));
 }
 
-/// Lays down a looping background layer. `MusicStream` loops itself, so that
-/// the filter the mixer runs it through keeps working past the first
+/// Lays down a background layer. A looping `MusicStream` loops itself, so
+/// that the filter the mixer runs it through keeps working past the first
 /// play-through; Bevy's own looping would buffer the decoded source and freeze
 /// it.
-fn play_layer(
-    commands: &mut Commands,
+fn play_layer<'a>(
+    commands: &'a mut Commands,
     (source, gain): &Layer,
     class: AudioClass,
     settings: &PlayerSettings,
     fade: Option<AudioFade>,
-) {
+) -> EntityCommands<'a> {
     let mut layer = commands.spawn((
         AudioPlayer(source.clone()),
         PlaybackSettings::ONCE.with_volume(Volume::Linear(
@@ -247,6 +260,7 @@ fn play_layer(
     if let Some(fade) = fade {
         layer.insert(fade);
     }
+    layer
 }
 
 /// Starts the music the game opens on: it plays from launch, through the main
@@ -342,10 +356,24 @@ pub(super) fn queue_boss_intro(mut queue: ResMut<SoundQueue>) {
     queue.push(SoundCue::BossIntro);
 }
 
+/// The chapter track playing: which of `audio.music_tracks` it is.
+#[derive(Component)]
+pub(super) struct ChapterTrack(usize);
+
+/// Picks a track at random, never `last` again while there is another.
+fn next_track(bank: &SoundBank, random: &mut RandomState, last: Option<usize>) -> usize {
+    let count = bank.music_tracks.len();
+    match last {
+        Some(last) if count > 1 => (last + 1 + random.index(count - 1)) % count,
+        _ => random.index(count),
+    }
+}
+
 /// Starts the music of a run, on the first room it enters that belongs to a
 /// chapter. Room 0 is left to the opening music, which bows out as the run
-/// crosses into room 1; later rooms find the track already playing and leave
-/// it alone, so one track plays to the end of the run.
+/// crosses into room 1; later rooms find a track already playing and leave
+/// it alone. A track plays once, then `play_the_next_track` follows it with
+/// another, to the end of the run.
 pub(super) fn start_chapter_music(
     mut commands: Commands,
     bank: Res<SoundBank>,
@@ -363,14 +391,36 @@ pub(super) fn start_chapter_music(
     {
         return;
     }
-    let index = random.index(bank.music_tracks.len());
+    let index = next_track(&bank, &mut random, None);
     let Some(track) = bank.music_tracks.get(index) else {
         return;
     };
-    play_layer(&mut commands, track, AudioClass::Music, &settings, None);
+    play_layer(&mut commands, track, AudioClass::Music, &settings, None)
+        .insert(ChapterTrack(index));
     // A run started past the opening room (`--room 7`) never crossed the door
     // that would have sent the opening music away; it goes now.
     fade_intro_music_out(&mut commands, &data, &active_audio);
+}
+
+/// Follows a chapter track that has played to its end with another one.
+pub(super) fn play_the_next_track(
+    mut commands: Commands,
+    bank: Res<SoundBank>,
+    settings: Res<PlayerSettings>,
+    mut random: ResMut<RandomState>,
+    tracks: Query<(Entity, &ChapterTrack, &AudioSink)>,
+) {
+    for (entity, ChapterTrack(last), sink) in &tracks {
+        if !sink.empty() {
+            continue;
+        }
+        commands.entity(entity).despawn();
+        let index = next_track(&bank, &mut random, Some(*last));
+        if let Some(track) = bank.music_tracks.get(index) {
+            play_layer(&mut commands, track, AudioClass::Music, &settings, None)
+                .insert(ChapterTrack(index));
+        }
+    }
 }
 
 /// Takes down what a run was playing: its chapter track and the city under

@@ -431,7 +431,11 @@ impl Plugin for GamePlugin {
         )
         .add_systems(
             PostUpdate,
-            (audio::update_audio_volume, audio::play_sound_queue),
+            (
+                audio::update_audio_volume,
+                audio::play_sound_queue,
+                audio::play_the_next_track,
+            ),
         );
     }
 }

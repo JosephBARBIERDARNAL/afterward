@@ -1,5 +1,7 @@
-//! Looping music streams whose highs can be muffled while the game is paused,
-//! so the music sounds like it keeps playing in another room.
+//! Music streams whose highs can be muffled while the game is paused, so the
+//! music sounds like it keeps playing in another room. A stream loops (the
+//! opening music, the city) unless it was loaded to play once (a chapter
+//! track, followed by another when it ends).
 //!
 //! Bevy's own looping wraps the source in a buffer that is filled on the first
 //! play-through and replayed afterwards, which would freeze the filter at
@@ -11,6 +13,7 @@ use bevy::{
     audio::{AudioSource, ChannelCount, Decodable, Sample, SampleRate, Source},
     prelude::*,
 };
+use serde::{Deserialize, Serialize};
 use std::{
     sync::{
         Arc,
@@ -19,11 +22,13 @@ use std::{
     time::Duration,
 };
 
-/// A music file that loops forever, with a low-pass filter the mixer can open
-/// and close while it plays.
+/// A music file, looped or played once, with a low-pass filter the mixer can
+/// open and close while it plays.
 #[derive(Asset, Clone, TypePath)]
 pub(crate) struct MusicStream {
     source: AudioSource,
+    /// Starts over at the end of its file rather than ending there.
+    loops: bool,
     /// The bits of the current muffle amount, shared with every decoder of this
     /// stream: 0 leaves the sound untouched, 1 cuts the highs hardest.
     muffle: Arc<AtomicU32>,
@@ -40,6 +45,7 @@ impl From<AudioSource> for MusicStream {
     fn from(source: AudioSource) -> Self {
         Self {
             source,
+            loops: true,
             muffle: Arc::new(AtomicU32::new(0.0_f32.to_bits())),
         }
     }
@@ -52,10 +58,23 @@ impl Decodable for MusicStream {
         MuffledLoop {
             decoder: self.source.decoder(),
             source: self.source.clone(),
+            loops: self.loops,
             muffle: Arc::clone(&self.muffle),
             filtered: [0.0; MAX_CHANNELS],
             channel: 0,
         }
+    }
+}
+
+/// How a [`MusicStream`] is loaded: looping unless told to play once.
+#[derive(Serialize, Deserialize)]
+pub(crate) struct MusicStreamSettings {
+    pub(crate) loops: bool,
+}
+
+impl Default for MusicStreamSettings {
+    fn default() -> Self {
+        Self { loops: true }
     }
 }
 
@@ -67,20 +86,23 @@ pub(crate) struct MusicStreamLoader;
 
 impl AssetLoader for MusicStreamLoader {
     type Asset = MusicStream;
-    type Settings = ();
+    type Settings = MusicStreamSettings;
     type Error = std::io::Error;
 
     async fn load(
         &self,
         reader: &mut dyn Reader,
-        _settings: &Self::Settings,
+        settings: &Self::Settings,
         _load_context: &mut LoadContext<'_>,
     ) -> Result<MusicStream, Self::Error> {
         let mut bytes = Vec::new();
         reader.read_to_end(&mut bytes).await?;
-        Ok(MusicStream::from(AudioSource {
-            bytes: bytes.into(),
-        }))
+        Ok(MusicStream {
+            loops: settings.loops,
+            ..MusicStream::from(AudioSource {
+                bytes: bytes.into(),
+            })
+        })
     }
 
     fn extensions(&self) -> &[&str] {
@@ -97,11 +119,12 @@ const STRONGEST_MUFFLE: f32 = 0.985;
 /// more channels than this plays unfiltered rather than not at all.
 const MAX_CHANNELS: usize = 8;
 
-/// A music file played end to end, over and over, through a one-pole low-pass
-/// filter per channel.
+/// A music file played end to end (over and over if it loops) through a
+/// one-pole low-pass filter per channel.
 pub(crate) struct MuffledLoop {
     decoder: <AudioSource as Decodable>::Decoder,
     source: AudioSource,
+    loops: bool,
     muffle: Arc<AtomicU32>,
     filtered: [Sample; MAX_CHANNELS],
     channel: usize,
@@ -113,6 +136,7 @@ impl Iterator for MuffledLoop {
     fn next(&mut self) -> Option<Sample> {
         let sample = match self.decoder.next() {
             Some(sample) => sample,
+            None if !self.loops => return None,
             None => {
                 self.decoder = self.source.decoder();
                 self.channel = 0;
@@ -132,8 +156,7 @@ impl Iterator for MuffledLoop {
 }
 
 impl Source for MuffledLoop {
-    /// The stream never ends and always holds the same file, so its format
-    /// never changes.
+    /// The stream always holds the same file, so its format never changes.
     fn current_span_len(&self) -> Option<usize> {
         None
     }
@@ -206,6 +229,21 @@ mod tests {
                 .skip(TONE_SAMPLES * 2)
                 .any(|sample| sample.abs() > 0.01),
             "the third play-through is audible, not silence"
+        );
+    }
+
+    #[test]
+    fn a_stream_loaded_to_play_once_ends_with_its_file() {
+        let stream = MusicStream {
+            loops: false,
+            ..MusicStream::from(tone(440.0))
+        };
+
+        let played = stream.decoder().take(TONE_SAMPLES * 3).count();
+
+        assert!(
+            played > 0 && played < TONE_SAMPLES * 2,
+            "the stream plays its file once ({played} samples)"
         );
     }
 

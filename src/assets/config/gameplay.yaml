@@ -477,8 +477,8 @@ audio:
   # How muffled the music and the city are while a door is crossed, as if the
   # sound passed through the wall between two rooms.
   crossing_music_muffle: 0.55
-  # Background music: one track is picked at random when a run starts and loops
-  # until the run ends. Paths are under src/assets/; gain multiplies the music
+  # Background music: a track picked at random plays once when a run starts,
+  # then another follows it, never the same twice in a row, until it ends. Paths are under src/assets/; gain multiplies the music
   # volume setting.
   music_tracks:
     - { asset: audio/music/track_1.mp3, gain: 0.5 }
