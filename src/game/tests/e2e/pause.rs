@@ -15,13 +15,13 @@ fn the_pause_menu_adjusts_settings_resumes_restarts_and_leaves() {
     let music = game
         .app
         .world()
-        .resource::<AudioSettings>()
+        .resource::<PlayerSettings>()
         .music_volume_percent;
     game.tap(KeyCode::ArrowLeft);
     assert_eq!(
         game.app
             .world()
-            .resource::<AudioSettings>()
+            .resource::<PlayerSettings>()
             .music_volume_percent,
         music.saturating_sub(5)
     );

@@ -5,22 +5,36 @@ use std::{fs, path::PathBuf};
 /// How far one press of an arrow key moves a volume.
 const VOLUME_STEP_PERCENT: u8 = 5;
 
-#[derive(Resource, Serialize, Deserialize)]
-pub(super) struct AudioSettings {
+/// What the settings screen sets, saved to `settings.yaml` as it changes.
+#[derive(Resource, Serialize)]
+pub(super) struct PlayerSettings {
     pub music_volume_percent: u8,
     pub sfx_volume_percent: u8,
+    /// Whether the enemies of the wave out of view are pointed at from the
+    /// edge of the screen (`enemy_markers.rs`).
+    pub enemy_markers: bool,
 }
 
-impl Default for AudioSettings {
+impl Default for PlayerSettings {
     fn default() -> Self {
         Self {
             music_volume_percent: 100,
             sfx_volume_percent: 100,
+            enemy_markers: true,
         }
     }
 }
 
-impl AudioSettings {
+/// `settings.yaml` as read back: a file saved before a setting existed leaves
+/// that one at its default rather than losing the others.
+#[derive(Deserialize)]
+struct SavedSettings {
+    music_volume_percent: Option<u8>,
+    sfx_volume_percent: Option<u8>,
+    enemy_markers: Option<bool>,
+}
+
+impl PlayerSettings {
     pub(super) fn volume_of(&self, channel: VolumeChannel) -> u8 {
         match channel {
             VolumeChannel::Music => self.music_volume_percent,
@@ -72,24 +86,32 @@ impl SettingsReturn {
 pub(super) fn initialize_settings(
     data: Res<GameData>,
     preferences: Res<PreferencesDir>,
-    mut settings: ResMut<AudioSettings>,
+    mut settings: ResMut<PlayerSettings>,
 ) {
     settings.music_volume_percent = data.gameplay.window.music_volume_percent;
     settings.sfx_volume_percent = data.gameplay.window.sfx_volume_percent;
+    settings.enemy_markers = data.gameplay.enemy_markers.on_by_default;
     let Some(path) = preferences.file("settings.yaml") else {
         return;
     };
     let Ok(serialized) = fs::read_to_string(path) else {
         return;
     };
-    let Ok(saved) = yaml_serde::from_str::<AudioSettings>(&serialized) else {
+    let Ok(saved) = yaml_serde::from_str::<SavedSettings>(&serialized) else {
         return;
     };
-    settings.music_volume_percent = saved.music_volume_percent.min(100);
-    settings.sfx_volume_percent = saved.sfx_volume_percent.min(100);
+    if let Some(volume) = saved.music_volume_percent {
+        settings.music_volume_percent = volume.min(100);
+    }
+    if let Some(volume) = saved.sfx_volume_percent {
+        settings.sfx_volume_percent = volume.min(100);
+    }
+    if let Some(on) = saved.enemy_markers {
+        settings.enemy_markers = on;
+    }
 }
 
-pub(super) fn save_settings(settings: &AudioSettings, preferences: &PreferencesDir) {
+pub(super) fn save_settings(settings: &PlayerSettings, preferences: &PreferencesDir) {
     let Some(path) = preferences.file("settings.yaml") else {
         return;
     };

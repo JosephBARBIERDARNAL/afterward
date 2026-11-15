@@ -69,13 +69,13 @@ fn the_main_menu_opens_the_settings_and_comes_back_over_its_water() {
     let music = game
         .app
         .world()
-        .resource::<AudioSettings>()
+        .resource::<PlayerSettings>()
         .music_volume_percent;
     game.tap(KeyCode::ArrowLeft);
     assert_eq!(
         game.app
             .world()
-            .resource::<AudioSettings>()
+            .resource::<PlayerSettings>()
             .music_volume_percent,
         music.saturating_sub(5)
     );

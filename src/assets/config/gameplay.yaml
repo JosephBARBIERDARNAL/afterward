@@ -393,6 +393,19 @@ effects:
     foam_color: "#A6F6F2"
     foam_opacity: 0.72
 
+# While a wave is being fought, every one of its enemies out of view is
+# pointed at by a ring on the edge of the screen, in its direction, with its
+# head inside (`head_px` of its type). The Gameplay section of the settings
+# turns them off. Sizes are UI pixels of the 16:9 viewport.
+enemy_markers:
+  on_by_default: true
+  diameter_px: 46
+  edge_margin_px: 14
+  border_px: 3
+  border_color: "#E0485A"
+  fill_color: "#5A6378"
+  pointer_px: 12
+
 # The one font every word in the game is written in: menus, HUD, prologue,
 # damage numbers, the debug editor. It must be monospace, since the prologue
 # holds each character's place before it is typed.

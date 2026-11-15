@@ -53,7 +53,7 @@ pub(super) struct ScreenInputResources<'w> {
     start_room: Res<'w, StartRoom>,
     session: ResMut<'w, RunSession>,
     random: ResMut<'w, RandomState>,
-    settings: ResMut<'w, AudioSettings>,
+    settings: ResMut<'w, PlayerSettings>,
     preferences: Res<'w, PreferencesDir>,
     controls: ResMut<'w, ControlBindings>,
     settings_return: ResMut<'w, SettingsReturn>,
@@ -218,6 +218,11 @@ pub(super) fn handle_screen_input(
                     settings::save_settings(&settings, &preferences);
                     sounds.push(SoundCue::UiMove);
                 }
+            }
+            MenuAction::ToggleEnemyMarkers => {
+                settings.enemy_markers = !settings.enemy_markers;
+                settings::save_settings(&settings, &preferences);
+                sounds.push(SoundCue::UiConfirm);
             }
             MenuAction::ToggleFullscreen => {
                 if let Ok(mut window) = windows.single_mut() {

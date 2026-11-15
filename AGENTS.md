@@ -258,6 +258,10 @@ Chapter 1 as it stands: rooms 1 to 3 are arenas of two or three waves, room 4 an
 
 Danger is read the same way on every body. While an enemy winds up, whatever its attack, its sprite warms toward `effects.telegraph.color` and is at its brightest the moment it strikes (`update_enemy_ai`); only the ghost's blink differs, fading out instead. A shot leaves a flash at the muzzle and bursts where it ends, on a body or a wall. A lunge throws the body forward over the distance it covers rather than setting it down there, the blow landing from where it will arrive. A corpse lies where it fell and fades out. `combat::feedback::play_effect` is the one way to play an effect sheet once and have it taken away: the sparks of a landed blow, the flashes of a shot, the rings a blink and Aftershock leave.
 
+### Enemy markers
+
+While a wave is fought, every enemy of it standing out of the 24 by 13.5 H view is pointed at by a ring on the edge of the screen (`src/game/enemy_markers.rs`, tuned from `enemy_markers:` of `config/gameplay.yaml`): pinned where the line from the middle of the screen to it leaves the view, a pointer on its rim aimed at it, and its head inside, the square `head_px` of its type cuts out of its first idle frame (the whole frame when left out). Out of view is decided in the world, from the camera and the configured view, so headless tests see it too. The Gameplay section of the settings turns them off (`PlayerSettings::enemy_markers`, saved with the volumes).
+
 ### Enemy material and armor
 
 Each type in `enemies/enemy_types.yaml` declares a `material`, which decides the sound a hit on its body makes (`audio.recorded_effects.damage_*`), and its `health`, speed and damage, which every enemy of the type shares: a room cannot change them. Armor is the one thing a room gives an enemy; `armor_layers` on a room spawn (none when left out) is how many layers that one enemy has, on top of the `armor_layers` of its type, which only the gold monsters have, and it is the `Armor layers` row of the debug editor's inspector. An armored enemy's health bar is gold with one shield icon per layer above it.

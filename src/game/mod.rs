@@ -22,6 +22,7 @@ mod controls;
 mod devices;
 #[cfg(debug_assertions)]
 mod editor;
+mod enemy_markers;
 mod flow;
 #[cfg(debug_assertions)]
 mod hitbox_overlay;
@@ -69,7 +70,7 @@ use prologue::Prologue;
 use random::RandomState;
 use room_pan::RoomPan;
 use session::{Difficulty, RunSession};
-use settings::{AudioSettings, PreferencesDir, SettingsReturn};
+use settings::{PlayerSettings, PreferencesDir, SettingsReturn};
 use shaders::{Bolt, CityLightsMaterial, Flame, Glowing, ShaderAssets};
 use sprites::{AnimatedSprite, SpriteSheet, SpriteSheetSpec, SpriteSheets, set_animation};
 use world::{EntryDoor, ExitDoor, RoomEntity};
@@ -129,7 +130,7 @@ impl Plugin for GamePlugin {
         .init_resource::<RoomPan>()
         .init_resource::<Prologue>()
         .init_resource::<StartRoom>()
-        .init_resource::<AudioSettings>()
+        .init_resource::<PlayerSettings>()
         .init_resource::<PreferencesDir>()
         .init_resource::<SettingsReturn>()
         .init_resource::<MenuFocus>()
@@ -232,7 +233,10 @@ impl Plugin for GamePlugin {
                     menus::navigate_menus,
                     screens::handle_screen_input,
                     menus::update_menu,
-                    (menus::highlight_menu_buttons, menus::update_volume_bars),
+                    (
+                        menus::highlight_menu_buttons,
+                        menus::update_setting_readings,
+                    ),
                 )
                     .chain(),
                 interface::update_room_clear_overlay,
@@ -242,6 +246,7 @@ impl Plugin for GamePlugin {
                 bonus_screen::update_bonus_screen,
                 camera::update_background_parallax,
                 interface::update_hud,
+                enemy_markers::update_enemy_markers.after(camera::follow_camera),
                 shaders::attach_glows,
                 interact::show_the_interact_prompt,
                 shaders::show_the_flood,

@@ -62,7 +62,7 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
         .init_resource::<RoomPan>()
         .init_resource::<InReach>()
         .init_resource::<StartRoom>()
-        .init_resource::<AudioSettings>()
+        .init_resource::<PlayerSettings>()
         .insert_resource(RandomState(0x4a75_6572_6e65_7974))
         .insert_resource(PhaseTimer(Timer::from_seconds(1.0, TimerMode::Once)))
         .init_resource::<SoundQueue>()

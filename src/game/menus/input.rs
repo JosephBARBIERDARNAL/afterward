@@ -27,7 +27,7 @@ pub(in crate::game) struct MenuInput<'w, 's> {
     keys: Res<'w, ButtonInput<KeyCode>>,
     controls: Res<'w, ControlBindings>,
     focus: ResMut<'w, MenuFocus>,
-    settings: ResMut<'w, AudioSettings>,
+    settings: ResMut<'w, PlayerSettings>,
     preferences: Res<'w, PreferencesDir>,
     sounds: ResMut<'w, SoundQueue>,
     buttons: Query<'w, 's, (Entity, &'static MenuButton)>,
@@ -132,6 +132,15 @@ pub(in crate::game) fn navigate_menus(
             settings::save_settings(&settings, &preferences);
             sounds.push(SoundCue::UiMove);
         }
+    }
+    // They flip a switch too, either way.
+    if actions.get(standing_on) == Some(&MenuAction::ToggleEnemyMarkers)
+        && (controls.just_pressed(GameAction::MoveRight, &keys)
+            || controls.just_pressed(GameAction::MoveLeft, &keys))
+    {
+        settings.enemy_markers = !settings.enemy_markers;
+        settings::save_settings(&settings, &preferences);
+        sounds.push(SoundCue::UiMove);
     }
 
     // A click presses the button it landed on, and a click inside a volume bar

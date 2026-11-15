@@ -124,6 +124,9 @@ pub enum EnemyMaterial {
 #[derive(Debug, Deserialize)]
 pub struct EnemyTypeConfig {
     pub health: f32,
+    /// The square of its first idle frame its marker at the screen's edge
+    /// shows; left out, the marker shows the whole frame.
+    pub head_px: Option<HeadPx>,
     pub material: EnemyMaterial,
     pub movement_speed_h_s: f32,
     pub jump_height_h: Option<f32>,
@@ -169,6 +172,14 @@ pub struct FlightConfig {
 pub struct DeathEffectConfig {
     pub sheet: String,
     pub size_h: f32,
+}
+
+/// A square of a sprite frame, in source pixels from the frame's top left.
+#[derive(Debug, Clone, Copy, Deserialize)]
+pub struct HeadPx {
+    pub x: f32,
+    pub y: f32,
+    pub size: f32,
 }
 
 /// How a type's sheets are laid over its body, in source pixels.

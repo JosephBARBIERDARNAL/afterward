@@ -40,6 +40,9 @@ jumping:
 #   reaches behind it), y up. The enemy starts the attack once the player's
 #   hurtbox reaches the box's far edge.
 # - a projectile attack's projectile_size_h: the shot's size.
+# head_px is the square of its first idle frame, in source pixels from the
+# frame's top left, that the marker at the screen's edge shows while it is out
+# of view (left out, the marker shows the whole frame).
 # material picks the sound a hit on the enemy's body makes. No type walks in
 # armored: armor is given to one enemy at a time, by `armor_layers` on its
 # room spawn. Each layer soaks one ordinary blow whole, and while any is left
@@ -65,6 +68,7 @@ types:
     # crowd of them is what makes the player feel strong.
     health: 36
     material: metal
+    head_px: { x: 37, y: 56, size: 30 }
     movement_speed_h_s: 2.5
     behavior: melee_pursuit
     procedural_movement:
@@ -91,6 +95,7 @@ types:
     # The shooter: frail once reached, three blows of the chain.
     health: 60
     material: metal
+    head_px: { x: 47, y: 54, size: 26 }
     movement_speed_h_s: 1.5
     behavior: ranged_keep_distance
     preferred_distance_h: 8
@@ -106,6 +111,7 @@ types:
     # The tough one of a wave: two full chains, or a charged blow and one.
     health: 140
     material: metal
+    head_px: { x: 55, y: 50, size: 22 }
     movement_speed_h_s: 0.8
     behavior: ranged_keep_distance
     preferred_distance_h: 10
@@ -125,6 +131,7 @@ types:
     hurtbox_h: { width: 0.8, height: 0.9 }
     health: 250
     material: metal
+    head_px: { x: 37, y: 56, size: 30 }
     movement_speed_h_s: 3.2
     behavior: melee_pursuit
     procedural_movement:
@@ -152,6 +159,7 @@ types:
     hurtbox_h: { width: 0.6, height: 1 }
     health: 250
     material: metal
+    head_px: { x: 47, y: 54, size: 26 }
     movement_speed_h_s: 2
     behavior: ranged_keep_distance
     preferred_distance_h: 8
@@ -166,6 +174,7 @@ types:
     hurtbox_h: { width: 0.6, height: 1 }
     health: 250
     material: metal
+    head_px: { x: 55, y: 50, size: 22 }
     movement_speed_h_s: 1.1
     behavior: ranged_keep_distance
     preferred_distance_h: 10
@@ -185,6 +194,7 @@ types:
     hurtbox_h: { width: 1, height: 1.5 }
     health: 450
     material: metal
+    head_px: { x: 68, y: 29, size: 16 }
     movement_speed_h_s: 3.2
     jump_height_h: 2.75
     behavior: boss
@@ -268,6 +278,7 @@ types:
     hurtbox_h: { width: 0.98, height: 1.26 }
     health: 220
     material: polymer
+    head_px: { x: 68, y: 2, size: 44 }
     movement_speed_h_s: 1.4
     behavior: melee_pursuit
     sprite:
@@ -297,6 +308,7 @@ types:
     hurtbox_h: { width: 0.42, height: 0.88 }
     health: 90
     material: polymer
+    head_px: { x: 49, y: 16, size: 14 }
     movement_speed_h_s: 1.6
     behavior: ranged_keep_distance
     sprite:
@@ -325,6 +337,7 @@ types:
     hurtbox_h: { width: 0.49, height: 0.42 }
     health: 60
     material: polymer
+    head_px: { x: 22, y: 15, size: 11 }
     movement_speed_h_s: 4
     behavior: melee_pursuit
     sprite:
@@ -359,6 +372,7 @@ types:
     hurtbox_h: { width: 0.56, height: 1.01 }
     health: 120
     material: polymer
+    head_px: { x: 29, y: 26, size: 16 }
     movement_speed_h_s: 2.8
     behavior: melee_pursuit
     sprite:
@@ -389,6 +403,7 @@ types:
     hurtbox_h: { width: 0.7, height: 0.98 }
     health: 80
     material: polymer
+    head_px: { x: 21, y: 16, size: 31 }
     movement_speed_h_s: 1.8
     behavior: ranged_keep_distance
     preferred_distance_h: 8
@@ -424,6 +439,7 @@ types:
     hurtbox_h: { width: 0.98, height: 1.26 }
     health: 220
     material: polymer
+    head_px: { x: 68, y: 2, size: 44 }
     movement_speed_h_s: 1.4
     behavior: melee_pursuit
     death_blast: { radius_h: 1.5, damage: 12, fuse_s: 0.8, burn_s: 0.2 }
@@ -451,6 +467,7 @@ types:
     hurtbox_h: { width: 0.98, height: 1.26 }
     health: 220
     material: polymer
+    head_px: { x: 68, y: 2, size: 44 }
     movement_speed_h_s: 1.4
     behavior: melee_pursuit
     armor_layers: 2
@@ -478,6 +495,7 @@ types:
     hurtbox_h: { width: 0.98, height: 1.26 }
     health: 220
     material: polymer
+    head_px: { x: 68, y: 2, size: 44 }
     movement_speed_h_s: 1.96
     behavior: melee_pursuit
     sprite:
@@ -504,6 +522,7 @@ types:
     hurtbox_h: { width: 0.42, height: 0.88 }
     health: 90
     material: polymer
+    head_px: { x: 49, y: 16, size: 14 }
     movement_speed_h_s: 1.6
     behavior: ranged_keep_distance
     death_blast: { radius_h: 1.5, damage: 12, fuse_s: 0.8, burn_s: 0.2 }
@@ -530,6 +549,7 @@ types:
     hurtbox_h: { width: 0.42, height: 0.88 }
     health: 90
     material: polymer
+    head_px: { x: 49, y: 16, size: 14 }
     movement_speed_h_s: 1.6
     behavior: ranged_keep_distance
     armor_layers: 1
@@ -556,6 +576,7 @@ types:
     hurtbox_h: { width: 0.42, height: 0.88 }
     health: 90
     material: polymer
+    head_px: { x: 49, y: 16, size: 14 }
     movement_speed_h_s: 2.24
     behavior: ranged_keep_distance
     sprite:
@@ -581,6 +602,7 @@ types:
     hurtbox_h: { width: 0.49, height: 0.42 }
     health: 60
     material: polymer
+    head_px: { x: 22, y: 15, size: 11 }
     movement_speed_h_s: 4
     behavior: melee_pursuit
     death_blast: { radius_h: 1.5, damage: 12, fuse_s: 0.8, burn_s: 0.2 }
@@ -612,6 +634,7 @@ types:
     hurtbox_h: { width: 0.49, height: 0.42 }
     health: 60
     material: polymer
+    head_px: { x: 22, y: 15, size: 11 }
     movement_speed_h_s: 4
     behavior: melee_pursuit
     armor_layers: 1
@@ -643,6 +666,7 @@ types:
     hurtbox_h: { width: 0.49, height: 0.42 }
     health: 60
     material: polymer
+    head_px: { x: 22, y: 15, size: 11 }
     movement_speed_h_s: 5.6
     behavior: melee_pursuit
     sprite:
@@ -673,6 +697,7 @@ types:
     hurtbox_h: { width: 0.56, height: 1.01 }
     health: 120
     material: polymer
+    head_px: { x: 29, y: 26, size: 16 }
     movement_speed_h_s: 2.8
     behavior: melee_pursuit
     death_blast: { radius_h: 1.5, damage: 12, fuse_s: 0.8, burn_s: 0.2 }
@@ -701,6 +726,7 @@ types:
     hurtbox_h: { width: 0.56, height: 1.01 }
     health: 120
     material: polymer
+    head_px: { x: 29, y: 26, size: 16 }
     movement_speed_h_s: 2.8
     behavior: melee_pursuit
     armor_layers: 1
@@ -729,6 +755,7 @@ types:
     hurtbox_h: { width: 0.56, height: 1.01 }
     health: 120
     material: polymer
+    head_px: { x: 29, y: 26, size: 16 }
     movement_speed_h_s: 3.92
     behavior: melee_pursuit
     sprite:
@@ -760,6 +787,7 @@ types:
     hurtbox_h: { width: 1.2, height: 1.3 }
     health: 40
     material: metal
+    head_px: { x: 12, y: 10, size: 28 }
     movement_speed_h_s: 1.6
     behavior: ranged_keep_distance
     preferred_distance_h: 7
@@ -787,6 +815,7 @@ types:
     hurtbox_h: { width: 0.8, height: 0.7 }
     health: 1
     material: metal
+    head_px: { x: 15, y: 16, size: 18 }
     movement_speed_h_s: 2.6
     behavior: flying_mine
     flight: { hover_h: 0.5, contact_h: 0.7 }
@@ -805,6 +834,7 @@ types:
     hurtbox_h: { width: 1.2, height: 1 }
     health: 30
     material: metal
+    head_px: { x: 8, y: 12, size: 30 }
     movement_speed_h_s: 2.2
     behavior: flying_gunner
     flight: { hover_h: 3.5 }

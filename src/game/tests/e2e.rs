@@ -44,6 +44,7 @@ mod death;
 mod devices;
 mod difficulty;
 mod editor;
+mod enemy_markers;
 mod flyers;
 mod hitboxes;
 mod impact;

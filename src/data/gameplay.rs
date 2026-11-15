@@ -18,6 +18,7 @@ pub struct GameplayConfig {
     pub prologue: PrologueConfig,
     pub difficulty: DifficultyColors,
     pub effects: EffectsConfig,
+    pub enemy_markers: EnemyMarkersConfig,
     /// The font file every text is drawn with, under the asset root.
     pub font: String,
     pub window: WindowConfig,
@@ -585,6 +586,23 @@ pub struct WavesConfig {
     /// How long an arriving enemy takes to rise out of the floor, held where
     /// it stands.
     pub arrive_s: f32,
+}
+
+/// The rings at the screen's edge that point at the enemies of the wave out
+/// of view, each showing the head of the one it stands for. Sizes are in UI
+/// pixels of the 16:9 viewport.
+#[derive(Debug, Deserialize)]
+pub struct EnemyMarkersConfig {
+    /// Whether a player with no saved settings sees them.
+    pub on_by_default: bool,
+    pub diameter_px: f32,
+    /// How far a marker's ring stands in from the edge of the screen.
+    pub edge_margin_px: f32,
+    pub border_px: f32,
+    pub border_color: HexColor,
+    pub fill_color: HexColor,
+    /// The pointer on the ring's rim, which turns toward the enemy.
+    pub pointer_px: f32,
 }
 
 #[derive(Debug, Deserialize)]

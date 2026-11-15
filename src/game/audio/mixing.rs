@@ -96,7 +96,7 @@ impl AudioMix {
 pub(crate) struct MixInputs<'w> {
     screen: Res<'w, State<GameScreen>>,
     data: Res<'w, GameData>,
-    settings: Res<'w, AudioSettings>,
+    settings: Res<'w, PlayerSettings>,
     settings_return: Res<'w, SettingsReturn>,
     music_streams: Res<'w, Assets<MusicStream>>,
 }

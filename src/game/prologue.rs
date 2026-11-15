@@ -186,7 +186,7 @@ pub(super) fn spawn_prologue_text(mut commands: Commands) {
 pub(super) fn start_prologue(
     mut commands: Commands,
     bank: Res<audio::SoundBank>,
-    settings: Res<AudioSettings>,
+    settings: Res<PlayerSettings>,
     mut prologue: ResMut<Prologue>,
 ) {
     prologue.typed_characters = 0.0;

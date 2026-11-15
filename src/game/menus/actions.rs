@@ -27,6 +27,8 @@ pub(in crate::game) enum MenuAction {
     /// A volume slider, which the left and right keys move.
     Volume(VolumeChannel),
     ToggleFullscreen,
+    /// Shows or hides the markers pointing at enemies out of view.
+    ToggleEnemyMarkers,
     /// Rebinds one action's key, on the controls screen.
     Rebind(GameAction),
     RestoreDefaultBindings,
@@ -66,6 +68,7 @@ impl MenuAction {
             GameScreen::Settings => vec![
                 Self::Volume(VolumeChannel::Music),
                 Self::Volume(VolumeChannel::Sound),
+                Self::ToggleEnemyMarkers,
                 Self::OpenControls,
                 Self::ToggleFullscreen,
                 Self::Back,

@@ -86,7 +86,7 @@ pub(crate) fn read_terminals(
         Res<ControlBindings>,
         Res<InReach>,
     ),
-    (bank, settings, data): (Res<audio::SoundBank>, Res<AudioSettings>, Res<GameData>),
+    (bank, settings, data): (Res<audio::SoundBank>, Res<PlayerSettings>, Res<GameData>),
     mut reading: ResMut<Reading>,
     terminals: Query<(&Device, &Transform)>,
     typing: Query<Entity, With<audio::TypingSound>>,

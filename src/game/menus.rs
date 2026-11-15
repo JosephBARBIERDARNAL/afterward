@@ -55,6 +55,10 @@ pub(super) struct VolumeFill(VolumeChannel);
 #[derive(Component, Clone, Copy)]
 pub(super) struct VolumeReading(VolumeChannel);
 
+/// The ON or OFF beside the enemy markers' switch.
+#[derive(Component, Clone, Copy)]
+pub(super) struct EnemyMarkersReading;
+
 pub(super) fn spawn_menu(mut commands: Commands) {
     commands.spawn((overlay_root(), MenuRoot));
 }
@@ -72,10 +76,14 @@ pub(super) struct MenuView {
 
 #[derive(Clone, Debug, PartialEq)]
 pub(super) struct MenuRow {
+    /// The heading of the section this row opens, drawn above it.
+    section: Option<&'static str>,
     key: Option<String>,
     label: String,
     /// Volume rows draw a bar, whose level is dressed on separately.
     slider: Option<VolumeChannel>,
+    /// The enemy markers' row reads ON or OFF, dressed on separately too.
+    switch: bool,
     /// A colour of the row's own to edge the box in, for the rows that stand
     /// for something coloured; the rest take the menu's border.
     edge: Option<Color>,
@@ -87,9 +95,11 @@ impl MenuRow {
     /// on the screen.
     fn action(key: impl Into<String>, label: impl Into<String>, action: MenuAction) -> Self {
         Self {
+            section: None,
             key: Some(key.into()),
             label: label.into(),
             slider: None,
+            switch: false,
             edge: None,
             action,
         }
@@ -99,9 +109,11 @@ impl MenuRow {
     /// difficulties, reached with the arrows or the mouse.
     fn choice(label: &str, edge: Color, action: MenuAction) -> Self {
         Self {
+            section: None,
             key: None,
             label: label.to_owned(),
             slider: None,
+            switch: false,
             edge: Some(edge),
             action,
         }
@@ -111,11 +123,35 @@ impl MenuRow {
     /// keys or by clicking into it.
     fn volume(label: &str, channel: VolumeChannel) -> Self {
         Self {
+            section: None,
             key: None,
             label: label.to_owned(),
             slider: Some(channel),
+            switch: false,
             edge: None,
             action: MenuAction::Volume(channel),
+        }
+    }
+
+    /// A row that is on or off, flipped by pressing it or by the left and
+    /// right keys.
+    fn switch(label: &str, action: MenuAction) -> Self {
+        Self {
+            section: None,
+            key: None,
+            label: label.to_owned(),
+            slider: None,
+            switch: true,
+            edge: None,
+            action,
+        }
+    }
+
+    /// The row with the heading of the section it opens above it.
+    fn opening(self, section: &'static str) -> Self {
+        Self {
+            section: Some(section),
+            ..self
         }
     }
 }
@@ -236,16 +272,19 @@ impl MenuState<'_> {
             MenuAction::Continue => row(String::from("ENTER"), "Continue"),
             MenuAction::Restart => row(String::from("R"), "Restart"),
             MenuAction::OpenSettings => row(String::from("S"), "Settings"),
-            MenuAction::OpenControls => row(String::from("C"), "Controls"),
             MenuAction::OpenEditor => row(String::from("D"), "Debug editor"),
             MenuAction::LeaveRun => row(String::from("M"), "Main menu"),
             MenuAction::Quit => row(String::from("Q"), "Quit"),
             MenuAction::Volume(VolumeChannel::Music) => {
-                MenuRow::volume("Music", VolumeChannel::Music)
+                MenuRow::volume("Music", VolumeChannel::Music).opening("AUDIO")
             }
             MenuAction::Volume(VolumeChannel::Sound) => {
                 MenuRow::volume("Sound", VolumeChannel::Sound)
             }
+            MenuAction::ToggleEnemyMarkers => {
+                MenuRow::switch("Enemy markers", action).opening("GAMEPLAY")
+            }
+            MenuAction::OpenControls => row(String::from("C"), "Controls").opening("SYSTEM"),
             MenuAction::ToggleFullscreen => row(key(GameAction::ToggleFullscreen), "Fullscreen"),
             MenuAction::Rebind(bound) => MenuRow {
                 key: Some(if self.controls.rebinding == Some(bound) {
@@ -254,7 +293,9 @@ impl MenuState<'_> {
                     self.controls.binding_label(bound)
                 }),
                 label: bound.label().to_owned(),
+                section: None,
                 slider: None,
+                switch: false,
                 edge: None,
                 action,
             },
@@ -329,11 +370,13 @@ pub(super) fn highlight_menu_buttons(
     }
 }
 
-/// Fills each volume bar to its setting and writes the reading beside it.
-pub(super) fn update_volume_bars(
-    settings: Res<AudioSettings>,
+/// Fills each volume bar to its setting and writes the reading beside it,
+/// and writes whether the enemy markers are on.
+pub(super) fn update_setting_readings(
+    settings: Res<PlayerSettings>,
     mut fills: Query<(&VolumeFill, &mut Node)>,
-    mut readings: Query<(&VolumeReading, &mut Text)>,
+    mut readings: Query<(&VolumeReading, &mut Text), Without<EnemyMarkersReading>>,
+    mut switches: Query<&mut Text, With<EnemyMarkersReading>>,
 ) {
     for (fill, mut node) in &mut fills {
         node.width = percent(f32::from(settings.volume_of(fill.0)));
@@ -342,6 +385,12 @@ pub(super) fn update_volume_bars(
         let reading = format!("{}%", settings.volume_of(reading.0));
         if text.0 != reading {
             text.0 = reading;
+        }
+    }
+    let reading = if settings.enemy_markers { "ON" } else { "OFF" };
+    for mut text in &mut switches {
+        if text.0 != reading {
+            text.0 = reading.to_owned();
         }
     }
 }
@@ -398,6 +447,16 @@ impl MenuView {
                     ))
                     .with_children(|rows| {
                         for (index, row) in self.rows.iter().enumerate() {
+                            if let Some(section) = row.section {
+                                rows.spawn((
+                                    text(section, 15.0, DESCRIPTION_COLOR),
+                                    Node {
+                                        width: percent(100),
+                                        margin: UiRect::top(px(if index == 0 { 0 } else { 6 })),
+                                        ..default()
+                                    },
+                                ));
+                            }
                             row.spawn(rows, index, compact);
                         }
                     });
@@ -521,6 +580,17 @@ impl MenuRow {
                         ..default()
                     },
                     VolumeReading(channel),
+                ));
+            }
+            if self.switch {
+                row.spawn((
+                    text(String::new(), label_font_px, DESCRIPTION_COLOR),
+                    TextLayout::justify(Justify::Right),
+                    Node {
+                        min_width: px(64),
+                        ..default()
+                    },
+                    EnemyMarkersReading,
                 ));
             }
         });

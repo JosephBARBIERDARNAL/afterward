@@ -209,7 +209,7 @@ pub(super) struct TypingSound;
 
 /// Starts that typing: a loop that runs for as long as the words take, rather
 /// than a cue fired once.
-pub(super) fn start_typing(commands: &mut Commands, bank: &SoundBank, settings: &AudioSettings) {
+pub(super) fn start_typing(commands: &mut Commands, bank: &SoundBank, settings: &PlayerSettings) {
     let Some((source, gain)) = bank.typing.as_ref() else {
         return;
     };
@@ -234,7 +234,7 @@ fn play_layer(
     commands: &mut Commands,
     (source, gain): &Layer,
     class: AudioClass,
-    settings: &AudioSettings,
+    settings: &PlayerSettings,
     fade: Option<AudioFade>,
 ) {
     let mut layer = commands.spawn((
@@ -255,7 +255,7 @@ fn play_layer(
 pub(super) fn start_intro_music(
     mut commands: Commands,
     bank: Res<SoundBank>,
-    settings: Res<AudioSettings>,
+    settings: Res<PlayerSettings>,
     active_audio: Query<&ManagedAudio>,
 ) {
     let Some(intro) = bank.intro_music.as_ref() else {
@@ -282,7 +282,7 @@ pub(super) fn start_run_ambience(
     mut commands: Commands,
     bank: Res<SoundBank>,
     data: Res<GameData>,
-    settings: Res<AudioSettings>,
+    settings: Res<PlayerSettings>,
     active_audio: Query<&ManagedAudio>,
 ) {
     let Some(ambience) = bank.ambience.as_ref() else {
@@ -351,7 +351,7 @@ pub(super) fn start_chapter_music(
     bank: Res<SoundBank>,
     data: Res<GameData>,
     session: Res<RunSession>,
-    settings: Res<AudioSettings>,
+    settings: Res<PlayerSettings>,
     mut random: ResMut<RandomState>,
     active_audio: Query<(Entity, &ManagedAudio)>,
 ) {
@@ -387,7 +387,7 @@ pub(super) fn play_sound_queue(
     mut commands: Commands,
     mut queue: ResMut<SoundQueue>,
     bank: Res<SoundBank>,
-    settings: Res<AudioSettings>,
+    settings: Res<PlayerSettings>,
     screen: Res<State<GameScreen>>,
 ) {
     for cue in queue.0.drain(..) {
