@@ -377,6 +377,26 @@ pub struct EffectsConfig {
     pub hazard: HazardLookConfig,
     pub bolt: BoltLookConfig,
     pub telegraph: TelegraphConfig,
+    pub tells: TellsConfig,
+}
+
+/// How a bonus shows it is at work (`src/game/tells/`); the YAML says what
+/// each value does.
+#[derive(Debug, Deserialize)]
+pub struct TellsConfig {
+    pub callout_px: f32,
+    pub callout_s: f32,
+    pub callout_rise_h_s: f32,
+    pub callout_repeat_s: f32,
+    pub afterimage_s: f32,
+    pub afterimage_every_s: f32,
+    pub afterimage_alpha: f32,
+    pub aura_radius_h: f32,
+    pub boosted_number_growth: f32,
+    pub boosted_number_max: f32,
+    pub boosted_color: HexColor,
+    pub healed_color: HexColor,
+    pub soaked_color: HexColor,
 }
 
 /// How an enemy's plain shot is drawn (`shaders/bolt.wgsl`): its two

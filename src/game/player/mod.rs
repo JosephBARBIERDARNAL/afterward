@@ -17,6 +17,7 @@ pub(super) struct PlayerUpdateResources<'w, 's> {
     sheets: Res<'w, SpriteSheets>,
     sounds: ResMut<'w, SoundQueue>,
     enemies: Query<'w, 's, &'static EnemyBody>,
+    tells: MessageWriter<'w, BonusTell>,
 }
 
 pub(super) fn update_player(
@@ -40,6 +41,7 @@ pub(super) fn update_player(
         sheets,
         mut sounds,
         enemies,
+        mut tells,
     } = resources;
     let Ok((mut player, mut transform, mut sprite, mut animation)) = player_query.single_mut()
     else {
@@ -264,6 +266,21 @@ pub(super) fn update_player(
                 } else {
                     data.bonus_effect("double_jump", "extra_jump_impulse_factor")
                 };
+                // A jump a bonus lifts or gives shows the air it pushed off.
+                let lifted_by = if player.jumps_used >= tuning.jumps_per_takeoff {
+                    Some(if session.has_bonus("kick_off") {
+                        ("kick_off", TellEffect::AirRing(1.8))
+                    } else {
+                        ("double_jump", TellEffect::AirRing(1.3))
+                    })
+                } else {
+                    session
+                        .has_bonus("high_jump")
+                        .then_some(("high_jump", TellEffect::Dust(0.9)))
+                };
+                if let Some((bonus, effect)) = lifted_by {
+                    tells.write(BonusTell::new(bonus, TellAt::Player).quiet().with(effect));
+                }
                 player.jump_buffer_s = 0.0;
                 player.velocity.y = tuning.jump_impulse_h_s * jump_factor * H_WORLD_UNITS;
                 player.jumps_used += 1;

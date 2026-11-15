@@ -21,6 +21,7 @@ fn jump_peak_h(hold_frames: usize) -> f32 {
             ..default()
         })
         .init_resource::<SoundQueue>()
+        .add_message::<BonusTell>()
         .init_resource::<ControlBindings>()
         .insert_resource(PreferencesDir(None))
         .init_resource::<ButtonInput<KeyCode>>()

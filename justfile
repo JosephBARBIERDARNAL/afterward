@@ -2,18 +2,20 @@
 default:
     @just --list
 
-# Run the game. Pass a room ID to start new runs there: `just run 7`.
-run room="1":
-    cargo run -- --room {{room}}
+# Run the game. Pass a room ID to start new runs there: `just run 7`, and a
+# number of bonuses (or `all`) for every run to open with: `just run 1 all`.
+run room="1" bonuses="0":
+    cargo run -- --room {{room}} --bonuses {{bonuses}}
 
 # Run the game starting directly at the Chapter 1 boss.
 boss:
     cargo run -- --room 10
 
 # Capture screenshots of part of a run into target/visual-walkthrough:
-# `just walkthrough menus`, `just walkthrough 3`, `just walkthrough 3-5`.
-walkthrough what:
-    cargo run -- --visual-walkthrough {{what}}
+# `just walkthrough menus`, `just walkthrough 3`, `just walkthrough 3-5`;
+# `just walkthrough 1 --bonuses all` plays it holding every bonus.
+walkthrough what *args:
+    cargo run -- --visual-walkthrough {{what}} {{args}}
 
 # Take a picture of whole rooms into target/room-shots, with no window:
 # `just shot 3`, `just shot --grid 3 4` (ruled in H), `just shot` for every room.

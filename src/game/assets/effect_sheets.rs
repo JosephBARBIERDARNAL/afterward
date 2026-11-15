@@ -35,11 +35,41 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
         ),
     ]
     .into_iter()
+    .map(|(key, path, size, frames, fps)| (key, path, UVec2::splat(size), frames, fps))
+    // Drawn white in Typst (`art/effects/`, `art/ui/mark.typ`), for the
+    // game to tint in the colour of the bonus each one tells.
+    .chain([
+        (
+            "effect_tell_ring",
+            "effects/tell_ring.png",
+            UVec2::splat(32),
+            6,
+            22.0,
+        ),
+        (
+            "effect_air_ring",
+            "effects/air_ring.png",
+            UVec2::new(32, 12),
+            6,
+            24.0,
+        ),
+        ("tell_mark", "ui/mark.png", UVec2::splat(13), 1, 1.0),
+        ("tell_alert", "ui/alert.png", UVec2::new(5, 11), 1, 1.0),
+        ("tell_unaware", "ui/unaware.png", UVec2::new(7, 11), 1, 1.0),
+        // The sci-fi pack's puff of dust, kicked up by a jump High Jump lifts.
+        (
+            "effect_dust",
+            "effects/sci_fi/dust.png",
+            UVec2::splat(16),
+            5,
+            20.0,
+        ),
+    ])
     .map(|(key, path, size, frames, fps)| SpriteSheetSpec {
         key: key.into(),
         path: path.into(),
-        frame_width: size,
-        frame_height: size,
+        frame_width: size.x,
+        frame_height: size.y,
         frames,
         fps,
         first_cell: UVec2::ZERO,

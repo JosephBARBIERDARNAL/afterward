@@ -27,7 +27,8 @@ pub(super) use cleanup::clear_room_combat_effects;
 pub(super) use components::{
     CombatProjectile, DamageNumber, HealEffect, HealthPickup, HitEffect, ImpactEffect,
 };
-use damage::{set_enemy_animation, spawn_damage_number};
+use damage::set_enemy_animation;
+pub(in crate::game) use damage::{Number, spawn_damage_number};
 pub(super) use enemy_ai::{update_enemy_ai, update_enemy_platform_physics};
 pub(super) use enemy_body::{
     DeadEnemy, EnemyAttack, EnemyBody, EnemyHealthBar, EnemyHealthBarBackground, EnemyJump,
@@ -35,7 +36,7 @@ pub(super) use enemy_body::{
 };
 use enemy_jumps::{JumpArc, JumpPlan, JumpRoute};
 pub(super) use falls::update_falls;
-use feedback::play_effect;
+pub(in crate::game) use feedback::play_effect;
 pub(super) use feedback::{HEALTH_BAR, SHIELDED_HEALTH_BAR};
 pub(super) use feedback::{
     update_damage_numbers, update_dead_enemies, update_healing_over_time, update_health_bars,
@@ -95,13 +96,19 @@ fn apply_player_damage(
     if player.roll_s.is_some_and(|elapsed_s| {
         (tuning.roll.invulnerable_from_s..=roll_untouchable_to_s).contains(&elapsed_s)
     }) {
-        player.empowered_blow_multiplier = player
-            .empowered_blow_multiplier
-            .max(session.bonus_multiplier(data, "riposte", "empowered_blow_multiplier"));
+        if session.has_bonus("riposte") && player.empowered.is_none() {
+            player.empowered = Some((
+                "riposte",
+                data.bonus_effect("riposte", "empowered_blow_multiplier"),
+            ));
+            commands.write_message(BonusTell::new("riposte", TellAt::Player));
+        }
         return;
     }
     if session.has_bonus("room_ward") && !session.room_ward_used {
         session.room_ward_used = true;
+        commands
+            .write_message(BonusTell::new("room_ward", TellAt::Player).with(TellEffect::Ring(2.6)));
         return;
     }
     let covered = player.covering && (attacker_x - transform.translation.x) * player.facing >= 0.0;
@@ -128,21 +135,41 @@ fn apply_player_damage(
         * cover
         * adrenaline
         * fortress;
+    // What the bonuses took off, beside what cover alone would have let in.
+    let base_cover = if covered {
+        tuning.cover_damage_taken_multiplier
+    } else {
+        1.0
+    };
+    let soaked = damage * base_cover - reduced_damage;
     if !session.playtest.infinite_health {
         session.health = (session.health - reduced_damage).max(0.0);
     }
     session.untouched = false;
-    player.empowered_blow_multiplier = player
-        .empowered_blow_multiplier
-        .max(session.bonus_multiplier(data, "retaliation", "empowered_blow_multiplier"));
+    if session.has_bonus("retaliation") && player.empowered.is_none() {
+        player.empowered = Some((
+            "retaliation",
+            data.bonus_effect("retaliation", "empowered_blow_multiplier"),
+        ));
+        commands.write_message(BonusTell::new("retaliation", TellAt::Player));
+    }
     player.invulnerability_timer = tuning.damage_invulnerability_s;
-    spawn_damage_number(commands, transform.translation, reduced_damage, true);
+    spawn_damage_number(
+        commands,
+        &data.gameplay.effects.tells,
+        transform.translation,
+        Number::Taken {
+            damage: reduced_damage,
+            soaked,
+        },
+    );
     sounds.push(SoundCue::Damage(DamageSound::Neutral));
     // Last Stand spends itself to leave the player on their feet at 1 health:
     // they go down, lie there, and get up again, untouchable until they have.
     if session.health == 0.0 && session.has_bonus("last_stand") && !session.last_stand_used {
         let rise_s = data.player_animations.clips.rise.duration_s();
         session.last_stand_used = true;
+        commands.write_message(BonusTell::new("last_stand", TellAt::Player));
         session.health = 1.0;
         player.invulnerability_timer = rise_s;
         player.velocity = Vec2::ZERO;

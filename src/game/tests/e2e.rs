@@ -56,6 +56,7 @@ mod pause;
 mod prologue;
 mod room_pan;
 mod run;
+mod tells;
 mod waves;
 
 const FRAME_S: f32 = 1.0 / 60.0;

@@ -1,0 +1,209 @@
+//! What hangs over an enemy while a bonus has a hold on it, redrawn from its
+//! state each frame:
+//! - Marked Prey's reticle, with a bar emptying as the mark runs out;
+//! - with Cold Read or Insight, a "!" over a wind-up, with a bar emptying
+//!   until the blow comes;
+//! - with Opportunist, a "?" over an enemy that has not noticed anyone;
+//! - with Executioner, a line on the health bar where its bonus starts, and
+//!   the bar flashing once the body is below it (at 50% on a marked body
+//!   with Open Wound).
+
+use super::{afterimages::category_color, *};
+use crate::game::combat::DeadEnemy;
+
+#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub(crate) enum OverheadKind {
+    MarkIcon,
+    MarkBar,
+    WindupIcon,
+    WindupBar,
+    Unaware,
+    ExecuteLine,
+    ExecuteFlash,
+}
+
+/// One piece hung over `enemy`. A bar keeps the fullest value it has shown,
+/// which is what it empties from: a mark renewed or a fresh wind-up fills
+/// it again.
+#[derive(Component)]
+pub(crate) struct Overhead {
+    pub(crate) enemy: Entity,
+    pub(crate) kind: OverheadKind,
+    full: f32,
+}
+
+/// How a piece is drawn this frame.
+struct Piece {
+    kind: OverheadKind,
+    /// The middle of the piece.
+    at: Vec2,
+    size: Vec2,
+    color: Color,
+    /// The icon's sheet, or none for a plain bar.
+    sheet: Option<&'static str>,
+    /// For a bar, what is left of it, emptying from its right.
+    left: Option<f32>,
+}
+
+/// How wide a bar is drawn, in world units, and how many world units an
+/// icon's pixel takes.
+const BAR_WIDTH: f32 = 34.0;
+const ICON_SCALE: f32 = 1.5;
+/// The health bar's width and how far over the body it stands
+/// (`feedback::update_health_bars`).
+const HEALTH_BAR_WIDTH: f32 = 48.0;
+const HEALTH_BAR_RISE: f32 = 6.0;
+
+pub(crate) fn update_overheads(
+    mut commands: Commands,
+    data: Res<GameData>,
+    session: Res<RunSession>,
+    sheets: Res<SpriteSheets>,
+    time: Res<Time>,
+    enemies: Query<(Entity, &EnemyBody, &Transform), Without<DeadEnemy>>,
+    mut overheads: Query<(Entity, &mut Overhead, &mut Transform, &mut Sprite), Without<EnemyBody>>,
+) {
+    let marks = session.has_bonus("marked_prey");
+    let reads = session.has_bonus("cold_read") || session.has_bonus("insight");
+    let ambushes = session.has_bonus("opportunist");
+    let executes = session.has_bonus("executioner");
+    let mut standing = overheads
+        .iter()
+        .map(|(entity, overhead, ..)| ((overhead.enemy, overhead.kind), entity))
+        .collect::<BTreeMap<_, _>>();
+    let pulse = 0.5 + 0.5 * (time.elapsed_secs() * 14.0).sin();
+    for (enemy_entity, enemy, transform) in &enemies {
+        if enemy.health <= 0.0 {
+            continue;
+        }
+        let x = transform.translation.x;
+        let health_bar_y = transform.translation.y + enemy.visible_top_offset + HEALTH_BAR_RISE;
+        // Over the shield icons when there are any.
+        let mut row_y = health_bar_y + if enemy.armor > 0 { 30.0 } else { 13.0 };
+        let mut pieces = Vec::new();
+        let icon_and_bar = |pieces: &mut Vec<Piece>, kinds, sheet, pixels: Vec2, color, left, y| {
+            let (icon, bar) = kinds;
+            pieces.push(Piece {
+                kind: icon,
+                at: Vec2::new(x - BAR_WIDTH / 2.0 - 4.0, y),
+                size: pixels * ICON_SCALE,
+                color,
+                sheet: Some(sheet),
+                left: None,
+            });
+            pieces.push(Piece {
+                kind: bar,
+                at: Vec2::new(x + 6.0, y),
+                size: Vec2::new(BAR_WIDTH, 3.0),
+                color,
+                sheet: None,
+                left: Some(left),
+            });
+        };
+        if marks && enemy.marked_timer > 0.0 {
+            icon_and_bar(
+                &mut pieces,
+                (OverheadKind::MarkIcon, OverheadKind::MarkBar),
+                "tell_mark",
+                Vec2::splat(13.0),
+                category_color(&data, "intelligence"),
+                enemy.marked_timer,
+                row_y,
+            );
+            row_y += 20.0;
+        }
+        if reads && enemy.windup_remaining > 0.0 {
+            icon_and_bar(
+                &mut pieces,
+                (OverheadKind::WindupIcon, OverheadKind::WindupBar),
+                "tell_alert",
+                Vec2::new(5.0, 11.0),
+                Color::from(data.gameplay.effects.telegraph.color),
+                enemy.windup_remaining,
+                row_y,
+            );
+        }
+        if ambushes && !enemy.engaged {
+            pieces.push(Piece {
+                kind: OverheadKind::Unaware,
+                at: Vec2::new(x, row_y),
+                size: Vec2::new(7.0, 11.0) * ICON_SCALE,
+                color: category_color(&data, "combined"),
+                sheet: Some("tell_unaware"),
+                left: None,
+            });
+        }
+        if executes {
+            let mut line = data.bonus_effect("executioner", "execute_health_fraction");
+            if enemy.marked_timer > 0.0 && marks && session.has_bonus("open_wound") {
+                line = line.max(data.bonus_effect("open_wound", "marked_execute_health_fraction"));
+            }
+            let left_edge = x - HEALTH_BAR_WIDTH / 2.0;
+            pieces.push(Piece {
+                kind: OverheadKind::ExecuteLine,
+                at: Vec2::new(left_edge + HEALTH_BAR_WIDTH * line, health_bar_y),
+                size: Vec2::new(2.0, 8.0),
+                color: Color::WHITE,
+                sheet: None,
+                left: None,
+            });
+            let health = (enemy.health / enemy.max_health).clamp(0.0, 1.0);
+            if health < line {
+                pieces.push(Piece {
+                    kind: OverheadKind::ExecuteFlash,
+                    at: Vec2::new(left_edge + HEALTH_BAR_WIDTH * health / 2.0, health_bar_y),
+                    size: Vec2::new(HEALTH_BAR_WIDTH * health.max(0.02), 4.0),
+                    color: Color::WHITE.with_alpha(0.75 * pulse),
+                    sheet: None,
+                    left: None,
+                });
+            }
+        }
+
+        for piece in pieces {
+            let key = (enemy_entity, piece.kind);
+            let Some(entity) = standing.remove(&key) else {
+                let mut sprite = match piece.sheet.and_then(|sheet| sheets.0.get(sheet)) {
+                    Some(sheet) => Sprite::from_image(sheet.image.clone()),
+                    None => Sprite::from_color(Color::WHITE, Vec2::ONE),
+                };
+                sprite.color = piece.color;
+                sprite.custom_size = Some(piece.size);
+                commands.spawn((
+                    sprite,
+                    Transform::from_xyz(piece.at.x, piece.at.y, 9.0),
+                    Overhead {
+                        enemy: enemy_entity,
+                        kind: piece.kind,
+                        full: piece.left.unwrap_or(0.0),
+                    },
+                    RoomEntity,
+                ));
+                continue;
+            };
+            let Ok((_, mut overhead, mut transform, mut sprite)) = overheads.get_mut(entity) else {
+                continue;
+            };
+            sprite.color = piece.color;
+            let (at, size) = match piece.left {
+                Some(left) => {
+                    overhead.full = overhead.full.max(left);
+                    let fraction = (left / overhead.full.max(f32::EPSILON)).clamp(0.0, 1.0);
+                    (
+                        Vec2::new(
+                            piece.at.x - piece.size.x * (1.0 - fraction) / 2.0,
+                            piece.at.y,
+                        ),
+                        Vec2::new(piece.size.x * fraction, piece.size.y),
+                    )
+                }
+                None => (piece.at, piece.size),
+            };
+            sprite.custom_size = Some(size);
+            transform.translation = at.extend(9.0);
+        }
+    }
+    for entity in standing.into_values() {
+        commands.entity(entity).despawn();
+    }
+}

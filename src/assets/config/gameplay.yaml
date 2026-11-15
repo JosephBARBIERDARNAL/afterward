@@ -339,6 +339,32 @@ effects:
   telegraph:
     color: "#FF9A4A"
     brightness: 1.7
+  # How a bonus shows that it is at work (`src/game/tells/`).
+  tells:
+    # The bonus's name flashed in the room as it fires, in its category's
+    # colour: its size in px, how long it lasts, how fast it rises in H a
+    # second, and how often one bonus may be called out at most.
+    callout_px: 15
+    callout_s: 0.9
+    callout_rise_h_s: 1.4
+    callout_repeat_s: 1.2
+    # The fading copies a body leaves behind while a bonus speeds or throws
+    # it: how long each lasts, how often one is left, how opaque it starts.
+    afterimage_s: 0.24
+    afterimage_every_s: 0.05
+    afterimage_alpha: 0.5
+    # The glow the player wears while a state a bonus gave them holds (the
+    # next blow empowered, Chain Reaction burning, Adrenaline in), in H.
+    aura_radius_h: 1.5
+    # A damage number grows by this much of its size for every 100% a bonus
+    # added to the blow, up to `boosted_number_max` times its size.
+    boosted_number_growth: 0.9
+    boosted_number_max: 1.9
+    # The colour of a blow a bonus made heavier, of a healed number, and of
+    # the damage a bonus soaked, shown beside the damage taken.
+    boosted_color: "#FFC94A"
+    healed_color: "#6BE38A"
+    soaked_color: "#7FB6FF"
   # The flood the city drowned in, and the water the main menu is drawn over:
   # a web of cold light wandering over deep wine cells, quantized to a pixel
   # grid and to the four tones below.

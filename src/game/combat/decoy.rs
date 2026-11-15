@@ -4,6 +4,7 @@
 //! nothing but the double's own health.
 
 use super::*;
+use crate::data::TellsConfig;
 use bevy::sprite::Anchor;
 
 /// A standing double of the player: it has health and nothing else, never
@@ -101,6 +102,7 @@ pub(in crate::game) fn plant_decoy(
 /// Takes the blow a double caught and breaks it once its health is gone.
 pub(super) fn hurt_the_decoy(
     commands: &mut Commands,
+    tells: &TellsConfig,
     sounds: &mut SoundQueue,
     decoys: &mut DecoyQuery,
     entity: Entity,
@@ -112,7 +114,15 @@ pub(super) fn hurt_the_decoy(
     let standing_at = transform.translation;
     decoy.health -= damage;
     let broken = decoy.health <= 0.0;
-    spawn_damage_number(commands, standing_at, damage, true);
+    spawn_damage_number(
+        commands,
+        tells,
+        standing_at,
+        Number::Taken {
+            damage,
+            soaked: 0.0,
+        },
+    );
     sounds.push(SoundCue::Damage(DamageSound::Neutral));
     if broken {
         commands.entity(entity).despawn();
@@ -165,9 +175,14 @@ impl Mark {
         damage: f32,
     ) {
         match self.decoy {
-            Some(entity) => {
-                hurt_the_decoy(resources.commands, resources.sounds, decoys, entity, damage)
-            }
+            Some(entity) => hurt_the_decoy(
+                resources.commands,
+                &resources.data.gameplay.effects.tells,
+                resources.sounds,
+                decoys,
+                entity,
+                damage,
+            ),
             None => apply_player_damage(resources, target, damage),
         }
     }

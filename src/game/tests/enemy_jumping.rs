@@ -57,6 +57,7 @@ next_room_id: 4
             ..default()
         })
         .init_resource::<SoundQueue>()
+        .add_message::<BonusTell>()
         .add_systems(
             Startup,
             |mut commands: Commands, data: Res<GameData>, sheets: Res<SpriteSheets>| {
@@ -173,6 +174,7 @@ next_room_id: 11
             ..default()
         })
         .init_resource::<SoundQueue>()
+        .add_message::<BonusTell>()
         .add_systems(
             Startup,
             |mut commands: Commands, data: Res<GameData>, sheets: Res<SpriteSheets>| {

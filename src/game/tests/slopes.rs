@@ -56,6 +56,7 @@ fn a_gentle_slope_is_walked_and_a_steep_one_is_a_wall() {
             ..default()
         })
         .init_resource::<SoundQueue>()
+        .add_message::<BonusTell>()
         .init_resource::<ControlBindings>()
         .insert_resource(PreferencesDir(None))
         .init_resource::<ButtonInput<KeyCode>>()
@@ -242,6 +243,7 @@ next_room_id: 4
             ..default()
         })
         .init_resource::<SoundQueue>()
+        .add_message::<BonusTell>()
         .add_systems(
             Startup,
             |mut commands: Commands, data: Res<GameData>, sheets: Res<SpriteSheets>| {

@@ -40,18 +40,16 @@ type PickupPlayerQuery<'w, 's> = Query<
 
 /// Plays the effect sheet `key` once where `at` is, `size_h` tall, and
 /// leaves `update_hit_effects` to take it away. Nothing is drawn for a
-/// sheet that is not loaded.
-pub(super) fn play_effect(
+/// sheet that is not loaded; what is drawn is handed back, to be tinted.
+pub(in crate::game) fn play_effect(
     commands: &mut Commands,
     sheets: &SpriteSheets,
     key: &str,
     at: Vec3,
     size_h: f32,
     flip_x: bool,
-) {
-    let Some(sheet) = sheets.0.get(key) else {
-        return;
-    };
+) -> Option<Entity> {
+    let sheet = sheets.0.get(key)?;
     let mut sprite = Sprite::from_atlas_image(
         sheet.image.clone(),
         TextureAtlas {
@@ -61,7 +59,7 @@ pub(super) fn play_effect(
     );
     sprite.custom_size = Some(sheet.frame_size * size_h * H_WORLD_UNITS / sheet.frame_size.y);
     sprite.flip_x = flip_x;
-    commands.spawn((
+    let played = commands.spawn((
         sprite,
         Transform::from_translation(at),
         AnimatedSprite {
@@ -76,6 +74,7 @@ pub(super) fn play_effect(
         },
         RoomEntity,
     ));
+    Some(played.id())
 }
 
 pub(in crate::game) fn update_damage_numbers(
@@ -202,6 +201,11 @@ pub(in crate::game) fn update_healing_over_time(
     let restored = session.idle_healing.floor();
     session.idle_healing -= restored;
     session.health = (session.health + restored).min(session.max_health);
+    commands.write_message(
+        BonusTell::new("recovery", TellAt::Player)
+            .quiet()
+            .healing(restored),
+    );
     // One play-through of the plusses over the body for every point back.
     let (Ok(transform), Some(sheet)) = (players.single(), sheets.0.get(HealEffect::SHEET)) else {
         return;
@@ -291,12 +295,22 @@ pub(in crate::game) fn update_health_pickups(
             * session.bonus_multiplier(&data, "field_dressing", "health_pickup_multiplier");
         session.health = (session.health + healing).min(session.max_health);
         sounds.push(SoundCue::Pickup);
+        if session.has_bonus("field_dressing") {
+            commands.write_message(BonusTell::new("field_dressing", TellAt::Player));
+        }
+        spawn_damage_number(
+            &mut commands,
+            &data.gameplay.effects.tells,
+            player_transform.translation,
+            Number::Healed(healing),
+        );
         // The healing glow plays where the drop was found.
         player_body.start_action(
             PlayerAction::Healing,
             data.player_animations.clips.healing.duration_s(),
         );
         if session.has_bonus("sated_fury") {
+            commands.write_message(BonusTell::new("sated_fury", TellAt::Player));
             player_body.sated_fury_timer =
                 data.bonus_effect("sated_fury", "healing_pickup_combo_speed_duration_s");
         }

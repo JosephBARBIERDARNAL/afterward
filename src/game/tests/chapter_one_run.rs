@@ -66,6 +66,7 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
         .insert_resource(RandomState(0x4a75_6572_6e65_7974))
         .insert_resource(PhaseTimer(Timer::from_seconds(1.0, TimerMode::Once)))
         .init_resource::<SoundQueue>()
+        .add_message::<BonusTell>()
         .init_resource::<ControlBindings>()
         .insert_resource(PreferencesDir(None))
         .init_resource::<ButtonInput<KeyCode>>()

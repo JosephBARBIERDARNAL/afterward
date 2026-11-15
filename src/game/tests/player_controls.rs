@@ -45,6 +45,7 @@ fn default_controls_move_and_jump_the_player() {
         })
         .insert_resource(RandomState(0x616e_696d_6174_696f))
         .init_resource::<SoundQueue>()
+        .add_message::<BonusTell>()
         .init_resource::<ControlBindings>()
         .insert_resource(PreferencesDir(None))
         .init_resource::<ButtonInput<KeyCode>>()

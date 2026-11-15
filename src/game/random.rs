@@ -27,7 +27,9 @@ impl RandomState {
         (self.next_u64() as usize) % length
     }
 
-    pub(crate) fn chance(&mut self, probability: f32) -> bool {
-        (self.next_u64() as f64 / u64::MAX as f64) < f64::from(probability)
+    /// A number drawn evenly from 0 to 1, to compare odds against: a draw
+    /// that falls under one odds and not another tells which paid out.
+    pub(crate) fn roll(&mut self) -> f32 {
+        (self.next_u64() as f64 / u64::MAX as f64) as f32
     }
 }

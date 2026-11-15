@@ -61,6 +61,7 @@ pub(in crate::game) fn update_projectiles(
         if let Some(entity) = struck_double {
             hurt_the_decoy(
                 &mut commands,
+                &data.gameplay.effects.tells,
                 &mut sounds,
                 &mut decoys,
                 entity,
@@ -75,6 +76,9 @@ pub(in crate::game) fn update_projectiles(
             if session.has_bonus("deflector") && !session.deflector_used {
                 session.deflector_used = true;
                 sounds.push(SoundCue::CoverBlock);
+                commands.write_message(
+                    BonusTell::new("deflector", TellAt::Player).with(TellEffect::Ring(1.6)),
+                );
                 commands.entity(projectile_entity).despawn();
                 continue;
             }

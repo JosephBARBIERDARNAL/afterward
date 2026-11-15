@@ -268,21 +268,7 @@ pub(super) fn reset_run(
     session.rerolls = data.gameplay.room_flow.bonus_rerolls_per_run;
     session.owned_bonuses.clear();
     session.next_bonus_category = None;
-    // What a playtest asked the run to open with, each paid out as if chosen.
-    let mut pool = data.bonuses.bonuses.iter().collect::<Vec<_>>();
-    let granted = session.playtest.starting_bonuses.min(pool.len());
-    while session.owned_bonuses.len() < granted {
-        let bonus = pool.swap_remove(random.index(pool.len()));
-        session.owned_bonuses.push(bonus.id.clone());
-        if let Some(increase) = bonus
-            .effects
-            .get("max_health_increase")
-            .and_then(yaml_serde::Value::as_f64)
-        {
-            session.max_health += increase as f32;
-        }
-    }
-    session.health = session.max_health;
+    session.grant_starting_bonuses(data, random);
     session.bonus_category = None;
     session.offered_bonuses.clear();
     session.previous_offers.clear();

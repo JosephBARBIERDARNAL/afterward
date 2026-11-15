@@ -206,6 +206,30 @@ impl RunSession {
         }
     }
 
+    /// Pays out what a playtest (or `--bonuses`) asked the run to open with,
+    /// each as if chosen, and opens it whole.
+    pub(crate) fn grant_starting_bonuses(&mut self, data: &GameData, random: &mut RandomState) {
+        let mut pool = data
+            .bonuses
+            .bonuses
+            .iter()
+            .filter(|bonus| !self.has_bonus(&bonus.id))
+            .collect::<Vec<_>>();
+        let granted = self.playtest.starting_bonuses.min(pool.len());
+        for _ in 0..granted {
+            let bonus = pool.swap_remove(random.index(pool.len()));
+            self.owned_bonuses.push(bonus.id.clone());
+            if let Some(increase) = bonus
+                .effects
+                .get("max_health_increase")
+                .and_then(yaml_serde::Value::as_f64)
+            {
+                self.max_health += increase as f32;
+            }
+        }
+        self.health = self.max_health;
+    }
+
     /// An owned bonus's multiplier effect, or 1 without the bonus.
     pub(crate) fn bonus_multiplier(&self, data: &GameData, id: &str, effect: &str) -> f32 {
         if self.has_bonus(id) {

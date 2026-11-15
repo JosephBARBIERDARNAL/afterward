@@ -45,6 +45,13 @@ pub(super) struct Blow {
     pub(super) pull: Option<Pull>,
     /// Throws the bodies it wounds into whatever stands behind them.
     pub(super) launch: Option<Launch>,
+    /// The bonus that throws this blow or shapes it (a finisher step,
+    /// Aftershock's shock, Meteor's or Breaker's slam, Overcharge's charged
+    /// blow, Battering Ram's throw), called out when it connects.
+    pub(super) bonus: Option<String>,
+    /// How many times heavier the bonuses that threw it already made
+    /// `damage`, so its damage number is drawn as boosted as it is.
+    pub(super) boost: f32,
 }
 
 /// The drag of a blow on every enemy within `radius_h` of where it was
@@ -100,7 +107,8 @@ pub(super) fn land_the_blow(
     let mut thrown = Vec::new();
     // Riposte and Retaliation leave the next blow empowered, and this is it
     // for every body it reaches; it is spent once it connects.
-    let empowered = player.empowered_blow_multiplier;
+    let empowered = player.empowered.map_or(1.0, |(_, multiplier)| multiplier);
+    let at = |transform: &Transform| TellAt::Spot(transform.translation);
     // The keystones that hit harder: Arsenal for every combat bonus owned,
     // Harmony for every combo.
     let keystones =
@@ -130,6 +138,9 @@ pub(super) fn land_the_blow(
         } else {
             session.bonus_multiplier(data, "opportunist", "unaware_damage_multiplier")
         };
+        if unaware > 1.0 {
+            commands.write_message(BonusTell::new("opportunist", at(&enemy_transform)));
+        }
         if data.enemies.damage_triggers_combat {
             enemy.engaged = true;
             struck.push(enemy_transform.translation.truncate());
@@ -184,6 +195,9 @@ pub(super) fn land_the_blow(
             if !blow.pierces_shields && !session.has_bonus("shield_breaker") {
                 continue;
             }
+            if !blow.pierces_shields {
+                commands.write_message(BonusTell::new("shield_breaker", at(&enemy_transform)));
+            }
         }
         // Open Wound raises Executioner's line on a marked body.
         let execute_below = if was_marked && session.has_bonus("open_wound") {
@@ -197,11 +211,25 @@ pub(super) fn land_the_blow(
         } else {
             1.0
         };
+        if executioner > 1.0 {
+            // Called out by the bonus that put the body under the line.
+            let by = if enemy.health / enemy.max_health
+                < data.bonus_effect("executioner", "execute_health_fraction")
+            {
+                "executioner"
+            } else {
+                "open_wound"
+            };
+            commands.write_message(BonusTell::new(by, at(&enemy_transform)));
+        }
         let finisher = if blow.finisher {
             session.bonus_multiplier(data, "finisher", "finisher_damage_multiplier")
         } else {
             1.0
         };
+        if finisher > 1.0 {
+            commands.write_message(BonusTell::new("finisher", at(&enemy_transform)));
+        }
         let chain_reaction =
             if player.chain_reaction_timer > 0.0 && session.has_bonus("chain_reaction") {
                 1.0 + data.bonus_effect("chain_reaction", "kill_damage_bonus")
@@ -213,8 +241,10 @@ pub(super) fn land_the_blow(
         } else {
             session.bonus_multiplier(data, "aerial_assault", "airborne_strike_damage_multiplier")
         };
-        let damage = blow.damage
-            * session.bonus_multiplier(data, "heavy_hands", "strike_damage_multiplier")
+        if airborne > 1.0 {
+            commands.write_message(BonusTell::new("aerial_assault", at(&enemy_transform)));
+        }
+        let boost = session.bonus_multiplier(data, "heavy_hands", "strike_damage_multiplier")
             * marked
             * finisher
             * chain_reaction
@@ -223,8 +253,17 @@ pub(super) fn land_the_blow(
             * executioner
             * empowered
             * keystones;
+        let damage = blow.damage * boost;
         enemy.health = (enemy.health - damage).max(0.0);
-        spawn_damage_number(commands, enemy_transform.translation, damage, false);
+        spawn_damage_number(
+            commands,
+            &data.gameplay.effects.tells,
+            enemy_transform.translation,
+            Number::Dealt {
+                damage,
+                boost: boost * blow.boost,
+            },
+        );
         if !armored {
             // Shoved away from the player, whichever side of them it stood.
             let away = if enemy_transform.translation.x == blow.from_x {
@@ -297,7 +336,15 @@ pub(super) fn land_the_blow(
             let item = &data.gameplay.health_pickup;
             let drop_chance = item.base_drop_chance
                 * session.bonus_multiplier(data, "scavenger", "health_drop_chance_multiplier");
-            if random.chance(drop_chance.min(1.0)) {
+            let roll = random.roll();
+            // A drop only Scavenger's better odds let fall says so.
+            if roll < drop_chance.min(1.0) && roll >= item.base_drop_chance {
+                commands.write_message(BonusTell::new(
+                    "scavenger",
+                    TellAt::Spot(middle.extend(0.0)),
+                ));
+            }
+            if roll < drop_chance.min(1.0) {
                 let mut pickup = Sprite::from_image(
                     sheets
                         .0
@@ -352,10 +399,14 @@ pub(super) fn land_the_blow(
             }
             player.chain_reaction_timer =
                 data.bonus_effect("chain_reaction", "kill_damage_duration_s");
+            if session.has_bonus("chain_reaction") {
+                commands.write_message(BonusTell::new("chain_reaction", TellAt::Player));
+            }
             if was_marked && session.has_bonus("hunters_feast") {
-                session.health = (session.health
-                    + data.bonus_effect("hunters_feast", "marked_kill_healing"))
-                .min(session.max_health);
+                let healed = data.bonus_effect("hunters_feast", "marked_kill_healing");
+                session.health = (session.health + healed).min(session.max_health);
+                commands
+                    .write_message(BonusTell::new("hunters_feast", TellAt::Player).healing(healed));
             }
         }
     }
@@ -387,12 +438,25 @@ pub(super) fn land_the_blow(
         }
         return;
     }
-    player.empowered_blow_multiplier = 1.0;
+    if let Some((by, _)) = player.empowered.take() {
+        commands.write_message(BonusTell::new(
+            by,
+            TellAt::Spot(blow.area.center().extend(0.0)),
+        ));
+    }
+    if let Some(bonus) = &blow.bonus {
+        commands.write_message(BonusTell::new(
+            bonus.clone(),
+            TellAt::Spot(blow.area.center().extend(0.0)),
+        ));
+    }
     // Updraft: a blow landed in mid-air hands back the mid-air jumps.
-    if !player.grounded && session.has_bonus("updraft") {
-        player.jumps_used = player
-            .jumps_used
-            .min(data.gameplay.player.jumps_per_takeoff);
+    let takeoff = data.gameplay.player.jumps_per_takeoff;
+    if !player.grounded && session.has_bonus("updraft") && player.jumps_used > takeoff {
+        player.jumps_used = takeoff;
+        commands.write_message(
+            BonusTell::new("updraft", TellAt::Player).with(TellEffect::AirRing(1.4)),
+        );
     }
     // A thrown body lands on whatever stood behind it, as a blow of its own.
     if let Some(launch) = &blow.launch {
@@ -419,6 +483,8 @@ pub(super) fn land_the_blow(
                     whiffs: false,
                     pull: None,
                     launch: None,
+                    bonus: Some("battering_ram".to_owned()),
+                    boost: 1.0,
                 },
                 enemies,
             );
@@ -499,5 +565,13 @@ pub(super) fn land_the_blow(
             .max(0.0);
         player.lifesteal_healing += healing;
         session.health = (session.health + healing).min(session.max_health);
+        if healing > 0.0 {
+            let by = if session.has_bonus("bloodlust") {
+                "bloodlust"
+            } else {
+                "lifesteal"
+            };
+            commands.write_message(BonusTell::new(by, TellAt::Player).quiet().healing(healing));
+        }
     }
 }

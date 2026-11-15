@@ -46,6 +46,7 @@ fn a_player_who_falls_below_the_room_dies_at_once() {
             ..default()
         })
         .init_resource::<SoundQueue>()
+        .add_message::<BonusTell>()
         .init_resource::<ControlBindings>()
         .insert_resource(PreferencesDir(None))
         .init_resource::<ButtonInput<KeyCode>>()
@@ -140,6 +141,7 @@ next_room_id: 4
             ..default()
         })
         .init_resource::<SoundQueue>()
+        .add_message::<BonusTell>()
         .add_systems(
             Startup,
             |mut commands: Commands, data: Res<GameData>, sheets: Res<SpriteSheets>| {
@@ -226,6 +228,7 @@ next_room_id: 4
         })
         .insert_resource(PhaseTimer(Timer::from_seconds(0.0, TimerMode::Once)))
         .init_resource::<SoundQueue>()
+        .add_message::<BonusTell>()
         .add_systems(
             Startup,
             |mut commands: Commands, data: Res<GameData>, sheets: Res<SpriteSheets>| {

@@ -44,6 +44,7 @@ fn behind_the_bonus_screen_the_player_lands_and_idles_without_taking_input() {
             ..default()
         })
         .init_resource::<SoundQueue>()
+        .add_message::<BonusTell>()
         .init_resource::<ControlBindings>()
         .insert_resource(PreferencesDir(None))
         .init_resource::<ButtonInput<KeyCode>>()

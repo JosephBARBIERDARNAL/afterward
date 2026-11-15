@@ -40,6 +40,17 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         })
         .transpose()?
         .unwrap_or_default();
+    let starting_bonuses = arguments
+        .iter()
+        .position(|argument| argument == "--bonuses")
+        .map(|index| {
+            arguments
+                .get(index + 1)
+                .ok_or("--bonuses expects a number or `all`")?
+                .parse::<game::StartingBonuses>()
+        })
+        .transpose()?
+        .unwrap_or_default();
     // A walkthrough of rooms opens on the first of them.
     let start_room = match visual_walkthrough {
         Some(game::WalkthroughScope::Rooms { first, .. }) => game::StartRoom(first),
@@ -72,7 +83,8 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     };
 
     let mut app = App::new();
-    app.insert_resource(start_room);
+    app.insert_resource(start_room)
+        .insert_resource(starting_bonuses);
 
     if room_shot {
         // A picture of the room and nothing else: no window to open, no sound

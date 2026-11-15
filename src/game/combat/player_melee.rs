@@ -2,7 +2,7 @@ use super::{
     blows::{Blow, LandingResources, Launch, MeleeEnemiesQuery, Pull, land_the_blow},
     *,
 };
-use crate::game::player::Thrown;
+use crate::game::{player::Thrown, tells::Fading};
 
 #[derive(SystemParam)]
 pub(in crate::game) struct MeleeResources<'w> {
@@ -108,6 +108,12 @@ pub(in crate::game) fn player_melee(
             false,
         );
         let drags = session.has_bonus("riptide");
+        // Riptide shows how far its drag reaches.
+        if drags {
+            commands.write_message(BonusTell::new("riptide", TellAt::Player).with(
+                TellEffect::Ring(2.0 * data.bonus_effect("undertow", "slam_pull_radius_h")),
+            ));
+        }
         land_the_blow(
             LandingResources {
                 commands: &mut commands,
@@ -135,6 +141,8 @@ pub(in crate::game) fn player_melee(
                 whiffs: false,
                 pull: drags.then(pull),
                 launch: None,
+                bonus: Some("aftershock".to_owned()),
+                boost: 1.0,
             },
             &mut enemies,
         );
@@ -155,6 +163,20 @@ pub(in crate::game) fn player_melee(
         } else {
             1.0
         };
+        // Undertow shows how far its drag reaches, and Meteor lands in a
+        // burst as heavy as it hits.
+        if drags {
+            commands.write_message(BonusTell::new("undertow", TellAt::Player).with(
+                TellEffect::Ring(2.0 * data.bonus_effect("undertow", "slam_pull_radius_h")),
+            ));
+        }
+        if meteor > 1.0 {
+            commands.write_message(
+                BonusTell::new("meteor", TellAt::Spot(feet.extend(0.0)))
+                    .quiet()
+                    .with(TellEffect::Burst(2.4)),
+            );
+        }
         land_the_blow(
             LandingResources {
                 commands: &mut commands,
@@ -177,6 +199,12 @@ pub(in crate::game) fn player_melee(
                 whiffs: false,
                 pull: drags.then(pull),
                 launch: None,
+                bonus: if breaks_shields {
+                    Some("breaker".to_owned())
+                } else {
+                    (meteor > 1.0).then(|| "meteor".to_owned())
+                },
+                boost: meteor,
             },
             &mut enemies,
         );
@@ -225,6 +253,7 @@ pub(in crate::game) fn player_melee(
             };
             return;
         }
+        let overcharge = session.bonus_multiplier(&data, "overcharge", "charged_damage_multiplier");
         let blow = match strike.thrown {
             Thrown::Step(index) => {
                 Blow {
@@ -241,14 +270,16 @@ pub(in crate::game) fn player_melee(
                     whiffs: true,
                     pull: None,
                     launch: None,
+                    // A finisher a bonus adds is called by its name.
+                    bonus: chain[index.min(chain.len() - 1)].requires_bonus.clone(),
+                    boost: 1.0,
                 }
             }
             Thrown::Charged => Blow {
                 area,
                 from_x: feet.x,
                 heavy: true,
-                damage: melee.charge.damage
-                    * session.bonus_multiplier(&data, "overcharge", "charged_damage_multiplier"),
+                damage: melee.charge.damage * overcharge,
                 pierces_shields: true,
                 flinch_s: 0.5,
                 finisher: false,
@@ -261,8 +292,22 @@ pub(in crate::game) fn player_melee(
                     knockback_multiplier: data
                         .bonus_effect("battering_ram", "launch_knockback_multiplier"),
                 }),
+                bonus: (overcharge > 1.0).then(|| "overcharge".to_owned()),
+                boost: overcharge,
             },
         };
+        // Long Reach draws the reach it gave as a streak through the air.
+        if session.has_bonus("long_reach") {
+            commands.spawn((
+                Sprite::from_color(Color::WHITE.with_alpha(0.55), Vec2::new(area.width(), 3.0)),
+                Transform::from_translation(area.center().extend(5.5)),
+                Fading {
+                    timer: Timer::from_seconds(0.14, TimerMode::Once),
+                    alpha: 0.55,
+                },
+                RoomEntity,
+            ));
+        }
         land_the_blow(
             LandingResources {
                 commands: &mut commands,
@@ -355,6 +400,15 @@ pub(in crate::game) fn player_melee(
     let ready_s = melee.charge.ready_s
         * session.bonus_multiplier(&data, "overcharge", "charge_time_multiplier");
     if attack_held {
+        // Overcharge calls itself out the moment the blow is ready.
+        if player.charge_s < ready_s
+            && player.charge_s + dt >= ready_s
+            && session.has_bonus("overcharge")
+        {
+            commands.write_message(
+                BonusTell::new("overcharge", TellAt::Player).with(TellEffect::Ring(1.8)),
+            );
+        }
         player.charge_s += dt;
         if player.charge_s >= ready_s {
             if player.action == Some(PlayerAction::Charging) {

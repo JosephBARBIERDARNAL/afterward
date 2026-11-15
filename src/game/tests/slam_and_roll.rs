@@ -78,6 +78,7 @@ next_room_id: 2
         })
         .insert_resource(RandomState(0x736c_616d_726f_6c6c))
         .init_resource::<SoundQueue>()
+        .add_message::<BonusTell>()
         .init_resource::<ControlBindings>()
         .insert_resource(PreferencesDir(None))
         .init_resource::<ButtonInput<KeyCode>>()

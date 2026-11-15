@@ -100,8 +100,9 @@ struct VisualWalkthroughResources<'w, 's> {
     screen: Res<'w, State<GameScreen>>,
     next_screen: ResMut<'w, NextState<GameScreen>>,
     timer: ResMut<'w, PhaseTimer>,
-    session: Res<'w, RunSession>,
+    session: ResMut<'w, RunSession>,
     data: Res<'w, GameData>,
+    random: ResMut<'w, RandomState>,
     walkthrough: ResMut<'w, VisualWalkthrough>,
     settings_return: ResMut<'w, SettingsReturn>,
     enemies: Query<'w, 's, Entity, With<EnemyBody>>,
@@ -134,8 +135,9 @@ fn drive_visual_walkthrough(resources: VisualWalkthroughResources) {
         screen,
         mut next_screen,
         mut timer,
-        session,
+        mut session,
         data,
+        mut random,
         mut walkthrough,
         mut settings_return,
         enemies,
@@ -269,7 +271,12 @@ fn drive_visual_walkthrough(resources: VisualWalkthroughResources) {
     walkthrough.action_started = true;
     match scene.screen {
         GameScreen::MainMenu => next_screen.set(GameScreen::Difficulty),
-        GameScreen::Difficulty => next_screen.set(GameScreen::Playing),
+        // The run opens holding what `--bonuses` asked for, as a real one
+        // begun from the difficulty screen would.
+        GameScreen::Difficulty => {
+            session.grant_starting_bonuses(&data, &mut random);
+            next_screen.set(GameScreen::Playing);
+        }
         // Nobody is holding the keyboard: the walkthrough walks in itself.
         GameScreen::Prologue => next_screen.set(GameScreen::RoomLoading),
         GameScreen::Playing if scene.door_open => {

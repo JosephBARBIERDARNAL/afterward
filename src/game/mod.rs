@@ -45,6 +45,7 @@ mod session;
 mod settings;
 mod shaders;
 mod sprites;
+mod tells;
 mod ui_style;
 mod visual_walkthrough;
 mod world;
@@ -75,6 +76,7 @@ use session::{Difficulty, RunSession};
 use settings::{PlayerSettings, PreferencesDir, SettingsReturn};
 use shaders::{Bolt, CityLightsMaterial, Flame, Glowing, ShaderAssets};
 use sprites::{AnimatedSprite, SpriteSheet, SpriteSheetSpec, SpriteSheets, set_animation};
+use tells::{BonusTell, TellAt, TellEffect};
 use world::{EntryDoor, ExitDoor, RoomEntity};
 
 const H_WORLD_UNITS: f32 = 48.0;
@@ -100,8 +102,32 @@ impl std::str::FromStr for StartRoom {
     }
 }
 
+/// How many bonuses, drawn at random, every run opens with: `--bonuses 5`,
+/// or `--bonuses all`, to try them without earning them. It is the
+/// starting point of the debug editor's playtest setting of the same name.
+#[derive(Resource, Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct StartingBonuses(pub usize);
+
+impl std::str::FromStr for StartingBonuses {
+    type Err = String;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        if value == "all" {
+            return Ok(Self(usize::MAX));
+        }
+        value
+            .parse()
+            .map(Self)
+            .map_err(|_| format!("--bonuses expects a number or `all`, got {value:?}"))
+    }
+}
+
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
+        let starting_bonuses = app
+            .world()
+            .get_resource::<StartingBonuses>()
+            .map_or(0, |bonuses| bonuses.0);
         #[cfg(debug_assertions)]
         app.add_plugins(editor::EditorPlugin)
             .init_resource::<hitbox_overlay::HitboxOverlay>()
@@ -128,7 +154,13 @@ impl Plugin for GamePlugin {
         .add_plugins(ripple::RipplePlugin)
         .register_asset_loader(audio::MusicStreamLoader)
         .init_state::<GameScreen>()
-        .init_resource::<RunSession>()
+        .insert_resource(RunSession {
+            playtest: session::Playtest {
+                starting_bonuses,
+                ..default()
+            },
+            ..default()
+        })
         .init_resource::<RoomPan>()
         .init_resource::<Prologue>()
         .init_resource::<StartRoom>()
@@ -138,6 +170,7 @@ impl Plugin for GamePlugin {
         .init_resource::<MenuFocus>()
         .init_resource::<InReach>()
         .add_message::<menus::MenuPressed>()
+        .add_message::<BonusTell>()
         .init_resource::<ControlBindings>()
         .init_resource::<SoundQueue>()
         .init_resource::<audio::SoundBank>()
@@ -150,6 +183,7 @@ impl Plugin for GamePlugin {
                 camera::spawn_camera,
                 interface::spawn_interface,
                 interact::spawn_interact_prompt,
+                tells::spawn_the_tray,
                 bonus_screen::spawn_bonus_screen,
                 menus::spawn_menu,
                 prologue::spawn_prologue_text,
@@ -362,6 +396,24 @@ impl Plugin for GamePlugin {
             Update,
             flow::update_room_transition_fade_out.run_if(in_state(GameScreen::TransitioningOut)),
         )
+        // What the bonuses show of themselves, after the fight has moved on
+        // this frame.
+        .add_systems(
+            Update,
+            (
+                tells::show_bonus_tells,
+                tells::update_callouts,
+                tells::leave_afterimages,
+                tells::update_fading,
+                tells::wear_the_aura,
+                tells::show_the_combo_window,
+                tells::update_overheads,
+            )
+                .chain()
+                .after(flow::room_clear_check)
+                .run_if(in_state(GameScreen::Playing).or_else(in_state(GameScreen::RoomClear))),
+        )
+        .add_systems(Update, tells::update_the_tray)
         .add_systems(
             Update,
             (assets::animate_sprites, combat::update_hit_effects).run_if(
