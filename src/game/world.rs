@@ -272,7 +272,7 @@ fn spawn_door(
     door: impl Bundle,
 ) {
     let sheet = &sheets.0[ExitDoor::SHEET];
-    let height = data.gameplay.room_flow.exit_door.height_h * H_WORLD_UNITS;
+    let height = sheet.frame_size.y / data.gameplay.room_flow.exit_door.px_per_h * H_WORLD_UNITS;
     let mut sprite = Sprite::from_atlas_image(
         sheet.image.clone(),
         TextureAtlas {

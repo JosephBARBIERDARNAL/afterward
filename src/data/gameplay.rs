@@ -530,7 +530,9 @@ pub struct ExitDoorConfig {
     pub sheet: String,
     pub frame_size_px: ImageSizeConfig,
     pub frames: usize,
-    pub height_h: f32,
+    /// How many of the sheet's pixels make one H: the door is drawn at that
+    /// scale, never resized to a height, so its pixels stay whole.
+    pub px_per_h: f32,
 }
 
 /// Room entrance timeline: the player walks in, holds idle while the enemies

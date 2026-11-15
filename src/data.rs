@@ -262,8 +262,8 @@ impl GameData {
         if door.frames < 3
             || door.frame_size_px.width == 0
             || door.frame_size_px.height == 0
-            || door.height_h.is_nan()
-            || door.height_h <= 0.0
+            || door.px_per_h.is_nan()
+            || door.px_per_h <= 0.0
         {
             return Err(InvalidGameData::from(
                 "the exit door needs locked, unlocked, and opening frames, and a positive size",
