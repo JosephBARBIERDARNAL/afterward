@@ -19,8 +19,7 @@ pub struct GameplayConfig {
     pub difficulty: DifficultyColors,
     pub effects: EffectsConfig,
     pub enemy_markers: EnemyMarkersConfig,
-    /// The font file every text is drawn with, under the asset root.
-    pub font: String,
+    pub fonts: FontsConfig,
     pub window: WindowConfig,
     pub audio: AudioConfig,
     pub controls: ControlsConfig,
@@ -624,4 +623,30 @@ pub enum WindowStartMode {
     BorderlessFullscreen,
     /// A regular window at the platform's default size.
     Windowed,
+}
+
+/// The font files of the game, under the asset root: `default` writes every
+/// text that names no `FontRole`, the others the texts that do.
+#[derive(Debug, Deserialize)]
+pub struct FontsConfig {
+    pub default: String,
+    pub regular: String,
+    pub italic: String,
+    pub bold_italic: String,
+    pub display: String,
+    pub display_italic: String,
+}
+
+impl FontsConfig {
+    /// Every file named, the default first.
+    pub(crate) fn files(&self) -> [&String; 6] {
+        [
+            &self.default,
+            &self.regular,
+            &self.italic,
+            &self.bold_italic,
+            &self.display,
+            &self.display_italic,
+        ]
+    }
 }

@@ -129,6 +129,7 @@ pub(super) fn spawn_prologue_text(mut commands: Commands) {
                         // Written out from the left, the way they are read.
                         TextLayout::justify(Justify::Left),
                         TextColor(Color::srgb(0.88, 0.9, 0.96)),
+                        FontRole::Display,
                         Pickable::IGNORE,
                         PrologueText,
                     ));

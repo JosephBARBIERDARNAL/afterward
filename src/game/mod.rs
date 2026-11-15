@@ -24,6 +24,7 @@ mod devices;
 mod editor;
 mod enemy_markers;
 mod flow;
+mod fonts;
 #[cfg(debug_assertions)]
 mod hitbox_overlay;
 mod impact;
@@ -63,6 +64,7 @@ use combat::{
 };
 use controls::{ControlBindings, GameAction};
 use flow::PhaseTimer;
+use fonts::FontRole;
 use interact::{InReach, Interactable};
 use menus::{MenuAction, MenuFocus, VolumeChannel};
 use player::{BonusAura, PlayerAction, PlayerBody, Strike};
@@ -141,10 +143,10 @@ impl Plugin for GamePlugin {
         .init_resource::<audio::SoundBank>()
         .init_resource::<RandomState>()
         .insert_resource(PhaseTimer(Timer::from_seconds(0.5, TimerMode::Once)))
+        .add_systems(PreStartup, fonts::load_the_game_fonts)
         .add_systems(
             Startup,
             (
-                ui_style::use_the_game_font,
                 camera::spawn_camera,
                 interface::spawn_interface,
                 interact::spawn_interact_prompt,

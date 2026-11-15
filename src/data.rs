@@ -832,11 +832,14 @@ impl GameData {
             }
         }
 
-        if !asset_root.join(&self.gameplay.font).is_file() {
-            return Err(InvalidGameData::from(format!(
-                "missing font asset: {}",
-                self.gameplay.font
-            )));
+        if let Some(font) = self
+            .gameplay
+            .fonts
+            .files()
+            .into_iter()
+            .find(|font| !asset_root.join(font).is_file())
+        {
+            return Err(InvalidGameData::from(format!("missing font asset: {font}")));
         }
 
         Ok(())

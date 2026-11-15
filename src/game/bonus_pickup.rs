@@ -115,6 +115,7 @@ pub(super) fn spawn_bonus_pickup(
                 ..default()
             },
             TextColor(Color::from(config.color)),
+            FontRole::Display,
             Transform::from_xyz(0.0, (item.height_h / 2.0 + 0.9) * H_WORLD_UNITS, 0.5),
         ));
     }

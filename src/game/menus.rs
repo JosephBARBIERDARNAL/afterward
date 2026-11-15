@@ -428,6 +428,8 @@ impl MenuView {
                     panel.spawn((
                         text(subtitle.clone(), 18.0, DESCRIPTION_COLOR),
                         TextLayout::justify(Justify::Center),
+                        // An aside under the title, not a row to act on.
+                        FontRole::Italic,
                         Node {
                             margin: UiRect::bottom(px(8)),
                             ..default()
@@ -450,6 +452,7 @@ impl MenuView {
                             if let Some(section) = row.section {
                                 rows.spawn((
                                     text(section, 15.0, DESCRIPTION_COLOR),
+                                    FontRole::Display,
                                     Node {
                                         width: percent(100),
                                         margin: UiRect::top(px(if index == 0 { 0 } else { 6 })),

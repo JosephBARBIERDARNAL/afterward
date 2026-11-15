@@ -406,10 +406,26 @@ enemy_markers:
   fill_color: "#5A6378"
   pointer_px: 12
 
-# The one font every word in the game is written in: menus, HUD, prologue,
-# damage numbers, the debug editor. It must be monospace, since the prologue
-# holds each character's place before it is typed.
-font: fonts/Eirian-Regular.ttf
+# The fonts the game is written in. `default` writes every text that names no
+# role: menu rows, the HUD, key badges, prompts, damage numbers, the debug
+# editor. The others are picked by a text's `FontRole` where a different face
+# sets a piece of information apart:
+# - regular: running text read rather than glanced at (bonus descriptions,
+#   the category and rarity line);
+# - italic: asides (the controls screen's hints);
+# - bold_italic: what a bonus adds to a moment (the synergy line, the damage
+#   number of a blow a bonus made heavier, a bonus's call-out in the room);
+# - display: titles, bonus names, the prologue and the UNTOUCHED label;
+# - display_italic: what the city says (a terminal's words).
+# Every one must be monospace, since the prologue and a terminal hold each
+# character's place before it is typed.
+fonts:
+  default: fonts/Space_Mono/SpaceMono-Bold.ttf
+  regular: fonts/Space_Mono/SpaceMono-Regular.ttf
+  italic: fonts/Space_Mono/SpaceMono-Italic.ttf
+  bold_italic: fonts/Space_Mono/SpaceMono-BoldItalic.ttf
+  display: fonts/Eirian-Regular.ttf
+  display_italic: fonts/Eirian-Italic.ttf
 
 window:
   # maximized (a window filling the screen), borderless_fullscreen, or windowed.

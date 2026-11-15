@@ -189,6 +189,10 @@ presses it from anywhere on that screen.
   letterboxed viewport. `ripple::UiPointer` is what puts the two in the same
   coordinates; anything comparing a pointer to a UI node goes through it.
 
+### Fonts
+
+`fonts:` of `config/gameplay.yaml` names the faces, all monospace (the prologue and a terminal hold each character's place before it is typed). `default` (Space Mono Bold) is put in the place of Bevy's built-in font by `fonts::load_the_game_fonts` (`PreStartup`), so every text naming no font is written in it. A text that should stand apart carries a `FontRole` next to its `TextFont` — and so does each `TextSpan`, which has a font of its own — and its `on_insert` hook writes the role's face in before the text is first laid out: `Display` (Eirian) for titles, bonus names, the prologue and in-world labels, `DisplayItalic` for a terminal's words, `Regular` for running text, `Italic` for asides, `BoldItalic` for what a bonus adds to a moment. The YAML's comment says which goes where.
+
 ### Shaders
 
 Two kinds of shader, both WGSL under `src/assets/shaders/`, both tuned from `effects:` in `config/gameplay.yaml`:

@@ -180,10 +180,16 @@ fn spawn_bubble(commands: &mut Commands, point: Vec2, text: &str) -> Entity {
                     Anchor::CENTER_LEFT,
                     Transform::from_xyz(0.0, 0.0, 0.02),
                     BubblePart::Words,
+                    // What the city says, in a voice of its own.
+                    FontRole::DisplayItalic,
                 ))
                 .with_children(|words| {
-                    words.spawn((TextSpan::new(""), TextColor(WORDS)));
-                    words.spawn((TextSpan::new(text), TextColor(Color::NONE)));
+                    words.spawn((TextSpan::new(""), TextColor(WORDS), FontRole::DisplayItalic));
+                    words.spawn((
+                        TextSpan::new(text),
+                        TextColor(Color::NONE),
+                        FontRole::DisplayItalic,
+                    ));
                 });
             // The tail: steps narrowing from the box down to the terminal,
             // each edged and filled as the box is.

@@ -120,12 +120,16 @@ pub(super) fn spawn_bonus_screen(mut commands: Commands) {
                                         Pickable::IGNORE,
                                     ))
                                     .with_children(|parent| {
-                                        for (kind, font_size) in [
-                                            (BonusSpanKind::Category, 16.0),
-                                            (BonusSpanKind::Rarity, 16.0),
-                                            (BonusSpanKind::Name, 26.0),
-                                            (BonusSpanKind::Description, 19.0),
-                                            (BonusSpanKind::Synergy, 16.0),
+                                        // The name stands out in the display
+                                        // face, the words around it are read in
+                                        // the regular one, and what the bonus
+                                        // works with in bold italic.
+                                        for (kind, font_size, role) in [
+                                            (BonusSpanKind::Category, 15.0, FontRole::Regular),
+                                            (BonusSpanKind::Rarity, 15.0, FontRole::Regular),
+                                            (BonusSpanKind::Name, 28.0, FontRole::Display),
+                                            (BonusSpanKind::Description, 17.0, FontRole::Regular),
+                                            (BonusSpanKind::Synergy, 15.0, FontRole::BoldItalic),
                                         ] {
                                             parent.spawn((
                                                 TextSpan::default(),
@@ -135,6 +139,7 @@ pub(super) fn spawn_bonus_screen(mut commands: Commands) {
                                                 },
                                                 TextColor(Color::WHITE),
                                                 BonusSpan { index, kind },
+                                                role,
                                             ));
                                         }
                                     });
