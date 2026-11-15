@@ -15,5 +15,13 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install yaml-language-server
+        run: npm install --global yaml-language-server@2.0.0
+      - name: Check game data YAML syntax with yaml-language-server
+        run: node scripts/validate_yaml_lsp.mjs
       - name: Parse game data YAML files
         run: ruby scripts/validate_yaml.rb
