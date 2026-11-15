@@ -18,7 +18,7 @@ Afterward is a single-player, offline, 2D action roguelike pixel-art platformer.
 
 The details (tuning values, rooms, enemies, bonuses, materials, backgrounds, animations, controls) live in the YAML files under `src/assets/` and in the code, which are the reference. Don't duplicate them here.
 
-The game is in development, focused on Chapter 1 (rooms 1–10). Content and systems needed only for later chapters (rooms 11–100) are low priority unless explicitly requested. Rooms 11–15 open Chapter 2 with the monsters of the horror pack and their palettes. Rooms 16–100 are placeholders, all alike: one viewport, a floor and two walls, no enemies. They are only there so the run is 100 rooms long (`RoomConfig::LAST_ID`); the door of room 15 leads into them, and the run ends at the door of room 100.
+The game is in development, focused on Chapter 1 (rooms 1–10). Content and systems needed only for later chapters (rooms 11–100) are low priority unless explicitly requested. Rooms 11–20 are Chapter 2, fought against the monsters of the horror pack and their palettes and drawn in the `dusk` colorway. Rooms 21–100 are placeholders, all alike: one viewport, a floor and two walls, no enemies. They are only there so the run is 100 rooms long (`RoomConfig::LAST_ID`); the door of room 20 leads into them, and the run ends at the door of room 100.
 
 The project is at an early, experimental stage. Many choices (assets, room layouts and materials, tuning values, editor features, even parts of the core design above) are trials that may be reworked or dropped soon. Expect them to change: prefer simple, easy-to-replace solutions over heavy abstractions or polish, don't treat the current state as a settled design, and when something looks like a placeholder or a half-made decision, ask rather than build on it as final.
 
@@ -251,7 +251,6 @@ The door out of room 0 leads through the prologue (`src/game/prologue.rs`): the 
 - A ladder's `Ladder` is its column, which `player::update_player` reads; the climb clip (`art/player/sheets/climb.typ`, seen from behind) holds its frame while the player hangs still, and Move up (`move_up`: W, Z, Up) is the action that climbs.
 - A terminal, used with Interact, types its `text` (default `...`, the `Text` row of the inspector, typed as a label is) out in a speech bubble over it (`devices/terminals.rs`): a box edged and filled as the prologue's card, with a stepped tail pointing down at the terminal, slid sideways to stay inside the room. The words come at `prologue.characters_per_s`, with `prologue.typing_sound` heard until the last one; Interact again writes them out at once, once more closes the bubble, and walking out of reach closes it too. The bubble's words are two spans, the typed part and the rest unseen, so the box is the words' full size from the start and nothing rewraps as they come.
 - A light strip is scenery that takes a length: `length_h` and `orientation` (vertical or horizontal, one sheet each), drawn as its two ends with its `middle` box repeated between them, the last repeat cut short. A terminal is not solid either: it is walked past.
-- Room 16 is the device lab: one of each, in a row, to try them (`just run 16`).
 
 ### Waves and what a room is for
 
@@ -261,7 +260,7 @@ The door out of room 0 leads through the prologue (`src/game/prologue.rs`): the 
 
 Room 1 is the reference the other rooms are to be rebuilt to: one screen and a little more (28 H by 13.5 H), a floor, two ledges, a walkway and one block of cover, nine enemies in two waves, everyone in sight from the door. The robots have a role each, set by their health against the chain's blows (18, 20, 30): the `blade_unit` is fodder and falls to the first two, the `rifle_unit` is the shooter and takes three, the `heavy_unit` is the tough one of a wave. Rooms 2 to 9 still have the large layouts they were first drawn with, which are too big for waves.
 
-Chapter 1 as it stands: rooms 1 to 3 are arenas of two or three waves, room 4 an empty climb, room 5 the armored duel, room 6 a gauntlet of four small waves, rooms 7 to 9 arenas ending on dark elites, room 10 the boss. Rooms 11 to 15 bring the monsters in one behaviour and one palette at a time, and room 15 as a gauntlet of every palette.
+Chapter 1 as it stands: rooms 1 to 3 are arenas of two or three waves, room 4 an empty climb, room 5 the armored duel, room 6 a gauntlet of four small waves, rooms 7 to 9 arenas ending on dark elites, room 10 the boss. Chapter 2 is built the same way, with the monsters: room 11 the broken bridge (cattos and mages first met), room 12 a climb round a central spine (the ghosts), room 13 the first special room, a hall of lasers firing in turn (the abomination), room 14 a gauntlet of four quick waves of the rust palette over fire grates, room 15 the mini-boss (a gold abomination, armored, with escorts), room 16 a three-storey plaza (the purple palette), room 17 the second special room, conveyor belts over spike pits and islands of fire, room 18 a climb by ladders and a lift with every palette, room 19 the duel against four armored gold elites, room 20 the boss: the Black Knight alone.
 
 ### Bonuses that change a move
 
@@ -307,7 +306,7 @@ Each type in `enemies/enemy_types.yaml` declares a `material`, which decides the
 
 ### The Black Knight
 
-The one boss type, `black_knight` of `enemies/enemy_types.yaml`. No room holds it yet: place it with the editor's enemy type row.
+The one boss type, `black_knight` of `enemies/enemy_types.yaml`, fought alone in room 20.
 
 - Its pack ships one atlas, `enemies/black_knight/source_atlas.png`, whose cells carry a coloured border and whose clips run on from one row into the next. `scripts/slice_black_knight.py` (`just black-knight`, needs ImageMagick) cuts it into one borderless strip per clip beside it, and its `CLIPS` table is where a clip is added or recut; the strips are committed. `assets/boss_sheets.rs` lists them with their frame counts and pace, and they load with nearest sampling, since the knight is pixel art drawn at a whole 3 world units a pixel.
 - Its sheets are named `black_knight_<action>`, and `set_enemy_animation` looks for `<type>_<action>` before its table of older types, so a type named this way needs no line there.
@@ -319,7 +318,7 @@ The one boss type, `black_knight` of `enemies/enemy_types.yaml`. No room holds i
 
 ### The monsters
 
-Five more types of `enemies/enemy_types.yaml`, drawn from two packs: `abomination`, `mage`, `catto` and `mad_ghost` from `enemies/horror/`, which fill rooms 11 to 15, and `eye_beast` from `enemies/eye_beast/`, placed in no room yet.
+Five more types of `enemies/enemy_types.yaml`, drawn from two packs: `abomination`, `mage`, `catto` and `mad_ghost` from `enemies/horror/`, which fill rooms 11 to 19, and `eye_beast` from `enemies/eye_beast/`, placed in no room yet.
 
 - The robots of Chapter 1 have a move each as well: the `blade_unit` darts in from a couple of H away (a `lunge` with a `start_range_h`) and only slashes up close, and the `dark_blade_unit` leaps at where the player stands (a `jump_slam`), which is what sets the elite apart from a blade with more health.
 - Each monster asks for one of the player's moves. The abomination's lash sends a low `shockwave` along the floor, to jump or roll through. The mage keeps its distance and casts a `hazard`: the floor under the player warns, then burns. The catto pounces from a few H away (a `jump_slam` with a `start_range_h`) and bites up close. The ghost's `blink` fades it out and brings it back at the player's back, on whatever floor they stand on, so no platform is cover from it.
@@ -334,7 +333,7 @@ Five more types of `enemies/enemy_types.yaml`, drawn from two packs: `abominatio
 
 ### The sci-fi robots
 
-Three types of `enemies/enemy_types.yaml` come from the sci-fi pack (`enemies/sci_fi/`, cut by `just sci-fi`, registered in `assets/monster_sheets.rs`), drawn at scale 3 (16 px per H) beside the hero, and dying in the pack's explosion (`death_effect`). Room 17 holds them in three waves (`just run 17`).
+Three types of `enemies/enemy_types.yaml` come from the sci-fi pack (`enemies/sci_fi/`, cut by `just sci-fi`, registered in `assets/monster_sheets.rs`), drawn at scale 3 (16 px per H) beside the hero, and dying in the pack's explosion (`death_effect`). No room holds them yet.
 
 - `sci_fi_walker` is a ground gunner (`ranged_keep_distance`): its frames are mirrored by the script, since the pack draws it looking left.
 - `sci_fi_orb` and `sci_fi_drone` fly: `flight` on a type (`combat/flight.rs`) makes it see all round it within its detection range, fly straight at a spot by its mark (stopped by the platforms, one axis at a time) and keep no floor, so `update_enemy_platform_physics` leaves it alone. The orb is a flying mine (`contact_h`): it goes off on reaching the player, who is hit at once (a blast left to burn would never go off if it was the room's last enemy, as the room clears as it dies), and one blow sets it off where it is. The drone hovers `hover_h` above its mark and, right over it, winds up and drops its shot straight down (`CombatProjectile::velocity_y`).

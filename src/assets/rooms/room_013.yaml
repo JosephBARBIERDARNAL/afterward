@@ -4,8 +4,8 @@
 room_id: 13
 chapter_id: 2
 size:
-  width_h: 48
-  height_h: 18
+  width_h: 52
+  height_h: 16
 background_profiles: [dead_city_ephemeral]
 hidden_background_layers: [dead_city_ephemeral/4, dead_city_ephemeral/5]
 player_spawn:
@@ -14,110 +14,419 @@ player_spawn:
 # Solid platforms: land on their top, stop against their sides, bump
 # your head on their underside. They stop shots too.
 platforms:
-  - label: the ledge the whole room stands on
-    material: sci_fi_dark_rivets
-    rect_h: { x: 1, y: 0, width: 46, height: 1 }
+  - material: sci_fi_dark_rivets
+    rect_h: { x: 0, y: 0, width: 52, height: 0.5 }
     colorway: dusk
-  - label: the ledge the whole room stands on trim
-    material: sci_fi_green_edge
-    rect_h: { x: 1, y: 0.5, width: 46, height: 0.5 }
+  - material: sci_fi_dark_rivets
+    rect_h: { x: 0, y: 0.5, width: 0.5, height: 15.5 }
     colorway: dusk
-  - label: east wall
-    material: sci_fi_dark_rivets
-    rect_h: { x: 47, y: 0, width: 1, height: 18 }
+  - material: sci_fi_green_edge
+    rect_h: { x: 1, y: 0.5, width: 3, height: 0.5 }
     colorway: dusk
-  - label: west wall
-    material: sci_fi_dark_rivets
-    rect_h: { x: 0, y: 0, width: 1, height: 18 }
+  - material: sci_fi_dark_rivets
+    rect_h: { x: 4.5, y: 0.5, width: 2, height: 2.5 }
     colorway: dusk
-  - label: the awning over the west mouth of the tunnel
-    material: sci_fi_green_edge
-    rect_h: { x: 5, y: 2.75, width: 3, height: 0.25 }
+  - material: sci_fi_green_edge
+    rect_h: { x: 7, y: 0.5, width: 38, height: 0.5 }
     colorway: dusk
-  - label: ziggurat, first tier, roofing the tunnel
-    material: sci_fi_dark_rivets
-    rect_h: { x: 8, y: 3.5, width: 32, height: 1.5 }
+  - material: sci_fi_dark_rivets
+    rect_h: { x: 45.5, y: 0.5, width: 6.5, height: 2 }
     colorway: dusk
-  - label: ziggurat, first tier, roofing the tunnel trim
-    material: sci_fi_green_edge
-    rect_h: { x: 8, y: 4.5, width: 32, height: 0.5 }
+  - material: sci_fi_trim_wall_right
+    rect_h: { x: 0.5, y: 1, width: 0.5, height: 15 }
     colorway: dusk
-  - label: ziggurat, second tier
-    material: sci_fi_dark_rivets
-    rect_h: { x: 12, y: 5, width: 24, height: 2 }
+  - material: sci_fi_trim_wall_left
+    rect_h: { x: 4, y: 1, width: 0.5, height: 2 }
     colorway: dusk
-  - label: ziggurat, second tier trim
-    material: sci_fi_green_edge
-    rect_h: { x: 12, y: 6.5, width: 24, height: 0.5 }
+  - material: sci_fi_trim_wall_right
+    rect_h: { x: 6.5, y: 1, width: 0.5, height: 2 }
     colorway: dusk
-  - label: ziggurat, third tier
-    material: sci_fi_dark_rivets
-    rect_h: { x: 16, y: 7, width: 16, height: 2 }
+  - material: sci_fi_trim_wall_left
+    rect_h: { x: 45, y: 1, width: 0.5, height: 1.5 }
     colorway: dusk
-  - label: ziggurat, third tier trim
-    material: sci_fi_green_edge
-    rect_h: { x: 16, y: 8.5, width: 16, height: 0.5 }
+  - material: sci_fi_green_edge
+    rect_h: { x: 45.5, y: 2.5, width: 5.5, height: 0.5 }
     colorway: dusk
-  - label: ziggurat, the summit
-    material: sci_fi_dark_rivets
-    rect_h: { x: 20, y: 9, width: 8, height: 2 }
+  - material: sci_fi_dark_rivets
+    rect_h: { x: 51.5, y: 2.5, width: 0.5, height: 13.5 }
     colorway: dusk
-  - label: ziggurat, the summit trim
-    material: sci_fi_green_edge
-    rect_h: { x: 20, y: 10.5, width: 8, height: 0.5 }
+  - material: sci_fi_green_edge
+    rect_h: { x: 4.5, y: 3, width: 2, height: 0.5 }
     colorway: dusk
-  - label: the canopy over the summit
-    material: sci_fi_green_edge
-    rect_h: { x: 22.5, y: 12.75, width: 3, height: 0.25 }
+  - material: sci_fi_trim_wall_left
+    rect_h: { x: 51, y: 3, width: 0.5, height: 13 }
     colorway: dusk
-  - label: the awning over the east mouth of the tunnel
-    material: sci_fi_green_edge
-    rect_h: { x: 40, y: 2.75, width: 3, height: 0.25 }
+  - material: sci_fi_trim_ceiling
+    rect_h: { x: 8.5, y: 5, width: 35, height: 0.5 }
+    colorway: dusk
+  - material: sci_fi_green_edge
+    rect_h: { x: 8.5, y: 5.5, width: 35, height: 0.5 }
+    colorway: dusk
+  - material: sci_fi_green_edge
+    rect_h: { x: 18.5, y: 7.5, width: 1, height: 0.5 }
+    colorway: dusk
+  - material: sci_fi_green_edge
+    rect_h: { x: 32.5, y: 7.5, width: 1, height: 0.5 }
+    colorway: dusk
+  - material: sci_fi_trim_ceiling
+    rect_h: { x: 21.5, y: 9.5, width: 8, height: 0.5 }
+    colorway: dusk
+  - material: sci_fi_green_edge
+    rect_h: { x: 21.5, y: 10, width: 8, height: 0.5 }
     colorway: dusk
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
+# Props: sprites standing on a spot (the middle of their bottom edge).
+props:
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 0.75, y: 0.5 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 4.25, y: 0.5 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 6.75, y: 0.5 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 45.25, y: 0.5 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 45.25, y: 2.5 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 51.25, y: 2.5 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 4.25, y: 3 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 6.75, y: 3 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 8.25, y: 5 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 43.75, y: 5 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 8.25, y: 5.5 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 43.75, y: 5.5 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 18.25, y: 7.5 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 19.75, y: 7.5 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 32.25, y: 7.5 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 33.75, y: 7.5 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 21.25, y: 9.5 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 29.75, y: 9.5 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 21.25, y: 10 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 29.75, y: 10 }
+    colorway: dusk
+  - prop: sci_fi_framed_fan
+    position_h: { x: 5.5, y: 1.75 }
+    colorway: dusk
+  - prop: sci_fi_framed_fan
+    position_h: { x: 48, y: 1.25 }
+    colorway: dusk
+  - prop: sci_fi_crate_stack
+    position_h: { x: 22.5, y: 10.5 }
+    solid: false
+    opacity: 0.8
+    colorway: dusk
+  - prop: sci_fi_barrel
+    position_h: { x: 46, y: 3 }
+    solid: false
+    opacity: 0.8
+    colorway: dusk
+  - prop: sci_fi_pipe_vertical
+    position_h: { x: 0.5, y: 6 }
+    colorway: dusk
+  - prop: sci_fi_pipe_vertical
+    position_h: { x: 51.5, y: 8 }
+    colorway: dusk
+# Devices: traps, moving and folding platforms, buttons, doors and
+# ladders, each standing on a spot (the middle of its bottom edge).
+devices:
+  - kind: terminal
+    position_h: { x: 1.75, y: 1 }
+    text: "SIGNAL HALL. THE BEAMS STILL KEEP TIME."
+    mirrored: true
+    colorway: dusk
+  - kind: laser
+    position_h: { x: 10, y: 1 }
+    color: red
+    orientation: vertical
+    length_h: 4
+    off_s: 1.6
+    warn_s: 0.4
+    on_s: 0.9
+    offset_s: 0
+    damage: 15
+    colorway: dusk
+  - kind: laser
+    position_h: { x: 13, y: 1 }
+    color: red
+    orientation: vertical
+    length_h: 4
+    off_s: 1.6
+    warn_s: 0.4
+    on_s: 0.9
+    offset_s: 0.25
+    damage: 15
+    colorway: dusk
+  - kind: laser
+    position_h: { x: 16, y: 1 }
+    color: red
+    orientation: vertical
+    length_h: 4
+    off_s: 1.6
+    warn_s: 0.4
+    on_s: 0.9
+    offset_s: 0.5
+    damage: 15
+    colorway: dusk
+  - kind: laser
+    position_h: { x: 19, y: 1 }
+    color: red
+    orientation: vertical
+    length_h: 4
+    off_s: 1.6
+    warn_s: 0.4
+    on_s: 0.9
+    offset_s: 0.75
+    damage: 15
+    colorway: dusk
+  - kind: laser
+    position_h: { x: 22, y: 1 }
+    color: red
+    orientation: vertical
+    length_h: 4
+    off_s: 1.6
+    warn_s: 0.4
+    on_s: 0.9
+    offset_s: 1
+    damage: 15
+    colorway: dusk
+  - kind: laser
+    position_h: { x: 25, y: 1 }
+    color: red
+    orientation: vertical
+    length_h: 4
+    off_s: 1.6
+    warn_s: 0.4
+    on_s: 0.9
+    offset_s: 1.25
+    damage: 15
+    colorway: dusk
+  - kind: laser
+    position_h: { x: 28, y: 1 }
+    color: red
+    orientation: vertical
+    length_h: 4
+    off_s: 1.6
+    warn_s: 0.4
+    on_s: 0.9
+    offset_s: 1.5
+    damage: 15
+    colorway: dusk
+  - kind: laser
+    position_h: { x: 31, y: 1 }
+    color: red
+    orientation: vertical
+    length_h: 4
+    off_s: 1.6
+    warn_s: 0.4
+    on_s: 0.9
+    offset_s: 1.75
+    damage: 15
+    colorway: dusk
+  - kind: laser
+    position_h: { x: 34, y: 1 }
+    color: red
+    orientation: vertical
+    length_h: 4
+    off_s: 1.6
+    warn_s: 0.4
+    on_s: 0.9
+    offset_s: 2
+    damage: 15
+    colorway: dusk
+  - kind: laser
+    position_h: { x: 37, y: 1 }
+    color: red
+    orientation: vertical
+    length_h: 4
+    off_s: 1.6
+    warn_s: 0.4
+    on_s: 0.9
+    offset_s: 2.25
+    damage: 15
+    colorway: dusk
+  - kind: laser
+    position_h: { x: 40, y: 1 }
+    color: red
+    orientation: vertical
+    length_h: 4
+    off_s: 1.6
+    warn_s: 0.4
+    on_s: 0.9
+    offset_s: 2.5
+    damage: 15
+    colorway: dusk
+  - kind: laser
+    position_h: { x: 43, y: 1 }
+    color: red
+    orientation: vertical
+    length_h: 4
+    off_s: 1.6
+    warn_s: 0.4
+    on_s: 0.9
+    offset_s: 2.75
+    damage: 15
+    colorway: dusk
+  - kind: laser
+    position_h: { x: 12, y: 5.75 }
+    color: red
+    orientation: horizontal
+    length_h: 3
+    off_s: 1.5
+    warn_s: 0.5
+    on_s: 0.8
+    offset_s: 0
+    damage: 15
+    colorway: dusk
+  - kind: laser
+    position_h: { x: 16, y: 5.75 }
+    color: red
+    orientation: horizontal
+    length_h: 3
+    off_s: 1.5
+    warn_s: 0.5
+    on_s: 0.8
+    offset_s: 0.5
+    damage: 15
+    colorway: dusk
+  - kind: laser
+    position_h: { x: 24, y: 5.75 }
+    color: red
+    orientation: horizontal
+    length_h: 3
+    off_s: 1.5
+    warn_s: 0.5
+    on_s: 0.8
+    offset_s: 1
+    damage: 15
+    colorway: dusk
+  - kind: laser
+    position_h: { x: 28, y: 5.75 }
+    color: red
+    orientation: horizontal
+    length_h: 3
+    off_s: 1.5
+    warn_s: 0.5
+    on_s: 0.8
+    offset_s: 1.5
+    damage: 15
+    colorway: dusk
+  - kind: laser
+    position_h: { x: 36, y: 5.75 }
+    color: red
+    orientation: horizontal
+    length_h: 3
+    off_s: 1.5
+    warn_s: 0.5
+    on_s: 0.8
+    offset_s: 2
+    damage: 15
+    colorway: dusk
+  - kind: laser
+    position_h: { x: 40, y: 5.75 }
+    color: red
+    orientation: horizontal
+    length_h: 3
+    off_s: 1.5
+    warn_s: 0.5
+    on_s: 0.8
+    offset_s: 2.5
+    damage: 15
+    colorway: dusk
 enemy_spawns:
   - type_id: catto
-    position_h: { x: 11, y: 1 }
+    position_h: { x: 15, y: 1 }
+    facing: left
+  - type_id: abomination
+    position_h: { x: 25, y: 1 }
+    facing: left
+  - type_id: catto
+    position_h: { x: 13, y: 6 }
     facing: left
   - type_id: mad_ghost
-    position_h: { x: 19, y: 1 }
+    position_h: { x: 22, y: 6 }
     facing: left
   - type_id: mage
-    position_h: { x: 10, y: 5 }
+    position_h: { x: 26, y: 10.5 }
     facing: left
-  - type_id: catto_gold
-    position_h: { x: 14, y: 1 }
-    facing: left
-  - type_id: mad_ghost_gold
-    position_h: { x: 28, y: 1 }
+  - type_id: abomination
+    position_h: { x: 38, y: 6 }
     facing: left
     wave: 1
   - type_id: catto
-    position_h: { x: 33, y: 1 }
+    position_h: { x: 35, y: 1 }
     facing: left
     wave: 1
-  - type_id: mage
-    position_h: { x: 34, y: 7 }
+  - type_id: catto
+    position_h: { x: 39, y: 1 }
     facing: left
     wave: 1
-  - type_id: abomination_gold
-    position_h: { x: 25, y: 11 }
+  - type_id: mad_ghost
+    position_h: { x: 30, y: 6 }
     facing: left
-    wave: 2
-  - type_id: mage_gold
-    position_h: { x: 24, y: 13 }
+    wave: 1
+  - type_id: mad_ghost
+    position_h: { x: 47, y: 3 }
     facing: left
-    wave: 2
-  - type_id: catto_gold
-    position_h: { x: 41.5, y: 3 }
-    facing: left
-    wave: 2
+    wave: 1
 # The bonus item, lying beside the door once every enemy is down.
 bonus:
-  x_h: 44.75
-  y_h: 1
+  x_h: 47.75
+  y_h: 3
 exit:
-  x_h: 46
-  y_h: 1
+  x_h: 49
+  y_h: 3
 next_room_id: 14

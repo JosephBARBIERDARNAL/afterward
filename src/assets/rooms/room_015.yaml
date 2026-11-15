@@ -4,122 +4,202 @@
 room_id: 15
 chapter_id: 2
 size:
-  width_h: 24
-  height_h: 13.5
+  width_h: 30
+  height_h: 14
 background_profiles: [dead_city_ephemeral]
 hidden_background_layers: [dead_city_ephemeral/4, dead_city_ephemeral/5]
 player_spawn:
   x_h: 2.5
-  y_h: 3
+  y_h: 3.5
 # Solid platforms: land on their top, stop against their sides, bump
 # your head on their underside. They stop shots too.
 platforms:
-  - label: the ledge the whole room stands on
-    material: sci_fi_dark_rivets
-    rect_h: { x: 1, y: 0, width: 22, height: 1 }
+  - material: sci_fi_dark_rivets
+    rect_h: { x: 0, y: 0, width: 30, height: 0.5 }
     colorway: dusk
-  - label: the ledge the whole room stands on trim
-    material: sci_fi_green_edge
-    rect_h: { x: 1, y: 0.5, width: 22, height: 0.5 }
+  - material: sci_fi_dark_rivets
+    rect_h: { x: 0, y: 0.5, width: 6.5, height: 2.5 }
     colorway: dusk
-  - label: east wall
-    material: sci_fi_dark_rivets
-    rect_h: { x: 23, y: 0, width: 1, height: 13.5 }
+  - material: sci_fi_green_edge
+    rect_h: { x: 7, y: 0.5, width: 16, height: 0.5 }
     colorway: dusk
-  - label: west wall
-    material: sci_fi_dark_rivets
-    rect_h: { x: 0, y: 0, width: 1, height: 13.5 }
+  - material: sci_fi_dark_rivets
+    rect_h: { x: 23.5, y: 0.5, width: 6.5, height: 2.5 }
     colorway: dusk
-  - label: the stoop the room is entered on
-    material: sci_fi_dark_rivets
-    rect_h: { x: 1, y: 1, width: 3, height: 2 }
+  - material: sci_fi_trim_wall_right
+    rect_h: { x: 6.5, y: 1, width: 0.5, height: 2 }
     colorway: dusk
-  - label: the stoop the room is entered on trim
-    material: sci_fi_green_edge
-    rect_h: { x: 1, y: 2.5, width: 3, height: 0.5 }
+  - material: sci_fi_trim_wall_left
+    rect_h: { x: 23, y: 1, width: 0.5, height: 2 }
     colorway: dusk
-  - label: the stoop under the door
-    material: sci_fi_dark_rivets
-    rect_h: { x: 20, y: 1, width: 3, height: 2 }
+  - material: sci_fi_dark_rivets
+    rect_h: { x: 0, y: 3, width: 0.5, height: 11 }
     colorway: dusk
-  - label: the stoop under the door trim
-    material: sci_fi_green_edge
-    rect_h: { x: 20, y: 2.5, width: 3, height: 0.5 }
+  - material: sci_fi_green_edge
+    rect_h: { x: 1, y: 3, width: 5.5, height: 0.5 }
     colorway: dusk
-  - label: the table in the middle of the pit
-    material: sci_fi_dark_rivets
-    rect_h: { x: 10, y: 1, width: 4, height: 2 }
+  - material: sci_fi_green_edge
+    rect_h: { x: 23.5, y: 3, width: 5.5, height: 0.5 }
     colorway: dusk
-  - label: the table in the middle of the pit trim
-    material: sci_fi_green_edge
-    rect_h: { x: 10, y: 2.5, width: 4, height: 0.5 }
+  - material: sci_fi_dark_rivets
+    rect_h: { x: 29.5, y: 3, width: 0.5, height: 11 }
     colorway: dusk
-  - label: west slab
-    material: sci_fi_green_edge
-    rect_h: { x: 5.5, y: 4.75, width: 4, height: 0.25 }
+  - material: sci_fi_trim_wall_right
+    rect_h: { x: 0.5, y: 3.5, width: 0.5, height: 10.5 }
     colorway: dusk
-  - label: east slab
-    material: sci_fi_green_edge
-    rect_h: { x: 14.5, y: 4.75, width: 4, height: 0.25 }
+  - material: sci_fi_trim_wall_left
+    rect_h: { x: 29, y: 3.5, width: 0.5, height: 10.5 }
     colorway: dusk
-  - label: the crown over the table
-    material: sci_fi_green_edge
-    rect_h: { x: 10.5, y: 6.75, width: 3, height: 0.25 }
+  - material: sci_fi_green_edge
+    rect_h: { x: 8, y: 5, width: 1.5, height: 0.5 }
+    colorway: dusk
+  - material: sci_fi_green_edge
+    rect_h: { x: 20.5, y: 5, width: 1.5, height: 0.5 }
+    colorway: dusk
+  - material: sci_fi_trim_ceiling
+    rect_h: { x: 11.5, y: 6.5, width: 7, height: 0.5 }
+    colorway: dusk
+  - material: sci_fi_green_edge
+    rect_h: { x: 11.5, y: 7, width: 7, height: 0.5 }
     colorway: dusk
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
+# Props: sprites standing on a spot (the middle of their bottom edge).
+props:
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 6.75, y: 0.5 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 23.25, y: 0.5 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 0.75, y: 3 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 6.75, y: 3 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 23.25, y: 3 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 29.25, y: 3 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 7.75, y: 5 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 9.75, y: 5 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 20.25, y: 5 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 22.25, y: 5 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 11.25, y: 6.5 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 18.75, y: 6.5 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 11.25, y: 7 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 18.75, y: 7 }
+    colorway: dusk
+  - prop: sci_fi_framed_fan
+    position_h: { x: 4, y: 1.75 }
+    colorway: dusk
+  - prop: sci_fi_framed_fan
+    position_h: { x: 26, y: 1.75 }
+    colorway: dusk
+  - prop: sci_fi_pipe_vertical
+    position_h: { x: 0.5, y: 6 }
+    colorway: dusk
+  - prop: sci_fi_pipe_vertical
+    position_h: { x: 29.5, y: 6 }
+    colorway: dusk
+  - prop: sci_fi_barrel
+    position_h: { x: 12, y: 7.5 }
+    solid: false
+    opacity: 0.8
+    colorway: dusk
+# Devices: traps, moving and folding platforms, buttons, doors and
+# ladders, each standing on a spot (the middle of its bottom edge).
+devices:
+  - kind: terminal
+    position_h: { x: 5.25, y: 3.5 }
+    text: "WARDEN UNIT. STILL ON DUTY."
+    colorway: dusk
+  - label: the beam under the west slab
+    kind: laser
+    position_h: { x: 8.75, y: 1 }
+    color: red
+    orientation: vertical
+    length_h: 4
+    off_s: 1.8
+    warn_s: 0.5
+    on_s: 1
+    offset_s: 0
+    damage: 15
+    colorway: dusk
+  - label: the beam under the east slab
+    kind: laser
+    position_h: { x: 21.25, y: 1 }
+    color: red
+    orientation: vertical
+    length_h: 4
+    off_s: 1.8
+    warn_s: 0.5
+    on_s: 1
+    offset_s: 1.2
+    damage: 15
+    colorway: dusk
+  - kind: light_strip
+    position_h: { x: 15, y: 1.25 }
+    orientation: horizontal
+    length_h: 8
+    colorway: dusk
 enemy_spawns:
-  - type_id: mad_ghost
-    position_h: { x: 7, y: 1 }
+  - label: the warden
+    type_id: abomination_gold
+    position_h: { x: 16, y: 1 }
     facing: left
-  - type_id: catto_rust
-    position_h: { x: 8.5, y: 1 }
+    armor_layers: 3
+  - type_id: catto
+    position_h: { x: 12.5, y: 1 }
     facing: left
   - type_id: catto
-    position_h: { x: 11, y: 3 }
+    position_h: { x: 19, y: 1 }
     facing: left
-  - type_id: catto_purple
-    position_h: { x: 15, y: 1 }
-    facing: left
-    wave: 1
-  - type_id: mage_rust
-    position_h: { x: 16.5, y: 5 }
+  - type_id: mage_gold
+    position_h: { x: 15, y: 7.5 }
     facing: left
     wave: 1
   - type_id: catto_gold
-    position_h: { x: 18.5, y: 1 }
+    position_h: { x: 8.75, y: 5.5 }
     facing: left
     wave: 1
-  - type_id: mad_ghost_gold
-    position_h: { x: 12, y: 7 }
-    facing: left
-    wave: 2
-  - type_id: mage_purple
-    position_h: { x: 19.25, y: 1 }
-    facing: left
-    wave: 2
-  - type_id: mage_gold
-    position_h: { x: 7.5, y: 5 }
-    facing: left
-    wave: 2
-  - type_id: abomination_purple
-    position_h: { x: 12.5, y: 3 }
-    facing: left
-    armor_layers: 1
-    wave: 3
-  - type_id: abomination_gold
-    position_h: { x: 16.75, y: 1 }
-    facing: left
-    wave: 3
-  - type_id: mad_ghost_purple
-    position_h: { x: 21, y: 3 }
-    facing: left
-    wave: 3
 # The bonus item, lying beside the door once every enemy is down.
 bonus:
-  x_h: 20.75
-  y_h: 3
+  x_h: 25.75
+  y_h: 3.5
 exit:
-  x_h: 22
-  y_h: 3
+  x_h: 27
+  y_h: 3.5
 next_room_id: 16
