@@ -290,7 +290,7 @@ bonuses:
     category: combat
     rarity: rare
     effects:
-      { launch_damage: 25, launch_reach_h: 3, launch_knockback_multiplier: 2.5 }
+      { launch_damage: 25, launch_reach_h: 3, launch_knockback_multiplier: 5.6 }
   - id: riptide
     name: Riptide
     description: "Aftershock and Undertow together: the roll's shock drags enemies in too."
