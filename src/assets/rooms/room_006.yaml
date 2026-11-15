@@ -91,7 +91,7 @@ platforms:
     rect_h: { x: 47, y: 10, width: 0.5, height: 6 }
   - label: the ramp from the pillar to the roof
     material: sci_fi_green_edge
-    rect_h: { x: 25.84, y: 5.76, width: 5.9, height: 0.5 }
+    rect_h: { x: 25.75, y: 5.5, width: 6.15, height: 0.5 }
     rotation_deg: 20
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
@@ -214,8 +214,9 @@ props:
 # ladders, each standing on a spot (the middle of its bottom edge).
 devices:
   - kind: terminal
-    position_h: { x: 5.5, y: 7 }
-    text: "MAINTENANCE LOG. THE WATER ROSE AGAIN LAST NIGHT. THE UNITS KEPT ON PATROLLING, AS IF NOTHING HAD CHANGED."
+    position_h: { x: 15.75, y: 10 }
+    text: MAINTENANCE LOG. THE WATER ROSE AGAIN LAST NIGHT. THE UNITS KEPT ON PATROLLING, AS IF NOTHING HAD CHANGED.
+    mirrored: true
   - kind: laser
     position_h: { x: 33.5, y: 1 }
     color: red
@@ -238,7 +239,7 @@ devices:
     damage: 15
   - kind: blade
     position_h: { x: 13.5, y: 1 }
-    travel_x_h: 7
+    travel_x_h: 8
     travel_y_h: 0
     speed_h_s: 2
     damage: 15
@@ -248,6 +249,10 @@ devices:
     travel_y_h: 0
     speed_h_s: 2
     damage: 15
+  - kind: light_strip
+    position_h: { x: 17.5, y: 1.25 }
+    orientation: horizontal
+    length_h: 8.5
 enemy_spawns:
   - type_id: blade_unit
     position_h: { x: 8.5, y: 5 }

@@ -448,8 +448,9 @@ props:
 # ladders, each standing on a spot (the middle of its bottom edge).
 devices:
   - kind: terminal
-    position_h: { x: 5, y: 37 }
-    text: "SECURITY NOTICE. ALL RESIDENTS ARE NOW CLASSIFIED AS INTRUDERS. PLEASE REMAIN CALM."
+    position_h: { x: 32.25, y: 35 }
+    text: SECURITY NOTICE. INTRUDERS ARE CURRENTLY ELIMINATED.
+    mirrored: true
   - kind: laser
     position_h: { x: 16, y: 1 }
     color: red

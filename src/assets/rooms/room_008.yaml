@@ -103,7 +103,7 @@ platforms:
     rect_h: { x: 43, y: 22, width: 0.5, height: 6 }
   - label: the ramp from the terrace to the west roof
     material: sci_fi_green_edge
-    rect_h: { x: 15.5, y: 11.26, width: 8.77, height: 0.5 }
+    rect_h: { x: 15.25, y: 11, width: 9.27, height: 0.5 }
     rotation_deg: -20
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
@@ -245,7 +245,7 @@ props:
 devices:
   - kind: terminal
     position_h: { x: 30, y: 10 }
-    text: "PERSONAL NOTE. WE BUILT THEM TO KEEP US SAFE. NOBODY THOUGHT TO ASK FROM WHAT."
+    text: PERSONAL NOTE. WE BUILT THEM TO KEEP US SAFE. NOBODY THOUGHT TO ASK FROM WHAT.
     mirrored: true
   - kind: laser
     position_h: { x: 7, y: 1 }
