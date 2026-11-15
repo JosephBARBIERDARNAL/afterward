@@ -15,35 +15,65 @@ player_spawn:
 # your head on their underside. They stop shots too.
 platforms:
   - label: the ledge the whole room stands on
-    color: "#1C1A2E"
+    material: sci_fi_dark_rivets
     rect_h: { x: 1, y: 0, width: 46, height: 1 }
+    colorway: dusk
+  - label: the ledge the whole room stands on trim
+    material: sci_fi_green_edge
+    rect_h: { x: 1, y: 0.5, width: 46, height: 0.5 }
+    colorway: dusk
   - label: east wall
-    color: "#1C1A2E"
+    material: sci_fi_dark_rivets
     rect_h: { x: 47, y: 0, width: 1, height: 18 }
+    colorway: dusk
   - label: west wall
-    color: "#1C1A2E"
+    material: sci_fi_dark_rivets
     rect_h: { x: 0, y: 0, width: 1, height: 18 }
+    colorway: dusk
   - label: the awning over the west mouth of the tunnel
-    color: "#1C1A2E"
+    material: sci_fi_green_edge
     rect_h: { x: 5, y: 2.75, width: 3, height: 0.25 }
+    colorway: dusk
   - label: ziggurat, first tier, roofing the tunnel
-    color: "#1C1A2E"
+    material: sci_fi_dark_rivets
     rect_h: { x: 8, y: 3.5, width: 32, height: 1.5 }
+    colorway: dusk
+  - label: ziggurat, first tier, roofing the tunnel trim
+    material: sci_fi_green_edge
+    rect_h: { x: 8, y: 4.5, width: 32, height: 0.5 }
+    colorway: dusk
   - label: ziggurat, second tier
-    color: "#1C1A2E"
+    material: sci_fi_dark_rivets
     rect_h: { x: 12, y: 5, width: 24, height: 2 }
+    colorway: dusk
+  - label: ziggurat, second tier trim
+    material: sci_fi_green_edge
+    rect_h: { x: 12, y: 6.5, width: 24, height: 0.5 }
+    colorway: dusk
   - label: ziggurat, third tier
-    color: "#1C1A2E"
+    material: sci_fi_dark_rivets
     rect_h: { x: 16, y: 7, width: 16, height: 2 }
+    colorway: dusk
+  - label: ziggurat, third tier trim
+    material: sci_fi_green_edge
+    rect_h: { x: 16, y: 8.5, width: 16, height: 0.5 }
+    colorway: dusk
   - label: ziggurat, the summit
-    color: "#1C1A2E"
+    material: sci_fi_dark_rivets
     rect_h: { x: 20, y: 9, width: 8, height: 2 }
+    colorway: dusk
+  - label: ziggurat, the summit trim
+    material: sci_fi_green_edge
+    rect_h: { x: 20, y: 10.5, width: 8, height: 0.5 }
+    colorway: dusk
   - label: the canopy over the summit
-    color: "#1C1A2E"
+    material: sci_fi_green_edge
     rect_h: { x: 22.5, y: 12.75, width: 3, height: 0.25 }
+    colorway: dusk
   - label: the awning over the east mouth of the tunnel
-    color: "#1C1A2E"
+    material: sci_fi_green_edge
     rect_h: { x: 40, y: 2.75, width: 3, height: 0.25 }
+    colorway: dusk
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
 enemy_spawns:

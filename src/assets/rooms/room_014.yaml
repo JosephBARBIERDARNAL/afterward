@@ -14,41 +14,60 @@ player_spawn:
 # your head on their underside. They stop shots too.
 platforms:
   - label: the ledge the whole room stands on
-    color: "#1C1A2E"
+    material: sci_fi_dark_rivets
     rect_h: { x: 1, y: 0, width: 32, height: 1 }
+    colorway: dusk
+  - label: the ledge the whole room stands on trim
+    material: sci_fi_green_edge
+    rect_h: { x: 1, y: 0.5, width: 32, height: 0.5 }
+    colorway: dusk
   - label: east wall
-    color: "#1C1A2E"
+    material: sci_fi_dark_rivets
     rect_h: { x: 33, y: 0, width: 1, height: 22 }
+    colorway: dusk
   - label: west wall
-    color: "#1C1A2E"
+    material: sci_fi_dark_rivets
     rect_h: { x: 0, y: 0, width: 1, height: 22 }
+    colorway: dusk
   - label: first ramp, from the street up to the east landing
-    color: "#1C1A2E"
+    material: sci_fi_green_edge
     rect_h: { x: 15.48, y: 2.26, width: 8.77, height: 0.25 }
     rotation_deg: 20
+    colorway: dusk
   - label: the east landing
-    color: "#1C1A2E"
+    material: sci_fi_dark_rivets
     rect_h: { x: 24, y: 1, width: 9, height: 3 }
+    colorway: dusk
+  - label: the east landing trim
+    material: sci_fi_green_edge
+    rect_h: { x: 24, y: 3.5, width: 9, height: 0.5 }
+    colorway: dusk
   - label: the step the second ramp stands on
-    color: "#1C1A2E"
+    material: sci_fi_green_edge
     rect_h: { x: 21, y: 5.75, width: 3, height: 0.25 }
+    colorway: dusk
   - label: second ramp, back west up to the gallery
-    color: "#1C1A2E"
+    material: sci_fi_green_edge
     rect_h: { x: 12.5, y: 7.26, width: 8.77, height: 0.25 }
     rotation_deg: -20
+    colorway: dusk
   - label: the gallery on the west wall
-    color: "#1C1A2E"
+    material: sci_fi_green_edge
     rect_h: { x: 1, y: 8.5, width: 11.75, height: 0.5 }
+    colorway: dusk
   - label: the step the third ramp stands on
-    color: "#1C1A2E"
+    material: sci_fi_green_edge
     rect_h: { x: 12.75, y: 10.75, width: 3, height: 0.25 }
+    colorway: dusk
   - label: third ramp, up to the door ledge
-    color: "#1C1A2E"
+    material: sci_fi_green_edge
     rect_h: { x: 15.48, y: 12.26, width: 8.77, height: 0.25 }
     rotation_deg: 20
+    colorway: dusk
   - label: the door ledge
-    color: "#1C1A2E"
+    material: sci_fi_green_edge
     rect_h: { x: 24, y: 13.5, width: 9, height: 0.5 }
+    colorway: dusk
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
 enemy_spawns:

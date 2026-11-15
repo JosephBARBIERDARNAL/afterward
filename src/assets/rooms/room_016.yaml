@@ -9,50 +9,50 @@ player_spawn:
   x_h: 2.5
   y_h: 2
 platforms:
-  - { label: start floor, material: sci_fi_riveted_wall, rect_h: { x: 0, y: 0, width: 9.5, height: 1.5 } }
-  - { label: start trim, material: sci_fi_green_edge, rect_h: { x: 0, y: 1.5, width: 9.5, height: 0.5 } }
-  - { label: under the fire, material: sci_fi_riveted_wall, rect_h: { x: 9.5, y: 0, width: 1, height: 1.5 } }
-  - { label: after the fire, material: sci_fi_riveted_wall, rect_h: { x: 10.5, y: 0, width: 1.5, height: 1.5 } }
-  - { label: after the fire trim, material: sci_fi_green_edge, rect_h: { x: 10.5, y: 1.5, width: 1.5, height: 0.5 } }
-  - { label: spike pit, material: sci_fi_riveted_wall, rect_h: { x: 12, y: 0, width: 3, height: 1 } }
-  - { label: before the belt, material: sci_fi_riveted_wall, rect_h: { x: 15, y: 0, width: 1, height: 1.5 } }
-  - { label: before the belt trim, material: sci_fi_green_edge, rect_h: { x: 15, y: 1.5, width: 1, height: 0.5 } }
-  - { label: under the belt, material: sci_fi_riveted_wall, rect_h: { x: 16, y: 0, width: 4, height: 1.75 } }
-  - { label: gap floor, material: sci_fi_dark, rect_h: { x: 20, y: 0, width: 7, height: 0.5 } }
-  - { label: island, material: sci_fi_riveted_wall, rect_h: { x: 27, y: 0, width: 1.5, height: 1.5 } }
-  - { label: island trim, material: sci_fi_green_edge, rect_h: { x: 27, y: 1.5, width: 1.5, height: 0.5 } }
-  - { label: second gap floor, material: sci_fi_dark, rect_h: { x: 28.5, y: 0, width: 5, height: 0.5 } }
-  - { label: last floor, material: sci_fi_riveted_wall, rect_h: { x: 33.5, y: 0, width: 14.5, height: 1.5 } }
-  - { label: last floor trim, material: sci_fi_green_edge, rect_h: { x: 33.5, y: 1.5, width: 14.5, height: 0.5 } }
-  - { label: press ceiling, material: sci_fi_riveted_wall, rect_h: { x: 35, y: 4.25, width: 2, height: 1.75 } }
-  - { label: press ceiling trim, material: sci_fi_trim_ceiling, rect_h: { x: 35, y: 4.25, width: 2, height: 0.5 } }
-  - { label: turret pedestal, material: sci_fi_riveted_wall, rect_h: { x: 41.5, y: 2, width: 1, height: 1 } }
-  - { label: wall over the door, material: sci_fi_riveted_wall, rect_h: { x: 44.5, y: 3.125, width: 1, height: 10.375 } }
-  - { label: ledge, material: sci_fi_riveted_wall, rect_h: { x: 4.75, y: 5.5, width: 3.75, height: 0.5 } }
-  - { label: ledge trim, material: sci_fi_green_edge, rect_h: { x: 4.75, y: 5.75, width: 3.75, height: 0.25 } }
-  - { label: left wall, material: sci_fi_riveted_wall, rect_h: { x: 0, y: 2, width: 0.5, height: 11.5 } }
-  - { label: right wall, material: sci_fi_riveted_wall, rect_h: { x: 47.5, y: 2, width: 0.5, height: 11.5 } }
+  - { label: start floor, material: sci_fi_riveted_wall, rect_h: { x: 0, y: 0, width: 9.5, height: 1.5 }, colorway: dusk }
+  - { label: start trim, material: sci_fi_green_edge, rect_h: { x: 0, y: 1.5, width: 9.5, height: 0.5 }, colorway: dusk }
+  - { label: under the fire, material: sci_fi_riveted_wall, rect_h: { x: 9.5, y: 0, width: 1, height: 1.5 }, colorway: dusk }
+  - { label: after the fire, material: sci_fi_riveted_wall, rect_h: { x: 10.5, y: 0, width: 1.5, height: 1.5 }, colorway: dusk }
+  - { label: after the fire trim, material: sci_fi_green_edge, rect_h: { x: 10.5, y: 1.5, width: 1.5, height: 0.5 }, colorway: dusk }
+  - { label: spike pit, material: sci_fi_riveted_wall, rect_h: { x: 12, y: 0, width: 3, height: 1 }, colorway: dusk }
+  - { label: before the belt, material: sci_fi_riveted_wall, rect_h: { x: 15, y: 0, width: 1, height: 1.5 }, colorway: dusk }
+  - { label: before the belt trim, material: sci_fi_green_edge, rect_h: { x: 15, y: 1.5, width: 1, height: 0.5 }, colorway: dusk }
+  - { label: under the belt, material: sci_fi_riveted_wall, rect_h: { x: 16, y: 0, width: 4, height: 1.75 }, colorway: dusk }
+  - { label: gap floor, material: sci_fi_dark, rect_h: { x: 20, y: 0, width: 7, height: 0.5 }, colorway: dusk }
+  - { label: island, material: sci_fi_riveted_wall, rect_h: { x: 27, y: 0, width: 1.5, height: 1.5 }, colorway: dusk }
+  - { label: island trim, material: sci_fi_green_edge, rect_h: { x: 27, y: 1.5, width: 1.5, height: 0.5 }, colorway: dusk }
+  - { label: second gap floor, material: sci_fi_dark, rect_h: { x: 28.5, y: 0, width: 5, height: 0.5 }, colorway: dusk }
+  - { label: last floor, material: sci_fi_riveted_wall, rect_h: { x: 33.5, y: 0, width: 14.5, height: 1.5 }, colorway: dusk }
+  - { label: last floor trim, material: sci_fi_green_edge, rect_h: { x: 33.5, y: 1.5, width: 14.5, height: 0.5 }, colorway: dusk }
+  - { label: press ceiling, material: sci_fi_riveted_wall, rect_h: { x: 35, y: 4.25, width: 2, height: 1.75 }, colorway: dusk }
+  - { label: press ceiling trim, material: sci_fi_trim_ceiling, rect_h: { x: 35, y: 4.25, width: 2, height: 0.5 }, colorway: dusk }
+  - { label: turret pedestal, material: sci_fi_riveted_wall, rect_h: { x: 41.5, y: 2, width: 1, height: 1 }, colorway: dusk }
+  - { label: wall over the door, material: sci_fi_riveted_wall, rect_h: { x: 44.5, y: 3.125, width: 1, height: 10.375 }, colorway: dusk }
+  - { label: ledge, material: sci_fi_riveted_wall, rect_h: { x: 4.75, y: 5.5, width: 3.75, height: 0.5 }, colorway: dusk }
+  - { label: ledge trim, material: sci_fi_green_edge, rect_h: { x: 4.75, y: 5.75, width: 3.75, height: 0.25 }, colorway: dusk }
+  - { label: left wall, material: sci_fi_riveted_wall, rect_h: { x: 0, y: 2, width: 0.5, height: 11.5 }, colorway: dusk }
+  - { label: right wall, material: sci_fi_riveted_wall, rect_h: { x: 47.5, y: 2, width: 0.5, height: 11.5 }, colorway: dusk }
 decorations: []
 props:
-  - { prop: sci_fi_steel_crate, position_h: { x: 7, y: 6 }, rotation_deg: 15, opacity: 0.6 }
-  - { prop: sci_fi_crate_stack, position_h: { x: 1.25, y: 2 }, mirrored: true }
+  - { prop: sci_fi_steel_crate, position_h: { x: 7, y: 6 }, rotation_deg: 15, opacity: 0.6, colorway: dusk }
+  - { prop: sci_fi_crate_stack, position_h: { x: 1.25, y: 2 }, mirrored: true, colorway: dusk }
 devices:
-  - { label: ladder to the ledge, kind: ladder, position_h: { x: 4.5, y: 2 }, height_h: 4 }
-  - { label: laser gate, kind: laser, position_h: { x: 7, y: 2 }, length_h: 3 }
-  - { label: grates in the floor, kind: fire_trap, position_h: { x: 10, y: 1.5 }, cells: 2 }
-  - { label: spike pit, kind: spikes, position_h: { x: 13.5, y: 1 }, cells: 6 }
-  - { label: belt, kind: conveyor, position_h: { x: 18, y: 1.75 }, cells: 8, speed_h_s: 2 }
-  - { label: gap spikes, kind: spikes, position_h: { x: 23.5, y: 0.5 }, cells: 14 }
-  - { label: ferry, kind: hover_platform, position_h: { x: 21.5, y: 1 }, travel_x_h: 4 }
-  - { label: fold 1, kind: folding_platform, position_h: { x: 29.5, y: 2.5 } }
-  - { label: fold 2, kind: folding_platform, position_h: { x: 31.75, y: 2.5 }, color: steel }
-  - { label: press, kind: press, position_h: { x: 36, y: 2 } }
-  - { label: blade, kind: blade, position_h: { x: 39, y: 2 }, travel_x_h: 0, travel_y_h: 2.5 }
-  - { label: turret, kind: turret, position_h: { x: 42, y: 3 } }
-  - { label: button, kind: button, position_h: { x: 43.25, y: 2 }, link: 1 }
-  - { label: door, kind: door, position_h: { x: 45, y: 2 }, link: 1 }
-  - { label: light strip up, kind: light_strip, position_h: { x: 2.5, y: 3 }, length_h: 3 }
-  - { label: light strip along, kind: light_strip, position_h: { x: 12, y: 7 }, orientation: horizontal, length_h: 5 }
+  - { label: ladder to the ledge, kind: ladder, position_h: { x: 4.5, y: 2 }, height_h: 4, colorway: dusk }
+  - { label: laser gate, kind: laser, position_h: { x: 7, y: 2 }, length_h: 3, colorway: dusk }
+  - { label: grates in the floor, kind: fire_trap, position_h: { x: 10, y: 1.5 }, cells: 2, colorway: dusk }
+  - { label: spike pit, kind: spikes, position_h: { x: 13.5, y: 1 }, cells: 6, colorway: dusk }
+  - { label: belt, kind: conveyor, position_h: { x: 18, y: 1.75 }, cells: 8, speed_h_s: 2, colorway: dusk }
+  - { label: gap spikes, kind: spikes, position_h: { x: 23.5, y: 0.5 }, cells: 14, colorway: dusk }
+  - { label: ferry, kind: hover_platform, position_h: { x: 21.5, y: 1 }, travel_x_h: 4, colorway: dusk }
+  - { label: fold 1, kind: folding_platform, position_h: { x: 29.5, y: 2.5 }, colorway: dusk }
+  - { label: fold 2, kind: folding_platform, position_h: { x: 31.75, y: 2.5 }, color: steel, colorway: dusk }
+  - { label: press, kind: press, position_h: { x: 36, y: 2 }, colorway: dusk }
+  - { label: blade, kind: blade, position_h: { x: 39, y: 2 }, travel_x_h: 0, travel_y_h: 2.5, colorway: dusk }
+  - { label: turret, kind: turret, position_h: { x: 42, y: 3 }, colorway: dusk }
+  - { label: button, kind: button, position_h: { x: 43.25, y: 2 }, link: 1, colorway: dusk }
+  - { label: door, kind: door, position_h: { x: 45, y: 2 }, link: 1, colorway: dusk }
+  - { label: light strip up, kind: light_strip, position_h: { x: 2.5, y: 3 }, length_h: 3, colorway: dusk }
+  - { label: light strip along, kind: light_strip, position_h: { x: 12, y: 7 }, orientation: horizontal, length_h: 5, colorway: dusk }
 enemy_spawns: []
 bonus:
   x_h: 46

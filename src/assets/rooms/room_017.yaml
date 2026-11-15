@@ -8,20 +8,20 @@ player_spawn:
   x_h: 2.5
   y_h: 2
 platforms:
-  - { label: floor, material: sci_fi_riveted_wall, rect_h: { x: 0, y: 0, width: 28, height: 1.5 } }
-  - { label: floor trim, material: sci_fi_green_edge, rect_h: { x: 0, y: 1.5, width: 28, height: 0.5 } }
-  - { label: left ledge, material: sci_fi_riveted_wall, rect_h: { x: 6, y: 5, width: 5, height: 0.5 } }
-  - { label: left ledge trim, material: sci_fi_green_edge, rect_h: { x: 6, y: 5.25, width: 5, height: 0.25 } }
-  - { label: right ledge, material: sci_fi_riveted_wall, rect_h: { x: 17, y: 5, width: 5, height: 0.5 } }
-  - { label: right ledge trim, material: sci_fi_green_edge, rect_h: { x: 17, y: 5.25, width: 5, height: 0.25 } }
-  - { label: left wall, material: sci_fi_riveted_wall, rect_h: { x: 0, y: 2, width: 0.5, height: 11.5 } }
-  - { label: right wall, material: sci_fi_riveted_wall, rect_h: { x: 27.5, y: 2, width: 0.5, height: 11.5 } }
+  - { label: floor, material: sci_fi_riveted_wall, rect_h: { x: 0, y: 0, width: 28, height: 1.5 }, colorway: dusk }
+  - { label: floor trim, material: sci_fi_green_edge, rect_h: { x: 0, y: 1.5, width: 28, height: 0.5 }, colorway: dusk }
+  - { label: left ledge, material: sci_fi_riveted_wall, rect_h: { x: 6, y: 5, width: 5, height: 0.5 }, colorway: dusk }
+  - { label: left ledge trim, material: sci_fi_green_edge, rect_h: { x: 6, y: 5.25, width: 5, height: 0.25 }, colorway: dusk }
+  - { label: right ledge, material: sci_fi_riveted_wall, rect_h: { x: 17, y: 5, width: 5, height: 0.5 }, colorway: dusk }
+  - { label: right ledge trim, material: sci_fi_green_edge, rect_h: { x: 17, y: 5.25, width: 5, height: 0.25 }, colorway: dusk }
+  - { label: left wall, material: sci_fi_riveted_wall, rect_h: { x: 0, y: 2, width: 0.5, height: 11.5 }, colorway: dusk }
+  - { label: right wall, material: sci_fi_riveted_wall, rect_h: { x: 27.5, y: 2, width: 0.5, height: 11.5 }, colorway: dusk }
 decorations: []
 props:
-  - { prop: sci_fi_crate_stack, position_h: { x: 13.5, y: 2 } }
+  - { prop: sci_fi_crate_stack, position_h: { x: 13.5, y: 2 }, colorway: dusk }
 devices:
-  - { label: warning terminal, kind: terminal, position_h: { x: 4.5, y: 2 }, text: "DEFENCE GRID ONLINE. WALKERS, MINES AND DRONES ARE ON PATROL." }
-  - { label: ladder to the right ledge, kind: ladder, position_h: { x: 16.5, y: 2 }, height_h: 3.5 }
+  - { label: warning terminal, kind: terminal, position_h: { x: 4.5, y: 2 }, text: "DEFENCE GRID ONLINE. WALKERS, MINES AND DRONES ARE ON PATROL.", colorway: dusk }
+  - { label: ladder to the right ledge, kind: ladder, position_h: { x: 16.5, y: 2 }, height_h: 3.5, colorway: dusk }
 enemy_spawns:
   - { label: gun walker, type_id: sci_fi_walker, position_h: { x: 20, y: 2 } }
   - { label: gun walker, type_id: sci_fi_walker, position_h: { x: 24, y: 2 } }

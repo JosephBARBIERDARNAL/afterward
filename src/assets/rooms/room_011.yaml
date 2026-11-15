@@ -45,75 +45,75 @@ platforms:
   - label: the trench floor, west
     material: sci_fi_dark_rivets
     rect_h: { x: 12, y: 0, width: 13, height: 1 }
-    colorway: rust
+    colorway: dusk
   - label: the trench floor trim, west
     material: sci_fi_green_edge
     rect_h: { x: 12, y: 0.5, width: 8, height: 0.5 }
-    colorway: rust
+    colorway: dusk
   - label: the trench floor trim past the pier
     material: sci_fi_green_edge
     rect_h: { x: 24, y: 0.5, width: 1, height: 0.5 }
-    colorway: rust
+    colorway: dusk
   - label: the west span of the broken bridge
     material: sci_fi_green_edge
     rect_h: { x: 13, y: 4.75, width: 6, height: 0.25 }
-    colorway: rust
+    colorway: dusk
   - label: the pier in the middle of the trench
     material: sci_fi_dark_rivets
     rect_h: { x: 20, y: 1, width: 4, height: 2 }
-    colorway: rust
+    colorway: dusk
   - label: the pier trim
     material: sci_fi_green_edge
     rect_h: { x: 20, y: 2.5, width: 4, height: 0.5 }
-    colorway: rust
+    colorway: dusk
   - label: the trench floor, east
     material: sci_fi_dark_rivets
     rect_h: { x: 25, y: 0, width: 7, height: 1 }
-    colorway: frost
+    colorway: dusk
   - label: the trench floor trim, east
     material: sci_fi_green_edge
     rect_h: { x: 25, y: 0.5, width: 5, height: 0.5 }
-    colorway: frost
+    colorway: dusk
   - label: the east span of the broken bridge
     material: sci_fi_green_edge
     rect_h: { x: 25, y: 4.75, width: 6, height: 0.25 }
-    colorway: frost
+    colorway: dusk
   - label: the step up out of the trench
     material: sci_fi_dark_rivets
     rect_h: { x: 30, y: 1, width: 2, height: 1.5 }
-    colorway: frost
+    colorway: dusk
   - label: the step up trim
     material: sci_fi_green_edge
     rect_h: { x: 30, y: 2, width: 2, height: 0.5 }
-    colorway: frost
+    colorway: dusk
   - label: the ledge under the east bank
     material: sci_fi_dark_rivets
     rect_h: { x: 32, y: 0, width: 11, height: 1 }
-    colorway: sulfur
+    colorway: dusk
   - label: the east bank
     material: sci_fi_dark_rivets
     rect_h: { x: 32, y: 1, width: 11, height: 3 }
-    colorway: sulfur
+    colorway: dusk
   - label: the east bank trim
     material: sci_fi_green_edge
     rect_h: { x: 32, y: 3.5, width: 11, height: 0.5 }
-    colorway: sulfur
+    colorway: dusk
   - label: the kerb on the east bank
     material: sci_fi_dark_rivets
     rect_h: { x: 36, y: 4, width: 2, height: 1.5 }
-    colorway: sulfur
+    colorway: dusk
   - label: the kerb trim
     material: sci_fi_green_edge
     rect_h: { x: 36, y: 5, width: 2, height: 0.5 }
-    colorway: sulfur
+    colorway: dusk
   - label: east wall
     material: sci_fi_dark_rivets
     rect_h: { x: 43, y: 0, width: 1, height: 13.5 }
-    colorway: sulfur
+    colorway: dusk
   - label: east wall face
     material: sci_fi_trim_wall_left
     rect_h: { x: 43, y: 4, width: 0.5, height: 9.5 }
-    colorway: sulfur
+    colorway: dusk
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
 # Props: sprites standing on a spot (the middle of their bottom edge).
@@ -129,72 +129,52 @@ props:
   - label: lamp
     prop: sci_fi_lamp_off
     position_h: { x: 16, y: 1 }
-    colorway: rust
+    colorway: dusk
   - label: window
     prop: sci_fi_wall_window
     position_h: { x: 22, y: 3 }
-    colorway: rust
+    colorway: dusk
   - label: vent
     prop: sci_fi_vent_grille
     position_h: { x: 27.5, y: 1 }
-    colorway: frost
+    colorway: dusk
   - label: dashes
     prop: sci_fi_wall_light_dashes
     position_h: { x: 31, y: 2.5 }
-    colorway: frost
+    colorway: dusk
   - label: capsule
     prop: sci_fi_wall_light_capsule
     position_h: { x: 34, y: 4 }
-    colorway: sulfur
+    colorway: dusk
   - label: grate
     prop: sci_fi_grate_panel
     position_h: { x: 39, y: 4 }
-    colorway: sulfur
-devices:
-  - label: what this stretch is painted
-    kind: terminal
-    position_h: { x: 2, y: 4 }
-    text: COLORWAY DUSK.
     colorway: dusk
+devices:
   - label: light strip
     kind: light_strip
     position_h: { x: 1.25, y: 4.5 }
     orientation: vertical
     length_h: 3
     colorway: dusk
-  - label: what this stretch is painted
-    kind: terminal
-    position_h: { x: 14, y: 1 }
-    text: COLORWAY RUST.
-    colorway: rust
   - label: light strip
     kind: light_strip
     position_h: { x: 23.5, y: 3 }
     orientation: vertical
     length_h: 3
-    colorway: rust
-  - label: what this stretch is painted
-    kind: terminal
-    position_h: { x: 26, y: 1 }
-    text: COLORWAY FROST.
-    colorway: frost
+    colorway: dusk
   - label: light strip
     kind: light_strip
     position_h: { x: 31, y: 2.5 }
     orientation: vertical
     length_h: 3
-    colorway: frost
-  - label: what this stretch is painted
-    kind: terminal
-    position_h: { x: 33, y: 4 }
-    text: COLORWAY SULFUR.
-    colorway: sulfur
+    colorway: dusk
   - label: light strip
     kind: light_strip
     position_h: { x: 42.5, y: 5.5 }
     orientation: vertical
     length_h: 3
-    colorway: sulfur
+    colorway: dusk
 enemy_spawns:
   - type_id: catto
     position_h: { x: 9, y: 4 }

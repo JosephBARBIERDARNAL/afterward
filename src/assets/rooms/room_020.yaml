@@ -14,14 +14,21 @@ player_spawn:
 # your head on their underside. They stop shots too.
 platforms:
   - label: placeholder floor
-    color: "#1C1A2E"
+    material: sci_fi_dark_rivets
     rect_h: { x: 1, y: 0, width: 23, height: 1 }
+    colorway: dusk
+  - label: placeholder floor trim
+    material: sci_fi_green_edge
+    rect_h: { x: 1, y: 0.5, width: 23, height: 0.5 }
+    colorway: dusk
   - label: placeholder wall
-    color: "#1C1A2E"
+    material: sci_fi_dark_rivets
     rect_h: { x: 23, y: 0, width: 1, height: 13.5 }
+    colorway: dusk
   - label: placeholder wall
-    color: "#1C1A2E"
+    material: sci_fi_dark_rivets
     rect_h: { x: 0, y: 0, width: 1, height: 13.5 }
+    colorway: dusk
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
 enemy_spawns: []
