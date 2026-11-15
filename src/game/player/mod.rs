@@ -57,13 +57,24 @@ pub(super) fn update_player(
         player.action = None;
     }
     player.wall_control_lock_s = (player.wall_control_lock_s - dt).max(0.0);
-    // The roll runs on its own clock and ends with its clip.
-    let was_rolling = player.roll_s.is_some();
-    player.roll_s = player
-        .roll_s
-        .filter(|_| matches!(player.action, Some(PlayerAction::Roll)))
-        .map(|elapsed_s| elapsed_s + dt);
-    player.roll_ended = was_rolling && player.roll_s.is_none();
+    // The dash runs on its own clock for `dash.duration_s`, and the next one
+    // waits out the cooldown from the moment it ends.
+    let dash = &tuning.dash;
+    let was_dashing = player.dash_s.is_some();
+    player.dash_s = player
+        .dash_s
+        .filter(|_| matches!(player.action, Some(PlayerAction::Dash { .. })))
+        .map(|elapsed_s| elapsed_s + dt)
+        .filter(|elapsed_s| *elapsed_s < dash.duration_s);
+    player.dash_ended = was_dashing && player.dash_s.is_none();
+    player.dash_cooldown_s = if player.dash_ended {
+        dash.cooldown_s
+    } else {
+        (player.dash_cooldown_s - dt).max(0.0)
+    };
+    if player.dash_ended && matches!(player.action, Some(PlayerAction::Dash { .. })) {
+        player.action = None;
+    }
     let mut sprite_view = PlayerSprite {
         sprite: &mut sprite,
         animation: &mut animation,
@@ -83,10 +94,7 @@ pub(super) fn update_player(
 
     let previous_feet = transform.translation.y - H_WORLD_UNITS / 2.0;
     let previous_x = transform.translation.x;
-    let rolling = player.roll_s.is_some();
-    player.covering = player.grounded && !rolling && held(GameAction::Cover);
-    player.crouching =
-        player.grounded && !player.covering && !rolling && held(GameAction::MoveDown);
+    player.crouching = player.grounded && player.dash_s.is_none() && held(GameAction::MoveDown);
 
     let movement_multiplier =
         session.bonus_multiplier(&data, "fleet_feet", "movement_speed_multiplier")
@@ -108,7 +116,7 @@ pub(super) fn update_player(
     let feet_now = transform.translation.y - H_WORLD_UNITS / 2.0;
     if player.climbing.is_none()
         && alive
-        && !rolling
+        && player.dash_s.is_none()
         && !player.slamming
         && player.strike.is_none()
         && let Some(ladder) = ladders.iter().map(|ladder| ladder.area).find(|area| {
@@ -120,7 +128,6 @@ pub(super) fn update_player(
     {
         player.climbing = Some(ladder);
         player.crouching = false;
-        player.covering = false;
     }
     if let Some(ladder) = player.climbing {
         let up_down = f32::from(u8::from(held(GameAction::MoveUp)))
@@ -133,6 +140,7 @@ pub(super) fn update_player(
         player.grounded = false;
         player.wall_cling = None;
         player.jumps_used = 0;
+        player.air_dashes_used = 0;
         player.jump_buffer_s = 0.0;
         if direction != 0.0 {
             player.facing = direction.signum();
@@ -169,26 +177,70 @@ pub(super) fn update_player(
         return;
     }
 
-    // Cover plants the player, and the push off a wall owns them until its
-    // lock runs out: no steering then, and no drag either, so the shove
-    // carries them clear instead of being rubbed out the frame it is given.
-    if player.covering {
-        direction = 0.0;
+    // Dash: the way the player steers, else away from the wall they cling
+    // to, else the way they face. In mid-air only `air_dashes` of them (Air
+    // Step adds one) until something holds the player up again. It cuts a
+    // blow in hand short: `combat/player_melee.rs` lets the blow go once its
+    // clip is no longer the one playing.
+    let air_dashes = dash.air_dashes
+        + if session.has_bonus("air_step") {
+            data.bonus_effect("air_step", "extra_air_dashes") as u8
+        } else {
+            0
+        };
+    if tapped(GameAction::Dash)
+        && player.dash_s.is_none()
+        && player.dash_cooldown_s == 0.0
+        && !player.slamming
+        && (player.grounded || player.air_dashes_used < air_dashes)
+    {
+        if !player.grounded {
+            player.air_dashes_used += 1;
+            // The dash Air Step adds shows the air it pushed off.
+            if player.air_dashes_used > dash.air_dashes {
+                tells.write(
+                    BonusTell::new("air_step", TellAt::Spot(transform.translation))
+                        .with(TellEffect::new("air_burst", 0.8)),
+                );
+            }
+        }
+        let way = if direction != 0.0 {
+            direction.signum()
+        } else {
+            player.wall_cling.map_or(player.facing, |wall| -wall)
+        };
+        player.facing = way;
+        player.dash_direction = way;
+        player.dash_s = Some(0.0);
+        // Decoy leaves a double of the player here, if they stand:
+        // `combat::plant_decoy` takes the spot once the dash has set off.
+        player.dash_origin = player.grounded.then_some(transform.translation);
+        player.wall_cling = None;
+        player.wall_control_lock_s = 0.0;
+        player.crouching = false;
+        player.start_action(
+            PlayerAction::Dash {
+                speed: clips.dash.duration_s() / dash.duration_s,
+            },
+            dash.duration_s,
+        );
     }
+
+    // The push off a wall owns the player until its lock runs out: no
+    // steering then, and no drag either, so the shove carries them clear
+    // instead of being rubbed out the frame it is given.
     if player.slamming {
         // The slam is a straight drop: nothing steers it.
         player.velocity.x = 0.0;
+    } else if player.dash_s.is_some() {
+        // The dash cannot be steered once it is under way.
+        player.velocity.x = player.dash_direction * dash.speed_h_s * H_WORLD_UNITS;
     } else if player
         .strike
         .is_some_and(|strike| strike.contact_in_s > 0.0)
     {
         // A blow on its way in carries the player with it: the lunge
         // `combat/player_melee.rs` gave them holds until it connects.
-    } else if let Some(elapsed_s) = player.roll_s {
-        // The roll carries the player the way they already faced, and cannot
-        // be steered once it is under way.
-        let _ = elapsed_s;
-        player.velocity.x = player.facing * tuning.roll.speed_h_s * H_WORLD_UNITS;
     } else if player.wall_control_lock_s == 0.0 {
         if direction != 0.0 {
             player.facing = direction.signum();
@@ -213,28 +265,14 @@ pub(super) fn update_player(
     }
 
     // A Jump that cannot be obeyed yet is remembered for a moment, so one
-    // pressed just before landing, or just before a roll ends, still counts.
+    // pressed just before landing, or just before a dash ends, still counts.
     player.jump_buffer_s = if tapped(GameAction::Jump) {
         tuning.jump_buffer_s
     } else {
         (player.jump_buffer_s - dt).max(0.0)
     };
     let jump_asked = controllable && player.jump_buffer_s > 0.0;
-    if jump_asked
-        && player.grounded
-        && held(GameAction::MoveDown)
-        && !player.covering
-        && player.roll_s.is_none()
-    {
-        // Down and Jump together: a roll rather than a hop.
-        player.jump_buffer_s = 0.0;
-        player.roll_s = Some(0.0);
-        // Decoy leaves a double of the player here: `combat::plant_decoy`
-        // takes the spot once the roll has set off from it.
-        player.roll_origin = Some(transform.translation);
-        player.velocity.x = player.facing * tuning.roll.speed_h_s * H_WORLD_UNITS;
-        player.start_action(PlayerAction::Roll, clips.roll.duration_s());
-    } else if jump_asked && !player.covering && player.roll_s.is_none() {
+    if jump_asked && player.dash_s.is_none() {
         if let Some(wall) = player.wall_cling {
             player.jump_buffer_s = 0.0;
             // Pushing off a wall throws the player up and away from it, and
@@ -313,8 +351,11 @@ pub(super) fn update_player(
     // Gravity before the horizontal step, so the frame's whole vertical reach
     // is known: a body rising over a ledge this frame also clears its side.
     // A wall the body clings to slows the fall.
+    // An air dash holds the player level for its length.
     if player.slamming {
         player.velocity.y = -tuning.melee.slam.drop_speed_h_s * H_WORLD_UNITS;
+    } else if player.dash_s.is_some() && !player.grounded {
+        player.velocity.y = 0.0;
     } else {
         player.velocity.y -= tuning.gravity_h_s2 * H_WORLD_UNITS * dt;
         if player.wall_cling.is_some() {
@@ -379,12 +420,16 @@ pub(super) fn update_player(
     // side by the player's own steering.
     let feet = transform.translation.y - H_WORLD_UNITS / 2.0;
     player.wall_cling = (!player.grounded
+        && player.dash_s.is_none()
         && player.velocity.y <= 0.0
         && player.wall_control_lock_s == 0.0
         && direction != 0.0
         && platforms.wall_beside(transform.translation.x, feet, direction))
     .then_some(direction);
 
+    if player.grounded || player.wall_cling.is_some() {
+        player.air_dashes_used = 0;
+    }
     if player.grounded {
         player.jumps_used = 0;
         if !was_grounded {

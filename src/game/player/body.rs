@@ -16,9 +16,12 @@ pub(crate) struct PlayerBody {
     pub(crate) jump_buffer_s: f32,
     /// What is left of an Attack pressed before it could be thrown.
     pub(crate) attack_buffer_s: f32,
+    /// What is left of a Heavy Attack pressed before it could be thrown.
+    pub(crate) heavy_buffer_s: f32,
     /// The blow being thrown, if any.
     pub(crate) strike: Option<Strike>,
-    /// Which step of the melee chain the next press throws.
+    /// Which step of the melee chain the next press of Attack throws, and so
+    /// how many of its blows came before: what Heavy Attack ends it on.
     pub(crate) combo_step: usize,
     /// What is left of the window to ask for the chain's next blow; at zero
     /// the chain drops back to its first step.
@@ -29,19 +32,21 @@ pub(crate) struct PlayerBody {
     pub(crate) slamming: bool,
     /// The slam reached the floor this frame and has yet to break it.
     pub(crate) slam_landed: bool,
-    /// How long Attack has been held since the blow in hand ended; past
-    /// `melee.charge.ready_s` the charged blow is ready to throw.
-    pub(crate) charge_s: f32,
-    /// A roll came to its end this frame: `combat::player_melee` takes it,
+    /// A dash came to its end this frame: `combat::player_melee` takes it,
     /// for the shock Aftershock leaves there.
-    pub(crate) roll_ended: bool,
-    /// How far into the roll the player is, while one is under way.
-    pub(crate) roll_s: Option<f32>,
-    /// Where a roll just began, until `combat::plant_decoy` has taken it:
+    pub(crate) dash_ended: bool,
+    /// How far into the dash the player is, while one is under way.
+    pub(crate) dash_s: Option<f32>,
+    /// The way the dash under way carries the player (-1 for left).
+    pub(crate) dash_direction: f32,
+    /// What is left of the wait before the next dash.
+    pub(crate) dash_cooldown_s: f32,
+    /// Dashes taken in mid-air since the player last stood, clung or climbed.
+    pub(crate) air_dashes_used: u8,
+    /// Where a dash just began, until `combat::plant_decoy` has taken it:
     /// the spot Decoy's double is left standing on.
-    pub(crate) roll_origin: Option<Vec3>,
+    pub(crate) dash_origin: Option<Vec3>,
     pub(crate) crouching: bool,
-    pub(crate) covering: bool,
     /// Clinging to a platform's side in mid-air, and which way that wall lies
     /// (-1 for a wall on the player's left).
     pub(crate) wall_cling: Option<f32>,
@@ -83,18 +88,20 @@ impl Default for PlayerBody {
             jump_held: false,
             jump_buffer_s: 0.0,
             attack_buffer_s: 0.0,
+            heavy_buffer_s: 0.0,
             strike: None,
             combo_step: 0,
             combo_window_s: 0.0,
             lifesteal_healing: 0.0,
             slamming: false,
             slam_landed: false,
-            charge_s: 0.0,
-            roll_ended: false,
-            roll_s: None,
-            roll_origin: None,
+            dash_ended: false,
+            dash_s: None,
+            dash_direction: 1.0,
+            dash_cooldown_s: 0.0,
+            air_dashes_used: 0,
+            dash_origin: None,
             crouching: false,
-            covering: false,
             wall_cling: None,
             climbing: None,
             wall_control_lock_s: 0.0,
@@ -175,32 +182,34 @@ pub(crate) struct Strike {
     pub(crate) thrown: Thrown,
     /// Seconds until it connects; once past zero it already has.
     pub(crate) contact_in_s: f32,
+    /// Thrown after a blow of the chain rather than opening one.
+    pub(crate) ends_a_chain: bool,
 }
 
-/// Which blow is in the air: a step of the chain, or the charged one. The
-/// slam is not here, because it lands when it reaches the floor rather than
-/// at a time of its own (`slamming`).
+/// Which blow is in the air: a step of the chain (`melee.steps`), or a heavy
+/// one (`melee.heavy`). The slam is not here, because it lands when it
+/// reaches the floor rather than at a time of its own (`slamming`).
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) enum Thrown {
     Step(usize),
-    Charged,
+    Heavy(usize),
 }
 
 /// A one-shot player animation played over the movement clips.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(crate) enum PlayerAction {
-    /// A blow of the melee chain, played at `speed` times its clip's rate.
+    /// A blow of the melee chain, light or heavy, played at `speed` times its
+    /// clip's rate.
     Strike {
         strike: MeleeStrike,
         speed: f32,
     },
-    /// Gathering for the charged blow, then throwing it.
-    Charging,
-    ChargedBlow,
     /// Driving at the floor, and the floor breaking.
     Slam,
-    /// The roll Down and Jump together ask for.
-    Roll,
+    /// The dash, played at `speed` times the roll clip's rate.
+    Dash {
+        speed: f32,
+    },
     /// Getting up off the floor again, which only Last Stand asks for.
     Rise,
     /// The glow worn for a moment when a bonus is taken.

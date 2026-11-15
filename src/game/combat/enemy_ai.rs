@@ -197,7 +197,6 @@ pub(in crate::game) fn update_enemy_ai(
                     PlayerDamageTarget {
                         player: &mut player,
                         transform: player_transform,
-                        attacker_x: transform.translation.x,
                     },
                     &mut decoys,
                     attack.damage,
@@ -520,7 +519,6 @@ pub(in crate::game) fn update_enemy_ai(
                             PlayerDamageTarget {
                                 player: &mut player,
                                 transform: player_transform,
-                                attacker_x: transform.translation.x,
                             },
                             &mut decoys,
                             attack.damage,

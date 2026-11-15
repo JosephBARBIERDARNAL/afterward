@@ -4,11 +4,11 @@ use std::{path::Path, time::Duration};
 
 use bevy::{prelude::MinimalPlugins, state::app::StatesPlugin, time::TimeUpdateStrategy};
 
-/// The two moves Attack and Jump gained: Attack with Down held in mid-air
-/// drives the player at the floor and breaks it to both sides, and Down with
-/// Jump on the ground rolls them forward through anything that would hit.
+/// Attack with Down held in mid-air drives the player at the floor and breaks
+/// it to both sides, and Dash carries them through anything that would hit,
+/// on the ground and once in mid-air.
 #[test]
-fn the_slam_breaks_the_floor_and_the_roll_carries_the_player_through_a_shot() {
+fn the_slam_breaks_the_floor_and_the_dash_carries_the_player_through_a_shot() {
     let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
     let mut data = GameData::load(&asset_root).expect("Chapter 1 data should load");
     // A floor of its own, and one body of polymer standing just within the
@@ -30,9 +30,9 @@ next_room_id: 2
 ",
     )
     .expect("the test layout should parse");
-    let roll = (
-        data.gameplay.player.roll.speed_h_s,
-        data.gameplay.player.roll.invulnerable_from_s,
+    let dash = (
+        data.gameplay.player.dash.speed_h_s,
+        data.gameplay.player.dash.invulnerable_from_s,
     );
     let mut sheets = data
         .player_animations
@@ -198,34 +198,33 @@ next_room_id: 2
         "the broken floor hurts what is standing on it"
     );
 
-    // Down and Jump together roll instead of hopping, and the roll keeps its
-    // own speed and direction.
+    // Dash on the ground keeps its own speed and direction.
     for _ in 0..20 {
         step(&mut app, &[]);
     }
-    step(&mut app, &[KeyCode::KeyS, KeyCode::Space]);
-    step(&mut app, &[KeyCode::KeyS]);
+    step(&mut app, &[KeyCode::KeyL]);
     {
         let body = app
             .world()
             .get::<PlayerBody>(player)
             .expect("the player should remain spawned");
-        assert!(body.roll_s.is_some(), "Down with Jump rolls");
+        assert!(body.dash_s.is_some(), "Dash dashes");
         assert!(
             body.grounded,
-            "the roll runs along the floor rather than leaving it"
+            "the dash runs along the floor rather than leaving it"
         );
         assert!(
-            (body.velocity.x / H_WORLD_UNITS - roll.0).abs() < 0.01,
-            "the roll carries the player at its own speed, got {} H/s",
+            (body.velocity.x / H_WORLD_UNITS - dash.0).abs() < 0.01,
+            "the dash carries the player at its own speed, got {} H/s",
             body.velocity.x / H_WORLD_UNITS
         );
     }
-    assert_eq!(sheet(&app), "player_roll");
+    step(&mut app, &[]);
+    assert_eq!(sheet(&app), "player_dash");
 
-    // Nothing can reach the player through the middle of the roll.
-    for _ in 0..(roll.1 / 0.05).ceil() as usize {
-        step(&mut app, &[KeyCode::KeyS]);
+    // Nothing can reach the player through the middle of the dash.
+    for _ in 0..(dash.1 / 0.05).ceil() as usize {
+        step(&mut app, &[]);
     }
     let health_before = app.world().resource::<RunSession>().health;
     let position = app
@@ -248,10 +247,39 @@ next_room_id: 2
             half_size: Vec2::splat(4.0),
         },
     ));
-    step(&mut app, &[KeyCode::KeyS]);
+    step(&mut app, &[]);
     assert_eq!(
         app.world().resource::<RunSession>().health,
         health_before,
-        "a shot that lands in the middle of a roll costs nothing"
+        "a shot that lands in the middle of a dash costs nothing"
     );
+
+    // In mid-air the dash holds the player level, and only one is allowed
+    // before they stand again.
+    for _ in 0..20 {
+        step(&mut app, &[]);
+    }
+    step(&mut app, &[KeyCode::Space]);
+    for _ in 0..4 {
+        step(&mut app, &[KeyCode::Space]);
+    }
+    step(&mut app, &[KeyCode::KeyL]);
+    {
+        let body = app
+            .world()
+            .get::<PlayerBody>(player)
+            .expect("the player should remain spawned");
+        assert!(
+            body.dash_s.is_some() && !body.grounded,
+            "Dash dashes in mid-air"
+        );
+        assert!(
+            body.velocity.y.abs() < f32::EPSILON,
+            "an air dash holds the player level"
+        );
+        assert_eq!(
+            body.air_dashes_used, 1,
+            "it spends the one air dash the player has before landing"
+        );
+    }
 }

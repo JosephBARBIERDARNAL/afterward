@@ -259,7 +259,7 @@ mod tests {
         assert_eq!(titles("finisher"), ["Chain", "Blow"]);
         assert_eq!(
             titles("riptide"),
-            ["Aftershock", "Undertow", "Roll"],
+            ["Aftershock", "Undertow", "Dash"],
             "the bonuses a combo names come first, where they stand"
         );
         assert_eq!(

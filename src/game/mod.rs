@@ -335,7 +335,7 @@ impl Plugin for GamePlugin {
         .add_systems(
             Update,
             (
-                // Before the melee and the AI: it takes the spot the roll
+                // Before the melee and the AI: it takes the spot the dash
                 // `update_player` just set off from, and the AI then marks
                 // the double it left standing there.
                 combat::plant_decoy,

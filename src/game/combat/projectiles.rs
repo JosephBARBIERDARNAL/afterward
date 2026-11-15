@@ -75,7 +75,7 @@ pub(in crate::game) fn update_projectiles(
             // Deflector turns aside the first shot of each room.
             if session.has_bonus("deflector") && !session.deflector_used {
                 session.deflector_used = true;
-                sounds.push(SoundCue::CoverBlock);
+                sounds.push(SoundCue::Deflect);
                 commands.write_message(
                     BonusTell::new("deflector", TellAt::Player)
                         .with(TellEffect::new("shield_hit", 1.5)),
@@ -93,7 +93,6 @@ pub(in crate::game) fn update_projectiles(
                 PlayerDamageTarget {
                     player: &mut player,
                     transform: player_transform,
-                    attacker_x: projectile_transform.translation.x - projectile.velocity_x,
                 },
                 projectile.damage,
             );

@@ -122,7 +122,6 @@ pub(in crate::game) fn update_hazards(
                 PlayerDamageTarget {
                     player: &mut player,
                     transform: player_transform,
-                    attacker_x: hazard.area.center().x,
                 },
                 hazard.damage,
             );

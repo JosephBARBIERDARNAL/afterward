@@ -113,7 +113,8 @@ pub struct ControlsConfig {
     pub navigate_down: Vec<String>,
     pub jump: Vec<String>,
     pub attack: Vec<String>,
-    pub cover: Vec<String>,
+    pub heavy_attack: Vec<String>,
+    pub dash: Vec<String>,
     pub interact: Vec<String>,
     pub pause: Vec<String>,
     pub toggle_fullscreen: Vec<String>,
@@ -162,12 +163,10 @@ pub struct PlayerConfig {
     pub jump_buffer_s: f32,
     pub damage_invulnerability_s: f32,
     pub crouch_speed_h_s: f32,
-    /// Damage multiplier for hits from the front while Cover is held.
-    pub cover_damage_taken_multiplier: f32,
     /// Seconds the last death frame holds before the run ends.
     pub death_hold_s: f32,
     pub melee: MeleeConfig,
-    pub roll: RollConfig,
+    pub dash: DashConfig,
     pub wall: WallConfig,
     pub climb: ClimbConfig,
 }
@@ -183,10 +182,10 @@ pub struct ClimbConfig {
     pub jump_off_impulse_h_s: f32,
 }
 
-/// The player's only weapon: a melee chain. Each press lands the next blow of
-/// `steps`; letting `combo_window_s` lapse after one ends drops the chain back
-/// to its first step. The steps with no `requires_bonus` are the chain every
-/// run throws; those with one are its rival finishers.
+/// The player's only weapon: a melee chain. Each press of Attack lands the
+/// next blow of `steps`, and Heavy Attack ends the chain on a blow of `heavy`;
+/// letting `combo_window_s` lapse after one ends drops the chain back to its
+/// first step.
 #[derive(Debug, Deserialize)]
 pub struct MeleeConfig {
     pub combo_window_s: f32,
@@ -198,8 +197,10 @@ pub struct MeleeConfig {
     pub boss_knockback_h_s: f32,
     pub impact: ImpactConfig,
     pub steps: Vec<MeleeComboStep>,
+    /// The heavy blows, by how many of `steps` came before: the ones with no
+    /// `requires_bonus` in order, then the rival finishers.
+    pub heavy: Vec<MeleeComboStep>,
     pub slam: SlamConfig,
-    pub charge: ChargeConfig,
     /// The effect played where a blow lands.
     pub hit_effect: HitEffectConfig,
 }
@@ -232,25 +233,19 @@ pub struct SlamConfig {
     pub drop_speed_h_s: f32,
 }
 
-/// Attack held rather than tapped: the gather, and the blow it throws.
+/// The dash: a short burst on the ground or in mid-air, the roll clip fitted
+/// to its length.
 #[derive(Debug, Deserialize)]
-pub struct ChargeConfig {
-    /// How long Attack is held, after the blow in hand ends, before the
-    /// charged blow is ready.
-    pub ready_s: f32,
-    pub damage: f32,
-    pub hitbox_h: RectH,
-    pub contact_s: f32,
-    pub lunge_h_s: f32,
-}
-
-/// The roll Down and Jump together ask for.
-#[derive(Debug, Deserialize)]
-pub struct RollConfig {
+pub struct DashConfig {
     pub speed_h_s: f32,
-    /// The stretch of the roll nothing can hurt the player through.
+    pub duration_s: f32,
+    /// The stretch of the dash nothing can hurt the player through.
     pub invulnerable_from_s: f32,
     pub invulnerable_to_s: f32,
+    /// How long after one dash ends the next may begin.
+    pub cooldown_s: f32,
+    /// Dashes allowed in mid-air before landing.
+    pub air_dashes: u8,
 }
 
 /// One blow of the chain.
@@ -270,25 +265,41 @@ pub struct MeleeComboStep {
     pub contact_s: f32,
     /// The speed the blow carries the player forward at until it connects.
     pub lunge_h_s: f32,
-    /// A finisher, thrown only by a run owning this bonus and only in place
-    /// of the other finishers: of the ones a run holds, the last listed wins.
+    /// A heavy finisher, thrown only by a run owning this bonus and only in
+    /// place of the other finishers: of the ones a run holds, the last listed
+    /// wins. Only a step of `heavy` may name one.
     #[serde(default)]
     pub requires_bonus: Option<String>,
 }
 
 impl MeleeConfig {
-    /// The chain a run actually throws: every step owing nothing to a bonus,
-    /// then the one finisher its bonuses bought, if any.
-    pub(crate) fn chain<'a>(&'a self, owned: &dyn Fn(&str) -> bool) -> Vec<&'a MeleeComboStep> {
-        self.steps
+    /// Which of `heavy` Heavy Attack throws after `light_blows` of the chain:
+    /// the plain heavy blows by that count, the last of them being replaced
+    /// by the one finisher the run's bonuses bought, if any. `None` only when
+    /// `heavy` holds no plain blow at all, which validation refuses.
+    pub(crate) fn heavy_after(
+        &self,
+        light_blows: usize,
+        owned: &dyn Fn(&str) -> bool,
+    ) -> Option<usize> {
+        let plain = self
+            .heavy
             .iter()
-            .filter(|step| step.requires_bonus.is_none())
-            .chain(self.steps.iter().rev().find(|step| {
+            .enumerate()
+            .filter(|(_, step)| step.requires_bonus.is_none())
+            .map(|(index, _)| index)
+            .collect::<Vec<_>>();
+        let pick = light_blows.min(plain.len().checked_sub(1)?);
+        if pick + 1 == plain.len()
+            && let Some(finisher) = self.heavy.iter().rposition(|step| {
                 step.requires_bonus
                     .as_ref()
                     .is_some_and(|bonus| owned(bonus))
-            }))
-            .collect()
+            })
+        {
+            return Some(finisher);
+        }
+        Some(plain[pick])
     }
 }
 

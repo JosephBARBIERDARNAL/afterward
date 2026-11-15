@@ -5,7 +5,8 @@ use bevy::{prelude::MinimalPlugins, state::app::StatesPlugin, time::TimeUpdateSt
 
 /// The chain: Attack throws its blows in order, one blow hurts everything it
 /// reaches, letting the window lapse drops it back to the first step, and
-/// owning Fire Kick lengthens it to four.
+/// Heavy Attack ends it on the heavy blow its length asks for (or the
+/// finisher a bonus bought).
 #[test]
 fn the_chain_steps_through_its_blows_catches_two_bodies_and_drops_back_when_the_window_lapses() {
     let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
@@ -101,24 +102,24 @@ next_room_id: 2
         .single(app.world())
         .expect("one player should spawn");
 
-    // One frame, with Attack pressed or not. Nothing clears the input between
-    // frames here, so every press is released again before the next one.
-    let frame = |app: &mut App, attack: bool| {
+    // One frame, with a key pressed or none. Nothing clears the input
+    // between frames here, so every press is released again before the next.
+    let frame = |app: &mut App, key: Option<KeyCode>| {
         {
             let mut input = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
             input.release_all();
             input.clear();
-            if attack {
-                input.press(KeyCode::KeyJ);
+            if let Some(key) = key {
+                input.press(key);
             }
         }
         app.update();
     };
     // Attack runs after movement, so the blow it starts shows from the next
     // frame; the clip then plays itself out before the chain takes another.
-    let blow = |app: &mut App, idle_frames: usize| {
-        frame(app, true);
-        frame(app, false);
+    let blow = |app: &mut App, key: KeyCode, idle_frames: usize| {
+        frame(app, Some(key));
+        frame(app, None);
         let sheet = app
             .world()
             .get::<AnimatedSprite>(player)
@@ -126,7 +127,7 @@ next_room_id: 2
             .sheet
             .clone();
         for _ in 0..idle_frames {
-            frame(app, false);
+            frame(app, None);
         }
         sheet
     };
@@ -149,7 +150,7 @@ next_room_id: 2
     );
 
     // The chain's first blow, which both bodies are inside.
-    assert_eq!(blow(&mut app, 6), "player_strike_1");
+    assert_eq!(blow(&mut app, KeyCode::KeyJ, 6), "player_strike_1");
     let after_one_blow = health(&mut app);
     assert!(
         after_one_blow
@@ -162,16 +163,16 @@ next_room_id: 2
 
     // Asked for soon enough, the chain goes on to its second and third blows
     // and then wraps back to the first.
-    assert_eq!(blow(&mut app, 7), "player_strike_2");
-    assert_eq!(blow(&mut app, 6), "player_kick");
-    assert_eq!(blow(&mut app, 6), "player_strike_1");
+    assert_eq!(blow(&mut app, KeyCode::KeyJ, 7), "player_strike_2");
+    assert_eq!(blow(&mut app, KeyCode::KeyJ, 6), "player_kick");
+    assert_eq!(blow(&mut app, KeyCode::KeyJ, 6), "player_strike_1");
 
     // Let the window lapse: the chain forgets where it was.
     for _ in 0..(combo_window_s / 0.05).ceil() as usize + 2 {
-        frame(&mut app, false);
+        frame(&mut app, None);
     }
     assert_eq!(
-        blow(&mut app, 6),
+        blow(&mut app, KeyCode::KeyJ, 6),
         "player_strike_1",
         "a chain left to lapse starts over at its first blow"
     );
@@ -179,15 +180,15 @@ next_room_id: 2
     // A press made while a blow is still playing is not lost: it is
     // remembered, and throws the next blow the moment the first has ended.
     for _ in 0..(combo_window_s / 0.05).ceil() as usize + 2 {
-        frame(&mut app, false);
+        frame(&mut app, None);
     }
-    frame(&mut app, true);
+    frame(&mut app, Some(KeyCode::KeyJ));
     for _ in 0..3 {
-        frame(&mut app, false);
+        frame(&mut app, None);
     }
-    frame(&mut app, true);
+    frame(&mut app, Some(KeyCode::KeyJ));
     for _ in 0..5 {
-        frame(&mut app, false);
+        frame(&mut app, None);
     }
     assert_eq!(
         app.world()
@@ -198,117 +199,58 @@ next_room_id: 2
         "a press made in the middle of a blow asks for the next one"
     );
 
-    // Fire Kick adds a fourth blow, after the kick that used to end it.
-    for _ in 0..(combo_window_s / 0.05).ceil() as usize + 2 {
-        frame(&mut app, false);
-    }
+    // Heavy Attack alone is the slow heavy blow, and it ends the chain: the
+    // next Attack starts it over.
+    let lapse = |app: &mut App| {
+        for _ in 0..(combo_window_s / 0.05).ceil() as usize + 2 {
+            frame(app, None);
+        }
+    };
+    let heavy = KeyCode::KeyK;
+    lapse(&mut app);
+    assert_eq!(blow(&mut app, heavy, 11), "player_heavy_strike");
+    assert_eq!(
+        blow(&mut app, KeyCode::KeyJ, 6),
+        "player_strike_1",
+        "a heavy blow ends the chain"
+    );
+    // After one blow of the chain it is the uppercut, after two the hammer.
+    assert_eq!(blow(&mut app, heavy, 10), "player_heavy_uppercut");
+    assert_eq!(blow(&mut app, KeyCode::KeyJ, 6), "player_strike_1");
+    assert_eq!(blow(&mut app, KeyCode::KeyJ, 7), "player_strike_2");
+    assert_eq!(blow(&mut app, heavy, 10), "player_heavy_hammer");
+
+    // Fire Kick takes the hammer's place at the end of two blows.
+    lapse(&mut app);
     app.world_mut()
         .resource_mut::<RunSession>()
         .owned_bonuses
         .push(String::from("fire_kick"));
-    assert_eq!(blow(&mut app, 6), "player_strike_1");
-    assert_eq!(blow(&mut app, 7), "player_strike_2");
-    assert_eq!(blow(&mut app, 6), "player_kick");
+    assert_eq!(blow(&mut app, KeyCode::KeyJ, 6), "player_strike_1");
+    assert_eq!(blow(&mut app, KeyCode::KeyJ, 7), "player_strike_2");
     assert_eq!(
-        blow(&mut app, 9),
+        blow(&mut app, heavy, 9),
         "player_fire_kick",
-        "with Fire Kick owned the chain runs to a fourth blow"
+        "with Fire Kick owned two blows end on it"
+    );
+    assert_eq!(
+        blow(&mut app, heavy, 11),
+        "player_heavy_strike",
+        "alone, the heavy blow is still the plain one"
     );
 
     // The finishers are rivals, not a queue: a run holding two of them throws
-    // the one listed last, and still only one.
-    for _ in 0..(combo_window_s / 0.05).ceil() as usize + 2 {
-        frame(&mut app, false);
-    }
+    // the one listed last.
+    lapse(&mut app);
     app.world_mut()
         .resource_mut::<RunSession>()
         .owned_bonuses
         .push(String::from("explosive_strike"));
-    assert_eq!(blow(&mut app, 6), "player_strike_1");
-    assert_eq!(blow(&mut app, 7), "player_strike_2");
-    assert_eq!(blow(&mut app, 6), "player_kick");
+    assert_eq!(blow(&mut app, KeyCode::KeyJ, 6), "player_strike_1");
+    assert_eq!(blow(&mut app, KeyCode::KeyJ, 7), "player_strike_2");
     assert_eq!(
-        blow(&mut app, 8),
+        blow(&mut app, heavy, 8),
         "player_explosive_strike",
         "the last finisher listed outranks the others a run holds"
-    );
-    assert_eq!(
-        blow(&mut app, 6),
-        "player_strike_1",
-        "and the chain is still four blows long, not five"
-    );
-
-    // Holding Attack rather than tapping it gathers, and letting go throws the
-    // heavy blow.
-    for _ in 0..(combo_window_s / 0.05).ceil() as usize + 2 {
-        frame(&mut app, false);
-    }
-    let charge = {
-        let data = app.world().resource::<GameData>();
-        data.gameplay.player.melee.charge.ready_s
-    };
-    // The first press still throws the chain's first blow; the gather begins
-    // once that blow has ended and Attack is still down.
-    {
-        let mut input = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
-        input.release_all();
-        input.clear();
-        input.press(KeyCode::KeyJ);
-    }
-    app.update();
-    for _ in 0..((charge + 0.5) / 0.05).ceil() as usize {
-        app.world_mut()
-            .resource_mut::<ButtonInput<KeyCode>>()
-            .clear();
-        app.update();
-    }
-    assert_eq!(
-        app.world()
-            .get::<AnimatedSprite>(player)
-            .expect("the player keeps its animation")
-            .sheet,
-        "player_charge",
-        "Attack held past the blow in hand gathers for the heavy one"
-    );
-    frame(&mut app, false);
-    frame(&mut app, false);
-    assert_eq!(
-        app.world()
-            .get::<AnimatedSprite>(player)
-            .expect("the player keeps its animation")
-            .sheet,
-        "player_charge_brace",
-        "letting the gather go throws the charged blow"
-    );
-    // Let it play itself out before anything else is asked for.
-    for _ in 0..16 {
-        frame(&mut app, false);
-    }
-
-    // Cover plants the player: the chain cannot be thrown from behind a guard.
-    {
-        let mut input = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
-        input.release_all();
-        input.clear();
-        input.press(KeyCode::KeyL);
-        input.press(KeyCode::KeyJ);
-    }
-    app.update();
-    app.update();
-    assert_eq!(
-        app.world()
-            .get::<AnimatedSprite>(player)
-            .expect("the player keeps its animation")
-            .sheet,
-        "player_cover",
-        "Attack is ignored while Cover is held"
-    );
-    assert!(
-        app.world()
-            .get::<PlayerBody>(player)
-            .expect("the player should remain spawned")
-            .strike
-            .is_none(),
-        "no blow is thrown from behind a guard"
     );
 }

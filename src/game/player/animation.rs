@@ -36,9 +36,9 @@ impl PlayerSprite<'_> {
     }
 
     /// Picks the clip for the player's current state. One-shot actions (blows
-    /// of the melee chain, the gather and the charged blow, the slam, the
-    /// roll, hits, landings, wall pushes) play over the movement
-    /// clips until they end; dying and Cover override everything.
+    /// of the melee chain, light and heavy, the slam, the dash, hits,
+    /// landings, wall pushes) play over the movement clips until they end;
+    /// dying overrides everything.
     pub(super) fn update(
         &mut self,
         player: &mut PlayerBody,
@@ -51,17 +51,11 @@ impl PlayerSprite<'_> {
             self.play("player_death", false);
             return;
         }
-        if player.covering {
-            self.play("player_cover", false);
-            return;
-        }
         if let Some(action) = player.action {
             let key = match action {
                 PlayerAction::Strike { strike, .. } => strike.clip_key(),
-                PlayerAction::Charging => "player_charge",
-                PlayerAction::ChargedBlow => "player_charge_brace",
                 PlayerAction::Slam => "player_ground_slam",
-                PlayerAction::Roll => "player_roll",
+                PlayerAction::Dash { .. } => "player_dash",
                 PlayerAction::Rise => "player_rise",
                 PlayerAction::Aura(aura) => aura.clip_key(),
                 PlayerAction::Healing => "player_healing",
@@ -69,20 +63,22 @@ impl PlayerSprite<'_> {
                 PlayerAction::Land => "player_land",
                 PlayerAction::WallJump => "player_wall_jump",
             };
-            let looping = action == PlayerAction::Charging;
             if restart {
-                self.restart(key, looping);
-                // A chain sped up by a bonus plays its blow that much faster.
-                if let PlayerAction::Strike { strike, speed } = action
-                    && let Some(sheet) = self.sheets.0.get(strike.clip_key())
-                {
+                self.restart(key, false);
+                // A chain sped up by a bonus plays its blow that much faster,
+                // and the dash fits the roll to its own length.
+                let speed = match action {
+                    PlayerAction::Strike { speed, .. } | PlayerAction::Dash { speed } => speed,
+                    _ => 1.0,
+                };
+                if let Some(sheet) = self.sheets.0.get(key) {
                     self.animation.timer = Timer::from_seconds(
                         (1.0 / (sheet.fps * speed)).max(f32::EPSILON),
                         TimerMode::Repeating,
                     );
                 }
             } else {
-                self.play(key, looping);
+                self.play(key, false);
             }
             return;
         }

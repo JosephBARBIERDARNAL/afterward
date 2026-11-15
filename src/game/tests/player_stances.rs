@@ -5,7 +5,7 @@ use std::{path::Path, time::Duration};
 use bevy::{prelude::MinimalPlugins, state::app::StatesPlugin, time::TimeUpdateStrategy};
 
 #[test]
-fn crouching_slows_cover_blocks_frontal_hits_and_death_plays_out_before_the_run_ends() {
+fn crouching_slows_and_death_plays_out_before_the_run_ends() {
     let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
     let mut data = GameData::load(&asset_root).expect("Chapter 1 data should load");
     // The floor below is spawned by hand under this spawn point, so the test
@@ -15,7 +15,6 @@ fn crouching_slows_cover_blocks_frontal_hits_and_death_plays_out_before_the_run_
         .expect("room 1 should be authored")
         .player_spawn = crate::data::SpawnPosition { x_h: 2.5, y_h: 1.0 };
     let crouch_speed_h_s = data.gameplay.player.crouch_speed_h_s;
-    let cover_multiplier = data.gameplay.player.cover_damage_taken_multiplier;
     let death_s =
         data.player_animations.clips.death.duration_s() + data.gameplay.player.death_hold_s;
     let sheets = data
@@ -144,30 +143,6 @@ fn crouching_slows_cover_blocks_frontal_hits_and_death_plays_out_before_the_run_
     assert!(body.crouching);
     assert!((body.velocity.x - crouch_speed_h_s * H_WORLD_UNITS).abs() < 0.5);
     assert_eq!(sheet(&app), "player_crouch_walk");
-
-    // Holding Cover stops the player in place and halves hits from the front.
-    hold(&mut app, &[KeyCode::KeyL], 10);
-    let covered_x = app
-        .world()
-        .get::<Transform>(player)
-        .expect("the player should remain spawned")
-        .translation
-        .x;
-    hold(&mut app, &[KeyCode::KeyL, KeyCode::KeyD], 4);
-    assert_eq!(
-        app.world()
-            .get::<Transform>(player)
-            .expect("the player should remain spawned")
-            .translation
-            .x,
-        covered_x,
-        "the player cannot move while in cover"
-    );
-    assert_eq!(sheet(&app), "player_cover");
-    let health_before = app.world().resource::<RunSession>().health;
-    shoot_at_player(&mut app, 10.0);
-    let taken = health_before - app.world().resource::<RunSession>().health;
-    assert!((taken - 10.0 * cover_multiplier).abs() < 0.01);
 
     // A lethal hit plays the death animation; the run ends once it has held.
     hold(&mut app, &[], 1);

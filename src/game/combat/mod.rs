@@ -63,8 +63,6 @@ struct PlayerDamageResources<'a, 'w, 's> {
 struct PlayerDamageTarget<'a> {
     player: &'a mut PlayerBody,
     transform: &'a Transform,
-    /// Where the hit comes from, so Cover only blocks attacks from the front.
-    attacker_x: f32,
 }
 
 fn apply_player_damage(
@@ -78,23 +76,19 @@ fn apply_player_damage(
         session,
         sounds,
     } = resources;
-    let PlayerDamageTarget {
-        player,
-        transform,
-        attacker_x,
-    } = target;
+    let PlayerDamageTarget { player, transform } = target;
     if player.dying_s.is_some() || player.invulnerability_timer > 0.0 {
         return;
     }
     let tuning = &data.gameplay.player;
-    // The middle of a roll is the one stretch nothing can reach the player
+    // The middle of a dash is the one stretch nothing can reach the player
     // through, which is what a melee fighter has instead of range.
-    // Slippery stretches it, and Riposte pays for a blow rolled through.
-    let roll_untouchable_to_s = tuning.roll.invulnerable_from_s
-        + (tuning.roll.invulnerable_to_s - tuning.roll.invulnerable_from_s)
-            * session.bonus_multiplier(data, "slippery", "roll_invulnerability_multiplier");
-    if player.roll_s.is_some_and(|elapsed_s| {
-        (tuning.roll.invulnerable_from_s..=roll_untouchable_to_s).contains(&elapsed_s)
+    // Slippery stretches it, and Riposte pays for a blow dashed through.
+    let dash_untouchable_to_s = tuning.dash.invulnerable_from_s
+        + (tuning.dash.invulnerable_to_s - tuning.dash.invulnerable_from_s)
+            * session.bonus_multiplier(data, "slippery", "dash_invulnerability_multiplier");
+    if player.dash_s.is_some_and(|elapsed_s| {
+        (tuning.dash.invulnerable_from_s..=dash_untouchable_to_s).contains(&elapsed_s)
     }) {
         if session.has_bonus("riposte") && player.empowered.is_none() {
             player.empowered = Some((
@@ -112,14 +106,6 @@ fn apply_player_damage(
         );
         return;
     }
-    let covered = player.covering && (attacker_x - transform.translation.x) * player.facing >= 0.0;
-    let cover = if covered {
-        sounds.push(SoundCue::CoverBlock);
-        tuning.cover_damage_taken_multiplier
-            * session.bonus_multiplier(data, "bulwark", "cover_damage_taken_multiplier")
-    } else {
-        1.0
-    };
     let adrenaline = if session.health / session.max_health
         < data.bonus_effect("adrenaline", "low_health_fraction")
     {
@@ -133,16 +119,10 @@ fn apply_player_damage(
             .min(data.bonus_effect("fortress", "max_reduction"));
     let reduced_damage = damage
         * session.bonus_multiplier(data, "thick_skin", "damage_taken_multiplier")
-        * cover
         * adrenaline
         * fortress;
-    // What the bonuses took off, beside what cover alone would have let in.
-    let base_cover = if covered {
-        tuning.cover_damage_taken_multiplier
-    } else {
-        1.0
-    };
-    let soaked = damage * base_cover - reduced_damage;
+    // What the bonuses took off.
+    let soaked = damage - reduced_damage;
     if !session.playtest.infinite_health {
         session.health = (session.health - reduced_damage).max(0.0);
     }
@@ -183,7 +163,7 @@ fn apply_player_damage(
         player.action = None;
         player.action_animation_timer = 0.0;
         sounds.push(SoundCue::RunEnded);
-    } else if !covered {
+    } else {
         player.start_action(
             PlayerAction::Hit,
             data.player_animations.clips.hit.duration_s(),

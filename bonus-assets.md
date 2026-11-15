@@ -28,7 +28,7 @@ would read better.
 | 2   | **Mark reticle, animated**  | Marked Prey, Open Wound         | A crosshair closing in and locking onto the enemy as the mark lands, then a slow spin while it holds. The packs only have 64–96 px lock-on rings (Holy pack `00.png` row 2, PVFX legacy `focus-charge`): far too big. | 16–24 px, 4–6 lock + 4 hold | once, then loop, tinted |
 | 11  | **Adrenaline heartbeat**    | Adrenaline                      | A red throb around the body, or a screen-edge vignette, beating while under 30% health. Nothing throbs in any pack: a vignette shader may be the better answer.                                                       | ~64×64, 6                   | loop                    |
 | 13  | **Speed lines**             | Fleet Feet, Tailwind            | Thin horizontal streaks trailing the runner. The packs only have one-shot dash dust and ornate wind gusts.                                                                                                           | ~32×16, 4                   | loop, tinted            |
-| 17  | **Invulnerability shimmer** | Slippery (and every roll)       | A ghostly flicker over the whole body while nothing can reach it mid-roll. Nothing body-shaped exists; the afterimages may stay.                                                                                    | full body, 4                | loop, tinted            |
+| 17  | **Invulnerability shimmer** | Slippery (and every dash)       | A ghostly flicker over the whole body while nothing can reach it mid-dash. Nothing body-shaped exists; the afterimages may stay.                                                                                    | full body, 4                | loop, tinted            |
 | 8b  | **A pull that contracts**   | Undertow, Riptide               | A ring closing *in* on the player. The packs have a flat whirlpool (fine as a stand-in) but nothing that shrinks toward the middle.                                                                                  | ~128×48 flat, 6–8           | once, tinted            |
 
 ## In the game now
@@ -46,8 +46,8 @@ Cut by `just vfx` (`scripts/cut_vfx.py`) from the packs kept under
 | 6   | Execute icon              | AW `Icon_Skull`                                                  | beside the health bar of a body below the line           |
 | 7   | Meteor crater             | AW `Explosion_Debris`                                            | once where the slam lands                                |
 | 8   | Pull vortex               | PVFX `water/whirlpool`                                           | once at the feet, Undertow and Riptide                   |
-| 9   | Air burst under the feet  | PVFX `impacts/shockwave-ring`, frames 0–9                        | mid-air jumps, Updraft                                   |
-| 10  | Charge-ready flash        | AW `Hit_Critical`                                                | Overcharge, as the charged blow is ready                 |
+| 9   | Air burst under the feet  | PVFX `impacts/shockwave-ring`, frames 0–9                        | mid-air jumps and dashes, Updraft                        |
+| 10  | Charge-ready flash        | AW `Hit_Critical`                                                | Overcharge, as a heavy blow is thrown                    |
 | 12  | Chain Reaction crackle    | AW `Shock_Sparks`                                                | looping over the player while it burns                   |
 | 14  | Shield pierce             | AW `Hit_Directional`                                             | Shield Breaker, Breaker                                  |
 | 15  | Alert "!" and unaware     | AW `Icon_Exclamation`, AW `Sleep_Zzz`                            | over the enemy, beside the wind-up bar / while unaware   |
@@ -59,7 +59,7 @@ Not used yet, worth a look later: AW `Fire_Fireball` turned to point down,
 as Meteor's trail (the drop still leaves orange afterimages); AW
 `Hit_Spark_Small`, `Hit_Heavy` and PVFX `impacts/hit-spark` / `punch-hit` for
 every blow, not only bonuses; AW `Dust_Land` / `Dust_Dash` for landings and
-rolls.
+dashes.
 
 ## Already fine
 

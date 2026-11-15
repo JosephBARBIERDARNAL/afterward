@@ -1,7 +1,7 @@
 //! What a room's devices do to the player: every device that can hurt keeps
 //! its dangerous area up to date in a `Hurts` (`devices/`), and this is where
 //! standing in one while it is live costs health, through the same path as
-//! any other hit (invulnerability, the roll, Cover and the bonuses included).
+//! any other hit (invulnerability, the dash and the bonuses included).
 
 use super::*;
 
@@ -44,11 +44,6 @@ impl Hurts {
             low < box_high && box_low < high
         })
     }
-
-    /// Its middle, which way the hit comes from.
-    fn middle(&self) -> Vec2 {
-        self.corners.iter().sum::<Vec2>() / 4.0
-    }
 }
 
 pub(in crate::game) fn hurt_by_devices(
@@ -77,7 +72,6 @@ pub(in crate::game) fn hurt_by_devices(
                 PlayerDamageTarget {
                     player: &mut player,
                     transform: player_transform,
-                    attacker_x: hurt.middle().x,
                 },
                 hurt.damage,
             );

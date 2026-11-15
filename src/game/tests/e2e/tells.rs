@@ -2,7 +2,7 @@ use super::*;
 use crate::game::tells::{Overhead, OverheadKind};
 
 /// A hall of its own, with a row of idle enemies ahead of the player, near
-/// enough that the shock a roll ends in reaches the first of them.
+/// enough that the shock a dash ends in reaches the first of them.
 const HALL: &str = "
 room_id: 1
 chapter_id: 1
@@ -54,10 +54,8 @@ fn a_bonus_at_work_is_seen_over_the_enemies_it_concerns_and_in_the_tray() {
     );
     assert_eq!(overheads(&mut game, OverheadKind::MarkIcon), 0);
 
-    // A roll ends in Aftershock's shock, which marks what it reaches.
-    game.key(KeyCode::KeyS, ButtonState::Pressed);
-    game.tap(KeyCode::Space);
-    game.key(KeyCode::KeyS, ButtonState::Released);
+    // A dash ends in Aftershock's shock, which marks what it reaches.
+    game.tap(KeyCode::KeyL);
     game.run_seconds(1.0);
     assert!(
         overheads(&mut game, OverheadKind::MarkIcon) >= 1,

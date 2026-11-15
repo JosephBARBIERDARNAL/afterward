@@ -31,30 +31,28 @@ player:
   # so a tap gives a short hop and holding the button gives the full jump.
   jump_release_velocity_multiplier: 0.5
   # A Jump pressed this long before it can be obeyed (still falling, still
-  # rolling) is remembered and thrown the moment it can.
+  # dashing) is remembered and thrown the moment it can.
   jump_buffer_s: 0.1
   damage_invulnerability_s: 0.55
   # Holding Down on the ground crouches; the crouch walk is slower.
   crouch_speed_h_s: 3
-  # Holding Cover on the ground raises a guard: the player can neither move
-  # nor strike, and damage from enemies in front is multiplied by this.
-  cover_damage_taken_multiplier: 0.5
   # Dying plays the death animation, then holds its last frame this long
   # before the run ends.
   death_hold_s: 0.6
   # The player's only weapon: a melee chain. Each press of Attack lands the
-  # next blow of `steps`; once a blow ends there is `combo_window_s` to ask
-  # for the next, and letting that lapse drops the chain back to its first
-  # step. `hitbox_h` is measured from the player's feet, `x` pointing the way
-  # they face, like an enemy attack's (B in debug builds draws them all).
+  # next blow of `steps`, and Heavy Attack ends the chain on a blow of
+  # `heavy`; once a blow ends there is `combo_window_s` to ask for the next,
+  # and letting that lapse drops the chain back to its first step.
+  # `hitbox_h` is measured from the player's feet, `x` pointing the way they
+  # face, like an enemy attack's (B in debug builds draws them all).
   # `lunge_h_s` is the speed a blow carries the player forward at until it
   # connects, and never slower than they were already running: a blow thrown
   # on the move keeps its momentum. The lunge stops short once the blow can
   # reach a body, so it closes the distance without running through anyone.
   melee:
     combo_window_s: 0.55
-    # An Attack pressed this long before the next blow can be thrown (the one
-    # in hand still playing, a roll still under way) is remembered and thrown
+    # An Attack (or Heavy Attack) pressed this long before the next blow can be thrown (the one
+    # in hand still playing, a dash still under way) is remembered and thrown
     # the moment it can, so mashing never drops a press.
     buffer_s: 0.2
     # The shove a blow gives a body with no armor up, away from the player.
@@ -64,8 +62,8 @@ player:
     boss_knockback_h_s: 1.1
     # What a landed blow does to the moment. The whole game holds still for
     # `freeze_s` (`kill_freeze_s` when the blow kills), the camera is thrown
-    # `shake_h` off its mark (`heavy_shake_h` for the chain's last blow, the
-    # charged blow, the slam and any kill) and settles over `shake_s`, and the
+    # `shake_h` off its mark (`heavy_shake_h` for the chain's last blow, a
+    # heavy blow, the slam and any kill) and settles over `shake_s`, and the
     # body that was hit flares `flash_brightness` times brighter for `flash_s`.
     impact:
       freeze_s: 0.05
@@ -91,26 +89,46 @@ player:
         hitbox_h: { x: 0.2, y: 0.15, width: 1, height: 0.5 }
         contact_s: 0.11
         lunge_h_s: 6
-      # The finishers. A step naming a bonus is only thrown by a run that
-      # owns it, and it is thrown *instead of* nothing rather than alongside
-      # the others: a run holding several throws the last of them listed
-      # here, so this order is the order they outrank each other in.
+    # Heavy Attack: a slow blow that goes through a shield (it costs the
+    # layer and wounds the body behind it too). Which one is thrown depends on
+    # how many blows of `steps` came before it in the chain: the first step
+    # here alone, the second after one, the third after two. A step naming a
+    # bonus is a finisher only a run owning it throws, in place of the last
+    # of the others (the one after two blows); a run holding several throws
+    # the last of them listed here, so this order is the order they outrank
+    # each other in. Thrown in the air, it is the same blow.
+    heavy:
+      - strike: heavy_strike
+        damage: 35
+        hitbox_h: { x: 0.15, y: 0.15, width: 1.1, height: 0.6 }
+        contact_s: 0.3
+        lunge_h_s: 5
+      - strike: heavy_uppercut
+        damage: 42
+        hitbox_h: { x: 0.15, y: 0.2, width: 1, height: 0.8 }
+        contact_s: 0.22
+        lunge_h_s: 5
+      - strike: heavy_hammer
+        damage: 48
+        hitbox_h: { x: 0.15, y: 0, width: 1.15, height: 0.75 }
+        contact_s: 0.26
+        lunge_h_s: 6
       - strike: power_strike
-        damage: 38
-        hitbox_h: { x: 0.15, y: 0.2, width: 1, height: 0.55 }
+        damage: 55
+        hitbox_h: { x: 0.15, y: 0.2, width: 1.2, height: 0.55 }
         contact_s: 0.22
         lunge_h_s: 5
         requires_bonus: power_strike
       - strike: fire_kick
-        damage: 45
-        hitbox_h: { x: 0.15, y: 0.2, width: 1.1, height: 0.55 }
+        damage: 62
+        hitbox_h: { x: 0.15, y: 0.2, width: 1.2, height: 0.55 }
         contact_s: 0.19
         lunge_h_s: 5
         requires_bonus: fire_kick
       # The one blow that lands on every side at once, so it is worth less
       # against a single body and far more in the middle of a crowd.
       - strike: explosive_strike
-        damage: 30
+        damage: 45
         hitbox_h: { x: 0, y: 0, width: 1.2, height: 1 }
         both_sides: true
         contact_s: 0.18
@@ -123,28 +141,26 @@ player:
       damage: 34
       hitbox_h: { x: 0, y: 0, width: 1.6, height: 0.6 }
       drop_speed_h_s: 22
-    # Attack held rather than tapped: once the blow in hand has ended, the
-    # player gathers for `ready_s`, and letting go then throws one heavy blow
-    # that goes through a shield instead of being soaked by it.
-    charge:
-      ready_s: 0.7
-      damage: 40
-      hitbox_h: { x: 0.15, y: 0.15, width: 1.1, height: 0.6 }
-      contact_s: 0.2
-      lunge_h_s: 6
     # The effect played where a blow lands, and how tall each is drawn: sparks
     # thrown the way the blow went for an ordinary one, a burst for a heavy
-    # one (the chain's last blow, the charged blow, the slam), and a ring
+    # one (the chain's last blow, every heavy blow, the slam), and a ring
     # opening out of a flash for one that kills. Their sheets and frame rates
     # are in `src/game/assets/effect_sheets.rs`.
     hit_effect: { spark_size_h: 0.9, burst_size_h: 1.1, kill_size_h: 1.3 }
-  # Down and Jump together on the ground: a forward roll that carries the
-  # player clear. Nothing can hurt them between `invulnerable_from_s` and
-  # `invulnerable_to_s` of it, which is the only way through a shot.
-  roll:
-    speed_h_s: 9
-    invulnerable_from_s: 0.1
-    invulnerable_to_s: 0.4
+  # Dash: a short burst the way the player steers (or faces), on the ground
+  # or in mid-air, where it holds them level for its length. It plays the
+  # roll clip, fitted to `duration_s`. Nothing can hurt them between
+  # `invulnerable_from_s` and `invulnerable_to_s` of it, which is the only
+  # way through a shot. It can cut a blow short. Once one ends, the next waits
+  # `cooldown_s`; in mid-air there are `air_dashes` of them before landing,
+  # a wall or a ladder gives them back.
+  dash:
+    speed_h_s: 12
+    duration_s: 0.32
+    invulnerable_from_s: 0.03
+    invulnerable_to_s: 0.26
+    cooldown_s: 0.35
+    air_dashes: 1
   # Clinging to a platform's side and pushing off it, Mario style: a player
   # pressed into a wall in mid-air slides down it instead of falling, and Jump
   # throws them up and away. The lock keeps movement input off them for a
@@ -207,7 +223,7 @@ room_flow:
   # next; this is the stake instead. Clearing a room without losing any health
   # weighs every rarity above common `rarer_weight_multiplier` times heavier
   # in the draw of its two bonuses, and its item glows `glow_multiplier`
-  # times further under `label`. A hit soaked by Room Ward or rolled through
+  # times further under `label`. A hit soaked by Room Ward or dashed through
   # costs nothing and so does not count.
   untouched:
     rarer_weight_multiplier: 4
@@ -508,12 +524,12 @@ audio:
     bonus_reroll: { asset: audio/sfx/bonus-reroll.wav, gain: 0.22 }
     # The chain's blows as they land on an enemy, in the chain's own order:
     # its first step plays the first, and so on. A blow past the end of the
-    # list (a finisher, the charged blow, the slam) plays the last.
+    # list (a heavy blow, the slam) plays the last.
     punch_hits:
       - { asset: audio/sfx/punch-1.wav, gain: 0.4 }
       - { asset: audio/sfx/punch-2.wav, gain: 0.4 }
       - { asset: audio/sfx/punch-3.wav, gain: 0.45 }
-    # A blow of the chain, or the charged one, that reached nobody.
+    # A blow of the chain, light or heavy, that reached nobody.
     punch_missed: { asset: audio/sfx/punch-missed.wav, gain: 0.35 }
     # The player touching down, from a jump, a fall or a slam.
     land: { asset: audio/sfx/land.wav, gain: 0.2 }
@@ -530,7 +546,8 @@ controls:
   navigate_down: [ArrowDown]
   jump: [Space]
   attack: [KeyJ]
-  cover: [KeyL]
+  heavy_attack: [KeyK]
+  dash: [KeyL]
   interact: [KeyE, Enter]
   pause: [Escape]
   toggle_fullscreen: [KeyF]

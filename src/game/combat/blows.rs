@@ -1,4 +1,4 @@
-//! Landing a blow on whatever it reaches. The melee chain, the charged blow
+//! Landing a blow on whatever it reaches. The melee chain, light and heavy,
 //! and the airborne slam all come through here, so a hit costs the same and
 //! sounds the same however it was thrown.
 
@@ -18,13 +18,13 @@ pub(super) type MeleeEnemiesQuery<'w, 's> = Query<
 >;
 
 /// A blow arriving: where it reaches, what it costs, and the two things that
-/// set the charged blow apart from the chain's own.
+/// set a heavy blow apart from the chain's light ones.
 pub(super) struct Blow {
     pub(super) area: Rect,
     /// Where the player stands, which is what a body it hits is shoved away
     /// from.
     pub(super) from_x: f32,
-    /// Shakes the camera harder: the chain's last blow, the charged blow and
+    /// Shakes the camera harder: the chain's last blow, a heavy blow and
     /// the slam.
     pub(super) heavy: bool,
     pub(super) damage: f32,
@@ -46,7 +46,7 @@ pub(super) struct Blow {
     /// Throws the bodies it wounds into whatever stands behind them.
     pub(super) launch: Option<Launch>,
     /// The bonus that throws this blow or shapes it (a finisher step,
-    /// Aftershock's shock, Meteor's or Breaker's slam, Overcharge's charged
+    /// Aftershock's shock, Meteor's or Breaker's slam, Overcharge's heavy
     /// blow, Battering Ram's throw), called out when it connects.
     pub(super) bonus: Option<String>,
     /// How many times heavier the bonuses that threw it already made
@@ -184,14 +184,14 @@ pub(super) fn land_the_blow(
         // Armor that is up when the blow lands costs it a layer, and keeps
         // the enemy at what it was doing: no flinch, no knockback, and a
         // wind-up carries on. An ordinary blow is soaked whole on top of
-        // that; a charged one goes through and wounds the body behind.
+        // that; a heavy one goes through and wounds the body behind.
         // `shield.rs` picks the break up from `armor` going down.
         let armored = enemy.armor > 0;
         if armored {
             sounds.push(SoundCue::Damage(DamageSound::of(enemy.material, true)));
             enemy.armor -= 1;
             // Shield Breaker lets an ordinary blow through the layer it
-            // broke, as the charged one always goes.
+            // broke, as a heavy one always goes.
             if !blow.pierces_shields && !session.has_bonus("shield_breaker") {
                 continue;
             }

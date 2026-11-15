@@ -18,15 +18,15 @@ pub(in crate::game) struct MeleeResources<'w> {
 
 /// The player's only weapon, and its three ways of arriving.
 ///
-/// Tapping Attack throws the next blow of the chain in `player.melee` of
+/// Attack throws the next blow of the chain in `player.melee` of
 /// `config/gameplay.yaml`; the blow connects partway through its clip, and
 /// once it ends there is `combo_window_s` to ask for the next before the chain
-/// drops back to its first step. The chain's last blow is whichever finisher
-/// the run's bonuses bought, if any.
+/// drops back to its first step.
 ///
-/// Holding Attack instead, once the blow in hand has ended, gathers for
-/// `charge.ready_s`; letting go then throws one heavy blow, which goes through
-/// a shield rather than being soaked by it.
+/// Heavy Attack throws a blow of `heavy` instead and ends the chain: which
+/// one depends on how many blows of the chain came before it, and a run's
+/// bonuses may buy a finisher in place of the last. It goes through a shield
+/// rather than being soaked by it.
 ///
 /// Tapping Attack in mid-air with Down held drives the player at the floor.
 /// `player/mod.rs` owns that drop and reports the landing, and the floor
@@ -61,22 +61,31 @@ pub(in crate::game) fn player_melee(
     // Both hands are on the ladder.
     if player.climbing.is_some() {
         player.attack_buffer_s = 0.0;
+        player.heavy_buffer_s = 0.0;
         return;
     }
     // An Attack pressed while it cannot be thrown is remembered for a moment
     // and thrown the instant it can, so a press made while the blow in hand
-    // is still playing asks for the next rather than being lost.
-    player.attack_buffer_s = if controls.just_pressed(GameAction::Attack, &keys) {
-        melee.buffer_s
+    // is still playing asks for the next rather than being lost. The latest
+    // press is the one remembered.
+    if controls.just_pressed(GameAction::Attack, &keys) {
+        player.attack_buffer_s = melee.buffer_s;
+        player.heavy_buffer_s = 0.0;
     } else {
-        (player.attack_buffer_s - dt).max(0.0)
-    };
+        player.attack_buffer_s = (player.attack_buffer_s - dt).max(0.0);
+    }
+    if controls.just_pressed(GameAction::HeavyAttack, &keys) {
+        player.heavy_buffer_s = melee.buffer_s;
+        player.attack_buffer_s = 0.0;
+    } else {
+        player.heavy_buffer_s = (player.heavy_buffer_s - dt).max(0.0);
+    }
     if player.dying_s.is_some() {
         player.attack_buffer_s = 0.0;
+        player.heavy_buffer_s = 0.0;
         player.strike = None;
         player.slamming = false;
         player.slam_landed = false;
-        player.charge_s = 0.0;
         return;
     }
     let feet = Vec2::new(
@@ -85,19 +94,16 @@ pub(in crate::game) fn player_melee(
     );
     let reach = session.bonus_multiplier(&data, "long_reach", "strike_reach_multiplier");
     let facing = player.facing;
-    let chain = melee.chain(&|bonus| session.has_bonus(bonus));
-    if chain.is_empty() {
-        return;
-    }
-    // What Undertow gives the slam, and Riptide the roll's shock with it.
+    let chain = &melee.steps;
+    // What Undertow gives the slam, and Riptide the dash's shock with it.
     let pull = || Pull {
         radius_h: data.bonus_effect("undertow", "slam_pull_radius_h"),
         speed_h_s: data.bonus_effect("undertow", "slam_pull_h_s"),
     };
-    // A roll has just ended: with Aftershock, the floor it ends on shocks
+    // A dash has just ended: with Aftershock, the floor it ends on shocks
     // everything standing to either side.
-    if player.roll_ended && session.has_bonus("aftershock") {
-        let reach = data.bonus_effect("aftershock", "roll_shock_reach_h") * H_WORLD_UNITS;
+    if player.dash_ended && session.has_bonus("aftershock") {
+        let reach = data.bonus_effect("aftershock", "dash_shock_reach_h") * H_WORLD_UNITS;
         // The shock is seen whether or not it reaches anybody.
         play_effect(
             &mut commands,
@@ -134,7 +140,7 @@ pub(in crate::game) fn player_melee(
                 ),
                 from_x: feet.x,
                 heavy: true,
-                damage: data.bonus_effect("aftershock", "roll_shock_damage"),
+                damage: data.bonus_effect("aftershock", "dash_shock_damage"),
                 pierces_shields: false,
                 flinch_s: 0.32,
                 finisher: false,
@@ -214,12 +220,7 @@ pub(in crate::game) fn player_melee(
 
     // A blow is in the air: it connects at its contact time, then plays itself
     // out, and the window to chain the next one opens as its clip ends.
-    if player.strike.is_some()
-        && !matches!(
-            player.action,
-            Some(PlayerAction::Strike { .. } | PlayerAction::ChargedBlow)
-        )
-    {
+    if player.strike.is_some() && !matches!(player.action, Some(PlayerAction::Strike { .. })) {
         player.strike = None;
         player.combo_window_s = melee.combo_window_s
             * session.bonus_multiplier(&data, "deep_breath", "combo_window_multiplier");
@@ -231,16 +232,11 @@ pub(in crate::game) fn player_melee(
         if !pending {
             return;
         }
-        let (area, lunge_h_s) = match strike.thrown {
-            Thrown::Step(index) => {
-                let step = chain[index.min(chain.len() - 1)];
-                (step.hitbox_at(feet, player.facing, reach), step.lunge_h_s)
-            }
-            Thrown::Charged => (
-                blow_area(melee.charge.hitbox_h, feet, player.facing, reach, false),
-                melee.charge.lunge_h_s,
-            ),
+        let step = match strike.thrown {
+            Thrown::Step(index) => &chain[index.min(chain.len() - 1)],
+            Thrown::Heavy(index) => &melee.heavy[index],
         };
+        let area = step.hitbox_at(feet, player.facing, reach);
         if strike.contact_in_s > 0.0 {
             // Still on its way in: it carries the player forward, never
             // slower than they were already running, until it can reach a
@@ -251,52 +247,58 @@ pub(in crate::game) fn player_melee(
             player.velocity.x = if in_reach {
                 0.0
             } else {
-                player.facing * (lunge_h_s * H_WORLD_UNITS).max(player.velocity.x * player.facing)
+                player.facing
+                    * (step.lunge_h_s * H_WORLD_UNITS).max(player.velocity.x * player.facing)
             };
             return;
         }
-        let overcharge = session.bonus_multiplier(&data, "overcharge", "charged_damage_multiplier");
         let blow = match strike.thrown {
-            Thrown::Step(index) => {
+            Thrown::Step(index) => Blow {
+                area,
+                from_x: feet.x,
+                // The chain has already stepped on, so one that wrapped
+                // back to its first step means this blow was its last.
+                heavy: player.combo_step == 0,
+                damage: step.damage,
+                pierces_shields: false,
+                flinch_s: 0.24,
+                finisher: player.combo_step == 0,
+                punch: index,
+                whiffs: true,
+                pull: None,
+                launch: None,
+                bonus: None,
+                boost: 1.0,
+            },
+            Thrown::Heavy(_) => {
+                let overcharge =
+                    session.bonus_multiplier(&data, "overcharge", "heavy_damage_multiplier");
                 Blow {
                     area,
                     from_x: feet.x,
-                    // The chain has already stepped on, so one that wrapped
-                    // back to its first step means this blow was its last.
-                    heavy: player.combo_step == 0,
-                    damage: chain[index.min(chain.len() - 1)].damage,
-                    pierces_shields: false,
-                    flinch_s: 0.24,
-                    finisher: player.combo_step == 0,
-                    punch: index,
+                    heavy: true,
+                    damage: step.damage * overcharge,
+                    pierces_shields: true,
+                    flinch_s: 0.5,
+                    // Thrown after a blow of the chain, it is what ends it.
+                    finisher: strike.ends_a_chain,
+                    punch: usize::MAX,
                     whiffs: true,
                     pull: None,
-                    launch: None,
+                    launch: session.has_bonus("battering_ram").then(|| Launch {
+                        damage: data.bonus_effect("battering_ram", "launch_damage"),
+                        reach_h: data.bonus_effect("battering_ram", "launch_reach_h"),
+                        knockback_multiplier: data
+                            .bonus_effect("battering_ram", "launch_knockback_multiplier"),
+                    }),
                     // A finisher a bonus adds is called by its name.
-                    bonus: chain[index.min(chain.len() - 1)].requires_bonus.clone(),
-                    boost: 1.0,
+                    bonus: step
+                        .requires_bonus
+                        .clone()
+                        .or_else(|| (overcharge > 1.0).then(|| "overcharge".to_owned())),
+                    boost: overcharge,
                 }
             }
-            Thrown::Charged => Blow {
-                area,
-                from_x: feet.x,
-                heavy: true,
-                damage: melee.charge.damage * overcharge,
-                pierces_shields: true,
-                flinch_s: 0.5,
-                finisher: false,
-                punch: usize::MAX,
-                whiffs: true,
-                pull: None,
-                launch: session.has_bonus("battering_ram").then(|| Launch {
-                    damage: data.bonus_effect("battering_ram", "launch_damage"),
-                    reach_h: data.bonus_effect("battering_ram", "launch_reach_h"),
-                    knockback_multiplier: data
-                        .bonus_effect("battering_ram", "launch_knockback_multiplier"),
-                }),
-                bonus: (overcharge > 1.0).then(|| "overcharge".to_owned()),
-                boost: overcharge,
-            },
         };
         // Long Reach draws the arc of the blow as far as it reaches.
         if session.has_bonus("long_reach")
@@ -339,16 +341,18 @@ pub(in crate::game) fn player_melee(
     if player.slamming {
         return;
     }
-    let free_to_strike = !player.covering && player.wall_cling.is_none() && player.roll_s.is_none();
-    let attack_held = controls.pressed(GameAction::Attack, &keys) && free_to_strike;
+    let free_to_strike = player.wall_cling.is_none() && player.dash_s.is_none();
     let attack_tapped = player.attack_buffer_s > 0.0 && free_to_strike;
+    let heavy_tapped = player.heavy_buffer_s > 0.0 && free_to_strike;
     if attack_tapped {
         player.attack_buffer_s = 0.0;
+    }
+    if heavy_tapped {
+        player.heavy_buffer_s = 0.0;
     }
 
     if attack_tapped && !player.grounded && controls.pressed(GameAction::MoveDown, &keys) {
         player.slamming = true;
-        player.charge_s = 0.0;
         player.velocity = Vec2::new(0.0, -melee.slam.drop_speed_h_s * H_WORLD_UNITS);
         player.start_action(
             PlayerAction::Slam,
@@ -357,89 +361,64 @@ pub(in crate::game) fn player_melee(
         sounds.push(SoundCue::MeleeSwing);
         return;
     }
-
-    if attack_tapped {
-        let step_index = player.combo_step.min(chain.len() - 1);
-        let step = chain[step_index];
-        // Rhythm, and the fury of a fresh pickup, speed the whole chain up.
-        let rhythm = 1.0
-            + f32::from(player.rhythm_stacks)
-                * data.bonus_effect("rhythm_training", "combo_speed_step");
-        let sated_fury = if player.sated_fury_timer > 0.0 {
-            data.bonus_effect("sated_fury", "healing_pickup_combo_speed_multiplier")
-        } else {
-            1.0
-        };
-        // Bloodrush rides Chain Reaction, and Tailwind grows with the agility
-        // bonuses owned.
-        let bloodrush = if player.chain_reaction_timer > 0.0 {
-            session.bonus_multiplier(&data, "bloodrush", "combo_speed_multiplier")
-        } else {
-            1.0
-        };
-        let speed = session.bonus_multiplier(&data, "quick_hands", "combo_speed_multiplier")
-            * rhythm
-            * sated_fury
-            * bloodrush
-            * (1.0 + session.keystone(&data, "tailwind"));
-        player.strike = Some(Strike {
-            thrown: Thrown::Step(step_index),
-            contact_in_s: step.contact_s / speed,
-        });
-        player.combo_step = (step_index + 1) % chain.len();
-        player.combo_window_s = 0.0;
-        player.charge_s = 0.0;
-        player.start_action(
-            PlayerAction::Strike {
-                strike: step.strike,
-                speed,
-            },
-            step.strike.clip(&data.player_animations.clips).duration_s() / speed,
-        );
-        sounds.push(SoundCue::MeleeSwing);
+    if !(attack_tapped || heavy_tapped) {
         return;
     }
 
-    // Attack still held with nothing in the air: the player gathers, and the
-    // gather holds its loop for as long as the key does.
-    // Overcharge gathers it sooner.
-    let ready_s = melee.charge.ready_s
-        * session.bonus_multiplier(&data, "overcharge", "charge_time_multiplier");
-    if attack_held {
-        // Overcharge calls itself out the moment the blow is ready.
-        if player.charge_s < ready_s
-            && player.charge_s + dt >= ready_s
-            && session.has_bonus("overcharge")
-        {
+    // Rhythm, and the fury of a fresh pickup, speed the whole chain up,
+    // heavy blows included.
+    let rhythm = 1.0
+        + f32::from(player.rhythm_stacks)
+            * data.bonus_effect("rhythm_training", "combo_speed_step");
+    let sated_fury = if player.sated_fury_timer > 0.0 {
+        data.bonus_effect("sated_fury", "healing_pickup_combo_speed_multiplier")
+    } else {
+        1.0
+    };
+    // Bloodrush rides Chain Reaction, and Tailwind grows with the agility
+    // bonuses owned.
+    let bloodrush = if player.chain_reaction_timer > 0.0 {
+        session.bonus_multiplier(&data, "bloodrush", "combo_speed_multiplier")
+    } else {
+        1.0
+    };
+    let mut speed = session.bonus_multiplier(&data, "quick_hands", "combo_speed_multiplier")
+        * rhythm
+        * sated_fury
+        * bloodrush
+        * (1.0 + session.keystone(&data, "tailwind"));
+    let light_blows = player.combo_step;
+    let (thrown, step) = if heavy_tapped
+        && let Some(index) = melee.heavy_after(light_blows, &|bonus| session.has_bonus(bonus))
+    {
+        // Overcharge throws every heavy blow sooner, and flares as it does.
+        speed *= session.bonus_multiplier(&data, "overcharge", "heavy_speed_multiplier");
+        if session.has_bonus("overcharge") {
             commands.write_message(
                 BonusTell::new("overcharge", TellAt::Player)
+                    .quiet()
                     .with(TellEffect::new("charge_flare", 1.3)),
             );
         }
-        player.charge_s += dt;
-        if player.charge_s >= ready_s {
-            if player.action == Some(PlayerAction::Charging) {
-                player.action_animation_timer = ready_s;
-            } else {
-                player.start_action(PlayerAction::Charging, ready_s);
-            }
-        }
-        return;
-    }
-
-    // Let go of a finished gather, and the heavy blow is thrown.
-    if player.charge_s >= ready_s {
         player.combo_step = 0;
-        player.combo_window_s = 0.0;
-        player.strike = Some(Strike {
-            thrown: Thrown::Charged,
-            contact_in_s: melee.charge.contact_s,
-        });
-        player.start_action(
-            PlayerAction::ChargedBlow,
-            data.player_animations.clips.charge_brace.duration_s(),
-        );
-        sounds.push(SoundCue::MeleeSwing);
-    }
-    player.charge_s = 0.0;
+        (Thrown::Heavy(index), &melee.heavy[index])
+    } else {
+        let index = light_blows.min(chain.len() - 1);
+        player.combo_step = (index + 1) % chain.len();
+        (Thrown::Step(index), &chain[index])
+    };
+    player.strike = Some(Strike {
+        thrown,
+        contact_in_s: step.contact_s / speed,
+        ends_a_chain: light_blows > 0,
+    });
+    player.combo_window_s = 0.0;
+    player.start_action(
+        PlayerAction::Strike {
+            strike: step.strike,
+            speed,
+        },
+        step.strike.clip(&data.player_animations.clips).duration_s() / speed,
+    );
+    sounds.push(SoundCue::MeleeSwing);
 }

@@ -1,4 +1,4 @@
-//! The double the Decoy bonus leaves behind. A roll plants a still copy of
+//! The double the Decoy bonus leaves behind. A dash plants a still copy of
 //! the hero where it began; an engaged enemy walks at and swings at whichever
 //! of the two stands nearer, and a blow that lands on the double costs the run
 //! nothing but the double's own health.
@@ -33,10 +33,10 @@ pub(super) type DecoyQuery<'w, 's> = Query<
     ),
 >;
 
-/// Plants the double the frame a roll begins, for a run that owns Decoy. It
-/// stands on the spot `player/mod.rs` noted as the roll started rather than
-/// where the first frame of the roll has already carried the player, and only
-/// one stands at a time: a second roll replaces the first one's double.
+/// Plants the double the frame a dash begins, for a run that owns Decoy. It
+/// stands on the spot `player/mod.rs` noted as the dash started rather than
+/// where the first frame of the dash has already carried the player, and only
+/// one stands at a time: a second dash replaces the first one's double.
 pub(in crate::game) fn plant_decoy(
     mut commands: Commands,
     data: Res<GameData>,
@@ -48,7 +48,7 @@ pub(in crate::game) fn plant_decoy(
     let Ok(mut player) = players.single_mut() else {
         return;
     };
-    let Some(origin) = player.roll_origin.take() else {
+    let Some(origin) = player.dash_origin.take() else {
         return;
     };
     if !session.has_bonus("decoy") {
@@ -83,7 +83,7 @@ pub(in crate::game) fn plant_decoy(
             0.0,
             body_center_from_bottom_px / sheet.frame_size.y - 0.5,
         )),
-        // Just behind the player, who rolls out through it.
+        // Just behind the player, who dashes out through it.
         Transform::from_xyz(origin.x, origin.y, 3.9),
         AnimatedSprite {
             sheet: Decoy::SHEET.to_string(),

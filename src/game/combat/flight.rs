@@ -119,7 +119,6 @@ pub(super) fn fly(world: FlightWorld, flyer: Flyer, mark: &Mark) {
                     PlayerDamageTarget {
                         player,
                         transform: player_transform,
-                        attacker_x: middle.x,
                     },
                     blast.damage,
                 );

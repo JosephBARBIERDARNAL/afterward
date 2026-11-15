@@ -41,7 +41,8 @@ pub(super) enum SoundCue {
     MeleeHit(usize),
     /// A blow arriving on nobody.
     MeleeMiss,
-    CoverBlock,
+    /// A shot turned aside (Deflector).
+    Deflect,
     ProjectileEnvironmentHit,
     /// A hit landing, on the player or an enemy, by what it lands on.
     Damage(DamageSound),

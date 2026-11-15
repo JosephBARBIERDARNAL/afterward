@@ -18,7 +18,7 @@ mod player_controls;
 mod player_stances;
 mod procedural_movement;
 mod punch_sounds;
-mod slam_and_roll;
+mod slam_and_dash;
 mod slopes;
 mod variable_jump;
 mod wall_jump;

@@ -36,7 +36,6 @@ impl PlayerAnimations {
             ("player_wall_slide", &clips.wall_slide),
             ("player_wall_jump", &clips.wall_jump),
             ("player_climb", &clips.climb),
-            ("player_cover", &clips.cover),
             ("player_hit", &clips.hit),
             ("player_death", &clips.death),
             ("player_strike_1", &clips.strike_1),
@@ -45,10 +44,11 @@ impl PlayerAnimations {
             ("player_power_strike", &clips.power_strike),
             ("player_fire_kick", &clips.fire_kick),
             ("player_explosive_strike", &clips.explosive_strike),
+            ("player_heavy_strike", &clips.heavy_strike),
+            ("player_heavy_uppercut", &clips.heavy_uppercut),
+            ("player_heavy_hammer", &clips.heavy_hammer),
             ("player_ground_slam", &clips.ground_slam),
-            ("player_roll", &clips.roll),
-            ("player_charge", &clips.charge),
-            ("player_charge_brace", &clips.charge_brace),
+            ("player_dash", &clips.dash),
             ("player_healing", &clips.healing),
             ("player_rise", &clips.rise),
             ("player_summon", &clips.summon),
@@ -83,7 +83,6 @@ pub struct PlayerAnimationClips {
     pub wall_slide: AnimationClip,
     pub wall_jump: AnimationClip,
     pub climb: AnimationClip,
-    pub cover: AnimationClip,
     pub hit: AnimationClip,
     pub death: AnimationClip,
     pub strike_1: AnimationClip,
@@ -92,10 +91,11 @@ pub struct PlayerAnimationClips {
     pub power_strike: AnimationClip,
     pub fire_kick: AnimationClip,
     pub explosive_strike: AnimationClip,
+    pub heavy_strike: AnimationClip,
+    pub heavy_uppercut: AnimationClip,
+    pub heavy_hammer: AnimationClip,
     pub ground_slam: AnimationClip,
-    pub roll: AnimationClip,
-    pub charge: AnimationClip,
-    pub charge_brace: AnimationClip,
+    pub dash: AnimationClip,
     pub healing: AnimationClip,
     pub rise: AnimationClip,
     pub summon: AnimationClip,
@@ -107,7 +107,7 @@ pub struct PlayerAnimationClips {
     pub aura_defense: AnimationClip,
 }
 
-/// Which blow a step of the melee combo lands, and so which clip it plays.
+/// Which blow a step of the melee chain (light or heavy) lands, and so which clip it plays.
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
 pub enum MeleeStrike {
     #[serde(rename = "strike_1")]
@@ -122,6 +122,12 @@ pub enum MeleeStrike {
     FireKick,
     #[serde(rename = "explosive_strike")]
     ExplosiveStrike,
+    #[serde(rename = "heavy_strike")]
+    HeavyStrike,
+    #[serde(rename = "heavy_uppercut")]
+    HeavyUppercut,
+    #[serde(rename = "heavy_hammer")]
+    HeavyHammer,
 }
 
 impl MeleeStrike {
@@ -134,6 +140,9 @@ impl MeleeStrike {
             Self::PowerStrike => "player_power_strike",
             Self::FireKick => "player_fire_kick",
             Self::ExplosiveStrike => "player_explosive_strike",
+            Self::HeavyStrike => "player_heavy_strike",
+            Self::HeavyUppercut => "player_heavy_uppercut",
+            Self::HeavyHammer => "player_heavy_hammer",
         }
     }
 
@@ -145,6 +154,9 @@ impl MeleeStrike {
             Self::PowerStrike => &clips.power_strike,
             Self::FireKick => &clips.fire_kick,
             Self::ExplosiveStrike => &clips.explosive_strike,
+            Self::HeavyStrike => &clips.heavy_strike,
+            Self::HeavyUppercut => &clips.heavy_uppercut,
+            Self::HeavyHammer => &clips.heavy_hammer,
         }
     }
 }

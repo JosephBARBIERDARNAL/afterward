@@ -32,7 +32,7 @@ impl EnemyBody {
 /// Where a hit area measured in H from a body's feet lands in the world. `x`
 /// points the way `facing` does, `reach` stretches it, and a blow landing on
 /// `both_sides` is mirrored around the feet instead of pointed. Every blow the
-/// player throws — the chain's, the charged one, the slam — and the debug
+/// player throws — the chain's light and heavy blows, the slam — and the debug
 /// overlay that draws them all come through here.
 pub(crate) fn blow_area(
     hitbox: RectH,

@@ -1,7 +1,7 @@
 use super::*;
 
 /// A hall of its own with a row of enemies ahead of the player, so that the
-/// roll ends beside one of them however far its tuning carries it.
+/// dash ends beside one of them however far its tuning carries it.
 const HALL: &str = "
 room_id: 1
 chapter_id: 1
@@ -21,7 +21,7 @@ next_room_id: 2
 ";
 
 #[test]
-fn aftershock_makes_the_end_of_a_roll_hit_what_stands_beside_it() {
+fn aftershock_makes_the_end_of_a_dash_hit_what_stands_beside_it() {
     let mut game = HeadlessGame::new();
     *game
         .app
@@ -36,15 +36,13 @@ fn aftershock_makes_the_end_of_a_roll_hit_what_stands_beside_it() {
         .resource_mut::<RunSession>()
         .owned_bonuses = vec![String::from("aftershock")];
 
-    game.key(KeyCode::KeyS, ButtonState::Pressed);
-    game.tap(KeyCode::Space);
-    game.key(KeyCode::KeyS, ButtonState::Released);
+    game.tap(KeyCode::KeyL);
     game.run_seconds(1.5);
     assert!(
         game.enemies()
             .into_iter()
             .any(|(health, max_health)| health < max_health),
-        "the shock a roll ends in wounds the enemy beside it"
+        "the shock a dash ends in wounds the enemy beside it"
     );
 }
 

@@ -52,15 +52,15 @@ glossary:
   - term: Blow
     words: [blow, blows, strike]
     definition: One hit of the chain. It hurts everything its reach touches, so one blow can catch two enemies standing together.
-  - term: Charged blow
-    words: [charged blow]
-    definition: Hold Attack, then let go once it is ready. One heavy blow that costs a shield and wounds the body behind it too.
+  - term: Heavy blow
+    words: [heavy blow, heavy blows]
+    definition: Heavy Attack. Slow alone, and a heavier finisher after one or two blows of the chain. It goes through a shield, wounding the body behind it too.
   - term: Slam
     words: [slam]
     definition: Attack with Down held in mid-air drives you into the floor, which breaks to both sides of you.
-  - term: Roll
-    words: [roll, rolling, "roll's"]
-    definition: Down with Jump on the ground. Nothing can touch you through the middle of it, which is how a shot is gone through.
+  - term: Dash
+    words: [dash, dashes, dashing, "dash's"]
+    definition: A short burst on the ground or in mid-air. Nothing can touch you through most of it, which is how a shot is gone through.
   - term: Airborne
     words: [airborne, mid-air]
     definition: Off the ground, jumping or falling. A mid-air jump is one taken before landing.
@@ -69,10 +69,7 @@ glossary:
     definition: The moment an enemy warms up before it strikes, glowing brighter until the blow lands. The longer it lasts, the more time to get out of the way.
   - term: Shield
     words: [shield, shields]
-    definition: A layer of armor over an enemy's health bar. Each soaks one ordinary blow whole, and while one is up the enemy is never interrupted.
-  - term: Cover
-    words: [cover]
-    definition: Hold Cover on the ground to take less damage from blows and shots on the side you face. You cannot strike while covering.
+    definition: A layer of armor over an enemy's health bar. Each soaks one ordinary blow whole (a heavy blow goes through), and while one is up the enemy is never interrupted.
   - term: Health pickup
     words: [health pickup, health pickups, healing pickups]
     definition: A drop a dying enemy may leave, taken by walking over it. Healing is scarce inside a room.
@@ -96,7 +93,7 @@ glossary:
     definition: One hit taken, however much it would have cost.
   - term: Projectile
     words: [projectile, shot]
-    definition: What an enemy or a turret fires. Platforms stop it, and a roll goes through it.
+    definition: What an enemy or a turret fires. Platforms stop it, and a dash goes through it.
   - term: Reroll
     words: [reroll]
     definition: Draws three new bonuses on the bonus screen. A run has only a few.
@@ -109,10 +106,10 @@ glossary:
 # number is common, one with a condition uncommon, one that changes what a
 # move does rare, and the few a run is built around epic or legendary.
 #
-# Fire Kick, Power Strike and Explosive Strike are the melee chain's rival
-# finishers: each is a step of `player.melee` in `config/gameplay.yaml` that
-# only a run owning it throws, and a run holding more than one throws the last
-# of them listed there rather than all of them.
+# Fire Kick, Power Strike and Explosive Strike are the rival heavy finishers:
+# each is a step of `player.melee.heavy` in `config/gameplay.yaml` that only a
+# run owning it throws, in place of the heavy blow after two of the chain, and
+# a run holding more than one throws the last of them listed there.
 bonuses:
   - id: heavy_hands
     name: Heavy Hands
@@ -140,19 +137,19 @@ bonuses:
     effects: { strike_reach_multiplier: 1.25 }
   - id: fire_kick
     name: Fire Kick
-    description: Adds a blazing fourth blow to the chain, dealing 45 damage.
+    description: The heavy blow after two of the chain becomes a blazing kick, dealing 62 damage.
     category: combat
     rarity: epic
     effects: { adds_combo_step: 1 }
   - id: power_strike
     name: Power Strike
-    description: Ends the chain with a heavier blow, dealing 38 damage.
+    description: The heavy blow after two of the chain becomes a crushing strike, dealing 55 damage.
     category: combat
     rarity: rare
     effects: { adds_combo_step: 1 }
   - id: explosive_strike
     name: Explosive Strike
-    description: Ends the chain with a blast that hits every side at once, dealing 30 damage.
+    description: The heavy blow after two of the chain becomes a blast that hits every side at once, dealing 45 damage.
     category: combat
     rarity: epic
     effects: { adds_combo_step: 1 }
@@ -258,12 +255,13 @@ bonuses:
     category: combat
     rarity: uncommon
     effects: { execute_health_fraction: 0.3, execute_damage_multiplier: 1.3 }
-  - id: bulwark
-    name: Bulwark
-    description: Taking cover reduces damage by a further 15%.
-    category: defense
+  - id: air_step
+    name: Air Step
+    description: Dash once more in mid-air before landing.
+    category: agility
     rarity: uncommon
-    effects: { cover_damage_taken_multiplier: 0.85 }
+    synergies: [aftershock, double_jump]
+    effects: { extra_air_dashes: 1 }
   - id: steadfast
     name: Steadfast
     description: Increase maximum health by 10.
@@ -310,7 +308,7 @@ bonuses:
     effects: { extra_jump_impulse_factor: 1 }
   - id: decoy
     name: Decoy
-    description: Rolling leaves a double of you behind for enemies to swing at.
+    description: Dashing leaves a double of you behind for enemies to swing at.
     category: agility
     rarity: rare
     effects: { decoy_health: 30 }
@@ -333,15 +331,15 @@ bonuses:
     rarity: common
     effects: { unaware_damage_multiplier: 1.2 }
   # Bonuses that change what a move does rather than how hard it hits: the
-  # roll, the slam and the charged blow each have one, and `requires` marks a
+  # dash, the slam and the heavy blow each have one, and `requires` marks a
   # bonus that is only offered to a run owning the ones it names — what two of
   # them do together.
   - id: aftershock
     name: Aftershock
-    description: A roll ends in a shock that hits everything beside you for 18 damage.
+    description: A dash ends in a shock that hits everything beside you for 18 damage.
     category: agility
     rarity: rare
-    effects: { roll_shock_damage: 18, roll_shock_reach_h: 1.6 }
+    effects: { dash_shock_damage: 18, dash_shock_reach_h: 1.6 }
   - id: undertow
     name: Undertow
     description: The slam drags every enemy within 5 H in to you.
@@ -350,14 +348,14 @@ bonuses:
     effects: { slam_pull_radius_h: 5, slam_pull_h_s: 10 }
   - id: battering_ram
     name: Battering Ram
-    description: The charged blow throws what it hits into whatever stands behind, for 25 damage.
+    description: A heavy blow throws what it hits into whatever stands behind, for 25 damage.
     category: combat
     rarity: rare
     effects:
       { launch_damage: 25, launch_reach_h: 3, launch_knockback_multiplier: 5.6 }
   - id: riptide
     name: Riptide
-    description: "Aftershock and Undertow together: the roll's shock drags enemies in too."
+    description: "Aftershock and Undertow together: the dash's shock drags enemies in too."
     category: combined
     rarity: rare
     requires: [aftershock, undertow]
@@ -451,10 +449,10 @@ bonuses:
     synergies: [retaliation]
     effects: { strike_hit_healing_multiplier: 2, room_healing_cap: 15 }
   # The empowered blow: two ways to earn one, and everything that lands next
-  # (the chain, the charged blow, Aftershock's shock) spends it.
+  # (the chain, light or heavy, Aftershock's shock) spends it.
   - id: riposte
     name: Riposte
-    description: Rolling through an enemy's blow makes your next blow deal 50% more damage.
+    description: Dashing through an enemy's blow makes your next blow deal 50% more damage.
     category: agility
     rarity: rare
     synergies: [aftershock, slippery, overcharge]
@@ -468,15 +466,15 @@ bonuses:
     effects: { empowered_blow_multiplier: 1.5 }
   - id: slippery
     name: Slippery
-    description: The roll's untouchable stretch lasts 40% longer.
+    description: The dash's untouchable stretch lasts 40% longer.
     category: agility
     rarity: common
     synergies: [aftershock, decoy]
-    effects: { roll_invulnerability_multiplier: 1.4 }
+    effects: { dash_invulnerability_multiplier: 1.4 }
   - id: overcharge
     name: Overcharge
-    description: The charged blow is ready 30% sooner and deals 40% more damage.
+    description: The heavy blow comes out 30% faster and deals 40% more damage.
     category: combat
     rarity: uncommon
     synergies: [battering_ram, shield_breaker]
-    effects: { charge_time_multiplier: 0.7, charged_damage_multiplier: 1.4 }
+    effects: { heavy_speed_multiplier: 1.3, heavy_damage_multiplier: 1.4 }

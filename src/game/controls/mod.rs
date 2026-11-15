@@ -59,7 +59,11 @@ pub(super) enum GameAction {
     NavigateDown,
     Jump,
     Attack,
-    Cover,
+    /// The slow blow that goes through a shield, and ends the chain on a
+    /// heavier finisher.
+    HeavyAttack,
+    /// A short invulnerable dash, on the ground and in mid-air.
+    Dash,
     Interact,
     Pause,
     ToggleFullscreen,
@@ -72,7 +76,7 @@ pub(super) enum GameAction {
 }
 
 impl GameAction {
-    pub const ALL: [Self; 17] = [
+    pub const ALL: [Self; 18] = [
         Self::MoveLeft,
         Self::MoveRight,
         Self::MoveUp,
@@ -81,7 +85,8 @@ impl GameAction {
         Self::NavigateDown,
         Self::Jump,
         Self::Attack,
-        Self::Cover,
+        Self::HeavyAttack,
+        Self::Dash,
         Self::Interact,
         Self::Pause,
         Self::ToggleFullscreen,
@@ -102,7 +107,8 @@ impl GameAction {
             Self::NavigateDown => "MENU DOWN",
             Self::Jump => "JUMP",
             Self::Attack => "ATTACK",
-            Self::Cover => "COVER",
+            Self::HeavyAttack => "HEAVY ATTACK",
+            Self::Dash => "DASH",
             Self::Interact => "INTERACT / CONFIRM",
             Self::Pause => "PAUSE",
             Self::ToggleFullscreen => "FULLSCREEN",
@@ -128,7 +134,8 @@ impl FromStr for GameAction {
             "navigate_down" => Ok(Self::NavigateDown),
             "jump" => Ok(Self::Jump),
             "attack" => Ok(Self::Attack),
-            "cover" => Ok(Self::Cover),
+            "heavy_attack" => Ok(Self::HeavyAttack),
+            "dash" => Ok(Self::Dash),
             "interact" => Ok(Self::Interact),
             "pause" => Ok(Self::Pause),
             "toggle_fullscreen" => Ok(Self::ToggleFullscreen),
@@ -153,7 +160,8 @@ impl Display for GameAction {
             Self::NavigateDown => "navigate_down",
             Self::Jump => "jump",
             Self::Attack => "attack",
-            Self::Cover => "cover",
+            Self::HeavyAttack => "heavy_attack",
+            Self::Dash => "dash",
             Self::Interact => "interact",
             Self::Pause => "pause",
             Self::ToggleFullscreen => "toggle_fullscreen",
@@ -197,7 +205,8 @@ impl From<&ControlsConfig> for DefaultBindings {
             ),
             (GameAction::Jump, parse_keys(&controls.jump)),
             (GameAction::Attack, parse_keys(&controls.attack)),
-            (GameAction::Cover, parse_keys(&controls.cover)),
+            (GameAction::HeavyAttack, parse_keys(&controls.heavy_attack)),
+            (GameAction::Dash, parse_keys(&controls.dash)),
             (GameAction::Interact, parse_keys(&controls.interact)),
             (GameAction::Pause, parse_keys(&controls.pause)),
             (

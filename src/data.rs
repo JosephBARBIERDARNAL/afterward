@@ -117,16 +117,16 @@ impl GameData {
         ]
         .iter()
         .any(|speed| !speed.is_finite() || *speed <= 0.0)
-            || !(0.0..=1.0).contains(&player.cover_damage_taken_multiplier)
             || !(player.death_hold_s.is_finite() && player.death_hold_s >= 0.0)
         {
             return Err(InvalidGameData::from(
-                "player speeds must be positive, the cover multiplier within 0..=1, \
-                 and the death hold nonnegative",
+                "player speeds must be positive and the death hold nonnegative",
             ));
         }
         let melee = &player.melee;
         if melee.steps.is_empty()
+            || melee.heavy.iter().all(|step| step.requires_bonus.is_some())
+            || melee.steps.iter().any(|step| step.requires_bonus.is_some())
             || melee.combo_window_s <= 0.0
             || [
                 &melee.hit_effect.spark_size_h,
@@ -137,11 +137,12 @@ impl GameData {
             .any(|value| !value.is_finite() || *value <= 0.0)
         {
             return Err(InvalidGameData::from(
-                "the melee chain needs at least one blow, a positive combo window, \
+                "the melee chain needs at least one blow, a heavy blow owing nothing to a \
+                 bonus, finishers only among the heavy blows, a positive combo window, \
                  and positive hit effect sizes",
             ));
         }
-        for step in &melee.steps {
+        for step in melee.steps.iter().chain(&melee.heavy) {
             let hitbox = &step.hitbox_h;
             if step.damage <= 0.0
                 || !step.damage.is_finite()
@@ -167,32 +168,26 @@ impl GameData {
             }
         }
         let slam = &melee.slam;
-        let charge = &melee.charge;
-        if [
-            slam.damage,
-            slam.drop_speed_h_s,
-            charge.ready_s,
-            charge.damage,
-            charge.contact_s,
-        ]
-        .iter()
-        .any(|value| !value.is_finite() || *value <= 0.0)
+        if [slam.damage, slam.drop_speed_h_s]
+            .iter()
+            .any(|value| !value.is_finite() || *value <= 0.0)
             || !(slam.hitbox_h.width > 0.0 && slam.hitbox_h.height > 0.0)
-            || !(charge.hitbox_h.width > 0.0 && charge.hitbox_h.height > 0.0)
-            || charge.contact_s > self.player_animations.clips.charge_brace.duration_s()
         {
             return Err(InvalidGameData::from(
-                "the slam and the charged blow need positive damage, timings and hitboxes, \
-                 and the charged blow must connect within its clip",
+                "the slam needs positive damage, drop speed and hitbox",
             ));
         }
-        let roll = &player.roll;
-        if !(roll.speed_h_s.is_finite() && roll.speed_h_s > 0.0)
-            || !(0.0..=roll.invulnerable_to_s).contains(&roll.invulnerable_from_s)
-            || roll.invulnerable_to_s > self.player_animations.clips.roll.duration_s()
+        let dash = &player.dash;
+        if [dash.speed_h_s, dash.duration_s]
+            .iter()
+            .any(|value| !value.is_finite() || *value <= 0.0)
+            || !(dash.cooldown_s.is_finite() && dash.cooldown_s >= 0.0)
+            || !(0.0..=dash.invulnerable_to_s).contains(&dash.invulnerable_from_s)
+            || dash.invulnerable_to_s > dash.duration_s
         {
             return Err(InvalidGameData::from(
-                "the roll needs a positive speed and an invulnerable stretch inside its clip",
+                "the dash needs a positive speed and length, a nonnegative cooldown, \
+                 and an invulnerable stretch inside it",
             ));
         }
         let wall = &player.wall;
@@ -312,7 +307,8 @@ impl GameData {
             &controls.navigate_down,
             &controls.jump,
             &controls.attack,
-            &controls.cover,
+            &controls.heavy_attack,
+            &controls.dash,
             &controls.interact,
             &controls.pause,
             &controls.toggle_fullscreen,

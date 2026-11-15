@@ -4,11 +4,11 @@ use std::{path::Path, time::Duration};
 
 use bevy::{prelude::MinimalPlugins, state::app::StatesPlugin, time::TimeUpdateStrategy};
 
-/// The Decoy bonus: a roll leaves a standing double of the hero behind, an
+/// The Decoy bonus: a dash leaves a standing double of the hero behind, an
 /// engaged enemy goes after whichever of the two stands nearer to it, and a
 /// blow that lands on the double costs the run nothing.
 #[test]
-fn a_roll_leaves_a_double_behind_that_is_gone_for_rather_than_the_player() {
+fn a_dash_leaves_a_double_behind_that_is_gone_for_rather_than_the_player() {
     let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
     let mut data = GameData::load(&asset_root).expect("Chapter 1 data should load");
     // A floor of its own, with the player standing in the middle of it and one
@@ -135,23 +135,23 @@ next_room_id: 2
             .collect::<Vec<_>>()
     };
 
-    // A run that does not own Decoy rolls and leaves nothing behind.
-    step(&mut app, &[KeyCode::KeyS, KeyCode::Space]);
-    step(&mut app, &[KeyCode::KeyS]);
+    // A run that does not own Decoy dashes and leaves nothing behind.
+    step(&mut app, &[KeyCode::KeyL]);
+    step(&mut app, &[]);
     assert!(
         app.world()
             .get::<PlayerBody>(player)
             .expect("the player should remain spawned")
-            .roll_s
+            .dash_s
             .is_some(),
-        "Down with Jump rolls"
+        "Dash dashes"
     );
     assert!(
         doubles(&mut app).is_empty(),
-        "a roll leaves no double behind until the run owns Decoy"
+        "a dash leaves no double behind until the run owns Decoy"
     );
 
-    // With the bonus taken, the next roll plants one where it set off from,
+    // With the bonus taken, the next dash plants one where it set off from,
     // rather than where its first frame has already carried the player.
     for _ in 0..20 {
         step(&mut app, &[]);
@@ -160,19 +160,19 @@ next_room_id: 2
         .resource_mut::<RunSession>()
         .owned_bonuses
         .push("decoy".to_string());
-    let rolled_from = app
+    let dashed_from = app
         .world()
         .get::<Transform>(player)
         .expect("the player should remain spawned")
         .translation
         .x;
-    step(&mut app, &[KeyCode::KeyS, KeyCode::Space]);
-    step(&mut app, &[KeyCode::KeyS]);
+    step(&mut app, &[KeyCode::KeyL]);
+    step(&mut app, &[]);
     let standing = doubles(&mut app);
-    assert_eq!(standing.len(), 1, "the roll plants one double");
+    assert_eq!(standing.len(), 1, "the dash plants one double");
     assert!(
-        (standing[0].0 - rolled_from).abs() < 0.01,
-        "it stands where the roll began, at {} rather than {rolled_from}",
+        (standing[0].0 - dashed_from).abs() < 0.01,
+        "it stands where the dash began, at {} rather than {dashed_from}",
         standing[0].0
     );
     assert_eq!(
@@ -186,20 +186,20 @@ next_room_id: 2
             .translation
             .x
             > standing[0].0,
-        "and the player has rolled out of it"
+        "and the player has dashed out of it"
     );
 
-    // Only one stands at a time: rolling again replaces the double rather than
+    // Only one stands at a time: dashing again replaces the double rather than
     // leaving a line of them across the room.
     for _ in 0..20 {
         step(&mut app, &[]);
     }
-    step(&mut app, &[KeyCode::KeyS, KeyCode::Space]);
-    step(&mut app, &[KeyCode::KeyS]);
+    step(&mut app, &[KeyCode::KeyL]);
+    step(&mut app, &[]);
     assert_eq!(
         doubles(&mut app).len(),
         1,
-        "a second roll replaces the first one's double"
+        "a second dash replaces the first one's double"
     );
 
     // Standing nearer the enemy than the player does, the double is what an

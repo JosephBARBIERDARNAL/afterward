@@ -1,6 +1,6 @@
 //! The fading copies a body leaves behind while a bonus speeds or throws it:
 //! the chain thrown faster, a run faster than the legs alone allow, Meteor's
-//! drop, a body Battering Ram threw or Undertow dragged. The middle of a roll,
+//! drop, a body Battering Ram threw or Undertow dragged. The middle of a dash,
 //! where nothing reaches the player, leaves them too, for longer with
 //! Slippery.
 
@@ -72,15 +72,15 @@ pub(crate) fn leave_afterimages(
     clocks.retain(|entity, _| bodies.contains(*entity));
     for (entity, sprite, anchor, transform, player, enemy) in &bodies {
         let tint = if let Some(player) = player {
-            let roll_untouchable_to_s = tuning.roll.invulnerable_from_s
-                + (tuning.roll.invulnerable_to_s - tuning.roll.invulnerable_from_s)
+            let dash_untouchable_to_s = tuning.dash.invulnerable_from_s
+                + (tuning.dash.invulnerable_to_s - tuning.dash.invulnerable_from_s)
                     * session.bonus_multiplier(
                         &data,
                         "slippery",
-                        "roll_invulnerability_multiplier",
+                        "dash_invulnerability_multiplier",
                     );
-            let untouchable = player.roll_s.is_some_and(|elapsed_s| {
-                (tuning.roll.invulnerable_from_s..=roll_untouchable_to_s).contains(&elapsed_s)
+            let untouchable = player.dash_s.is_some_and(|elapsed_s| {
+                (tuning.dash.invulnerable_from_s..=dash_untouchable_to_s).contains(&elapsed_s)
             });
             let fast_chain = matches!(
                 player.action,

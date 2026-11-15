@@ -50,28 +50,26 @@ clips:
   # Climbing a ladder, seen from behind: the hands reach up a rung in turn,
   # the opposite foot stepping with each. A loop, held on a frame while still.
   climb: { sheet: player/sheets/climb.png, frames: 8, fps: 10 }
-  # Raising the guard; holds its last frame while Cover is held.
-  cover: { sheet: player/sheets/cover.png, frames: 24, fps: 40 }
   hit: { sheet: player/sheets/hit.png, frames: 6, fps: 28 }
   death: { sheet: player/sheets/death.png, frames: 10, fps: 18 }
   # The melee chain, in the order the steps of `player.melee` of
-  # `config/gameplay.yaml` call for them. The last four are finishers: a run
-  # throws whichever one of them its bonuses bought.
+  # `config/gameplay.yaml` call for them, then its heavy blows: alone, after
+  # one blow and after two. The last three are the heavy finishers a bonus
+  # buys in place of the hammer.
   strike_1: { sheet: player/sheets/strike_1.png, frames: 14, fps: 48 }
   strike_2: { sheet: player/sheets/strike_2.png, frames: 16, fps: 48 }
   kick: { sheet: player/sheets/kick.png, frames: 10, fps: 36 }
   power_strike: { sheet: player/sheets/power_strike.png, frames: 22, fps: 52 }
   fire_kick: { sheet: player/sheets/fire_kick.png, frames: 22, fps: 52 }
   explosive_strike: { sheet: player/sheets/explosive_strike.png, frames: 18, fps: 44 }
+  heavy_strike: { sheet: player/sheets/heavy_strike.png, frames: 12, fps: 20 }
+  heavy_uppercut: { sheet: player/sheets/heavy_uppercut.png, frames: 12, fps: 28 }
+  heavy_hammer: { sheet: player/sheets/heavy_hammer.png, frames: 12, fps: 24 }
   # Attack with Down held in mid-air: the drop, then the floor it breaks.
   ground_slam: { sheet: player/sheets/ground_slam.png, frames: 24, fps: 48 }
-  # Down and Jump together on the ground: a roll that nothing can hit through
-  # its middle.
-  roll: { sheet: player/sheets/roll.png, frames: 18, fps: 36 }
-  # Attack held rather than tapped: the gather, then the brace it is thrown
-  # from. The charge loops until the key goes.
-  charge: { sheet: player/sheets/charge.png, frames: 12, fps: 24 }
-  charge_brace: { sheet: player/sheets/charge_brace.png, frames: 20, fps: 32 }
+  # The dash, on the ground or in mid-air: the roll, played through at
+  # whatever pace fits `player.dash.duration_s`.
+  dash: { sheet: player/sheets/roll.png, frames: 18, fps: 36 }
   # Healing: the glow of a health drop taken off the floor, or of a bonus that
   # heals a cleared room.
   healing: { sheet: player/sheets/healing.png, frames: 16, fps: 28 }
