@@ -16,6 +16,7 @@ piece smaller than its cells keeps their transparent margin.
   in one row, read by `props/props.yaml`, the device art of
   `devices/devices.yaml`, the enemies and the effects.
 - `COPIES` are taken whole: the background layers.
+- `ELEVATOR` is the exit door, its opening drawn from the pack's still one.
 
 Run it with `just sci-fi` after the pack or a piece changes. Needs
 ImageMagick.
@@ -208,6 +209,24 @@ STRIPS = {
 
 FLOPPED = {"walker_idle", "walker_walk", "walker_shoot"}
 
+# The exit door: the pack's one still elevator door, set going. Every frame is
+# cut to the door itself (`ELEVATOR_BOX`, x, y, width, height in the pack's
+# picture), so the sheet's frame is the door and nothing around it. Frame 0 is
+# locked, its lights turned `ELEVATOR_LOCKED`; frame 1 is the door as drawn,
+# unlocked; the rest slide the two panels apart into the frame, by
+# `ELEVATOR_OPENINGS` px each, over the lit shaft behind them.
+ELEVATOR = (MISC, 0, 0, 48, 48)
+ELEVATOR_BOX = (2, 11, 41, 37)
+ELEVATOR_LIGHT = "#1AA2B3"
+ELEVATOR_LOCKED = "#C8389B"
+# The doorway: its top row, its height, and the columns each panel spans.
+ELEVATOR_TOP, ELEVATOR_HEIGHT = 21, 27
+ELEVATOR_LEFT, ELEVATOR_RIGHT = (12, 10), (22, 11)
+# Behind the panels: the dark of the shaft, a band of light down its middle.
+ELEVATOR_SHAFT = "#151527"
+ELEVATOR_GLOW = [("#24283C", 4), ("#1AA2B3", 2), ("#9FE4EE", 1)]
+ELEVATOR_OPENINGS = [1, 2, 4, 6, 8, 9, 10, 11]
+
 COPIES = {f"background/sci_fi/layer-{n}.png": f"background/layer-{n}.png" for n in range(6)}
 
 
@@ -219,6 +238,38 @@ def crop(sheet, x, y, width, height, flop=False):
 
 def magick(*args):
     subprocess.run(["magick", *map(str, args)], check=True)
+
+
+def elevator_frame(opening):
+    """The elevator door with its panels slid `opening` px into the frame, or
+    closed (`None`). A panel's part slid into the frame is cut away."""
+    sheet, x, y, width, height = ELEVATOR
+    door = ["(", PACK / sheet, "-crop", f"{width}x{height}+{x}+{y}", "+repage", ")"]
+    if opening is not None:
+        (left, left_width), (right, right_width) = ELEVATOR_LEFT, ELEVATOR_RIGHT
+        shaft_width = left_width + right_width
+        middle = shaft_width / 2 - 0.5
+        draws = []
+        for colour, reach in ELEVATOR_GLOW:
+            draws += ["-fill", colour, "-draw", f"rectangle {middle - reach + 0.5:g},0 {middle + reach - 0.5:g},{ELEVATOR_HEIGHT - 1}"]
+        door += [
+            "(", "-size", f"{shaft_width}x{ELEVATOR_HEIGHT}", f"xc:{ELEVATOR_SHAFT}", *draws, ")",
+            "-geometry", f"+{left}+{ELEVATOR_TOP}", "-composite",
+        ]
+        shown = left_width - min(opening, left_width)
+        if shown:
+            door += [
+                "(", PACK / sheet, "-crop", f"{shown}x{ELEVATOR_HEIGHT}+{x + left + left_width - shown}+{y + ELEVATOR_TOP}", "+repage", ")",
+                "-geometry", f"+{left}+{ELEVATOR_TOP}", "-composite",
+            ]
+        shown = right_width - min(opening, right_width)
+        if shown:
+            door += [
+                "(", PACK / sheet, "-crop", f"{shown}x{ELEVATOR_HEIGHT}+{x + right}+{y + ELEVATOR_TOP}", "+repage", ")",
+                "-geometry", f"+{right + right_width - shown}+{ELEVATOR_TOP}", "-composite",
+            ]
+    box_x, box_y, box_width, box_height = ELEVATOR_BOX
+    return ["(", *door, "-crop", f"{box_width}x{box_height}+{box_x}+{box_y}", "+repage", ")"]
 
 
 def main():
@@ -242,6 +293,10 @@ def main():
         target.parent.mkdir(parents=True, exist_ok=True)
         parts = [part for frame in frames for part in crop(*frame, flop=name in FLOPPED)]
         magick(*parts, "-background", "none", "+append", "-strip", target)
+    locked = ["(", *elevator_frame(None), "-fill", ELEVATOR_LOCKED, "-opaque", ELEVATOR_LIGHT, ")"]
+    frames = [locked, elevator_frame(None), *map(elevator_frame, ELEVATOR_OPENINGS)]
+    target = ASSETS / "doors/elevator_door.png"
+    magick(*[part for frame in frames for part in frame], "+append", "-strip", target)
     for target, source in COPIES.items():
         (ASSETS / target).parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(PACK / source, ASSETS / target)

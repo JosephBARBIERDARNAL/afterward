@@ -220,12 +220,14 @@ room_flow:
   room_pan_speed_h_s: 22
   room_gap_h: 1.5
   # The exit door stands on the room's `exit`, locked until a bonus is picked.
-  # Sheet frames, left to right: 0 locked, 1 unlocked, then the opening, played
-  # over the first half of the room transition.
+  # The sci-fi pack's elevator door, set going by `just sci-fi`. Sheet frames,
+  # left to right: 0 locked, 1 unlocked, then the panels sliding apart, played
+  # over the first half of the room transition. `height_h` is the whole door,
+  # frame and header included, which leaves its doorway about 1.1 H tall.
   exit_door:
-    sheet: doors/exit_door.png
-    frame_size_px: { width: 48, height: 96 }
-    frames: 14
+    sheet: doors/elevator_door.png
+    frame_size_px: { width: 41, height: 37 }
+    frames: 10
     height_h: 1.5
   # The bonus item lying on the room's `bonus` spot once every enemy is down.
   # Its category is drawn at random; Interact pressed within `reach_h` of it
