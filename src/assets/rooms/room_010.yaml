@@ -6,40 +6,117 @@ chapter_id: 1
 size:
   width_h: 24
   height_h: 13.5
-background_profiles: [city_teal_evening]
-hidden_background_layers: [city_teal_evening/3, city_teal_evening/4]
+background_profiles: [sci_fi_industrial]
+hidden_background_layers: [sci_fi_industrial/4, sci_fi_industrial/5]
+layer_opacity: { sci_fi_industrial/1: 0.8, sci_fi_industrial/2: 0.8 }
 player_spawn:
   x_h: 4.25
   y_h: 1
 # Solid platforms: land on their top, stop against their sides, bump
 # your head on their underside. They stop shots too.
 platforms:
-  - label: the ledge the whole room stands on
-    color: "#1C1A2E"
-    rect_h: { x: 1, y: 0, width: 23, height: 1 }
-  - label: the ledge the whole room stands on
-    color: "#1C1A2E"
-    rect_h: { x: 23, y: 0, width: 1, height: 13.5 }
-  - label: the ledge the whole room stands on
-    color: "#1C1A2E"
-    rect_h: { x: 0, y: 0, width: 1, height: 13.5 }
-  - color: "#1C1A2E"
-    rect_h: { x: 14.75, y: 3.75, width: 8.25, height: 0.25 }
-  - color: "#1C1A2E"
-    rect_h: { x: 1, y: 3, width: 2, height: 0.25 }
+  - material: sci_fi_dark_rivets
+    rect_h: { x: 0, y: 0, width: 24, height: 0.5 }
+  - material: sci_fi_dark_rivets
+    rect_h: { x: 0, y: 0.5, width: 0.5, height: 13 }
+  - material: sci_fi_green_edge
+    rect_h: { x: 1, y: 0.5, width: 22, height: 0.5 }
+  - material: sci_fi_dark_rivets
+    rect_h: { x: 23.5, y: 0.5, width: 0.5, height: 13 }
+  - material: sci_fi_trim_wall_right
+    rect_h: { x: 0.5, y: 1, width: 0.5, height: 2 }
+  - material: sci_fi_trim_wall_left
+    rect_h: { x: 23, y: 1, width: 0.5, height: 2 }
+  - material: sci_fi_green_edge
+    rect_h: { x: 1, y: 3, width: 3, height: 0.5 }
+  - material: sci_fi_green_edge
+    rect_h: { x: 15.5, y: 3, width: 7.5, height: 0.5 }
+  - material: sci_fi_trim_wall_right
+    rect_h: { x: 0.5, y: 3.5, width: 0.5, height: 10 }
+  - material: sci_fi_trim_wall_left
+    rect_h: { x: 23, y: 3.5, width: 0.5, height: 10 }
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
+# Props: sprites standing on a spot (the middle of their bottom edge).
+props:
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 0.75, y: 0.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 0.75, y: 3 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 4.25, y: 3 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 15.25, y: 3 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 23.25, y: 0.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 23.25, y: 3 }
+  - prop: sci_fi_barrel
+    position_h: { x: 9, y: 1 }
+    solid: false
+    opacity: 0.8
+  - prop: sci_fi_small_crate
+    position_h: { x: 21.5, y: 3.5 }
+    solid: false
+    mirrored: true
+    opacity: 0.8
+  - prop: sci_fi_pipe_vertical
+    position_h: { x: 0.5, y: 6 }
+  - prop: sci_fi_pipe_vertical
+    position_h: { x: 23.5, y: 6 }
+# Devices: traps, moving and folding platforms, buttons, doors and
+# ladders, each standing on a spot (the middle of its bottom edge).
+devices:
+  - kind: terminal
+    position_h: { x: 1.75, y: 3.5 }
+    text: "BLUEPRINT 10. SEALED. WHAT GUARDS THIS DOOR WAS NEVER DRAWN ON THE PLANS."
+  - kind: laser
+    position_h: { x: 3, y: 1 }
+    color: red
+    orientation: vertical
+    length_h: 2
+    off_s: 1.2
+    warn_s: 0.5
+    on_s: 1
+    offset_s: 0
+    damage: 15
+  - kind: laser
+    position_h: { x: 19, y: 1 }
+    color: red
+    orientation: vertical
+    length_h: 2
+    off_s: 1.2
+    warn_s: 0.5
+    on_s: 1
+    offset_s: 1.1
+    damage: 15
+  - kind: blade
+    position_h: { x: 7, y: 1 }
+    travel_x_h: 4
+    travel_y_h: 0
+    speed_h_s: 2
+    damage: 15
 enemy_spawns:
   - type_id: dark_blade_unit
-    position_h: { x: 2.5, y: 3.25 }
+    position_h: { x: 4, y: 3.5 }
     facing: right
     armor_layers: 3
   - type_id: dark_blade_unit
-    position_h: { x: 15, y: 4 }
+    position_h: { x: 15.25, y: 3.5 }
     facing: left
     armor_layers: 3
   - type_id: dark_blade_unit
-    position_h: { x: 17.25, y: 1 }
+    position_h: { x: 13.5, y: 1 }
+    facing: left
+    armor_layers: 3
+  - type_id: dark_heavy_unit
+    position_h: { x: 11, y: 1 }
     facing: left
     armor_layers: 3
 # The bonus item, lying beside the door once every enemy is down.

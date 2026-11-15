@@ -6,68 +6,279 @@ chapter_id: 1
 size:
   width_h: 44
   height_h: 28
-background_profiles: [city_teal_evening]
-hidden_background_layers: [city_teal_evening/3, city_teal_evening/4]
+background_profiles: [sci_fi_industrial]
+hidden_background_layers: [sci_fi_industrial/4, sci_fi_industrial/5]
+layer_opacity: { sci_fi_industrial/1: 0.8, sci_fi_industrial/2: 0.8 }
 player_spawn:
   x_h: 2.5
   y_h: 1
 # Solid platforms: land on their top, stop against their sides, bump
 # your head on their underside. They stop shots too.
 platforms:
-  - label: the ledge the whole room stands on
-    color: "#1C1A2E"
-    rect_h: { x: 1, y: 0, width: 42, height: 1 }
-  - label: east wall
-    color: "#1C1A2E"
-    rect_h: { x: 43, y: 0, width: 1, height: 28 }
-  - label: west wall
-    color: "#1C1A2E"
-    rect_h: { x: 0, y: 0, width: 1, height: 28 }
-  - label: street, the wreck
-    color: "#1C1A2E"
-    rect_h: { x: 12, y: 1, width: 3, height: 1.5 }
-  - label: street, the awning over it
-    color: "#1C1A2E"
-    rect_h: { x: 18, y: 3.75, width: 4, height: 0.25 }
-  - label: east stairs, step 1
-    color: "#1C1A2E"
-    rect_h: { x: 30, y: 1, width: 4, height: 2 }
-  - label: east stairs, step 2
-    color: "#1C1A2E"
-    rect_h: { x: 34, y: 1, width: 4, height: 4 }
-  - label: east stairs, the landing on the east wall
-    color: "#1C1A2E"
-    rect_h: { x: 38, y: 1, width: 5, height: 6 }
-  - label: the step back west, up to the terrace
-    color: "#1C1A2E"
-    rect_h: { x: 33, y: 8.75, width: 2.5, height: 0.25 }
-  - label: the terrace over the street
-    color: "#1C1A2E"
-    rect_h: { x: 24, y: 8, width: 7.5, height: 2 }
+  - material: sci_fi_dark_rivets
+    rect_h: { x: 0, y: 0, width: 44, height: 0.5 }
+  - material: sci_fi_dark_rivets
+    rect_h: { x: 0, y: 0.5, width: 0.5, height: 27.5 }
+  - material: sci_fi_green_edge
+    rect_h: { x: 1, y: 0.5, width: 11, height: 0.5 }
+  - material: sci_fi_dark_rivets
+    rect_h: { x: 12.5, y: 0.5, width: 2, height: 1.5 }
+  - material: sci_fi_green_edge
+    rect_h: { x: 15, y: 0.5, width: 15, height: 0.5 }
+  - material: sci_fi_dark_rivets
+    rect_h: { x: 30.5, y: 0.5, width: 13.5, height: 2 }
+  - material: sci_fi_trim_wall_right
+    rect_h: { x: 0.5, y: 1, width: 0.5, height: 10 }
+  - material: sci_fi_trim_wall_left
+    rect_h: { x: 12, y: 1, width: 0.5, height: 1 }
+  - material: sci_fi_trim_wall_right
+    rect_h: { x: 14.5, y: 1, width: 0.5, height: 1 }
+  - material: sci_fi_trim_wall_left
+    rect_h: { x: 30, y: 1, width: 0.5, height: 1.5 }
+  - material: sci_fi_green_edge
+    rect_h: { x: 12.5, y: 2, width: 2, height: 0.5 }
+  - material: sci_fi_green_edge
+    rect_h: { x: 30.5, y: 2.5, width: 3.5, height: 0.5 }
+  - material: sci_fi_dark_rivets
+    rect_h: { x: 34.5, y: 2.5, width: 9.5, height: 2 }
+  - material: sci_fi_trim_wall_left
+    rect_h: { x: 34, y: 3, width: 0.5, height: 1.5 }
+  - material: sci_fi_green_edge
+    rect_h: { x: 18.5, y: 3.5, width: 3, height: 0.5 }
+  - material: sci_fi_green_edge
+    rect_h: { x: 34.5, y: 4.5, width: 3.5, height: 0.5 }
+  - material: sci_fi_dark_rivets
+    rect_h: { x: 38.5, y: 4.5, width: 5.5, height: 2 }
+  - material: sci_fi_trim_wall_left
+    rect_h: { x: 38, y: 5, width: 0.5, height: 1.5 }
+  - material: sci_fi_green_edge
+    rect_h: { x: 38.5, y: 6.5, width: 4.5, height: 0.5 }
+  - material: sci_fi_dark_rivets
+    rect_h: { x: 43.5, y: 6.5, width: 0.5, height: 21.5 }
+  - material: sci_fi_trim_wall_left
+    rect_h: { x: 43, y: 7, width: 0.5, height: 13 }
+  - material: sci_fi_trim_ceiling
+    rect_h: { x: 24.5, y: 8, width: 6.5, height: 0.5 }
+  - material: sci_fi_trim_wall_left
+    rect_h: { x: 24, y: 8.5, width: 0.5, height: 1 }
+  - material: sci_fi_dark_rivets
+    rect_h: { x: 24.5, y: 8.5, width: 6.5, height: 1 }
+  - material: sci_fi_trim_wall_right
+    rect_h: { x: 31, y: 8.5, width: 0.5, height: 1 }
+  - material: sci_fi_green_edge
+    rect_h: { x: 33.5, y: 8.5, width: 1.5, height: 0.5 }
+  - material: sci_fi_green_edge
+    rect_h: { x: 24.5, y: 9.5, width: 6.5, height: 0.5 }
+  - material: sci_fi_trim_ceiling
+    rect_h: { x: 1, y: 11, width: 14.5, height: 0.5 }
+  - material: sci_fi_dark_rivets
+    rect_h: { x: 0.5, y: 11.5, width: 15, height: 1 }
+  - material: sci_fi_trim_wall_right
+    rect_h: { x: 15.5, y: 11.5, width: 0.5, height: 1 }
+  - material: sci_fi_green_edge
+    rect_h: { x: 1, y: 12.5, width: 14.5, height: 0.5 }
+  - material: sci_fi_trim_wall_right
+    rect_h: { x: 0.5, y: 13, width: 0.5, height: 1.5 }
+  - material: sci_fi_green_edge
+    rect_h: { x: 1, y: 14.5, width: 2, height: 0.5 }
+  - material: sci_fi_trim_wall_right
+    rect_h: { x: 0.5, y: 15, width: 0.5, height: 13 }
+  - material: sci_fi_green_edge
+    rect_h: { x: 6, y: 16.5, width: 1.5, height: 0.5 }
+  - material: sci_fi_trim_ceiling
+    rect_h: { x: 11, y: 18, width: 10.5, height: 0.5 }
+  - material: sci_fi_green_edge
+    rect_h: { x: 11, y: 18.5, width: 10.5, height: 0.5 }
+  - material: sci_fi_trim_ceiling
+    rect_h: { x: 30.5, y: 20, width: 12.5, height: 0.5 }
+  - material: sci_fi_green_edge
+    rect_h: { x: 25, y: 20.5, width: 2, height: 0.5 }
+  - material: sci_fi_trim_wall_left
+    rect_h: { x: 30, y: 20.5, width: 0.5, height: 1 }
+  - material: sci_fi_dark_rivets
+    rect_h: { x: 30.5, y: 20.5, width: 13, height: 1 }
+  - material: sci_fi_green_edge
+    rect_h: { x: 30.5, y: 21.5, width: 12.5, height: 0.5 }
+  - material: sci_fi_trim_wall_left
+    rect_h: { x: 43, y: 22, width: 0.5, height: 6 }
   - label: the ramp from the terrace to the west roof
-    color: "#1C1A2E"
-    rect_h: { x: 15.5, y: 11.26, width: 8.77, height: 0.25 }
+    material: sci_fi_green_edge
+    rect_h: { x: 15.5, y: 11.26, width: 8.77, height: 0.5 }
     rotation_deg: -20
-  - label: the west roof
-    color: "#1C1A2E"
-    rect_h: { x: 1, y: 11, width: 14.75, height: 2 }
-  - label: the balcony on the west wall
-    color: "#1C1A2E"
-    rect_h: { x: 1, y: 14.75, width: 2.5, height: 0.25 }
-  - label: the step up to the gantry
-    color: "#1C1A2E"
-    rect_h: { x: 5.5, y: 16.75, width: 2.5, height: 0.25 }
-  - label: the gantry
-    color: "#1C1A2E"
-    rect_h: { x: 10.5, y: 18, width: 11.5, height: 1 }
-  - label: the perch between the gantry and the door roof
-    color: "#1C1A2E"
-    rect_h: { x: 24.5, y: 20.75, width: 3, height: 0.25 }
-  - label: the door roof
-    color: "#1C1A2E"
-    rect_h: { x: 30, y: 20, width: 13, height: 2 }
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
+# Props: sprites standing on a spot (the middle of their bottom edge).
+props:
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 0.75, y: 0.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 0.75, y: 11 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 0.75, y: 12.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 0.75, y: 14.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 3.25, y: 14.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 5.75, y: 16.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 7.75, y: 16.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 10.75, y: 18 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 10.75, y: 18.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 12.25, y: 0.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 12.25, y: 2 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 14.75, y: 0.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 14.75, y: 2 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 15.75, y: 11 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 15.75, y: 12.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 18.25, y: 3.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 21.75, y: 3.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 21.75, y: 18 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 21.75, y: 18.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 24.25, y: 8 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 24.25, y: 9.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 24.75, y: 20.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 27.25, y: 20.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 30.25, y: 0.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 30.25, y: 2.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 30.25, y: 20 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 30.25, y: 21.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 31.25, y: 8 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 31.25, y: 9.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 33.25, y: 8.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 34.25, y: 2.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 34.25, y: 4.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 35.25, y: 8.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 38.25, y: 4.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 38.25, y: 6.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 43.25, y: 6.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 43.25, y: 20 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 43.25, y: 21.5 }
+  - prop: sci_fi_crate_stack
+    position_h: { x: 10, y: 1 }
+    solid: false
+    opacity: 0.8
+  - prop: sci_fi_barrel
+    position_h: { x: 25.5, y: 10 }
+    solid: false
+    opacity: 0.8
+  - prop: sci_fi_small_crate
+    position_h: { x: 33, y: 3 }
+    solid: false
+    mirrored: true
+    opacity: 0.8
+  - prop: sci_fi_pipe_vertical
+    position_h: { x: 0.5, y: 4 }
+  - prop: sci_fi_pipe_vertical
+    position_h: { x: 43.5, y: 12 }
+# Devices: traps, moving and folding platforms, buttons, doors and
+# ladders, each standing on a spot (the middle of its bottom edge).
+devices:
+  - kind: terminal
+    position_h: { x: 30, y: 10 }
+    text: "PERSONAL NOTE. WE BUILT THEM TO KEEP US SAFE. NOBODY THOUGHT TO ASK FROM WHAT."
+    mirrored: true
+  - kind: laser
+    position_h: { x: 7, y: 1 }
+    color: red
+    orientation: vertical
+    length_h: 10
+    off_s: 1.2
+    warn_s: 0.5
+    on_s: 1
+    offset_s: 0
+    damage: 15
+  - kind: laser
+    position_h: { x: 27.5, y: 1 }
+    color: red
+    orientation: vertical
+    length_h: 7
+    off_s: 1.2
+    warn_s: 0.5
+    on_s: 1
+    offset_s: 1.1
+    damage: 15
+  - kind: blade
+    position_h: { x: 16, y: 1 }
+    travel_x_h: 6
+    travel_y_h: 0
+    speed_h_s: 2
+    damage: 15
+  - kind: blade
+    position_h: { x: 3, y: 13 }
+    travel_x_h: 8
+    travel_y_h: 0
+    speed_h_s: 2
+    damage: 15
 enemy_spawns:
   - type_id: blade_unit
     position_h: { x: 9.5, y: 1 }
