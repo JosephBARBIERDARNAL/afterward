@@ -314,6 +314,7 @@ impl Plugin for GamePlugin {
                 combat::update_enemy_platform_physics,
                 combat::update_falls,
                 (
+                    combat::put_out_a_won_room,
                     combat::update_projectiles,
                     combat::update_hazards,
                     combat::hurt_by_devices,

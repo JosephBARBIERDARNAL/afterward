@@ -133,6 +133,14 @@ impl RunSession {
         !self.playtest.no_enemies && !data.rooms[&self.room_id].enemy_spawns.is_empty()
     }
 
+    /// Whether the room's fight has been won, which powers its devices down
+    /// and puts out what was still flying or burning. A room with no one to
+    /// fight is cleared from its first frame, and keeps its devices running:
+    /// they are what it is crossed against.
+    pub(crate) fn fight_won(&self, data: &GameData) -> bool {
+        self.room_cleared && self.has_enemies(data)
+    }
+
     /// How many owned bonuses a keystone counts: those of its own category
     /// for one with `per_bonus_in_category`, those that build on others for
     /// one with `per_combo`, and none for any other bonus.

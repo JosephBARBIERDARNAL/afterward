@@ -86,6 +86,38 @@ fn a_laser_costs_nothing_while_off_or_warning_and_hurts_once_on() {
 }
 
 #[test]
+fn winning_a_room_powers_its_devices_down() {
+    // A laser standing on the player, on from the first second, and an
+    // enemy far off to win the room against.
+    let mut room = hall(
+        "  - { kind: laser, position_h: { x: 3, y: 1 }, length_h: 3, off_s: 30, warn_s: 0.5, on_s: 30 }",
+    );
+    room.enemy_spawns =
+        yaml_serde::from_str("[{ type_id: blade_unit, position_h: { x: 20, y: 1 } }]")
+            .expect("the enemy should parse");
+    let mut game = play_in(room);
+    {
+        let world = game.app.world_mut();
+        for mut device in world.query::<&mut Device>().iter_mut(world) {
+            device.elapsed_s = 30.6;
+        }
+    }
+    game.defeat_enemies();
+    game.wait_for_screen(GameScreen::Playing, 5.0);
+    let health = game.session().health;
+    game.run_seconds(1.0);
+    assert_eq!(game.session().health, health, "the beam no longer hurts");
+    let world = game.app.world_mut();
+    assert!(
+        world
+            .query::<&Device>()
+            .iter(world)
+            .all(|device| device.frame == 0),
+        "the laser shows itself off"
+    );
+}
+
+#[test]
 fn a_button_opens_the_doors_sharing_its_link_and_closes_them_again() {
     let mut game = play_in(hall(
         "  - { kind: button, position_h: { x: 3.25, y: 1 }, link: 4 }

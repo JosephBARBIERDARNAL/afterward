@@ -10,21 +10,53 @@ const SHOT_LIFE_S: f32 = 4.0;
 const SHOT_FRAME: f32 = 1.0;
 
 /// Steps every device on a cycle and shows where in it it is: its frame,
-/// and whether it hurts. Spikes and blades always hurt.
+/// and whether it hurts. Spikes and blades always hurt — until the room's
+/// fight is won, which powers every device down: none hurts any more, and
+/// each runs on to where it rests (a laser off, a fire trap cold, a press
+/// up, a blade back on its spot) and holds there.
 pub(super) fn run_cycles(
     time: Res<Time>,
     data: Res<GameData>,
+    session: Res<RunSession>,
     mut devices: Query<(&mut Device, &mut combat::Hurts)>,
 ) {
     let dt = time.delta_secs().min(0.05);
+    let powered_down = session.fight_won(&data);
     for (mut device, mut hurts) in &mut devices {
+        if powered_down {
+            if hurts.live {
+                hurts.live = false;
+            }
+            match &device.config.kind {
+                // A beam or a flame goes out at once.
+                DeviceKind::Laser(_) | DeviceKind::FireTrap(_) => {
+                    if device.frame != 0 {
+                        device.frame = 0;
+                    }
+                    continue;
+                }
+                DeviceKind::Blade(blade) => {
+                    // It finishes its lap there and back, and stops on its spot.
+                    let length = Vec2::new(blade.travel_x_h, blade.travel_y_h).length();
+                    let lap_s = 2.0 * length / blade.speed_h_s.max(f32::EPSILON);
+                    if lap_s > f32::EPSILON {
+                        let home_s = (device.elapsed_s / lap_s - 1e-4).ceil() * lap_s;
+                        device.elapsed_s = (device.elapsed_s + dt).min(home_s);
+                    }
+                    continue;
+                }
+                // A press rises back up, and holds there.
+                _ if device.frame == 0 => continue,
+                _ => {}
+            }
+        }
         device.elapsed_s += dt;
         let (frame, live) = Device::state(&device.config, &data.devices, device.elapsed_s);
         // A blade's frame is its speed's, which `move_platforms` knows.
         if device.frame != frame && !matches!(device.config.kind, DeviceKind::Blade(_)) {
             device.frame = frame;
         }
-        if hurts.live != live {
+        if hurts.live != live && !powered_down {
             hurts.live = live;
         }
     }
@@ -44,8 +76,18 @@ pub(super) fn run_turrets(
     time: Res<Time>,
     data: Res<GameData>,
     asset_server: Res<AssetServer>,
+    session: Res<RunSession>,
     mut turrets: Query<(&mut Device, &mut TurretState, &Transform)>,
 ) {
+    // A won room's turrets are powered down, at rest.
+    if session.fight_won(&data) {
+        for (mut device, _, _) in &mut turrets {
+            if device.frame != 0 {
+                device.frame = 0;
+            }
+        }
+        return;
+    }
     let dt = time.delta_secs().min(0.05);
     for (mut device, mut state, transform) in &mut turrets {
         let DeviceKind::Turret(turret) = device.config.kind.clone() else {

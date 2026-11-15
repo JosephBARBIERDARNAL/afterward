@@ -60,6 +60,10 @@ pub(in crate::game) fn hurt_by_devices(
     let Ok((player_transform, mut player)) = players.single_mut() else {
         return;
     };
+    // A won room's devices are powered down (`devices::run_cycles`).
+    if session.fight_won(&data) {
+        return;
+    }
     let player_box = player_hurtbox(player_transform.translation, &data);
     for hurt in &hurts {
         if hurt.live && hurt.touches(player_box) {

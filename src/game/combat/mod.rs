@@ -42,7 +42,7 @@ pub(super) use feedback::{
     drop_health_pickups, update_damage_numbers, update_dead_enemies, update_healing_over_time,
     update_health_bars, update_health_pickups, update_hit_effects, update_impact_effects,
 };
-pub(super) use hazards::{Hazard, update_hazards};
+pub(super) use hazards::{Hazard, put_out_a_won_room, update_hazards};
 use hitboxes::blow_area;
 #[cfg(debug_assertions)]
 pub(super) use hitboxes::blow_area as melee_blow_area;

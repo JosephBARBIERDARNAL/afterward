@@ -44,6 +44,26 @@ impl Hazard {
     }
 }
 
+/// What may still hurt the player once the fight is won: the patches burning
+/// and the shots in the air.
+type Leftovers = Or<(With<Hazard>, With<CombatProjectile>)>;
+
+/// Once the fight is won, nothing still flying or burning can hurt the
+/// player: the shots in the air and the patches on the floor go out.
+pub(in crate::game) fn put_out_a_won_room(
+    mut commands: Commands,
+    data: Res<GameData>,
+    session: Res<RunSession>,
+    leftovers: Query<Entity, Leftovers>,
+) {
+    if !session.fight_won(&data) {
+        return;
+    }
+    for entity in &leftovers {
+        commands.entity(entity).despawn();
+    }
+}
+
 #[derive(SystemParam)]
 pub(in crate::game) struct HazardResources<'w> {
     time: Res<'w, Time>,
