@@ -180,7 +180,6 @@ mod tests {
             solid: None,
             placement,
         };
-        let as_drawn = Placement::default();
         // The lower-left and upper-right corners of each solid box.
         let spans = |placed: &PropConfig| {
             props
@@ -198,7 +197,7 @@ mod tests {
         // The small crate fills the lower 10 px of its 16 px cell: half an H
         // wide, standing on the spot.
         assert_eq!(
-            spans(&placed("sci_fi_small_crate", as_drawn)),
+            spans(&placed("sci_fi_small_crate", Placement::default())),
             vec![(Vec2::new(4.75, 1.0), Vec2::new(5.25, 1.0 + 10.0 / 32.0))]
         );
         // Turned a quarter about its middle (5, 1.25), it stands on its side.
@@ -206,7 +205,7 @@ mod tests {
             "sci_fi_small_crate",
             Placement {
                 rotation_deg: 90.0,
-                ..as_drawn
+                ..Placement::default()
             },
         ));
         let (low, high) = turned[0];
@@ -215,12 +214,15 @@ mod tests {
         // The stack is two boxes: the crate on top and the pair under it, the
         // top one off its middle, and mirrored to the other side of it.
         let top_crate = |placement| spans(&placed("sci_fi_crate_stack", placement))[0];
-        assert_eq!(spans(&placed("sci_fi_crate_stack", as_drawn)).len(), 2);
-        assert_eq!(top_crate(as_drawn).0.x, 4.5 + 9.0 / 32.0);
+        assert_eq!(
+            spans(&placed("sci_fi_crate_stack", Placement::default())).len(),
+            2
+        );
+        assert_eq!(top_crate(Placement::default()).0.x, 4.5 + 9.0 / 32.0);
         assert_eq!(
             top_crate(Placement {
                 mirrored: true,
-                ..as_drawn
+                ..Placement::default()
             })
             .0
             .x,
@@ -228,18 +230,18 @@ mod tests {
         );
         assert!(
             props
-                .solid_corners_h(&placed("sci_fi_ceiling_lamp", as_drawn))
+                .solid_corners_h(&placed("sci_fi_ceiling_lamp", Placement::default()))
                 .is_empty()
         );
 
         // A room may say otherwise: a solid crate made scenery has nothing to
         // stand on, and a scenery lamp made solid is solid over its whole
         // frame.
-        let mut crate_made_scenery = placed("sci_fi_small_crate", as_drawn);
+        let mut crate_made_scenery = placed("sci_fi_small_crate", Placement::default());
         crate_made_scenery.solid = Some(false);
         assert!(!props.is_solid(&crate_made_scenery));
         assert!(props.solid_corners_h(&crate_made_scenery).is_empty());
-        let mut lamp_made_solid = placed("sci_fi_ceiling_lamp", as_drawn);
+        let mut lamp_made_solid = placed("sci_fi_ceiling_lamp", Placement::default());
         lamp_made_solid.solid = Some(true);
         let size = props
             .size_h(&lamp_made_solid.prop)

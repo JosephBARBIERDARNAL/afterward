@@ -271,6 +271,7 @@ pub(super) fn spawn_devices(
     room: &RoomConfig,
     data: &GameData,
     asset_server: &AssetServer,
+    colorways: &ColorwayImages,
 ) {
     let art = &data.devices;
     for config in &room.devices {
@@ -297,7 +298,7 @@ pub(super) fn spawn_devices(
             }
             _ => 0.0,
         };
-        let placement = config.placement;
+        let placement = &config.placement;
         let mut device = commands.spawn((
             Device {
                 config: config.clone(),
@@ -405,7 +406,7 @@ pub(super) fn spawn_devices(
             }
             _ => {}
         }
-        let image = room_art::load_texture(asset_server, &sheet.sheet);
+        let image = colorways.texture(asset_server, &sheet.sheet, placement.colorway.as_ref());
         device.with_children(|parent| {
             for (piece, local, size) in pieces(config, art, sheet, frame_px) {
                 let [frame_width, _] = frame_px;

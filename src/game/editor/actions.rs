@@ -432,6 +432,7 @@ impl RoomEditor {
     /// Adds a platform, decoration, enemy, prop or device around `at_h` and
     /// selects it.
     fn add(&mut self, data: &mut GameData, new: NewItem, at_h: Vec2) {
+        let colorway = self.colorway.clone();
         let Some(room) = data.rooms.get(&self.room_id) else {
             return;
         };
@@ -473,7 +474,10 @@ impl RoomEditor {
                         y_h: snap(at_h.y, false),
                     },
                     kind: DeviceKind::from(tag),
-                    placement: Placement::default(),
+                    placement: Placement {
+                        colorway: colorway.clone(),
+                        ..Placement::default()
+                    },
                 });
                 added = Some(EditorItem::Device(room.devices.len() - 1, tag));
             });
@@ -500,7 +504,10 @@ impl RoomEditor {
                     },
                     layer: DecorationLayer::default(),
                     solid: None,
-                    placement: Placement::default(),
+                    placement: Placement {
+                        colorway: colorway.clone(),
+                        ..Placement::default()
+                    },
                 });
                 added = Some(EditorItem::Prop(room.props.len() - 1));
             });
@@ -543,7 +550,10 @@ impl RoomEditor {
                     fill,
                     layer: DecorationLayer::Background,
                     rect_h,
-                    placement: Placement::default(),
+                    placement: Placement {
+                        colorway: colorway.clone(),
+                        ..Placement::default()
+                    },
                 });
                 EditorItem::Decoration(room.decorations.len() - 1)
             } else {
@@ -551,7 +561,10 @@ impl RoomEditor {
                     label: None,
                     fill,
                     rect_h,
-                    placement: Placement::default(),
+                    placement: Placement {
+                        colorway: colorway.clone(),
+                        ..Placement::default()
+                    },
                 });
                 EditorItem::Platform(room.platforms.len() - 1)
             });

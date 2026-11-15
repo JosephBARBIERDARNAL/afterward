@@ -17,6 +17,7 @@ mod bonus_pickup;
 mod bonus_screen;
 mod camera;
 mod collision;
+mod colorways;
 mod combat;
 mod controls;
 mod devices;
@@ -59,6 +60,7 @@ mod tests;
 use audio::{DamageSound, SoundCue, SoundQueue};
 use camera::{BackgroundParallax, RoomCamera};
 use collision::{HALF_BODY_WIDTH, PlatformSurface, Platforms};
+use colorways::ColorwayImages;
 use combat::{
     EnemyAttack, EnemyBody, EnemyHealthBar, EnemyHealthBarBackground, EnemyShieldIcon,
     ProceduralMovementState,
@@ -188,6 +190,7 @@ impl Plugin for GamePlugin {
                 menus::spawn_menu,
                 prologue::spawn_prologue_text,
                 assets::load_sprites,
+                colorways::paint_colorways,
                 settings::initialize_settings,
                 controls::initialize_control_bindings,
                 (audio::initialize_sound_bank, audio::start_intro_music).chain(),

@@ -6,8 +6,8 @@
 
 use super::*;
 use crate::data::{
-    Backdrop, DecorationLayer, DeviceKind, DeviceTag, Facing, HexColor, MaterialId, ParamValue,
-    Placement,
+    Backdrop, ColorwayId, DecorationLayer, DeviceKind, DeviceTag, Facing, HexColor, MaterialId,
+    ParamValue, Placement,
 };
 use std::sync::LazyLock;
 
@@ -49,6 +49,8 @@ pub(super) enum Field {
     /// Flipped left to right, and how opaque: of anything a room places.
     Mirrored,
     Opacity,
+    /// The colorway of `surfaces/colorways.yaml` it is redrawn in.
+    Colorway,
     Armor,
     Wave,
     // Shared by every enemy of a type or by the player, in every room
@@ -78,6 +80,7 @@ static DEVICE_FIELDS: LazyLock<BTreeMap<DeviceTag, Vec<Field>>> = LazyLock::new(
                 Field::Rotation,
                 Field::Mirrored,
                 Field::Opacity,
+                Field::Colorway,
             ]
             .into_iter()
             .chain(params.map(|index| Field::DeviceParam(tag, index)))
@@ -96,7 +99,13 @@ impl Field {
                 matches!(item, EditorItem::Platform(_) | EditorItem::Decoration(_))
             }) =>
             {
-                return &[Self::Fill, Self::X, Self::Y];
+                return &[Self::Fill, Self::Colorway, Self::X, Self::Y];
+            }
+            _ if selection
+                .iter()
+                .any(|item| matches!(item, EditorItem::Prop(_) | EditorItem::Device(..))) =>
+            {
+                return &[Self::Colorway, Self::X, Self::Y];
             }
             _ => return &[Self::X, Self::Y],
         };
@@ -118,6 +127,7 @@ impl Field {
                 Self::Rotation,
                 Self::Mirrored,
                 Self::Opacity,
+                Self::Colorway,
             ],
             Some(EditorItem::Decoration(_)) => &[
                 Self::Label,
@@ -130,6 +140,7 @@ impl Field {
                 Self::Rotation,
                 Self::Mirrored,
                 Self::Opacity,
+                Self::Colorway,
             ],
             Some(EditorItem::Enemy(_)) => &[
                 Self::Label,
@@ -164,6 +175,7 @@ impl Field {
                 Self::Rotation,
                 Self::Mirrored,
                 Self::Opacity,
+                Self::Colorway,
             ],
             Some(EditorItem::Device(_, tag)) => DEVICE_FIELDS
                 .get(&tag)
@@ -193,6 +205,7 @@ impl Field {
             Self::Rotation => "Rotation (deg)",
             Self::Mirrored => "Mirrored",
             Self::Opacity => "Opacity",
+            Self::Colorway => "Colorway",
             Self::Armor => "Armor layers",
             Self::Wave => "Wave",
             Self::BodyHeight => "Body height (H)",
@@ -245,6 +258,7 @@ impl Field {
                 | Self::Rotation
                 | Self::Mirrored
                 | Self::Opacity
+                | Self::Colorway
                 | Self::Solid
                 | Self::Armor
         )
@@ -418,6 +432,19 @@ impl Field {
                         _ => String::from("(mixed)"),
                     }
                 }
+                Self::Colorway => {
+                    let mut colorways = selection
+                        .iter()
+                        .filter_map(|item| item.placement(room))
+                        .map(|placement| placement.colorway.as_ref());
+                    let first = colorways.next();
+                    match first {
+                        Some(first) if colorways.all(|colorway| colorway == first) => {
+                            first.map_or_else(|| String::from("none"), ToString::to_string)
+                        }
+                        _ => String::from("(mixed)"),
+                    }
+                }
                 _ => format!("Left/Right moves all {}", selection.len()),
             };
         }
@@ -516,6 +543,15 @@ impl Field {
             Self::Opacity => item
                 .and_then(|item| item.placement(room))
                 .map_or_else(String::new, |placement| placement.opacity.to_string()),
+            Self::Colorway => {
+                item.and_then(|item| item.placement(room))
+                    .map_or_else(String::new, |placement| {
+                        placement
+                            .colorway
+                            .as_ref()
+                            .map_or_else(|| String::from("none"), ToString::to_string)
+                    })
+            }
             Self::Armor => match spawn.map(|spawn| spawn.armor_layers) {
                 Some(0) => String::from("none"),
                 Some(layers) => layers.to_string(),
@@ -734,6 +770,26 @@ impl Field {
                     placement.opacity = faded.clamp(0.0, 1.0);
                 }
             }
+            // Left/Right walk the colorways, through none, for the whole
+            // selection.
+            Self::Colorway => {
+                let colorways = std::iter::once(String::new())
+                    .chain(data.colorways.colorways.keys().map(ToString::to_string))
+                    .collect();
+                let current = item
+                    .and_then(|item| item.placement(room))
+                    .and_then(|placement| placement.colorway.as_ref())
+                    .map(ToString::to_string)
+                    .unwrap_or_default();
+                if let Some(colorway) = cycle(colorways, &current) {
+                    let colorway = colorway.parse::<ColorwayId>().ok();
+                    for item in selection {
+                        if let Some(placement) = item.placement_mut(room) {
+                            placement.colorway.clone_from(&colorway);
+                        }
+                    }
+                }
+            }
             Self::Armor => {
                 if let Some(EditorItem::Enemy(index)) = item
                     && let Some(spawn) = room.enemy_spawns.get_mut(index)
@@ -783,13 +839,16 @@ impl Field {
             self.set_backdrop(room, None);
             return;
         }
-        if matches!(self, Self::Rotation | Self::Mirrored | Self::Opacity)
-            && let Some(placement) = item.and_then(|item| item.placement_mut(room))
+        if matches!(
+            self,
+            Self::Rotation | Self::Mirrored | Self::Opacity | Self::Colorway
+        ) && let Some(placement) = item.and_then(|item| item.placement_mut(room))
         {
             let as_drawn = Placement::default();
             match self {
                 Self::Rotation => placement.rotation_deg = as_drawn.rotation_deg,
                 Self::Mirrored => placement.mirrored = as_drawn.mirrored,
+                Self::Colorway => placement.colorway = as_drawn.colorway,
                 _ => placement.opacity = as_drawn.opacity,
             }
             return;

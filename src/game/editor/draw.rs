@@ -30,9 +30,7 @@ pub(super) fn refresh_room_view(
     mut commands: Commands,
     mut editor: ResMut<RoomEditor>,
     data: Res<GameData>,
-    asset_server: Res<AssetServer>,
-    sheets: Res<SpriteSheets>,
-    mut shaders: ShaderAssets,
+    mut art: world::RoomArt,
     room_entities: Query<Entity, With<RoomEntity>>,
 ) {
     if !editor.view_dirty {
@@ -45,17 +43,11 @@ pub(super) fn refresh_room_view(
     let Some(room) = data.rooms.get(&editor.room_id) else {
         return;
     };
-    world::draw_room(
-        &mut commands,
-        room,
-        &data,
-        &asset_server,
-        &sheets,
-        &mut shaders,
-    );
-    world::spawn_player(&mut commands, room, &data, &sheets);
-    world::spawn_enemies(&mut commands, room, &data, &sheets, None);
-    world::spawn_exit_door(&mut commands, room, &data, &sheets);
+    world::draw_room(&mut commands, room, &data, &mut art);
+    let sheets = &*art.sheets;
+    world::spawn_player(&mut commands, room, &data, sheets);
+    world::spawn_enemies(&mut commands, room, &data, sheets, None);
+    world::spawn_exit_door(&mut commands, room, &data, sheets);
     if editor
         .selected
         .iter()

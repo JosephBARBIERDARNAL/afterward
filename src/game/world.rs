@@ -13,13 +13,21 @@ pub(super) struct RoomBuild<'w> {
     session: ResMut<'w, RunSession>,
 }
 
+/// What a room's scenery is drawn with: its images and sprite sheets, its
+/// art in every colorway, and the shaders of its backdrop.
+#[derive(SystemParam)]
+pub(super) struct RoomArt<'w> {
+    asset_server: Res<'w, AssetServer>,
+    pub(super) sheets: Res<'w, SpriteSheets>,
+    colorways: Res<'w, ColorwayImages>,
+    shaders: ShaderAssets<'w>,
+}
+
 pub(super) fn spawn_room(
     mut commands: Commands,
     build: RoomBuild,
     mut camera: Query<(&mut Transform, &mut RoomCamera), With<Camera2d>>,
-    asset_server: Res<AssetServer>,
-    sheets: Res<SpriteSheets>,
-    mut shaders: ShaderAssets,
+    mut art: RoomArt,
 ) {
     let RoomBuild {
         data,
@@ -33,25 +41,19 @@ pub(super) fn spawn_room(
     // its entrance starts over rather than carrying on from a crossing.
     pan.came_through_a_door = false;
     let room = &data.rooms[&session.room_id];
-    draw_room(
-        &mut commands,
-        room,
-        &data,
-        &asset_server,
-        &sheets,
-        &mut shaders,
-    );
-    spawn_player(&mut commands, room, &data, &sheets);
+    draw_room(&mut commands, room, &data, &mut art);
+    let sheets = &*art.sheets;
+    spawn_player(&mut commands, room, &data, sheets);
     session.wave = 0;
     session.untouched = true;
     session.deflector_used = false;
     session.flawless = false;
     session.wave_wait_s = 0.0;
     if session.has_enemies(&data) {
-        spawn_enemies(&mut commands, room, &data, &sheets, Some(0));
+        spawn_enemies(&mut commands, room, &data, sheets, Some(0));
     }
-    spawn_exit_door(&mut commands, room, &data, &sheets);
-    spawn_entry_door(&mut commands, room, &data, &sheets);
+    spawn_exit_door(&mut commands, room, &data, sheets);
+    spawn_entry_door(&mut commands, room, &data, sheets);
 
     if let Ok((mut transform, mut rig)) = camera.single_mut() {
         rig.size_h = Vec2::new(room.size.width_h, room.size.height_h);
@@ -69,10 +71,10 @@ pub(super) fn draw_room(
     commands: &mut Commands,
     room: &RoomConfig,
     data: &GameData,
-    asset_server: &AssetServer,
-    sheets: &SpriteSheets,
-    shaders: &mut ShaderAssets,
+    art: &mut RoomArt,
 ) {
+    let (asset_server, sheets, colorways) = (&*art.asset_server, &*art.sheets, &*art.colorways);
+    let shaders = &mut art.shaders;
     // The profiles are mixed rather than laid one over the other. Their skies
     // are blended in equal parts, each drawn over the ones before it at the
     // share that leaves them all even; a plain color is a sky like any other,
@@ -188,8 +190,8 @@ pub(super) fn draw_room(
     }
 
     spawn_room_platforms(commands, room, data);
-    room_art::draw(commands, room, data, asset_server, sheets);
-    devices::spawn_devices(commands, room, data, asset_server);
+    room_art::draw(commands, room, data, asset_server, sheets, colorways);
+    devices::spawn_devices(commands, room, data, asset_server, colorways);
 }
 
 /// Spawns the colliders of the room's platforms and solid props;

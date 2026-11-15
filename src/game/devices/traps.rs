@@ -91,7 +91,7 @@ fn fire_shot(
         return;
     };
     // The way it faces, mirrored and turned as the turret is.
-    let placement = config.placement;
+    let placement = &config.placement;
     let muzzle = placement.place(muzzle.center(), center);
     let facing = f32::from(turret.facing) * if placement.mirrored { -1.0 } else { 1.0 };
     let heading = Vec2::from_angle(placement.rotation_deg.to_radians()) * facing;

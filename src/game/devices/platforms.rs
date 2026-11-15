@@ -130,7 +130,7 @@ pub(super) fn carry_riders(
             (DeviceKind::Conveyor(belt), _) => {
                 // Along the belt as it is placed: mirrored, it runs the other
                 // way; turned, up or down its slope.
-                let placement = device.config.placement;
+                let placement = &device.config.placement;
                 let way = if placement.mirrored { -1.0 } else { 1.0 };
                 let along = Vec2::from_angle(placement.rotation_deg.to_radians());
                 (

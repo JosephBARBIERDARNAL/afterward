@@ -4,7 +4,8 @@
 
 use super::*;
 use crate::data::{
-    DeviceArt, DeviceTag, Fill, Placement, PlatformConfig, PropCatalog, PropId, RectH, RoomConfig,
+    ColorwayId, DeviceArt, DeviceTag, Fill, Placement, PlatformConfig, PropCatalog, PropId, RectH,
+    RoomConfig,
 };
 
 mod actions;
@@ -83,6 +84,7 @@ impl Plugin for EditorPlugin {
                         layers::show_layer_opacity,
                         palette::show_palette,
                         palette::refresh_palette,
+                        palette::recolor_swatch_art,
                     )
                         .chain(),
                 )
@@ -574,6 +576,9 @@ struct RoomEditor {
     prop: Option<PropId>,
     /// The kind of device T adds: the last one placed or picked.
     device: DeviceTag,
+    /// The colorway new items are drawn in: the last one picked, or that of
+    /// the last item pressed.
+    colorway: Option<ColorwayId>,
     /// The hue the color picker's shades are mixed from, in degrees.
     hue: f32,
     /// Items copied with Cmd+C or Cmd+X, ready to paste into any room.
@@ -618,6 +623,7 @@ impl Default for RoomEditor {
             fill: None,
             prop: None,
             device: DeviceTag::Laser,
+            colorway: None,
             hue: 0.0,
             clipboard: None,
             pointer_over_panel: false,

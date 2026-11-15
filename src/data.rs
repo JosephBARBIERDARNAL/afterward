@@ -1,6 +1,7 @@
 mod backgrounds;
 mod bonuses;
 mod color;
+mod colorways;
 mod devices;
 mod enemies;
 mod gameplay;
@@ -13,6 +14,7 @@ mod surfaces;
 pub use backgrounds::*;
 pub use bonuses::*;
 pub use color::*;
+pub use colorways::*;
 pub use devices::*;
 pub use enemies::*;
 pub use gameplay::*;
@@ -42,6 +44,7 @@ pub struct GameData {
     pub backgrounds: BackgroundProfiles,
     pub bonuses: BonusesConfig,
     pub surfaces: SurfaceMaterials,
+    pub colorways: Colorways,
     pub props: PropCatalog,
     pub devices: DeviceArt,
     pub rooms: BTreeMap<u16, RoomConfig>,
@@ -55,6 +58,7 @@ impl GameData {
         let backgrounds = read_yaml(&asset_root.join("background/background_profiles.yaml"))?;
         let bonuses = read_yaml(&asset_root.join("config/bonuses.yaml"))?;
         let surfaces = read_yaml(&asset_root.join("surfaces/materials.yaml"))?;
+        let colorways = read_yaml(&asset_root.join("surfaces/colorways.yaml"))?;
         let props = read_yaml(&asset_root.join("props/props.yaml"))?;
         let devices = read_yaml(&asset_root.join("devices/devices.yaml"))?;
         let mut rooms = BTreeMap::new();
@@ -73,6 +77,7 @@ impl GameData {
             backgrounds,
             bonuses,
             surfaces,
+            colorways,
             props,
             devices,
             rooms,
@@ -627,6 +632,13 @@ impl GameData {
                          or with an opacity outside 0..=1"
                     )));
                 }
+                if let Some(colorway) = &placement.colorway
+                    && !self.colorways.colorways.contains_key(colorway)
+                {
+                    return Err(InvalidGameData::from(format!(
+                        "room {room_id} references unknown colorway {colorway}"
+                    )));
+                }
             }
             let fills = room
                 .platforms
@@ -722,6 +734,14 @@ impl GameData {
                 "surface textures need a positive size, edges a nonnegative thickness, \
                  and every alpha must be within 0..=1",
             ));
+        }
+        if let Some((colorway, _)) = self.colorways.colorways.iter().find(|(_, colorway)| {
+            colorway.shifts.is_empty() || !colorway.shifts.iter().all(HueShift::is_valid)
+        }) {
+            return Err(InvalidGameData::from(format!(
+                "colorway {colorway} needs shifts with hues within 0..=360, a minimum \
+                 saturation within 0..=1, and scales that are not negative"
+            )));
         }
         for material in surfaces.materials.values() {
             if !asset_root.join(&material.texture).is_file() {

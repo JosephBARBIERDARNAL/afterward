@@ -8,7 +8,9 @@ use std::{
 use bevy::math::{Rect, Vec2};
 use serde::Deserialize;
 
-use super::{Backdrop, BackgroundLayerRef, DeviceConfig, EnemyTypeId, Fill, ProfileLayer, PropId};
+use super::{
+    Backdrop, BackgroundLayerRef, ColorwayId, DeviceConfig, EnemyTypeId, Fill, ProfileLayer, PropId,
+};
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct RoomConfig {
@@ -157,10 +159,10 @@ impl PlatformConfig {
     }
 }
 
-/// How an item a room places is mirrored, turned and faded: every platform,
-/// decoration, prop and device has one, left out of its room entry while it
-/// stands as drawn.
-#[derive(Debug, Clone, Copy, PartialEq, Deserialize)]
+/// How an item a room places is mirrored, turned, faded and recolored: every
+/// platform, decoration, prop and device has one, left out of its room entry
+/// while it stands as drawn.
+#[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(default)]
 pub struct Placement {
     /// Flipped left to right about its middle, what holds a body up or hurts
@@ -170,15 +172,19 @@ pub struct Placement {
     pub rotation_deg: f32,
     /// How opaque it is drawn, from 0 (unseen) to 1.
     pub opacity: f32,
+    /// The colorway of `surfaces/colorways.yaml` its images are redrawn in;
+    /// left out, it keeps the colors it was drawn with.
+    pub colorway: Option<ColorwayId>,
 }
 
 impl Default for Placement {
-    /// As drawn: neither mirrored nor turned, and fully opaque.
+    /// As drawn: neither mirrored nor turned, fully opaque, in its own colors.
     fn default() -> Self {
         Self {
             mirrored: false,
             rotation_deg: 0.0,
             opacity: 1.0,
+            colorway: None,
         }
     }
 }

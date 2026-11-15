@@ -198,6 +198,9 @@ pub(super) fn handle_pointer(resources: EditorPointerResources) {
                     if let EditorItem::Device(_, tag) = item {
                         editor.device = tag;
                     }
+                    if let Some(placement) = item.placement(room) {
+                        editor.colorway.clone_from(&placement.colorway);
+                    }
                     let starts = editor
                         .selected
                         .iter()

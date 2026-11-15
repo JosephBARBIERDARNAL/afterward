@@ -240,6 +240,10 @@ fn placement_fields(placement: &Placement) -> impl Iterator<Item = String> {
         placement.mirrored.then(|| String::from("mirrored: true")),
         (rotation != 0.0).then(|| format!("rotation_deg: {rotation}")),
         (placement.opacity != 1.0).then(|| format!("opacity: {}", placement.opacity)),
+        placement
+            .colorway
+            .as_ref()
+            .map(|colorway| format!("colorway: {colorway}")),
     ]
     .into_iter()
     .flatten()
@@ -459,12 +463,13 @@ next_room_id: 4
                     y_h: 1.0,
                 },
                 kind,
-                // Mirrored, turned and faded, so a placement the writer
-                // drops cannot pass for one left as drawn.
+                // Mirrored, turned, faded and recolored, so a placement the
+                // writer drops cannot pass for one left as drawn.
                 placement: Placement {
                     mirrored: true,
                     rotation_deg: 15.0 * index as f32,
                     opacity: 0.5,
+                    colorway: "dusk".parse().ok(),
                 },
             });
         }

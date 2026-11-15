@@ -1,14 +1,16 @@
-//! The fill palette: a swatch for every surface material, then every prop,
+//! The fill palette: a swatch for every colorway, then every surface
+//! material, every prop and every device, drawn in the current colorway,
 //! then a color picker (a field to type any hex code into, and a hue strip
 //! over a grid of shades mixed from it). Clicking a material or a color
 //! paints the selected platforms and decorations and becomes the fill new
 //! ones use; clicking a prop turns the selected props into it and makes it
-//! the one O adds. With nothing selected,
+//! the one O adds; clicking a colorway redraws the selection in it and
+//! makes it the one new items take. With nothing selected,
 //! a color paints the room's background instead: the one the inspector
 //! stands on, else Background 1.
 
 use super::*;
-use crate::data::{Backdrop, DeviceTag, HexColor, MaterialId, PropId, PropSprite};
+use crate::data::{Backdrop, ColorwayId, DeviceTag, HexColor, MaterialId, PropId, PropSprite};
 use bevy::{text::LineHeight, ui::RelativeCursorPosition};
 
 const SWATCH_PX: f32 = 26.0;
@@ -37,12 +39,19 @@ pub(super) struct PalettePanel;
 
 #[derive(Component)]
 pub(super) enum PaletteSwatch {
+    /// A colorway of `surfaces/colorways.yaml`, or none: the art's own colors.
+    Colorway(Option<ColorwayId>),
     Material(MaterialId),
     /// A prop's sprite, as big as the swatch allows.
     Prop(PropId),
     /// A kind of device: clicking it makes it what T adds.
     Device(DeviceTag),
 }
+
+/// The image a material, prop or device swatch shows, by its path: redrawn
+/// in the current colorway.
+#[derive(Component)]
+pub(super) struct SwatchArt(String);
 
 /// A hue of the color picker, in degrees: clicking it mixes the shade grid
 /// from that hue without painting anything.
@@ -97,6 +106,15 @@ type PanelParts<'world, 'state> = Query<
 pub(super) struct HexFieldText;
 
 impl RoomEditor {
+    /// The colorway the palette shows the art in: the selected item's, else
+    /// the one new items take.
+    fn current_colorway<'a>(&'a self, room: Option<&'a RoomConfig>) -> Option<&'a ColorwayId> {
+        match room.and_then(|room| self.primary().and_then(|item| item.placement(room))) {
+            Some(placement) => placement.colorway.as_ref(),
+            None => self.colorway.as_ref(),
+        }
+    }
+
     /// The background the palette paints while nothing is selected: the one
     /// the inspector stands on, else Background 1. `None` while something is
     /// selected, which the palette paints instead.
@@ -152,6 +170,26 @@ pub(super) fn spawn_palette(
                 },
                 PaletteCaption,
             ));
+            panel.spawn(ui::heading("Colorway"));
+            panel.spawn(grid(COLUMNS, SWATCH_PX)).with_children(|grid| {
+                let colorways = data
+                    .colorways
+                    .colorways
+                    .iter()
+                    .map(|(id, colorway)| (Some(id.clone()), Color::from(colorway.swatch)));
+                // The art's own colors first, as the pack's green trim.
+                for (colorway, color) in
+                    std::iter::once((None, Color::srgb(0.18, 0.5, 0.31))).chain(colorways)
+                {
+                    grid.spawn((
+                        cell(SWATCH_PX),
+                        BorderColor::all(SWATCH_BORDER),
+                        BackgroundColor(color),
+                        RelativeCursorPosition::default(),
+                        PaletteSwatch::Colorway(colorway),
+                    ));
+                }
+            });
             panel.spawn(ui::heading("Materials"));
             panel.spawn(grid(COLUMNS, SWATCH_PX)).with_children(|grid| {
                 for (id, material) in &data.surfaces.materials {
@@ -159,6 +197,7 @@ pub(super) fn spawn_palette(
                         cell(SWATCH_PX),
                         BorderColor::all(SWATCH_BORDER),
                         ImageNode::new(room_art::load_texture(asset_server, &material.texture)),
+                        SwatchArt(material.texture.clone()),
                         RelativeCursorPosition::default(),
                         PaletteSwatch::Material(id.clone()),
                     ));
@@ -195,6 +234,7 @@ pub(super) fn spawn_palette(
                                 rect: Some(Rect::new(0.0, 0.0, width_px, height_px)),
                                 ..ImageNode::new(room_art::load_texture(asset_server, &prop.sprite))
                             },
+                            SwatchArt(prop.sprite.clone()),
                         ));
                     }
                 });
@@ -237,6 +277,7 @@ pub(super) fn spawn_palette(
                                 rect: Some(Rect::new(0.0, 0.0, width_px, height_px)),
                                 ..ImageNode::new(room_art::load_texture(asset_server, &sheet.sheet))
                             },
+                            SwatchArt(sheet.sheet.clone()),
                         ));
                     }
                 });
@@ -345,6 +386,18 @@ pub(super) fn handle_palette(
         editor.device = *tag;
         return;
     }
+    if let Some(PaletteSwatch::Colorway(colorway)) = swatch {
+        let selection = editor.selected.clone();
+        editor.edit(&mut data, |room| {
+            for item in &selection {
+                if let Some(placement) = item.placement_mut(room) {
+                    placement.colorway.clone_from(colorway);
+                }
+            }
+        });
+        editor.colorway.clone_from(colorway);
+        return;
+    }
     if let Some(PaletteSwatch::Prop(prop)) = swatch {
         let selection = editor.selected.clone();
         if selection
@@ -445,8 +498,16 @@ pub(super) fn refresh_palette(
             _ => None,
         })
         .or(editor.prop.as_ref());
+    let current_colorway = editor.current_colorway(room);
     for (cursor, swatch, mut outline) in &mut swatches {
         let (name, is_current) = match swatch {
+            PaletteSwatch::Colorway(colorway) => (
+                colorway.as_ref().map_or_else(
+                    || String::from("colorway: none (the art's own colors)"),
+                    |colorway| format!("colorway: {colorway}"),
+                ),
+                colorway.as_ref() == current_colorway,
+            ),
             PaletteSwatch::Material(material) => (
                 material.to_string(),
                 matches!(current, Some(Fill::Material(picked)) if picked == material),
@@ -506,9 +567,31 @@ pub(super) fn refresh_palette(
     }
 }
 
+/// Redraws the swatches of materials, props and devices in the current
+/// colorway once it changes.
+pub(super) fn recolor_swatch_art(
+    editor: Res<RoomEditor>,
+    data: Res<GameData>,
+    colorways: Res<ColorwayImages>,
+    asset_server: Res<AssetServer>,
+    mut shown: Local<Option<Option<ColorwayId>>>,
+    mut art: Query<(&SwatchArt, &mut ImageNode)>,
+) {
+    let current = editor
+        .current_colorway(data.rooms.get(&editor.room_id))
+        .cloned();
+    if shown.as_ref() == Some(&current) {
+        return;
+    }
+    for (SwatchArt(path), mut image) in &mut art {
+        image.image = colorways.texture(&asset_server, path, current.as_ref());
+    }
+    *shown = Some(current);
+}
+
 /// Shows the palette while it has something to paint: the room's background
-/// with nothing selected, or a selection holding a platform, a decoration or
-/// a prop.
+/// with nothing selected, or a selection holding a platform, a decoration, a
+/// prop or a device.
 pub(super) fn show_palette(
     editor: Res<RoomEditor>,
     mut panels: Query<&mut Node, With<PalettePanel>>,
@@ -517,7 +600,10 @@ pub(super) fn show_palette(
         || editor.selected.iter().any(|item| {
             matches!(
                 item,
-                EditorItem::Platform(_) | EditorItem::Decoration(_) | EditorItem::Prop(_)
+                EditorItem::Platform(_)
+                    | EditorItem::Decoration(_)
+                    | EditorItem::Prop(_)
+                    | EditorItem::Device(..)
             )
         });
     let display = if paints { Display::Flex } else { Display::None };

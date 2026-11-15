@@ -311,6 +311,50 @@ fn the_editor_places_a_prop_swaps_its_sprite_saves_and_deletes_it() {
 }
 
 #[test]
+fn the_editor_redraws_a_prop_in_a_colorway_saves_it_and_clears_it() {
+    let mut game = HeadlessGame::with_copied_data();
+    game.tap(KeyCode::KeyD);
+    game.tap(KeyCode::PageDown);
+    let colorway = |game: &HeadlessGame| {
+        game.data().rooms[&1]
+            .props
+            .last()
+            .and_then(|placed| placed.placement.colorway.clone())
+    };
+
+    // O places a prop in the art's own colors; its rows run Label, Prop,
+    // Layer, Solid, X, Y, Rotation, Mirrored, Opacity, then Colorway.
+    game.tap(KeyCode::KeyO);
+    assert_eq!(colorway(&game), None);
+    for _ in 0..9 {
+        game.tap(KeyCode::ArrowDown);
+    }
+    // Right walks from none to the catalog's first colorway.
+    game.tap(KeyCode::ArrowRight);
+    let first = game.data().colorways.colorways.keys().next().cloned();
+    assert!(first.is_some());
+    assert_eq!(colorway(&game), first);
+
+    // Cmd+S writes it into the room file, and C gives the prop its own
+    // colors back.
+    command_presses(&mut game, KeyCode::KeyS, "s", 1);
+    let saved: RoomConfig = yaml_serde::from_str(
+        &fs::read_to_string(RoomConfig::file_path(&game.data().asset_root, 1))
+            .expect("the editor wrote the room file"),
+    )
+    .expect("the saved room is valid YAML");
+    assert_eq!(
+        saved
+            .props
+            .last()
+            .and_then(|placed| placed.placement.colorway.clone()),
+        first
+    );
+    game.tap(KeyCode::KeyC);
+    assert_eq!(colorway(&game), None);
+}
+
+#[test]
 fn the_editor_places_a_device_tunes_it_saves_and_deletes_it() {
     let mut game = HeadlessGame::with_copied_data();
     game.tap(KeyCode::KeyD);
@@ -319,8 +363,8 @@ fn the_editor_places_a_device_tunes_it_saves_and_deletes_it() {
     let authored = devices(&game).len();
 
     // T places a laser, the kind picked when nothing else was; its rows run
-    // Label, X, Y, Rotation, Mirrored, Opacity, then its colour, its
-    // orientation and its length.
+    // Label, X, Y, Rotation, Mirrored, Opacity, Colorway, then its colour,
+    // its orientation and its length.
     game.tap(KeyCode::KeyT);
     assert_eq!(devices(&game).len(), authored + 1);
     let length = |game: &HeadlessGame| match &devices(game)[authored].kind {
@@ -328,7 +372,7 @@ fn the_editor_places_a_device_tunes_it_saves_and_deletes_it() {
         other => panic!("T added a {}, not a laser", other.tag()),
     };
     let before = length(&game);
-    for _ in 0..8 {
+    for _ in 0..9 {
         game.tap(KeyCode::ArrowDown);
     }
     game.tap(KeyCode::ArrowRight);

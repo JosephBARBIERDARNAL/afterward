@@ -5,7 +5,7 @@
 //! Drawing only: collision lives in `collision.rs`.
 
 use super::*;
-use crate::data::{DecorationLayer, Fill, RectH, RoomConfig};
+use crate::data::{DecorationLayer, Fill, Placement, RectH, RoomConfig};
 use bevy::image::{ImageAddressMode, ImageLoaderSettings, ImageSampler, ImageSamplerDescriptor};
 
 /// Depth of the first platform; later platforms stack slightly above it.
@@ -129,13 +129,15 @@ pub(super) fn draw(
     data: &GameData,
     asset_server: &AssetServer,
     sheets: &SpriteSheets,
+    colorways: &ColorwayImages,
 ) {
     let surfaces = &data.surfaces;
     let texel_h = surfaces.texel_h();
-    // A sprite painted with `fill`: the material's texture sampled at the
-    // rectangle's world position, so every block of one material shares one
-    // continuous pattern, or a plain color. `tint` multiplies both.
-    let painted = |fill: &Fill, rect: RectH, tint: Color| match fill {
+    // A sprite painted with `fill`: the material's texture (in the colorway
+    // `placement` names) sampled at the rectangle's world position, so every
+    // block of one material shares one continuous pattern, or a plain color.
+    // `tint` multiplies both.
+    let painted = |fill: &Fill, placement: &Placement, rect: RectH, tint: Color| match fill {
         Fill::Material(material) => match surfaces.materials.get(material) {
             Some(material) => {
                 let tile_h = material.tile_h.unwrap_or(surfaces.texture_tile_h);
@@ -148,7 +150,11 @@ pub(super) fn draw(
                         -rect.y * px_per_h,
                     )),
                     color: tint,
-                    ..Sprite::from_image(load_texture(asset_server, &material.texture))
+                    ..Sprite::from_image(colorways.texture(
+                        asset_server,
+                        &material.texture,
+                        placement.colorway.as_ref(),
+                    ))
                 }
             }
             None => Sprite::from_color(tint, Vec2::ONE),
@@ -202,7 +208,12 @@ pub(super) fn draw(
             }
         };
         let opacity = block.placement.opacity;
-        let mut fill = painted(&block.fill, rect, Color::WHITE.with_alpha(opacity));
+        let mut fill = painted(
+            &block.fill,
+            &block.placement,
+            rect,
+            Color::WHITE.with_alpha(opacity),
+        );
         fill.flip_x = block.placement.mirrored;
         commands.spawn(placed(fill, rect, z, pivot, turn));
         let highlight = highlight.with_alpha(edges.highlight_alpha * opacity);
@@ -242,10 +253,10 @@ pub(super) fn draw(
             DecorationLayer::Foreground => (&layers.foreground, FOREGROUND_DECORATION_Z),
         };
         let z = base_z + index as f32 * BLOCK_Z_STEP;
-        let placement = decoration.placement;
+        let placement = &decoration.placement;
         let tint = Color::from(style.tint).with_alpha(style.alpha * placement.opacity);
         let rect = decoration.rect_h;
-        let mut panel = painted(&decoration.fill, rect, tint);
+        let mut panel = painted(&decoration.fill, placement, rect, tint);
         panel.flip_x = placement.mirrored;
         commands.spawn(placed(
             panel,
@@ -260,8 +271,11 @@ pub(super) fn draw(
     // the room is played: a still prop is a sheet of one frame.
     for (index, placed) in room.props.iter().enumerate() {
         let key = placed.prop.sheet();
-        let (Some(sheet), Some(size_h)) = (sheets.0.get(&key), data.props.size_h(&placed.prop))
-        else {
+        let (Some(sheet), Some(sprite), Some(size_h)) = (
+            sheets.0.get(&key),
+            data.props.props.get(&placed.prop),
+            data.props.size_h(&placed.prop),
+        ) else {
             continue;
         };
         let base_z = match placed.layer {
@@ -272,14 +286,19 @@ pub(super) fn draw(
             placed.position_h.x_h,
             placed.position_h.y_h + size_h.y / 2.0,
         );
-        let placement = placed.placement;
+        let placement = &placed.placement;
         commands.spawn((
             Sprite {
                 custom_size: Some(size_h * H_WORLD_UNITS),
                 flip_x: placement.mirrored,
                 color: Color::WHITE.with_alpha(placement.opacity),
                 ..Sprite::from_atlas_image(
-                    sheet.image.clone(),
+                    match &placement.colorway {
+                        Some(colorway) => {
+                            colorways.texture(asset_server, &sprite.sprite, Some(colorway))
+                        }
+                        None => sheet.image.clone(),
+                    },
                     TextureAtlas {
                         layout: sheet.layout.clone(),
                         index: 0,
