@@ -257,7 +257,7 @@ props:
   - prop: sci_fi_pipe_vertical
     position_h: { x: 0.5, y: 10 }
   - prop: sci_fi_pipe_vertical
-    position_h: { x: 61.5, y: 3 }
+    position_h: { x: 61.5, y: 7.25 }
 # Devices: traps, moving and folding platforms, buttons, doors and
 # ladders, each standing on a spot (the middle of its bottom edge).
 devices:

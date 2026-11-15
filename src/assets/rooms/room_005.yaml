@@ -112,12 +112,14 @@ props:
   - label: corner
     prop: sci_fi_steel_block
     position_h: { x: 32.25, y: 3 }
+  - prop: sci_fi_pipe_vertical
+    position_h: { x: 0.5, y: 13 }
 # Devices: traps, moving and folding platforms, buttons, doors and
 # ladders, each standing on a spot (the middle of its bottom edge).
 devices:
   - kind: terminal
     position_h: { x: 31.5, y: 3.5 }
-    text: "CITY ACCESS LOG. ROOM IS NOW CLEARED."
+    text: CITY ACCESS LOG. ROOM IS NOW CLEARED.
     mirrored: true
 enemy_spawns:
   - type_id: heavy_unit

@@ -74,6 +74,12 @@ platforms:
   - material: sci_fi_green_edge
     rect_h: { x: 21.5, y: 10, width: 8, height: 0.5 }
     colorway: dusk
+  - material: sci_fi_trim_ceiling
+    rect_h: { x: 48, y: 5.5, width: 3, height: 0.5 }
+    colorway: dusk
+  - material: sci_fi_green_edge
+    rect_h: { x: 48, y: 6, width: 3, height: 0.5 }
+    colorway: dusk
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
 # Props: sprites standing on a spot (the middle of their bottom edge).
@@ -162,7 +168,7 @@ props:
     position_h: { x: 5.5, y: 1.75 }
     colorway: dusk
   - prop: sci_fi_framed_fan
-    position_h: { x: 48, y: 1.25 }
+    position_h: { x: 50.5, y: 0.75 }
     colorway: dusk
   - prop: sci_fi_crate_stack
     position_h: { x: 22.5, y: 10.5 }
@@ -178,14 +184,30 @@ props:
     position_h: { x: 0.5, y: 6 }
     colorway: dusk
   - prop: sci_fi_pipe_vertical
-    position_h: { x: 51.5, y: 8 }
+    position_h: { x: 51.5, y: 10.75 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 47.75, y: 5.5 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 51.25, y: 5.5 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 47.75, y: 6 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 51.25, y: 6 }
     colorway: dusk
 # Devices: traps, moving and folding platforms, buttons, doors and
 # ladders, each standing on a spot (the middle of its bottom edge).
 devices:
   - kind: terminal
-    position_h: { x: 1.75, y: 1 }
-    text: "SIGNAL HALL. THE BEAMS STILL KEEP TIME."
+    position_h: { x: 50.25, y: 6.5 }
+    text: SIGNAL HALL. THE BEAMS STILL KEEP TIME.
     mirrored: true
     colorway: dusk
   - kind: laser
@@ -422,6 +444,9 @@ enemy_spawns:
     position_h: { x: 47, y: 3 }
     facing: left
     wave: 1
+  - type_id: mad_ghost
+    position_h: { x: 6.25, y: 3.5 }
+    facing: left
 # The bonus item, lying beside the door once every enemy is down.
 bonus:
   x_h: 47.75

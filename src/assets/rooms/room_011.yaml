@@ -210,12 +210,7 @@ props:
     position_h: { x: 40.75, y: 9 }
     colorway: dusk
   - prop: sci_fi_crate_stack
-    position_h: { x: 8.5, y: 4 }
-    solid: false
-    opacity: 0.8
-    colorway: dusk
-  - prop: sci_fi_barrel
-    position_h: { x: 33.5, y: 1 }
+    position_h: { x: 8.25, y: 4 }
     solid: false
     opacity: 0.8
     colorway: dusk
@@ -225,28 +220,34 @@ props:
     opacity: 0.8
     colorway: dusk
   - prop: sci_fi_pipe_vertical
-    position_h: { x: 0.5, y: 9 }
+    position_h: { x: 0.5, y: 10.5 }
     colorway: dusk
   - prop: sci_fi_pipe_vertical
-    position_h: { x: 47.5, y: 7 }
+    position_h: { x: 47.5, y: 5.5 }
     colorway: dusk
   - prop: sci_fi_framed_fan
-    position_h: { x: 24, y: 1.75 }
+    position_h: { x: 25, y: 2 }
     colorway: dusk
   - prop: sci_fi_framed_fan
-    position_h: { x: 42.5, y: 1.75 }
+    position_h: { x: 40.5, y: 1.25 }
+    colorway: dusk
+  - prop: sci_fi_pipe_vertical
+    position_h: { x: 47.5, y: 12 }
+    colorway: dusk
+  - prop: sci_fi_pipe_vertical
+    position_h: { x: 21.5, y: 1 }
     colorway: dusk
 # Devices: traps, moving and folding platforms, buttons, doors and
 # ladders, each standing on a spot (the middle of its bottom edge).
 devices:
   - kind: terminal
-    position_h: { x: 6.5, y: 4 }
-    text: "FLOOD LOG. THE BRIDGE WENT FIRST."
+    position_h: { x: 14, y: 7 }
+    text: FLOOD LOG. THE BRIDGE WENT FIRST.
     colorway: dusk
   - label: the blade in the trench
     kind: blade
     position_h: { x: 13.5, y: 1 }
-    travel_x_h: 6
+    travel_x_h: 6.5
     travel_y_h: 0
     speed_h_s: 2
     damage: 15
@@ -271,6 +272,14 @@ devices:
     warn_s: 0.5
     on_s: 1
     offset_s: 0.6
+    damage: 15
+    colorway: dusk
+  - label: the blade in the trench
+    kind: blade
+    position_h: { x: 28.25, y: 1 }
+    travel_x_h: 6.5
+    travel_y_h: 0
+    speed_h_s: 2
     damage: 15
     colorway: dusk
 enemy_spawns:

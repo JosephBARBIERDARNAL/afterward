@@ -156,7 +156,7 @@ platforms:
     rect_h: { x: 26.5, y: 17.5, width: 6.5, height: 0.5 }
     colorway: dusk
   - material: sci_fi_trim_wall_right
-    rect_h: { x: 0.5, y: 18, width: 0.5, height: 4 }
+    rect_h: { x: 0.5, y: 18, width: 0.5, height: 10 }
     colorway: dusk
   - material: sci_fi_trim_wall_left
     rect_h: { x: 33, y: 18, width: 0.5, height: 4 }
@@ -168,19 +168,10 @@ platforms:
     rect_h: { x: 11.5, y: 20, width: 11, height: 0.5 }
     colorway: dusk
   - material: sci_fi_trim_ceiling
-    rect_h: { x: 1, y: 22, width: 6.5, height: 0.5 }
-    colorway: dusk
-  - material: sci_fi_trim_ceiling
     rect_h: { x: 26.5, y: 22, width: 6.5, height: 0.5 }
     colorway: dusk
   - material: sci_fi_green_edge
-    rect_h: { x: 1, y: 22.5, width: 6.5, height: 0.5 }
-    colorway: dusk
-  - material: sci_fi_green_edge
     rect_h: { x: 26.5, y: 22.5, width: 6.5, height: 0.5 }
-    colorway: dusk
-  - material: sci_fi_trim_wall_right
-    rect_h: { x: 0.5, y: 23, width: 0.5, height: 5 }
     colorway: dusk
   - material: sci_fi_trim_wall_left
     rect_h: { x: 33, y: 23, width: 0.5, height: 5 }
@@ -439,27 +430,11 @@ props:
     colorway: dusk
   - label: corner
     prop: sci_fi_steel_block
-    position_h: { x: 0.75, y: 22 }
-    colorway: dusk
-  - label: corner
-    prop: sci_fi_steel_block
-    position_h: { x: 7.75, y: 22 }
-    colorway: dusk
-  - label: corner
-    prop: sci_fi_steel_block
     position_h: { x: 26.25, y: 22 }
     colorway: dusk
   - label: corner
     prop: sci_fi_steel_block
     position_h: { x: 33.25, y: 22 }
-    colorway: dusk
-  - label: corner
-    prop: sci_fi_steel_block
-    position_h: { x: 0.75, y: 22.5 }
-    colorway: dusk
-  - label: corner
-    prop: sci_fi_steel_block
-    position_h: { x: 7.75, y: 22.5 }
     colorway: dusk
   - label: corner
     prop: sci_fi_steel_block
@@ -470,10 +445,10 @@ props:
     position_h: { x: 33.25, y: 22.5 }
     colorway: dusk
   - prop: sci_fi_framed_fan
-    position_h: { x: 17, y: 7 }
+    position_h: { x: 17, y: 6.25 }
     colorway: dusk
   - prop: sci_fi_framed_fan
-    position_h: { x: 17, y: 11.5 }
+    position_h: { x: 17, y: 11.25 }
     colorway: dusk
   - prop: sci_fi_barrel
     position_h: { x: 29, y: 1 }
@@ -491,7 +466,7 @@ props:
     opacity: 0.8
     colorway: dusk
   - prop: sci_fi_pipe_vertical
-    position_h: { x: 0.5, y: 4 }
+    position_h: { x: 0.5, y: 3.75 }
     colorway: dusk
   - prop: sci_fi_pipe_vertical
     position_h: { x: 33.5, y: 14 }
@@ -499,17 +474,22 @@ props:
   - prop: sci_fi_pipe_vertical
     position_h: { x: 0.5, y: 24 }
     colorway: dusk
+  - prop: sci_fi_pipe_vertical
+    position_h: { x: 18.5, y: 13 }
+    colorway: dusk
+  - prop: sci_fi_framed_fan
+    position_h: { x: 17, y: 1.75 }
+    colorway: dusk
+  - prop: sci_fi_pipe_vertical
+    position_h: { x: 33.5, y: 3.25 }
+    colorway: dusk
 # Devices: traps, moving and folding platforms, buttons, doors and
 # ladders, each standing on a spot (the middle of its bottom edge).
 devices:
   - kind: terminal
-    position_h: { x: 5.5, y: 1 }
-    text: "CISTERN 4. THE PUMPS GAVE UP."
-    colorway: dusk
-  - kind: light_strip
-    position_h: { x: 17, y: 4 }
-    orientation: vertical
-    length_h: 6
+    position_h: { x: 14.5, y: 1 }
+    text: CISTERN 4. THE PUMPS GAVE UP.
+    mirrored: true
     colorway: dusk
   - label: the blade on the east shelf
     kind: blade
@@ -534,6 +514,18 @@ devices:
     travel_y_h: 0
     speed_h_s: 2.5
     damage: 15
+    colorway: dusk
+  - kind: light_strip
+    position_h: { x: 17, y: 16.75 }
+    orientation: vertical
+    length_h: 8.5
+    rotation_deg: -90
+    colorway: dusk
+  - kind: light_strip
+    position_h: { x: 21.25, y: 4 }
+    orientation: vertical
+    length_h: 4
+    rotation_deg: -90
     colorway: dusk
 enemy_spawns:
   - type_id: mad_ghost
@@ -577,7 +569,7 @@ enemy_spawns:
     facing: left
     wave: 2
   - type_id: mad_ghost
-    position_h: { x: 17, y: 20.5 }
+    position_h: { x: 18.75, y: 20.5 }
     facing: left
     wave: 2
 # The bonus item, lying beside the door once every enemy is down.

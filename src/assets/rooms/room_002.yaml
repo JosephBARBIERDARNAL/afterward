@@ -379,6 +379,12 @@ props:
   - prop: sci_fi_framed_fan
     position_h: { x: 41.75, y: 2 }
     opacity: 0.90000004
+  - prop: sci_fi_pipe_vertical
+    position_h: { x: 0.5, y: 14.5 }
+  - prop: sci_fi_pipe_vertical
+    position_h: { x: 24.5, y: 1.75 }
+  - prop: sci_fi_pipe_vertical
+    position_h: { x: 40.5, y: 6.5 }
 # Devices: traps, moving and folding platforms, buttons, doors and
 # ladders, each standing on a spot (the middle of its bottom edge).
 devices:
@@ -449,9 +455,9 @@ enemy_spawns:
     facing: right
 # The bonus item, lying beside the door once every enemy is down.
 bonus:
-  x_h: 44.75
+  x_h: 44.5
   y_h: 1
 exit:
-  x_h: 46.25
+  x_h: 46
   y_h: 1
 next_room_id: 3

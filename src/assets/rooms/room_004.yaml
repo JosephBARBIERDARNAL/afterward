@@ -721,6 +721,16 @@ props:
   - prop: sci_fi_framed_fan
     position_h: { x: 31.75, y: 14 }
     opacity: 0.90000004
+  - prop: sci_fi_pipe_vertical
+    position_h: { x: 17.5, y: 30.75 }
+  - prop: sci_fi_pipe_vertical
+    position_h: { x: 22.5, y: 11 }
+  - prop: sci_fi_pipe_vertical
+    position_h: { x: 16.5, y: 4.75 }
+    rotation_deg: -90
+  - prop: sci_fi_pipe_vertical
+    position_h: { x: 22.5, y: -0.25 }
+    rotation_deg: -90
 # Devices: traps, moving and folding platforms, buttons, doors and
 # ladders, each standing on a spot (the middle of its bottom edge).
 devices:

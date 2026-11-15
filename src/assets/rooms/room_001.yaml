@@ -139,6 +139,9 @@ props:
     position_h: { x: 0.5, y: 3 }
   - prop: sci_fi_pipe_vertical
     position_h: { x: 23.5, y: 8 }
+  - prop: sci_fi_pipe_vertical
+    position_h: { x: 9.75, y: -0.25 }
+    rotation_deg: -90
 enemy_spawns:
   - label: fodder
     type_id: blade_unit
@@ -178,7 +181,7 @@ enemy_spawns:
     wave: 1
   - label: the tough one
     type_id: heavy_unit
-    position_h: { x: 20.25, y: 1 }
+    position_h: { x: 20, y: 1 }
     facing: left
     armor_layers: 1
     wave: 1
@@ -209,9 +212,9 @@ enemy_spawns:
     wave: 2
 # The bonus item, lying beside the door once every enemy is down.
 bonus:
-  x_h: 21.5
+  x_h: 21
   y_h: 1
 exit:
-  x_h: 22.5
+  x_h: 22.25
   y_h: 1
 next_room_id: 2
