@@ -28,12 +28,17 @@ const SIGHT_CLIP_STEPS: usize = 12;
 pub(super) struct Overlays {
     pub(super) viewport: bool,
     pub(super) sight: bool,
+    /// The room alone, as it is played: no grid, outline, overlay or panel.
+    pub(super) clean: bool,
 }
 
 pub(super) fn draw_overlays(mut gizmos: Gizmos, editor: Res<RoomEditor>, data: Res<GameData>) {
     let Some(room) = data.rooms.get(&editor.room_id) else {
         return;
     };
+    if editor.overlays.clean {
+        return;
+    }
     if editor.overlays.viewport {
         draw_viewport(&mut gizmos, room, &data, editor.cursor_h);
     }

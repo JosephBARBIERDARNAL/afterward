@@ -149,6 +149,8 @@ pub(super) fn handle_editor_keys(
         EditorAction::ToggleFrame
     } else if letter('v') {
         EditorAction::ToggleSight
+    } else if letter('g') {
+        EditorAction::ToggleClean
     } else if letter('p') {
         EditorAction::Add(NewItem::Platform)
     } else if letter('d') {

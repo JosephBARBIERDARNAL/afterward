@@ -62,6 +62,11 @@ pub(super) enum Part {
     PlaytestValue(usize),
 }
 
+/// The panels around the room (toolbar, inspector, palette, status bar),
+/// hidden while the clean view (G) shows the room alone.
+#[derive(Component)]
+pub(super) struct EditorPanels;
+
 /// The shortcuts card, shown while H is held or pinned from the toolbar.
 #[derive(Component)]
 pub(super) struct HelpCard;
@@ -159,6 +164,7 @@ pub(super) fn spawn_editor_ui(
             },
             Pickable::IGNORE,
             EditorUi,
+            EditorPanels,
         ))
         .id();
     commands
@@ -212,6 +218,7 @@ pub(super) fn spawn_editor_ui(
             separator(bar);
             button(bar, "Frame", "F", EditorAction::ToggleFrame);
             button(bar, "Sight", "V", EditorAction::ToggleSight);
+            button(bar, "Clean", "G", EditorAction::ToggleClean);
             button(bar, "Fit", "Home", EditorAction::FitRoom);
             button(bar, "Help", "H", EditorAction::ToggleHelp);
             bar.spawn(Node {
@@ -474,6 +481,7 @@ fn spawn_help(commands: &mut Commands) {
                 (String::from("Home"), "fit the room"),
                 (String::from("F"), "viewport frame"),
                 (String::from("V"), "what idle enemies see"),
+                (String::from("G"), "the room alone, as played"),
                 (String::from("PgUp / PgDn"), "previous / next room"),
                 (format!("{COMMAND_KEY}+S"), "save"),
                 (format!("{COMMAND_KEY}+R"), "playtest"),
@@ -644,7 +652,12 @@ pub(super) fn click_buttons(
     mut editor: ResMut<RoomEditor>,
     data: Res<GameData>,
     blockers: Query<(&RelativeCursorPosition, &InheritedVisibility), With<EditorBlocker>>,
-    buttons: Query<(&RelativeCursorPosition, &ComputedNode, &EditorButton)>,
+    buttons: Query<(
+        &RelativeCursorPosition,
+        &ComputedNode,
+        &EditorButton,
+        &InheritedVisibility,
+    )>,
     mut actions: MessageWriter<EditorAction>,
 ) {
     // A hidden panel keeps the cursor it had when it was hidden (Bevy stops
@@ -657,12 +670,12 @@ pub(super) fn click_buttons(
     }
     let clicked = buttons
         .iter()
-        .filter(|(cursor, _, _)| cursor.cursor_over())
-        .min_by(|(_, a, _), (_, b, _)| {
+        .filter(|(cursor, _, _, visibility)| visibility.get() && cursor.cursor_over())
+        .min_by(|(_, a, _, _), (_, b, _, _)| {
             let area = |node: &ComputedNode| node.size().x * node.size().y;
             area(a).total_cmp(&area(b))
         });
-    let Some((_, _, EditorButton(action))) = clicked else {
+    let Some((_, _, EditorButton(action), _)) = clicked else {
         return;
     };
     if !action.looks(&editor, &data).1 {

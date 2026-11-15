@@ -212,6 +212,42 @@ fn the_editor_toggles_the_viewport_and_sight_overlays() {
 }
 
 #[test]
+fn the_clean_view_hides_the_panels_until_g_or_escape() {
+    let mut game = HeadlessGame::with_copied_data();
+    game.tap(KeyCode::KeyD);
+    assert_eq!(game.screen(), GameScreen::Editor);
+    let toolbar_visible = |game: &mut HeadlessGame| {
+        let world = game.app.world_mut();
+        world
+            .query::<(&Text, &InheritedVisibility)>()
+            .iter(world)
+            .find(|(text, _)| text.0 == "+ Platform")
+            .map(|(_, visibility)| visibility.get())
+    };
+    assert_eq!(toolbar_visible(&mut game), Some(true));
+    game.tap(KeyCode::KeyG);
+    assert_eq!(
+        toolbar_visible(&mut game),
+        Some(false),
+        "G shows the room alone"
+    );
+    game.tap(KeyCode::KeyG);
+    assert_eq!(
+        toolbar_visible(&mut game),
+        Some(true),
+        "G again brings it back"
+    );
+    game.tap(KeyCode::KeyG);
+    game.tap(KeyCode::Escape);
+    assert_eq!(toolbar_visible(&mut game), Some(true), "Escape leaves it");
+    assert_eq!(
+        game.screen(),
+        GameScreen::Editor,
+        "without leaving the editor"
+    );
+}
+
+#[test]
 fn a_playtest_is_played_the_way_its_settings_ask() {
     let mut game = HeadlessGame::with_copied_data();
     game.tap(KeyCode::KeyD);

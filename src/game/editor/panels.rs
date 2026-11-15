@@ -4,7 +4,7 @@
 
 use super::*;
 use bevy::input::keyboard::Key;
-use ui::{ACCENT, GOOD, HelpCard, MUTED, Part, PlaytestCard, TEXT};
+use ui::{ACCENT, EditorPanels, GOOD, HelpCard, MUTED, Part, PlaytestCard, TEXT};
 
 /// Every part of the panels, with what `refresh_panels` may change on it.
 type Parts<'world, 'state> = Query<
@@ -290,7 +290,8 @@ pub(super) fn show_cards(
     keys: Res<ButtonInput<Key>>,
     editor: Res<RoomEditor>,
     mut help: Query<&mut Visibility, (With<HelpCard>, Without<PlaytestCard>)>,
-    mut playtest: Query<&mut Visibility, With<PlaytestCard>>,
+    mut playtest: Query<&mut Visibility, (With<PlaytestCard>, Without<EditorPanels>)>,
+    mut panels: Query<&mut Visibility, (With<EditorPanels>, Without<HelpCard>)>,
 ) {
     let held = keys.any_pressed([Key::Character("h".into()), Key::Character("H".into())])
         && editor.text_entry.is_none();
@@ -307,5 +308,8 @@ pub(super) fn show_cards(
     }
     for mut card in &mut playtest {
         card.set_if_neq(visibility(editor.playtest_row.is_some()));
+    }
+    for mut panel in &mut panels {
+        panel.set_if_neq(visibility(!editor.overlays.clean));
     }
 }

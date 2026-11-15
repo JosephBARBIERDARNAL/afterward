@@ -36,6 +36,9 @@ pub(super) enum EditorAction {
     SelectAll,
     ToggleFrame,
     ToggleSight,
+    /// Hides the grid, the outlines, the overlays and the panels, to see
+    /// the room alone as it is played.
+    ToggleClean,
     ToggleHelp,
     Add(NewItem),
     /// Tab: from the one selected item to the closest of its kind.
@@ -56,7 +59,8 @@ pub(super) enum EditorAction {
     TypeField,
     ClearField,
     ClearFieldAt(usize),
-    /// Deselects, closes the help, then leaves (twice with unsaved edits).
+    /// Leaves the clean view, deselects, closes the help, then leaves (twice
+    /// with unsaved edits).
     Escape,
     /// Hides or shows one layer of the room's backgrounds.
     ToggleLayer(BackgroundLayerRef),
@@ -80,6 +84,7 @@ impl EditorAction {
         match self {
             Self::ToggleFrame => (editor.overlays.viewport, true),
             Self::ToggleSight => (editor.overlays.sight, true),
+            Self::ToggleClean => (editor.overlays.clean, true),
             Self::ToggleHelp => (editor.help_pinned, true),
             Self::Save => (unsaved(), unsaved()),
             Self::Undo => (false, !editor.undo.is_empty()),
@@ -246,6 +251,7 @@ pub(super) fn run_actions(resources: EditorActionResources) {
             }
             EditorAction::ToggleFrame => editor.overlays.viewport = !editor.overlays.viewport,
             EditorAction::ToggleSight => editor.overlays.sight = !editor.overlays.sight,
+            EditorAction::ToggleClean => editor.overlays.clean = !editor.overlays.clean,
             EditorAction::ToggleHelp => editor.help_pinned = !editor.help_pinned,
             EditorAction::Add(new) => editor.add(&mut data, *new, at_h),
             EditorAction::SelectNextOfKind => {
@@ -343,7 +349,9 @@ pub(super) fn run_actions(resources: EditorActionResources) {
             EditorAction::Escape => {
                 let unsaved =
                     !editor.unsaved_rooms(&data).is_empty() || editor.unsaved_hitboxes(&data);
-                if editor.help_pinned {
+                if editor.overlays.clean {
+                    editor.overlays.clean = false;
+                } else if editor.help_pinned {
                     editor.help_pinned = false;
                 } else if !editor.selected.is_empty() {
                     editor.select(None);
