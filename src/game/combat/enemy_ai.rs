@@ -172,7 +172,7 @@ pub(in crate::game) fn update_enemy_ai(
                 "fall"
             };
             set_enemy_animation(&mut sprite, &mut animation, &sheets, &enemy.type_id, action);
-            if !matches!(&*enemy.type_id, "emitter_unit" | "black_knight") {
+            if enemy.type_id != "black_knight" {
                 // Without jump art, hold the current walk frame in the air.
                 animation.timer.reset();
             }
@@ -716,11 +716,9 @@ pub(in crate::game) fn update_enemy_ai(
                 )));
                 let action = match (&attack.clip, attack.kind.as_str()) {
                     (Some(clip), _) => clip,
-                    (None, "telegraphed_lunge") => "attack_2",
                     // A boss gathers for its leap in the air clip; anything else
                     // that leaps winds up as it does for a strike.
                     (None, "jump_slam") if enemy.behavior == "boss" => "jump",
-                    _ if enemy.type_id == "emitter_unit" => "attack_1",
                     _ => "attack",
                 };
                 set_enemy_animation(&mut sprite, &mut animation, &sheets, &enemy.type_id, action);

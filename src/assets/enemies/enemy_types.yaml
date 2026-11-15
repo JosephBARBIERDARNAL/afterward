@@ -176,35 +176,7 @@ types:
       projectile_speed_h_s: 9
       cooldown_s: 1.8
       windup_s: 0.6
-  emitter_unit:
-    hurtbox_h: { width: 0.6, height: 2.6 }
-    health: 300
-    material: polymer
-    movement_speed_h_s: 3
-    jump_height_h: 2.75
-    behavior: boss
-    attacks:
-      - kind: two_hit_melee_combo
-        hits: 2
-        damage_per_hit: 10
-        hitbox_h: { x: 0, y: 0, width: 1.2, height: 1.5 }
-        cooldown_s: 1.4
-        windup_s: 0.45
-      - kind: telegraphed_lunge
-        damage: 15
-        hitbox_h: { x: 0, y: 0, width: 0.9, height: 1.5 }
-        cooldown_s: 1.9
-        windup_s: 0.6
-      # Wind-up is the crouch before take-off; damage lands on touchdown.
-      - kind: jump_slam
-        damage: 18
-        hitbox_h: { x: -2, y: -2, width: 4, height: 4 }
-        cooldown_s: 2.5
-        windup_s: 0.8
-    phase_two:
-      health_fraction_at_or_below: 0.5
-      cooldown_multiplier: 0.8
-  # The Black Knight: a second boss, drawn from its own pack
+  # The Black Knight: the one boss, drawn from its own pack
   # (enemies/black_knight/, cut by scripts/slice_black_knight.py) and placed
   # in no room yet. It stands unarmed until it notices the player, draws, and
   # then works through its attacks in order. Its body is 31 px tall in a

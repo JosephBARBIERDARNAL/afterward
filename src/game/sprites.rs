@@ -82,7 +82,6 @@ impl EnemyTypeId {
             "dark_blade_unit" => "enemy_dark_swordsman_idle",
             "dark_rifle_unit" => "enemy_dark_infantry_idle",
             "dark_heavy_unit" => "enemy_dark_destroyer_idle",
-            "emitter_unit" => "boss_idle",
             // How it stands before it has noticed anyone, its sword not yet
             // drawn; once it has, it idles in `black_knight_idle`.
             "black_knight" => "black_knight_unarmed_idle",

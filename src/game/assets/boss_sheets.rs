@@ -9,7 +9,7 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
     // attack's clip is not played at this pace until its strike has landed:
     // the frames before its `strike_frame` are spread over its wind-up. The
     // roll is spread over its own length the same way.
-    let black_knight = [
+    [
         ("unarmed_idle", 6, 8.0),
         ("draw", 18, 18.0),
         ("idle", 6, 8.0),
@@ -35,81 +35,6 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
         frames,
         fps,
         first_cell: UVec2::ZERO,
-    });
-    let mut sheets = vec![
-        SpriteSheetSpec {
-            key: "boss_idle".into(),
-            path: "enemies/boss1/Idle.png".into(),
-            frame_width: 250,
-            frame_height: 250,
-            frames: 8,
-            fps: 8.0,
-            first_cell: UVec2::ZERO,
-        },
-        SpriteSheetSpec {
-            key: "boss_walk".into(),
-            path: "enemies/boss1/Run.png".into(),
-            frame_width: 250,
-            frame_height: 250,
-            frames: 8,
-            fps: 10.0,
-            first_cell: UVec2::ZERO,
-        },
-        SpriteSheetSpec {
-            key: "boss_attack".into(),
-            path: "enemies/boss1/Attack_1.png".into(),
-            frame_width: 250,
-            frame_height: 250,
-            frames: 8,
-            fps: 14.0,
-            first_cell: UVec2::ZERO,
-        },
-        SpriteSheetSpec {
-            key: "boss_attack_2".into(),
-            path: "enemies/boss1/Attack_2.png".into(),
-            frame_width: 250,
-            frame_height: 250,
-            frames: 8,
-            fps: 12.0,
-            first_cell: UVec2::ZERO,
-        },
-        SpriteSheetSpec {
-            key: "boss_jump".into(),
-            path: "enemies/boss1/Jump.png".into(),
-            frame_width: 250,
-            frame_height: 250,
-            frames: 2,
-            fps: 8.0,
-            first_cell: UVec2::ZERO,
-        },
-        SpriteSheetSpec {
-            key: "boss_fall".into(),
-            path: "enemies/boss1/Fall.png".into(),
-            frame_width: 250,
-            frame_height: 250,
-            frames: 2,
-            fps: 8.0,
-            first_cell: UVec2::ZERO,
-        },
-        SpriteSheetSpec {
-            key: "boss_hurt".into(),
-            path: "enemies/boss1/Hurt.png".into(),
-            frame_width: 250,
-            frame_height: 250,
-            frames: 3,
-            fps: 12.0,
-            first_cell: UVec2::ZERO,
-        },
-        SpriteSheetSpec {
-            key: "boss_dead".into(),
-            path: "enemies/boss1/Dead.png".into(),
-            frame_width: 250,
-            frame_height: 250,
-            frames: 7,
-            fps: 9.0,
-            first_cell: UVec2::ZERO,
-        },
-    ];
-    sheets.extend(black_knight);
-    sheets
+    })
+    .into()
 }

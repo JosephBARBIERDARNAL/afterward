@@ -311,7 +311,7 @@ mod tests {
         let blade_unit = "blade_unit"
             .parse::<EnemyTypeId>()
             .expect("a valid type ID");
-        let boss = "emitter_unit"
+        let boss = "black_knight"
             .parse::<EnemyTypeId>()
             .expect("a valid type ID");
 
@@ -328,9 +328,9 @@ mod tests {
         let blade_unit_height = data.enemies.types[&blade_unit].hurtbox_h.height;
         let boss_x = data.enemies.types[&boss].attacks[1]
             .hitbox_h
-            .expect("the lunge has a hitbox")
+            .expect("the parry has a hitbox")
             .x;
-        assert_eq!(boss_x, 0.05);
+        assert!((boss_x + 0.55).abs() < 1e-5);
         let edited = Hitboxes::of(&data);
         assert!(edited != original);
 

@@ -48,34 +48,23 @@ pub(super) fn set_enemy_animation(
         _ if sheets.0.contains_key(&own) => own.as_str(),
         // A type with sheets of its own and none for the air leaps in its walk.
         "jump" | "fall" if sheets.0.contains_key(&own_walk) => own_walk.as_str(),
-        "jump" if &**type_id == "emitter_unit" => "boss_jump",
-        "fall" if &**type_id == "emitter_unit" => "boss_fall",
         // Without dedicated art, airborne enemies use their movement sheet.
         "walk" | "jump" | "fall" => match &**type_id {
             "rifle_unit" => "enemy_infantry_walk",
             "heavy_unit" => "enemy_destroyer_walk",
             "dark_rifle_unit" => "enemy_dark_infantry_walk",
             "dark_heavy_unit" => "enemy_dark_destroyer_walk",
-            "emitter_unit" => "boss_walk",
             _ => type_id.idle_sheet(),
         },
-        "attack" | "attack_1" => match &**type_id {
+        "attack" => match &**type_id {
             "blade_unit" => "enemy_swordsman_attack",
             "rifle_unit" => "enemy_infantry_attack",
             "heavy_unit" => "enemy_destroyer_attack",
             "dark_blade_unit" => "enemy_dark_swordsman_attack",
             "dark_rifle_unit" => "enemy_dark_infantry_attack",
             "dark_heavy_unit" => "enemy_dark_destroyer_attack",
-            "emitter_unit" => "boss_attack",
             _ => type_id.idle_sheet(),
         },
-        "attack_2" => {
-            if &**type_id == "emitter_unit" {
-                "boss_attack_2"
-            } else {
-                type_id.idle_sheet()
-            }
-        }
         "hurt" => match &**type_id {
             "blade_unit" => "enemy_swordsman_hurt",
             "rifle_unit" => "enemy_infantry_hurt",
@@ -83,7 +72,6 @@ pub(super) fn set_enemy_animation(
             "dark_blade_unit" => "enemy_dark_swordsman_hurt",
             "dark_rifle_unit" => "enemy_dark_infantry_hurt",
             "dark_heavy_unit" => "enemy_dark_destroyer_hurt",
-            "emitter_unit" => "boss_hurt",
             _ => type_id.idle_sheet(),
         },
         "dead" => match &**type_id {
@@ -93,7 +81,6 @@ pub(super) fn set_enemy_animation(
             "dark_blade_unit" => "enemy_dark_swordsman_dead",
             "dark_rifle_unit" => "enemy_dark_infantry_dead",
             "dark_heavy_unit" => "enemy_dark_destroyer_dead",
-            "emitter_unit" => "boss_dead",
             _ => type_id.idle_sheet(),
         },
         _ => type_id.idle_sheet(),

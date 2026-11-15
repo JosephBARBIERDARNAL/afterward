@@ -34,10 +34,6 @@ enemy_spawns:
     position_h: { x: 2.5, y: 3.25 }
     facing: right
     armor_layers: 3
-  - type_id: emitter_unit
-    position_h: { x: 15.75, y: 1 }
-    facing: left
-    armor_layers: 5
   - type_id: dark_blade_unit
     position_h: { x: 15, y: 4 }
     facing: left

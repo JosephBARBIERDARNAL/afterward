@@ -878,13 +878,6 @@ mod tests {
         let data = GameData::load(&asset_root).expect("Chapter 1 YAML should be valid");
 
         assert_eq!(data.rooms.len(), 101);
-        assert!(
-            data.rooms[&10]
-                .enemy_spawns
-                .iter()
-                .any(|spawn| spawn.type_id == "emitter_unit"),
-            "the chapter's last room holds its boss"
-        );
         assert_eq!(
             data.surfaces.materials.len(),
             8,

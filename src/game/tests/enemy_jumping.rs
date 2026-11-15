@@ -120,7 +120,7 @@ next_room_id: 4
 }
 
 #[test]
-fn emitter_unit_jump_slam_damages_the_player_on_landing() {
+fn black_knight_jump_slam_damages_the_player_on_landing() {
     let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
     let mut data = GameData::load(&asset_root).expect("Chapter 1 data should load");
     // A flat hall, independent of the authored boss room.
@@ -135,7 +135,7 @@ player_spawn: { x_h: 2.5, y_h: 1 }
 platforms:
   - { material: city_pavement, rect_h: { x: 0, y: 0, width: 48, height: 1 } }
 enemy_spawns:
-  - { type_id: emitter_unit, position_h: { x: 18, y: 1 } }
+  - { type_id: black_knight, position_h: { x: 18, y: 1 } }
 bonus: { x_h: 44, y_h: 1 }
 exit: { x_h: 46, y_h: 1 }
 next_room_id: 11
@@ -143,11 +143,11 @@ next_room_id: 11
     )
     .expect("the test layout should parse");
     *room = layout;
-    let slam_index = data.enemies.types["emitter_unit"]
+    let slam_index = data.enemies.types["black_knight"]
         .attacks
         .iter()
         .position(|attack| attack.kind == "jump_slam")
-        .expect("the Evil Wizard should have a jump slam");
+        .expect("the Black Knight should have a jump slam");
     let placeholder_sheet = SpriteSheet {
         image: Handle::default(),
         layout: Handle::default(),
@@ -157,7 +157,7 @@ next_room_id: 11
     };
     let sheets = SpriteSheets(BTreeMap::from([
         (String::from("player_idle"), placeholder_sheet.clone()),
-        (String::from("boss_idle"), placeholder_sheet),
+        (String::from("black_knight_unarmed_idle"), placeholder_sheet),
     ]));
 
     let mut app = App::new();
@@ -195,7 +195,7 @@ next_room_id: 11
     let mut bosses = app.world_mut().query::<&mut EnemyBody>();
     let mut boss = bosses
         .single_mut(app.world_mut())
-        .expect("room 10 should spawn only the Evil Wizard");
+        .expect("room 10 should spawn only the Black Knight");
     boss.next_attack = slam_index;
     boss.engaged = true;
 
@@ -205,7 +205,7 @@ next_room_id: 11
         let mut bosses = app.world_mut().query::<&EnemyBody>();
         let boss = bosses
             .single(app.world())
-            .expect("the Evil Wizard should remain spawned");
+            .expect("the Black Knight should remain spawned");
         slammed |= boss.jump.is_some_and(|jump| jump.slam);
         if app.world().resource::<RunSession>().health < 100.0 {
             break;

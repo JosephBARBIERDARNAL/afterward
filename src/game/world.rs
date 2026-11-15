@@ -351,7 +351,6 @@ pub(super) fn spawn_enemies(
         let sheet = &sheets.0[key];
         let scale = match (&profile.sprite, &*spawn.type_id) {
             (Some(sprite), _) => sprite.scale,
-            (None, "emitter_unit") => 1.2,
             // Pixel art, so a whole number: 31 px of knight stand 1.9 H tall.
             (None, "black_knight") => 3.0,
             (None, _) => ENEMY_SPRITE_SCALE,
@@ -369,7 +368,6 @@ pub(super) fn spawn_enemies(
                 (None, "blade_unit" | "dark_blade_unit") => (61.0, 0.0, sheet.frame_size.y / 2.0),
                 (None, "rifle_unit" | "dark_rifle_unit") => (56.0, 0.0, sheet.frame_size.y / 2.0),
                 (None, "heavy_unit" | "dark_heavy_unit") => (51.0, 0.0, sheet.frame_size.y / 2.0),
-                (None, "emitter_unit") => (63.0, 83.0, 26.0),
                 (None, "black_knight") => (31.0, 0.0, 16.0),
                 (None, _) => (0.0, 0.0, sheet.frame_size.y / 2.0),
             };

@@ -94,7 +94,6 @@ pub(super) enum EnemySoundStyle {
     BladeUnit,
     RifleUnit,
     HeavyUnit,
-    EmitterUnit,
 }
 
 impl From<&EnemyTypeId> for EnemySoundStyle {
@@ -103,7 +102,6 @@ impl From<&EnemyTypeId> for EnemySoundStyle {
             "blade_unit" | "dark_blade_unit" => Self::BladeUnit,
             "rifle_unit" | "dark_rifle_unit" => Self::RifleUnit,
             "heavy_unit" | "dark_heavy_unit" => Self::HeavyUnit,
-            "emitter_unit" => Self::EmitterUnit,
             _ => Self::Generic,
         }
     }

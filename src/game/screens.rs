@@ -13,7 +13,7 @@ pub(super) fn update_screen_text(
 ) {
     let message = match screen.get() {
         GameScreen::RoomClear => String::from("ROOM CLEARED"),
-        GameScreen::BossIntro => String::from("CHAPTER ONE\n\nTHE EVIL WIZARD"),
+        GameScreen::BossIntro => String::from("CHAPTER ONE\n\nTHE BLACK KNIGHT"),
         // A room led into by a door says nothing: the camera carries the
         // player there in the open. The door out of the chapter is the one
         // worth announcing.
