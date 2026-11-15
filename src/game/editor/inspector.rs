@@ -505,15 +505,11 @@ impl Field {
             },
             Self::PropType => placed.map_or_else(String::new, |placed| placed.prop.to_string()),
             Self::Solid => placed.map_or_else(String::new, |placed| {
-                let solid = if data.props.is_solid(placed) {
+                String::from(if data.props.is_solid(placed) {
                     "yes"
                 } else {
                     "no"
-                };
-                match placed.solid {
-                    None => format!("{solid}  (as its sprite)"),
-                    Some(_) => solid.to_string(),
-                }
+                })
             }),
             Self::DeviceParam(_, param) => match item {
                 Some(EditorItem::Device(index, _)) => {
