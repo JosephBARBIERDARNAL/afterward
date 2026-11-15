@@ -40,18 +40,22 @@ fn a_run_goes_from_the_menu_through_combat_the_bonus_and_the_door_to_room_two() 
     );
     game.take_bonus();
     let offers = game.session().offered_bonuses.clone();
-    assert_eq!(offers.len(), 2);
-    assert_ne!(offers.first(), offers.get(1), "the two offers differ");
+    assert_eq!(offers.len(), 3);
+    assert_eq!(
+        offers.iter().collect::<BTreeSet<_>>().len(),
+        3,
+        "the three offers differ"
+    );
 
     let carried = game.session().owned_bonuses.clone();
-    game.tap(KeyCode::Digit1);
+    game.tap(KeyCode::Digit3);
     // The screen holds for the droplet to land on the box that was pressed
     // before it hands the room back.
     assert_eq!(game.screen(), GameScreen::Bonus);
     game.wait_for_screen(GameScreen::Playing, 2.0);
     assert_eq!(
         game.session().owned_bonuses,
-        [carried.clone(), offers[..1].to_vec()].concat()
+        [carried.clone(), offers[2..].to_vec()].concat()
     );
     assert!(game.session().door_open, "picking a bonus opens the door");
     assert_eq!(door_frame(&mut game), Some(1), "and unlocks its sprite");
@@ -68,7 +72,7 @@ fn a_run_goes_from_the_menu_through_combat_the_bonus_and_the_door_to_room_two() 
     assert_eq!(game.session().room_id, 2);
     assert_eq!(
         game.session().owned_bonuses,
-        [carried, offers[..1].to_vec()].concat(),
+        [carried, offers[2..].to_vec()].concat(),
         "the build carries over"
     );
     assert!(

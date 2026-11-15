@@ -1,12 +1,12 @@
 use super::*;
 
 #[test]
-fn a_reroll_replaces_both_offers_and_the_keyboard_picks_the_second() {
+fn a_reroll_replaces_every_offer_and_the_keyboard_picks_the_second() {
     let mut game = HeadlessGame::new();
     game.start_run();
     game.defeat_enemies();
     game.take_bonus();
-    let first_pair = game.session().offered_bonuses.clone();
+    let first_offers = game.session().offered_bonuses.clone();
     let category = game
         .session()
         .bonus_category
@@ -15,16 +15,20 @@ fn a_reroll_replaces_both_offers_and_the_keyboard_picks_the_second() {
     let rerolls = game.session().rerolls;
 
     game.tap(KeyCode::KeyR);
-    let second_pair = game.session().offered_bonuses.clone();
+    let second_offers = game.session().offered_bonuses.clone();
     assert_eq!(game.session().rerolls, rerolls - 1);
-    assert_eq!(second_pair.len(), 2);
+    assert_eq!(first_offers.len(), 3, "a bonus item offers three bonuses");
+    // A reroll draws from what the first three left, which is still a choice.
+    assert!((2..=3).contains(&second_offers.len()));
     assert!(
-        second_pair.iter().all(|bonus| !first_pair.contains(bonus)),
-        "a reroll offers two new bonuses: {first_pair:?} -> {second_pair:?}"
+        second_offers
+            .iter()
+            .all(|bonus| !first_offers.contains(bonus)),
+        "a reroll offers new bonuses only: {first_offers:?} -> {second_offers:?}"
     );
-    let offered_categories = first_pair
+    let offered_categories = first_offers
         .iter()
-        .chain(&second_pair)
+        .chain(&second_offers)
         .map(|id| {
             game.data()
                 .bonuses
@@ -71,7 +75,7 @@ fn a_reroll_replaces_both_offers_and_the_keyboard_picks_the_second() {
     );
     assert_eq!(
         game.session().owned_bonuses.last(),
-        second_pair.get(1),
+        second_offers.get(1),
         "picking the second offer adds it to the build"
     );
 }

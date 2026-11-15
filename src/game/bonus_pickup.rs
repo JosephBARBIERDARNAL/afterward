@@ -1,7 +1,7 @@
 //! The bonus item hovering over a cleared room's `bonus` spot: the same
 //! obelisk every time, glowing in the colour of the category drawn when it
 //! appears. Interact pressed within reach of it opens the bonus screen, which
-//! then offers two bonuses of that category.
+//! then offers three bonuses of that category.
 
 use super::*;
 
@@ -176,7 +176,7 @@ pub(super) fn update_bonus_pickup(
         in_reach.0 = None;
         session.bonus_category = Some(pickup.category.clone());
         session.offered_bonuses =
-            flow::draw_bonus_pair(&data, &session, &mut random, &BTreeSet::new());
+            flow::draw_bonus_offers(&data, &session, &mut random, &BTreeSet::new());
         session.previous_offers.clear();
         let offered = session.offered_bonuses.clone();
         session.previous_offers.extend(offered);

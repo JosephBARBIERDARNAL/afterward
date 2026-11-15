@@ -703,9 +703,10 @@ pub(in crate::game) fn update_enemy_ai(
                 enemy.movement_sound_timer = 0.0;
                 enemy.active_attack = chosen;
                 enemy.next_attack = (chosen + 1) % enemy.attacks.len();
-                // Cold Read gives the player longer to read it.
+                // Cold Read and Insight give the player longer to read it.
                 enemy.windup_remaining = attack.windup_s
-                    * session.bonus_multiplier(&data, "cold_read", "enemy_windup_multiplier");
+                    * session.bonus_multiplier(&data, "cold_read", "enemy_windup_multiplier")
+                    * (1.0 + session.keystone(&data, "insight"));
                 let phase_multiplier = enemy
                     .phase_two
                     .filter(|(threshold, _)| enemy.health / enemy.max_health <= *threshold)

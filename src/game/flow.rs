@@ -31,7 +31,7 @@ pub(super) fn room_clear_check(
         return;
     }
     session.room_cleared = true;
-    // A fight won without a wound is paid for: see `draw_bonus_pair`.
+    // A fight won without a wound is paid for: see `draw_bonus_offers`.
     session.flawless = session.untouched && session.has_enemies(&data);
     session.offered_bonuses.clear();
     // A cleared room gives the player all their health back, under the
@@ -183,10 +183,11 @@ pub(super) fn handle_bonus_input(
         choice
     } else if controls.just_pressed(GameAction::RerollBonus, &keys) {
         BonusChoice::Reroll
-    } else if controls.just_pressed(GameAction::ChooseFirstBonus, &keys) {
-        BonusChoice::Offer(0)
-    } else if controls.just_pressed(GameAction::ChooseSecondBonus, &keys) {
-        BonusChoice::Offer(1)
+    } else if let Some(index) = BonusChoice::KEYS
+        .iter()
+        .position(|action| controls.just_pressed(*action, &keys))
+    {
+        BonusChoice::Offer(index)
     } else if controls.just_pressed(GameAction::Interact, &keys) {
         session.selected_choice
     } else {
@@ -201,7 +202,7 @@ pub(super) fn handle_bonus_input(
         droplet_on(BonusChoice::Reroll);
         sounds.push(SoundCue::BonusRerolled);
         session.offered_bonuses =
-            draw_bonus_pair(&data, &session, &mut random, &session.previous_offers);
+            draw_bonus_offers(&data, &session, &mut random, &session.previous_offers);
         session.previous_offers.clear();
         let offered = session.offered_bonuses.clone();
         session.previous_offers.extend(offered);
@@ -425,17 +426,19 @@ pub(super) fn update_room_transition_fade_out(
     });
 }
 
-pub(super) fn draw_bonus_pair(
+pub(super) fn draw_bonus_offers(
     data: &GameData,
     session: &RunSession,
     random: &mut RandomState,
     excluded: &BTreeSet<String>,
 ) -> Vec<String> {
     let mut eligible = eligible_bonuses(data, session, excluded).collect::<Vec<_>>();
-    let mut offers = Vec::with_capacity(2);
+    let mut offers = Vec::with_capacity(BonusChoice::KEYS.len());
     // A rarer bonus weighs less in the draw, so commons come up often and
     // legendaries rarely.
-    // A room cleared untouched weighs everything above common heavier still.
+    // A room cleared untouched weighs everything above common heavier still,
+    // and one that works with the build owned weighs heavier whatever its
+    // rarity.
     let untouched = data.gameplay.room_flow.untouched.rarer_weight_multiplier;
     let weight = |bonus: &crate::data::BonusConfig| {
         data.bonuses.rarities[bonus.rarity].weight
@@ -444,8 +447,13 @@ pub(super) fn draw_bonus_pair(
             } else {
                 1
             }
+            * if session.synergy(data, bonus).is_some() {
+                data.bonuses.synergy.weight_multiplier
+            } else {
+                1
+            }
     };
-    while offers.len() < 2 && !eligible.is_empty() {
+    while offers.len() < BonusChoice::KEYS.len() && !eligible.is_empty() {
         let total = eligible.iter().copied().map(weight).sum::<u32>() as usize;
         let mut drawn = random.index(total.max(1)) as u32;
         let index = eligible
@@ -473,7 +481,7 @@ mod tests {
     use std::path::Path;
 
     #[test]
-    fn the_draw_offers_two_different_bonuses_and_leans_on_the_common_ones() {
+    fn the_draw_offers_three_different_bonuses_and_leans_on_the_common_ones() {
         let data = GameData::load(&Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets"))
             .expect("the game data should be valid");
         let session = RunSession {
@@ -483,10 +491,14 @@ mod tests {
         let mut random = RandomState(12345);
         let mut drawn = BTreeMap::<String, usize>::new();
         for _ in 0..500 {
-            let pair = draw_bonus_pair(&data, &session, &mut random, &BTreeSet::new());
-            assert_eq!(pair.len(), 2);
-            assert_ne!(pair[0], pair[1], "a pair never offers the same bonus twice");
-            for id in pair {
+            let offers = draw_bonus_offers(&data, &session, &mut random, &BTreeSet::new());
+            assert_eq!(offers.len(), 3);
+            assert_eq!(
+                offers.iter().collect::<BTreeSet<_>>().len(),
+                3,
+                "a draw never offers the same bonus twice"
+            );
+            for id in offers {
                 let rarity = data
                     .bonuses
                     .bonuses

@@ -87,7 +87,8 @@ pub(super) fn update_player(
         player.grounded && !player.covering && !rolling && held(GameAction::MoveDown);
 
     let movement_multiplier =
-        session.bonus_multiplier(&data, "fleet_feet", "movement_speed_multiplier");
+        session.bonus_multiplier(&data, "fleet_feet", "movement_speed_multiplier")
+            * (1.0 + session.keystone(&data, "tailwind"));
     let jog_speed = data.player_animations.jog_speed_fraction
         * tuning.max_speed_h_s
         * movement_multiplier

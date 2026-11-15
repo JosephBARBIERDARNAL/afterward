@@ -15,7 +15,17 @@ use super::HexColor;
 pub struct BonusesConfig {
     pub categories: BTreeMap<String, BonusCategoryConfig>,
     pub rarities: BonusRarities,
+    pub synergy: BonusSynergyConfig,
     pub bonuses: Vec<BonusConfig>,
+}
+
+/// How an offered bonus that works with the build is told apart: the colour
+/// of the line naming what it works with, and how many times heavier it
+/// weighs in the draw.
+#[derive(Debug, Deserialize)]
+pub struct BonusSynergyConfig {
+    pub color: HexColor,
+    pub weight_multiplier: u32,
 }
 
 /// What each rarity is worth: the colour the bonus screen paints a bonus of
@@ -124,6 +134,11 @@ pub struct BonusConfig {
     /// two of them do together.
     #[serde(default)]
     pub requires: Vec<String>,
+    /// The bonuses this one works with, without needing them: owning one of
+    /// them (or being offered one of them while owning this) weighs it
+    /// heavier in the draw, and the bonus screen names the ones owned.
+    #[serde(default)]
+    pub synergies: Vec<String>,
 }
 
 #[derive(Debug, Clone, Copy)]

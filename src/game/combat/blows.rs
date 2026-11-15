@@ -98,6 +98,13 @@ pub(super) fn land_the_blow(
     let mut struck = Vec::new();
     // Behind each body the blow threw: where the throw lands in its turn.
     let mut thrown = Vec::new();
+    // Riposte and Retaliation leave the next blow empowered, and this is it
+    // for every body it reaches; it is spent once it connects.
+    let empowered = player.empowered_blow_multiplier;
+    // The keystones that hit harder: Arsenal for every combat bonus owned,
+    // Harmony for every combo.
+    let keystones =
+        (1.0 + session.keystone(data, "arsenal")) * (1.0 + session.keystone(data, "harmony"));
 
     for (entity, mut enemy, mut enemy_transform, mut sprite, mut animation) in enemies.iter_mut() {
         if enemy.health <= 0.0
@@ -156,6 +163,7 @@ pub(super) fn land_the_blow(
             }
             enemy.stance = None;
         }
+        let was_marked = enemy.marked_timer > 0.0 && session.has_bonus("marked_prey");
         let marked = if enemy.marked_timer > 0.0 {
             session.bonus_multiplier(data, "marked_prey", "marked_strike_damage_multiplier")
         } else {
@@ -177,9 +185,14 @@ pub(super) fn land_the_blow(
                 continue;
             }
         }
-        let executioner = if enemy.health / enemy.max_health
-            < data.bonus_effect("executioner", "execute_health_fraction")
-        {
+        // Open Wound raises Executioner's line on a marked body.
+        let execute_below = if was_marked && session.has_bonus("open_wound") {
+            data.bonus_effect("open_wound", "marked_execute_health_fraction")
+        } else {
+            0.0
+        }
+        .max(data.bonus_effect("executioner", "execute_health_fraction"));
+        let executioner = if enemy.health / enemy.max_health < execute_below {
             session.bonus_multiplier(data, "executioner", "execute_damage_multiplier")
         } else {
             1.0
@@ -207,7 +220,9 @@ pub(super) fn land_the_blow(
             * chain_reaction
             * airborne
             * unaware
-            * executioner;
+            * executioner
+            * empowered
+            * keystones;
         enemy.health = (enemy.health - damage).max(0.0);
         spawn_damage_number(commands, enemy_transform.translation, damage, false);
         if !armored {
@@ -337,6 +352,11 @@ pub(super) fn land_the_blow(
             }
             player.chain_reaction_timer =
                 data.bonus_effect("chain_reaction", "kill_damage_duration_s");
+            if was_marked && session.has_bonus("hunters_feast") {
+                session.health = (session.health
+                    + data.bonus_effect("hunters_feast", "marked_kill_healing"))
+                .min(session.max_health);
+            }
         }
     }
 
@@ -366,6 +386,13 @@ pub(super) fn land_the_blow(
             sounds.push(SoundCue::MeleeMiss);
         }
         return;
+    }
+    player.empowered_blow_multiplier = 1.0;
+    // Updraft: a blow landed in mid-air hands back the mid-air jumps.
+    if !player.grounded && session.has_bonus("updraft") {
+        player.jumps_used = player
+            .jumps_used
+            .min(data.gameplay.player.jumps_per_takeoff);
     }
     // A thrown body lands on whatever stood behind it, as a blow of its own.
     if let Some(launch) = &blow.launch {
@@ -458,9 +485,16 @@ pub(super) fn land_the_blow(
         player.rhythm_timer = data.bonus_effect("rhythm_training", "hit_window_s");
     }
     if session.has_bonus("lifesteal") {
-        let cap = data.bonus_effect("lifesteal", "room_healing_cap");
-        let healing = data
-            .bonus_effect("lifesteal", "strike_hit_healing")
+        // Bloodlust heals harder and lets more of it through each room.
+        let (cap, healing) = if session.has_bonus("bloodlust") {
+            (
+                data.bonus_effect("bloodlust", "room_healing_cap"),
+                data.bonus_effect("bloodlust", "strike_hit_healing_multiplier"),
+            )
+        } else {
+            (data.bonus_effect("lifesteal", "room_healing_cap"), 1.0)
+        };
+        let healing = (data.bonus_effect("lifesteal", "strike_hit_healing") * healing)
             .min(cap - player.lifesteal_healing)
             .max(0.0);
         player.lifesteal_healing += healing;

@@ -133,6 +133,79 @@ impl RunSession {
         !self.playtest.no_enemies && !data.rooms[&self.room_id].enemy_spawns.is_empty()
     }
 
+    /// How many owned bonuses a keystone counts: those of its own category
+    /// for one with `per_bonus_in_category`, those that build on others for
+    /// one with `per_combo`, and none for any other bonus.
+    fn counted_by(&self, data: &GameData, keystone: &crate::data::BonusConfig) -> usize {
+        let counts = |owned: &crate::data::BonusConfig| {
+            if keystone.effects.contains_key("per_bonus_in_category") {
+                owned.category == keystone.category
+            } else {
+                keystone.effects.contains_key("per_combo") && !owned.requires.is_empty()
+            }
+        };
+        data.bonuses
+            .bonuses
+            .iter()
+            .filter(|owned| self.has_bonus(&owned.id) && counts(owned))
+            .count()
+    }
+
+    /// What an owned keystone adds: its `per_bonus_in_category` or its
+    /// `per_combo` for every owned bonus it counts (itself included when it
+    /// counts its own category), or 0 without it.
+    pub(crate) fn keystone(&self, data: &GameData, id: &str) -> f32 {
+        data.bonuses
+            .bonuses
+            .iter()
+            .find(|bonus| bonus.id == id && self.has_bonus(id))
+            .map_or(0.0, |keystone| {
+                (data.bonus_effect(id, "per_bonus_in_category")
+                    + data.bonus_effect(id, "per_combo"))
+                    * self.counted_by(data, keystone) as f32
+            })
+    }
+
+    /// What a bonus works with in the build already owned, in words, or
+    /// nothing when it stands alone: the bonuses it builds on, the owned ones
+    /// it lists (or that list it) as `synergies`, or the owned bonuses a
+    /// keystone counts. Such a bonus weighs heavier in the draw, and the bonus
+    /// screen says why.
+    pub(crate) fn synergy(
+        &self,
+        data: &GameData,
+        bonus: &crate::data::BonusConfig,
+    ) -> Option<String> {
+        let owned = data
+            .bonuses
+            .bonuses
+            .iter()
+            .filter(|owned| self.has_bonus(&owned.id));
+        if !bonus.requires.is_empty() {
+            let parts = owned
+                .filter(|owned| bonus.requires.contains(&owned.id))
+                .map(|owned| owned.name.as_str())
+                .collect::<Vec<_>>();
+            return Some(format!("COMBO: {}", parts.join(" + ")));
+        }
+        let partners = owned
+            .filter(|owned| {
+                bonus.synergies.contains(&owned.id) || owned.synergies.contains(&bonus.id)
+            })
+            .map(|owned| owned.name.as_str())
+            .collect::<Vec<_>>();
+        if !partners.is_empty() {
+            return Some(format!("SYNERGY: {}", partners.join(", ")));
+        }
+        match self.counted_by(data, bonus) {
+            0 => None,
+            count if bonus.effects.contains_key("per_combo") => {
+                Some(format!("SYNERGY: {count} combos owned"))
+            }
+            count => Some(format!("SYNERGY: {count} {} owned", bonus.category)),
+        }
+    }
+
     /// An owned bonus's multiplier effect, or 1 without the bonus.
     pub(crate) fn bonus_multiplier(&self, data: &GameData, id: &str, effect: &str) -> f32 {
         if self.has_bonus(id) {
@@ -172,5 +245,68 @@ impl Default for RunSession {
             last_stand_used: false,
             world_loaded: false,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::Path;
+
+    #[test]
+    fn keystones_count_the_build_and_the_screen_says_what_a_bonus_works_with() {
+        let data = GameData::load(&Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets"))
+            .expect("the game data should be valid");
+        let bonus = |id: &str| {
+            data.bonuses
+                .bonuses
+                .iter()
+                .find(|bonus| bonus.id == id)
+                .expect("the bonus is in the pool")
+        };
+        let session = RunSession {
+            owned_bonuses: [
+                "heavy_hands",
+                "finisher",
+                "arsenal",
+                "marked_prey",
+                "aftershock",
+            ]
+            .map(String::from)
+            .to_vec(),
+            ..default()
+        };
+        // Arsenal counts the three combat bonuses owned, itself included.
+        let per_bonus = data.bonus_effect("arsenal", "per_bonus_in_category");
+        assert!((session.keystone(&data, "arsenal") - 3.0 * per_bonus).abs() < 1e-6);
+        assert_eq!(
+            session.keystone(&data, "fortress"),
+            0.0,
+            "an unowned keystone adds nothing"
+        );
+
+        assert_eq!(
+            session.synergy(&data, bonus("hunters_feast")).as_deref(),
+            Some("COMBO: Marked Prey")
+        );
+        assert_eq!(
+            session.synergy(&data, bonus("riposte")).as_deref(),
+            Some("SYNERGY: Aftershock"),
+            "a bonus names the owned ones it lists"
+        );
+        assert_eq!(
+            session.synergy(&data, bonus("fortress")),
+            None,
+            "a keystone with nothing of its category owned stands alone"
+        );
+        assert_eq!(
+            RunSession {
+                owned_bonuses: vec!["fleet_feet".to_owned()],
+                ..default()
+            }
+            .synergy(&data, bonus("tailwind"))
+            .as_deref(),
+            Some("SYNERGY: 1 agility owned")
+        );
     }
 }

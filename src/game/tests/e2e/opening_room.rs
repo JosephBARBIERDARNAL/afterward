@@ -62,7 +62,7 @@ fn an_empty_opening_room_offers_its_bonus_at_once_and_runs_into_room_one() {
     );
     game.take_bonus();
     let offers = game.session().offered_bonuses.clone();
-    assert_eq!(offers.len(), 2);
+    assert_eq!(offers.len(), 3);
     game.tap(KeyCode::Digit1);
     game.wait_for_screen(GameScreen::Playing, 2.0);
     assert_eq!(game.session().owned_bonuses, offers[..1]);

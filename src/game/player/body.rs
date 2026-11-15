@@ -61,6 +61,9 @@ pub(crate) struct PlayerBody {
     pub(crate) rhythm_stacks: u8,
     pub(crate) chain_reaction_timer: f32,
     pub(crate) sated_fury_timer: f32,
+    /// What the next blow to connect is multiplied by: 1, or more once
+    /// Riposte or Retaliation has empowered it.
+    pub(crate) empowered_blow_multiplier: f32,
     /// One-shot animation playing over the movement clips.
     pub(crate) action: Option<PlayerAction>,
     /// Seconds left on `action`; it only grows when an action (re)starts.
@@ -103,6 +106,7 @@ impl Default for PlayerBody {
             rhythm_stacks: 0,
             chain_reaction_timer: 0.0,
             sated_fury_timer: 0.0,
+            empowered_blow_multiplier: 1.0,
             action: None,
             action_animation_timer: 0.0,
             action_started: false,

@@ -65,11 +65,12 @@ pub(super) enum GameAction {
     ToggleFullscreen,
     ChooseFirstBonus,
     ChooseSecondBonus,
+    ChooseThirdBonus,
     RerollBonus,
 }
 
 impl GameAction {
-    pub const ALL: [Self; 15] = [
+    pub const ALL: [Self; 16] = [
         Self::MoveLeft,
         Self::MoveRight,
         Self::MoveUp,
@@ -84,6 +85,7 @@ impl GameAction {
         Self::ToggleFullscreen,
         Self::ChooseFirstBonus,
         Self::ChooseSecondBonus,
+        Self::ChooseThirdBonus,
         Self::RerollBonus,
     ];
 
@@ -103,6 +105,7 @@ impl GameAction {
             Self::ToggleFullscreen => "FULLSCREEN",
             Self::ChooseFirstBonus => "FIRST BONUS",
             Self::ChooseSecondBonus => "SECOND BONUS",
+            Self::ChooseThirdBonus => "THIRD BONUS",
             Self::RerollBonus => "REROLL BONUSES",
         }
     }
@@ -127,6 +130,7 @@ impl FromStr for GameAction {
             "toggle_fullscreen" => Ok(Self::ToggleFullscreen),
             "choose_first_bonus" => Ok(Self::ChooseFirstBonus),
             "choose_second_bonus" => Ok(Self::ChooseSecondBonus),
+            "choose_third_bonus" => Ok(Self::ChooseThirdBonus),
             "reroll_bonus" => Ok(Self::RerollBonus),
             _ => Err("unknown game action"),
         }
@@ -150,6 +154,7 @@ impl Display for GameAction {
             Self::ToggleFullscreen => "toggle_fullscreen",
             Self::ChooseFirstBonus => "choose_first_bonus",
             Self::ChooseSecondBonus => "choose_second_bonus",
+            Self::ChooseThirdBonus => "choose_third_bonus",
             Self::RerollBonus => "reroll_bonus",
         })
     }
@@ -200,6 +205,10 @@ impl From<&ControlsConfig> for DefaultBindings {
             (
                 GameAction::ChooseSecondBonus,
                 parse_keys(&controls.choose_second_bonus),
+            ),
+            (
+                GameAction::ChooseThirdBonus,
+                parse_keys(&controls.choose_third_bonus),
             ),
             (GameAction::RerollBonus, parse_keys(&controls.reroll_bonus)),
         ]))

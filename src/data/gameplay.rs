@@ -120,6 +120,7 @@ pub struct ControlsConfig {
     pub toggle_fullscreen: Vec<String>,
     pub choose_first_bonus: Vec<String>,
     pub choose_second_bonus: Vec<String>,
+    pub choose_third_bonus: Vec<String>,
     pub reroll_bonus: Vec<String>,
 }
 

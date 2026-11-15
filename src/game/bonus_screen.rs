@@ -16,16 +16,25 @@ pub(super) enum BonusChoice {
 }
 
 impl BonusChoice {
+    /// The key that picks each offer, in the order the boxes stand: there are
+    /// as many offers as there are keys.
+    pub(super) const KEYS: [GameAction; 3] = [
+        GameAction::ChooseFirstBonus,
+        GameAction::ChooseSecondBonus,
+        GameAction::ChooseThirdBonus,
+    ];
+    const LAST: usize = Self::KEYS.len() - 1;
+
     pub(super) fn previous(self) -> Self {
         match self {
             Self::Offer(index) => Self::Offer(index.saturating_sub(1)),
-            Self::Reroll => Self::Offer(1),
+            Self::Reroll => Self::Offer(Self::LAST),
         }
     }
 
     pub(super) fn next(self, can_reroll: bool) -> Self {
         match self {
-            Self::Offer(0) => Self::Offer(1),
+            Self::Offer(index) if index < Self::LAST => Self::Offer(index + 1),
             Self::Offer(_) | Self::Reroll if can_reroll => Self::Reroll,
             choice => choice,
         }
@@ -50,6 +59,7 @@ enum BonusSpanKind {
     Rarity,
     Name,
     Description,
+    Synergy,
 }
 
 pub(super) fn spawn_bonus_screen(mut commands: Commands) {
@@ -62,23 +72,19 @@ pub(super) fn spawn_bonus_screen(mut commands: Commands) {
                     max_width: px(760),
                     flex_direction: FlexDirection::Column,
                     align_items: AlignItems::Stretch,
-                    row_gap: px(16),
+                    row_gap: px(12),
                     ..default()
                 })
                 .with_children(|parent| {
                     parent.spawn(title("CHOOSE A BONUS"));
-                    for (index, action) in
-                        [GameAction::ChooseFirstBonus, GameAction::ChooseSecondBonus]
-                            .into_iter()
-                            .enumerate()
-                    {
+                    for (index, action) in BonusChoice::KEYS.into_iter().enumerate() {
                         parent
                             .spawn((
                                 Node {
                                     flex_direction: FlexDirection::Row,
                                     align_items: AlignItems::Center,
                                     column_gap: px(20),
-                                    padding: UiRect::all(px(18)),
+                                    padding: UiRect::axes(px(18), px(12)),
                                     border: UiRect::all(px(2)),
                                     border_radius: BorderRadius::all(px(8)),
                                     ..default()
@@ -119,6 +125,7 @@ pub(super) fn spawn_bonus_screen(mut commands: Commands) {
                                             (BonusSpanKind::Rarity, 16.0),
                                             (BonusSpanKind::Name, 26.0),
                                             (BonusSpanKind::Description, 19.0),
+                                            (BonusSpanKind::Synergy, 16.0),
                                         ] {
                                             parent.spawn((
                                                 TextSpan::default(),
@@ -287,6 +294,15 @@ pub(super) fn update_bonus_screen(
             (Some(bonus), BonusSpanKind::Description) => {
                 (bonus.description.clone(), DESCRIPTION_COLOR)
             }
+            // What the bonus works with in the build already owned, so the
+            // right pick stands out from the other two.
+            (Some(bonus), BonusSpanKind::Synergy) => (
+                session
+                    .synergy(&data, bonus)
+                    .map(|synergy| format!("\n+ {synergy}"))
+                    .unwrap_or_default(),
+                Color::from(data.bonuses.synergy.color),
+            ),
         };
         text.0 = content;
         color.0 = span_color;
@@ -300,11 +316,12 @@ mod tests {
     #[test]
     fn arrow_navigation_walks_offers_then_reroll_only_when_available() {
         assert_eq!(BonusChoice::Offer(0).next(true), BonusChoice::Offer(1));
-        assert_eq!(BonusChoice::Offer(1).next(true), BonusChoice::Reroll);
-        assert_eq!(BonusChoice::Offer(1).next(false), BonusChoice::Offer(1));
+        assert_eq!(BonusChoice::Offer(1).next(true), BonusChoice::Offer(2));
+        assert_eq!(BonusChoice::Offer(2).next(true), BonusChoice::Reroll);
+        assert_eq!(BonusChoice::Offer(2).next(false), BonusChoice::Offer(2));
         assert_eq!(BonusChoice::Reroll.next(true), BonusChoice::Reroll);
-        assert_eq!(BonusChoice::Reroll.previous(), BonusChoice::Offer(1));
-        assert_eq!(BonusChoice::Offer(1).previous(), BonusChoice::Offer(0));
+        assert_eq!(BonusChoice::Reroll.previous(), BonusChoice::Offer(2));
+        assert_eq!(BonusChoice::Offer(2).previous(), BonusChoice::Offer(1));
         assert_eq!(BonusChoice::Offer(0).previous(), BonusChoice::Offer(0));
     }
 }

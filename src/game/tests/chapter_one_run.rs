@@ -283,16 +283,15 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
                                 .iter()
                                 .any(|offered| offered == preferred)
                         });
-                        if preferred_bonus.is_some_and(|preferred| {
-                            session
-                                .offered_bonuses
-                                .get(1)
-                                .is_some_and(|offered| offered == preferred)
-                        }) {
-                            keys.press(KeyCode::Digit2);
-                        } else {
-                            keys.press(KeyCode::Digit1);
-                        }
+                        let index = preferred_bonus
+                            .and_then(|preferred| {
+                                session
+                                    .offered_bonuses
+                                    .iter()
+                                    .position(|offered| offered == preferred)
+                            })
+                            .unwrap_or(0);
+                        keys.press([KeyCode::Digit1, KeyCode::Digit2, KeyCode::Digit3][index]);
                     }
                 },
                 flow::handle_bonus_input,

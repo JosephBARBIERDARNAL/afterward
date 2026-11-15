@@ -88,9 +88,16 @@ fn apply_player_damage(
     let tuning = &data.gameplay.player;
     // The middle of a roll is the one stretch nothing can reach the player
     // through, which is what a melee fighter has instead of range.
+    // Slippery stretches it, and Riposte pays for a blow rolled through.
+    let roll_untouchable_to_s = tuning.roll.invulnerable_from_s
+        + (tuning.roll.invulnerable_to_s - tuning.roll.invulnerable_from_s)
+            * session.bonus_multiplier(data, "slippery", "roll_invulnerability_multiplier");
     if player.roll_s.is_some_and(|elapsed_s| {
-        (tuning.roll.invulnerable_from_s..=tuning.roll.invulnerable_to_s).contains(&elapsed_s)
+        (tuning.roll.invulnerable_from_s..=roll_untouchable_to_s).contains(&elapsed_s)
     }) {
+        player.empowered_blow_multiplier = player
+            .empowered_blow_multiplier
+            .max(session.bonus_multiplier(data, "riposte", "empowered_blow_multiplier"));
         return;
     }
     if session.has_bonus("room_ward") && !session.room_ward_used {
@@ -112,14 +119,22 @@ fn apply_player_damage(
     } else {
         1.0
     };
+    let fortress = 1.0
+        - session
+            .keystone(data, "fortress")
+            .min(data.bonus_effect("fortress", "max_reduction"));
     let reduced_damage = damage
         * session.bonus_multiplier(data, "thick_skin", "damage_taken_multiplier")
         * cover
-        * adrenaline;
+        * adrenaline
+        * fortress;
     if !session.playtest.infinite_health {
         session.health = (session.health - reduced_damage).max(0.0);
     }
     session.untouched = false;
+    player.empowered_blow_multiplier = player
+        .empowered_blow_multiplier
+        .max(session.bonus_multiplier(data, "retaliation", "empowered_blow_multiplier"));
     player.invulnerability_timer = tuning.damage_invulnerability_s;
     spawn_damage_number(commands, transform.translation, reduced_damage, true);
     sounds.push(SoundCue::Damage(DamageSound::Neutral));

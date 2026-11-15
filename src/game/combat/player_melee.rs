@@ -144,6 +144,17 @@ pub(in crate::game) fn player_melee(
         player.slam_landed = false;
         let drags = session.has_bonus("undertow");
         let breaks_shields = session.has_bonus("breaker");
+        // Meteor: the slam lands harder, and as an airborne blow.
+        let meteor = if session.has_bonus("meteor") {
+            data.bonus_effect("meteor", "slam_damage_multiplier")
+                * session.bonus_multiplier(
+                    &data,
+                    "aerial_assault",
+                    "airborne_strike_damage_multiplier",
+                )
+        } else {
+            1.0
+        };
         land_the_blow(
             LandingResources {
                 commands: &mut commands,
@@ -158,7 +169,7 @@ pub(in crate::game) fn player_melee(
                 area: blow_area(melee.slam.hitbox_h, feet, facing, reach, true),
                 from_x: feet.x,
                 heavy: true,
-                damage: melee.slam.damage,
+                damage: melee.slam.damage * meteor,
                 pierces_shields: breaks_shields,
                 flinch_s: 0.32,
                 finisher: false,
@@ -236,7 +247,8 @@ pub(in crate::game) fn player_melee(
                 area,
                 from_x: feet.x,
                 heavy: true,
-                damage: melee.charge.damage,
+                damage: melee.charge.damage
+                    * session.bonus_multiplier(&data, "overcharge", "charged_damage_multiplier"),
                 pierces_shields: true,
                 flinch_s: 0.5,
                 finisher: false,
@@ -307,9 +319,18 @@ pub(in crate::game) fn player_melee(
         } else {
             1.0
         };
+        // Bloodrush rides Chain Reaction, and Tailwind grows with the agility
+        // bonuses owned.
+        let bloodrush = if player.chain_reaction_timer > 0.0 {
+            session.bonus_multiplier(&data, "bloodrush", "combo_speed_multiplier")
+        } else {
+            1.0
+        };
         let speed = session.bonus_multiplier(&data, "quick_hands", "combo_speed_multiplier")
             * rhythm
-            * sated_fury;
+            * sated_fury
+            * bloodrush
+            * (1.0 + session.keystone(&data, "tailwind"));
         player.strike = Some(Strike {
             thrown: Thrown::Step(step_index),
             contact_in_s: step.contact_s / speed,
@@ -330,20 +351,23 @@ pub(in crate::game) fn player_melee(
 
     // Attack still held with nothing in the air: the player gathers, and the
     // gather holds its loop for as long as the key does.
+    // Overcharge gathers it sooner.
+    let ready_s = melee.charge.ready_s
+        * session.bonus_multiplier(&data, "overcharge", "charge_time_multiplier");
     if attack_held {
         player.charge_s += dt;
-        if player.charge_s >= melee.charge.ready_s {
+        if player.charge_s >= ready_s {
             if player.action == Some(PlayerAction::Charging) {
-                player.action_animation_timer = melee.charge.ready_s;
+                player.action_animation_timer = ready_s;
             } else {
-                player.start_action(PlayerAction::Charging, melee.charge.ready_s);
+                player.start_action(PlayerAction::Charging, ready_s);
             }
         }
         return;
     }
 
     // Let go of a finished gather, and the heavy blow is thrown.
-    if player.charge_s >= melee.charge.ready_s {
+    if player.charge_s >= ready_s {
         player.combo_step = 0;
         player.combo_window_s = 0.0;
         player.strike = Some(Strike {

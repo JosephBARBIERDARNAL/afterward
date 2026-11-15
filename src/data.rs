@@ -441,16 +441,19 @@ impl GameData {
         }
         if self.bonuses.bonuses.iter().any(|bonus| {
             !self.bonuses.categories.contains_key(&bonus.category)
-                || bonus.requires.iter().any(|required| {
-                    !self
-                        .bonuses
-                        .bonuses
-                        .iter()
-                        .any(|other| other.id == *required)
-                })
+                || bonus
+                    .requires
+                    .iter()
+                    .chain(&bonus.synergies)
+                    .any(|named| !bonus_ids.contains(&named.as_str()))
         }) {
             return Err(InvalidGameData::from(
-                "a bonus references an unknown category, or requires an unknown bonus",
+                "a bonus references an unknown category, or requires or works with an unknown bonus",
+            ));
+        }
+        if self.bonuses.synergy.weight_multiplier == 0 {
+            return Err(InvalidGameData::from(
+                "the synergy weight multiplier must be above zero",
             ));
         }
         if BonusRarity::ALL

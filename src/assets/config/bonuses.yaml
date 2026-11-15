@@ -1,6 +1,6 @@
 # Each category paints the bonus screen and the glow of the item the player
-# picks up once a room is cleared; the two bonuses offered then come from that
-# item's category.
+# picks up once a room is cleared; the three bonuses offered then come from
+# that item's category.
 categories:
   combat:
     color: "#D74444"
@@ -28,6 +28,17 @@ rarities:
   rare: { color: "#4F8FD6", weight: 12 }
   epic: { color: "#9A5FD0", weight: 5 }
   legendary: { color: "#E8843F", weight: 2 }
+
+# A bonus that works with the build already owned weighs `weight_multiplier`
+# times heavier in the draw, and the bonus screen names what it works with in
+# `color` under its description. What counts:
+# - `requires`: the bonuses it builds on (a combo, only offered once they are
+#   all owned);
+# - `synergies`: bonuses it works well with without needing them, either way
+#   round (listing one on either side is enough);
+# - a keystone's own count: `per_bonus_in_category` grows with every owned
+#   bonus of its category, `per_combo` with every owned combo.
+synergy: { color: "#F2C14E", weight_multiplier: 3 }
 
 # Every bonus here is read by the game: one that nothing reads is taken out
 # rather than left to thin the draw. Rarity follows what a bonus does: a plain
@@ -279,11 +290,7 @@ bonuses:
     category: combat
     rarity: rare
     effects:
-      {
-        launch_damage: 25,
-        launch_reach_h: 3,
-        launch_knockback_multiplier: 2.5,
-      }
+      { launch_damage: 25, launch_reach_h: 3, launch_knockback_multiplier: 2.5 }
   - id: riptide
     name: Riptide
     description: "Aftershock and Undertow together: the roll's shock drags enemies in too."
@@ -298,3 +305,114 @@ bonuses:
     rarity: rare
     requires: [undertow, battering_ram]
     effects: {}
+  # Keystones: each grows with the bonuses the run already owns, so following
+  # one colour of door from room to room pays more the further it goes.
+  - id: arsenal
+    name: Arsenal
+    description: Blows deal 4% more damage for every combat bonus you own, this one included.
+    category: combat
+    rarity: epic
+    effects: { per_bonus_in_category: 0.04 }
+  - id: fortress
+    name: Fortress
+    description: Take 3% less damage for every defense bonus you own, this one included, up to 40%.
+    category: defense
+    rarity: epic
+    effects: { per_bonus_in_category: 0.03, max_reduction: 0.4 }
+  - id: tailwind
+    name: Tailwind
+    description: Move and throw the chain 3% faster for every agility bonus you own, this one included.
+    category: agility
+    rarity: epic
+    effects: { per_bonus_in_category: 0.03 }
+  - id: insight
+    name: Insight
+    description: Enemy wind-ups last 5% longer for every intelligence bonus you own, this one included.
+    category: intelligence
+    rarity: epic
+    synergies: [cold_read]
+    effects: { per_bonus_in_category: 0.05 }
+  - id: harmony
+    name: Harmony
+    description: Blows deal 8% more damage for every combo you own.
+    category: combined
+    rarity: legendary
+    effects: { per_combo: 0.08 }
+  # Combos: what two bonuses already owned do together.
+  - id: open_wound
+    name: Open Wound
+    description: "Marked Prey and Executioner together: Executioner strikes a marked enemy below 50% health."
+    category: intelligence
+    rarity: rare
+    requires: [marked_prey, executioner]
+    effects: { marked_execute_health_fraction: 0.5 }
+  - id: hunters_feast
+    name: Hunter's Feast
+    description: Killing a marked enemy restores 4 health.
+    category: combined
+    rarity: uncommon
+    requires: [marked_prey]
+    synergies: [executioner, lifesteal]
+    effects: { marked_kill_healing: 4 }
+  - id: bloodrush
+    name: Bloodrush
+    description: While Chain Reaction burns, the chain is thrown 20% faster.
+    category: combat
+    rarity: rare
+    requires: [chain_reaction]
+    synergies: [quick_hands, rhythm_training]
+    effects: { combo_speed_multiplier: 1.2 }
+  - id: meteor
+    name: Meteor
+    description: The slam deals 30% more damage, and Aerial Assault's bonus counts on it.
+    category: combat
+    rarity: rare
+    requires: [aerial_assault]
+    synergies: [undertow, breaker]
+    effects: { slam_damage_multiplier: 1.3 }
+  - id: updraft
+    name: Updraft
+    description: A blow landed in mid-air gives you back your mid-air jump.
+    category: agility
+    rarity: rare
+    requires: [double_jump]
+    synergies: [aerial_assault, meteor]
+    effects: {}
+  - id: bloodlust
+    name: Bloodlust
+    description: Lifesteal heals twice as much per blow, up to 15 health per room.
+    category: defense
+    rarity: epic
+    requires: [lifesteal]
+    synergies: [retaliation]
+    effects: { strike_hit_healing_multiplier: 2, room_healing_cap: 15 }
+  # The empowered blow: two ways to earn one, and everything that lands next
+  # (the chain, the charged blow, Aftershock's shock) spends it.
+  - id: riposte
+    name: Riposte
+    description: Rolling through an enemy's blow makes your next blow deal 50% more damage.
+    category: agility
+    rarity: rare
+    synergies: [aftershock, slippery, overcharge]
+    effects: { empowered_blow_multiplier: 1.5 }
+  - id: retaliation
+    name: Retaliation
+    description: Taking damage makes your next blow deal 50% more damage.
+    category: defense
+    rarity: uncommon
+    synergies: [thick_skin, fortress, adrenaline, overcharge]
+    effects: { empowered_blow_multiplier: 1.5 }
+  - id: slippery
+    name: Slippery
+    description: The roll's untouchable stretch lasts 40% longer.
+    category: agility
+    rarity: common
+    synergies: [aftershock, decoy]
+    effects: { roll_invulnerability_multiplier: 1.4 }
+  - id: overcharge
+    name: Overcharge
+    description: The charged blow is ready 30% sooner and deals 40% more damage.
+    category: combat
+    rarity: uncommon
+    synergies: [battering_ram, shield_breaker]
+    effects: { charge_time_multiplier: 0.7, charged_damage_multiplier: 1.4 }
