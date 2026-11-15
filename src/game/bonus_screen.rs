@@ -1,7 +1,7 @@
 use super::*;
 use crate::game::ui_style::{
-    ACTIVE_BORDER, CARD_BACKGROUND, CARD_HIGHLIGHT_BACKGROUND, DESCRIPTION_COLOR, MUTED, key_badge,
-    overlay_root, title,
+    ACTIVE_BORDER, CARD_BACKGROUND, CARD_HIGHLIGHT_BACKGROUND, DESCRIPTION_COLOR,
+    DIMMED_EDGE_ALPHA, MUTED, focus_ring, key_badge, overlay_root, title,
 };
 use bevy::text::FontSize;
 
@@ -10,6 +10,7 @@ pub(super) struct BonusScreenRoot;
 
 /// A selectable box on the bonus screen, also used as the keyboard selection.
 #[derive(Component, Clone, Copy, Debug, Eq, PartialEq)]
+#[require(Outline)]
 pub(super) enum BonusChoice {
     Offer(usize),
     Reroll,
@@ -200,7 +201,12 @@ pub(super) struct BonusScreenResources<'w> {
 pub(super) fn update_bonus_screen(
     resources: BonusScreenResources,
     mut roots: Query<&mut Visibility, With<BonusScreenRoot>>,
-    mut boxes: Query<(&BonusChoice, &mut BorderColor, &mut BackgroundColor)>,
+    mut boxes: Query<(
+        &BonusChoice,
+        &mut BorderColor,
+        &mut BackgroundColor,
+        &mut Outline,
+    )>,
     mut labels: Query<(&BonusLabel, &mut Text, &mut TextColor)>,
     mut spans: Query<(&BonusSpan, &mut TextSpan, &mut TextColor), Without<BonusLabel>>,
 ) {
@@ -239,14 +245,23 @@ pub(super) fn update_bonus_screen(
         })
     };
 
-    for (choice, mut border, mut background) in &mut boxes {
+    for (choice, mut border, mut background, mut outline) in &mut boxes {
         let enabled = matches!(choice, BonusChoice::Offer(_)) || can_reroll;
-        *border = BorderColor::all(match choice {
+        let lit = enabled && session.selected_choice == *choice;
+        // A box keeps its rarity's colour either way, and only comes up to
+        // full strength, ringed, under the focus.
+        let color = match choice {
             BonusChoice::Offer(index) => rarity_color(*index),
             BonusChoice::Reroll if can_reroll => ACTIVE_BORDER,
             BonusChoice::Reroll => MUTED,
+        };
+        *border = BorderColor::all(if lit {
+            color
+        } else {
+            color.with_alpha(color.alpha() * DIMMED_EDGE_ALPHA)
         });
-        background.0 = if enabled && session.selected_choice == *choice {
+        *outline = focus_ring(if lit { color } else { Color::NONE });
+        background.0 = if lit {
             CARD_HIGHLIGHT_BACKGROUND
         } else {
             CARD_BACKGROUND

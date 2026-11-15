@@ -14,8 +14,8 @@
 
 use super::*;
 use crate::game::ui_style::{
-    ACTIVE_BORDER, CARD_BACKGROUND, CARD_HIGHLIGHT_BACKGROUND, DESCRIPTION_COLOR, KEY_BACKGROUND,
-    MUTED, key_badge, overlay_root, title,
+    ACTIVE_BORDER, CARD_BACKGROUND, CARD_HIGHLIGHT_BACKGROUND, DESCRIPTION_COLOR,
+    DIMMED_EDGE_ALPHA, KEY_BACKGROUND, MUTED, focus_ring, key_badge, overlay_root, title,
 };
 use bevy::text::FontSize;
 
@@ -25,14 +25,12 @@ mod input;
 pub(super) use actions::{MenuAction, MenuFocus, VolumeChannel};
 pub(super) use input::{MenuPressed, navigate_menus};
 
-/// How strongly a button's own edge colour shows while the focus is elsewhere.
-const DIMMED_EDGE_ALPHA: f32 = 0.45;
-
 #[derive(Component)]
 pub(super) struct MenuRoot;
 
 /// A menu button: what it does, and where it stands in its menu.
 #[derive(Component, Clone, Copy)]
+#[require(Outline)]
 pub(super) struct MenuButton {
     pub(super) action: MenuAction,
     pub(super) index: usize,
@@ -348,10 +346,11 @@ pub(super) fn highlight_menu_buttons(
         Option<&MenuEdge>,
         &mut BackgroundColor,
         &mut BorderColor,
+        &mut Outline,
     )>,
 ) {
     let on = focus.lit(*screen.get());
-    for (button, edge, mut background, mut border) in &mut buttons {
+    for (button, edge, mut background, mut border, mut outline) in &mut buttons {
         let lit = on == Some(button.index);
         background.set_if_neq(BackgroundColor(if lit {
             CARD_HIGHLIGHT_BACKGROUND
@@ -367,6 +366,7 @@ pub(super) fn highlight_menu_buttons(
             None => MUTED,
         };
         border.set_if_neq(BorderColor::all(color));
+        outline.set_if_neq(focus_ring(if lit { color } else { Color::NONE }));
     }
 }
 

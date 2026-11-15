@@ -11,12 +11,21 @@ use bevy::{
 // The cards are semi-transparent, so the water behind the main menu (and the
 // blurred room behind the other menus) shows through them.
 pub(super) const CARD_BACKGROUND: Color = Color::srgba(0.03, 0.035, 0.07, 0.7);
-pub(super) const CARD_HIGHLIGHT_BACKGROUND: Color = Color::srgba(0.11, 0.12, 0.19, 0.9);
+pub(super) const CARD_HIGHLIGHT_BACKGROUND: Color = Color::srgba(0.17, 0.19, 0.3, 0.94);
 pub(super) const KEY_BACKGROUND: Color = Color::srgba(1.0, 1.0, 1.0, 0.1);
 pub(super) const ACTIVE_BORDER: Color = Color::srgba(0.92, 0.94, 1.0, 0.85);
 pub(super) const MUTED: Color = Color::srgba(0.6, 0.62, 0.7, 0.55);
+/// How strongly a button's own edge colour shows while the focus is elsewhere.
+pub(super) const DIMMED_EDGE_ALPHA: f32 = 0.45;
 pub(super) const DESCRIPTION_COLOR: Color = Color::srgb(0.84, 0.86, 0.92);
 pub(super) const TITLE_FONT_PX: f32 = 32.0;
+
+/// The ring drawn a little outside the edge of the button or box the focus
+/// stands on, in its edge's colour, so the focus reads at a glance; every
+/// other button wears it in `Color::NONE`.
+pub(super) fn focus_ring(color: Color) -> Outline {
+    Outline::new(px(2), px(4), color)
+}
 
 /// A full-screen layer that centers its content above the game.
 pub(super) fn overlay_root() -> impl Bundle {
