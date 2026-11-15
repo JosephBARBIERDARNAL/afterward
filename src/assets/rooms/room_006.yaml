@@ -215,7 +215,7 @@ props:
 devices:
   - kind: terminal
     position_h: { x: 15.75, y: 10 }
-    text: MAINTENANCE LOG. THE WATER ROSE AGAIN LAST NIGHT. THE UNITS KEPT ON PATROLLING, AS IF NOTHING HAD CHANGED.
+    text: MAINTENANCE LOG. THE WATER ROSE AGAIN LAST NIGHT.
     mirrored: true
   - kind: laser
     position_h: { x: 33.5, y: 1 }

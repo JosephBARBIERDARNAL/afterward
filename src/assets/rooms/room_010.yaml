@@ -75,7 +75,7 @@ props:
 devices:
   - kind: terminal
     position_h: { x: 1.75, y: 3.5 }
-    text: BLUEPRINT 10. SEALED. WHAT GUARDS THIS DOOR WAS NEVER DRAWN ON THE PLANS.
+    text: BLUEPRINT 10. SEALED.
   - kind: laser
     position_h: { x: 3, y: 1 }
     color: red

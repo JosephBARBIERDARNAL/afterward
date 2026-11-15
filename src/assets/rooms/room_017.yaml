@@ -59,7 +59,7 @@ devices:
   - label: warning terminal
     kind: terminal
     position_h: { x: 4.5, y: 2 }
-    text: DEFENCE GRID ONLINE. WALKERS, MINES AND DRONES ARE ON PATROL.
+    text: DEFENCE GRID ONLINE.
     colorway: dusk
   - label: ladder to the right ledge
     kind: ladder

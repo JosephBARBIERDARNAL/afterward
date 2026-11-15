@@ -117,7 +117,7 @@ props:
 devices:
   - kind: terminal
     position_h: { x: 31.5, y: 3.5 }
-    text: "CITY ACCESS LOG. 'Need help asap, room n° 5, please hurry!'"
+    text: "CITY ACCESS LOG. ROOM IS NOW CLEARED."
     mirrored: true
 enemy_spawns:
   - type_id: heavy_unit

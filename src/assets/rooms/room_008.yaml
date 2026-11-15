@@ -245,7 +245,7 @@ props:
 devices:
   - kind: terminal
     position_h: { x: 30, y: 10 }
-    text: PERSONAL NOTE. WE BUILT THEM TO KEEP US SAFE. NOBODY THOUGHT TO ASK FROM WHAT.
+    text: PERSONAL NOTE. IT'S GETTING WORSE.
     mirrored: true
   - kind: laser
     position_h: { x: 7, y: 1 }

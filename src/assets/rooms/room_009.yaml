@@ -263,7 +263,7 @@ props:
 devices:
   - kind: terminal
     position_h: { x: 5.5, y: 8 }
-    text: CITY ACCESS LOG. 'IF YOU READ THIS, TURN BACK. NOBODY CAME BACK FROM ROOM 10.'
+    text: CITY ACCESS LOG. IT WILL PROBABLY NEVER STOP.
     mirrored: true
   - kind: laser
     position_h: { x: 22, y: 1 }
