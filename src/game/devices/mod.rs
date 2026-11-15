@@ -146,20 +146,19 @@ fn press_state(press: &PressConfig, elapsed_s: f32, fps: f32) -> (usize, bool) {
     }
 }
 
-/// Where a device that travels stands `elapsed_s` in, from its spot: there
-/// and back along `travel` at `speed`.
-fn travelled(travel: Vec2, speed: f32, elapsed_s: f32) -> Vec2 {
-    let length = travel.length();
+/// How far along its route a device that travels stands `elapsed_s` in,
+/// from 0 at its spot to 1 at the far end: there and back along a route
+/// `length` long at `speed`.
+fn along_route(length: f32, speed: f32, elapsed_s: f32) -> f32 {
     if length < f32::EPSILON || speed <= 0.0 {
-        return Vec2::ZERO;
+        return 0.0;
     }
     let along = (elapsed_s * speed).rem_euclid(2.0 * length);
-    let fraction = if along < length {
+    if along < length {
         along / length
     } else {
         2.0 - along / length
-    };
-    travel * fraction
+    }
 }
 
 impl Device {
@@ -170,7 +169,6 @@ impl Device {
             DeviceKind::FireTrap(fire) => fire.color.name(),
             DeviceKind::HoverPlatform(platform) => platform.size.name(),
             DeviceKind::FoldingPlatform(platform) => platform.color.name(),
-            DeviceKind::Blade(blade) => blade.style.name(),
             _ => "default",
         }
     }

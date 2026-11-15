@@ -20,12 +20,8 @@ pub(super) fn run_cycles(
     for (mut device, mut hurts) in &mut devices {
         device.elapsed_s += dt;
         let (frame, live) = Device::state(&device.config, &data.devices, device.elapsed_s);
-        // A blade loops its spin; the rest show the frame their cycle is on.
-        let frame = match device.config.kind {
-            DeviceKind::Blade(_) => (device.elapsed_s * device.fps) as usize % device.frames.max(1),
-            _ => frame,
-        };
-        if device.frame != frame {
+        // A blade's frame is its speed's, which `move_platforms` knows.
+        if device.frame != frame && !matches!(device.config.kind, DeviceKind::Blade(_)) {
             device.frame = frame;
         }
         if hurts.live != live {

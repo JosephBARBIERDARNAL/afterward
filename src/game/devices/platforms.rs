@@ -2,6 +2,7 @@
 //! belts that carry, and platforms that fold away once stood on.
 
 use super::*;
+use std::f32::consts::PI;
 
 /// How close, in world units, feet must be to a surface's top to stand on it.
 const STANDING_TOLERANCE: f32 = 2.0;
@@ -50,8 +51,16 @@ fn stands_on(surface: &PlatformSurface, top: f32, feet: Vec2) -> bool {
         && feet.x <= surface.right + HALF_BODY_WIDTH * 0.5
 }
 
+/// The frames of the blade's sheet that show its teeth; the rest are it
+/// blurred into a disc.
+const BLADE_TOOTHED_FRAMES: usize = 3;
+/// How fast a blade must go, against its fastest, to blur into a disc.
+const BLADE_BLURS_FROM: f32 = 0.5;
+
 /// Moves every hovering platform and blade along its way, its collider and
-/// what it hurts with it, and loops its frames.
+/// what it hurts with it, and loops its frames. A platform keeps one pace; a
+/// blade eases into each end of its route, its teeth turning there, and is a
+/// blurred disc while it runs fast through the middle.
 pub(super) fn move_platforms(time: Res<Time>, mut movers: Movers) {
     let dt = time.delta_secs().min(0.05);
     for (mut device, mover, mut transform, surface, hurts) in &mut movers {
@@ -66,17 +75,29 @@ pub(super) fn move_platforms(time: Res<Time>, mut movers: Movers) {
             ),
             _ => continue,
         };
+        let blade = matches!(device.config.kind, DeviceKind::Blade(_));
         // Blades count their own time in `run_cycles`.
-        if matches!(device.config.kind, DeviceKind::HoverPlatform(_)) {
+        if !blade {
             device.elapsed_s += dt;
-            device.frame = (device.elapsed_s * device.fps) as usize % device.frames.max(1);
         }
-        let at = mover.spot
-            + travelled(
-                travel * H_WORLD_UNITS,
-                speed * H_WORLD_UNITS,
-                device.elapsed_s,
-            );
+        let along = along_route(travel.length(), speed, device.elapsed_s);
+        let spun = (device.elapsed_s * device.fps) as usize;
+        let (fraction, frame) = if blade {
+            let pace = (along * PI).sin();
+            let frames = device.frames.max(BLADE_TOOTHED_FRAMES + 1);
+            let frame = if pace >= BLADE_BLURS_FROM {
+                BLADE_TOOTHED_FRAMES + spun % (frames - BLADE_TOOTHED_FRAMES)
+            } else {
+                spun % BLADE_TOOTHED_FRAMES
+            };
+            ((1.0 - (along * PI).cos()) / 2.0, frame)
+        } else {
+            (along, spun % device.frames.max(1))
+        };
+        if device.frame != frame {
+            device.frame = frame;
+        }
+        let at = mover.spot + travel * H_WORLD_UNITS * fraction;
         let delta = at - transform.translation.truncate();
         transform.translation.x = at.x;
         transform.translation.y = at.y;

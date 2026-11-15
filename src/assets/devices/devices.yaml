@@ -79,8 +79,7 @@ kinds:
       head: [5, 52, 38, 28]
   blade:
     sheets:
-      gear: { sheet: devices/sci_fi/blade_gear.png, frames: 3 }
-      disc: { sheet: devices/sci_fi/blade_disc.png, frames: 2 }
+      default: { sheet: devices/sci_fi/blade.png, frames: 5 }
     frame_px: [32, 32]
     fps: 16
     boxes:

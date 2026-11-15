@@ -170,8 +170,10 @@ STRIPS = {
         "devices/sci_fi",
         row("traps/press-trap.png", 0, 0, 48, 80, 9) + row("traps/press-trap.png", 0, 80, 48, 80, 6),
     ),
-    "blade_gear": ("devices/sci_fi", row("traps/spinning-blade.png", 0, 0, 32, 32, 3)),
-    "blade_disc": ("devices/sci_fi", row("traps/spinning-blade.png", 96, 0, 32, 32, 2)),
+    # Three frames of the gear turning, its teeth seen, then two of it blurred
+    # into a disc: a blade shows the first near the ends of its route, where
+    # it is slow, and the blur halfway along it, where it is fastest.
+    "blade": ("devices/sci_fi", row("traps/spinning-blade.png", 0, 0, 32, 32, 5)),
     "turret": (
         "devices/sci_fi",
         row("traps/turret.png", 0, 0, 32, 16, 5) + row("traps/turret.png", 0, 32, 32, 16, 4),

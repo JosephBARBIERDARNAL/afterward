@@ -249,10 +249,6 @@ two_way_choice!(
     /// A folding platform's colour: only a look.
     FoldingColor { Green = "green", Steel = "steel" }
 );
-two_way_choice!(
-    /// A spinning blade's look.
-    BladeStyle { Gear = "gear", Disc = "disc" }
-);
 
 impl DeviceChoice for Facing {
     fn step(&mut self, _forward: bool) {
@@ -433,11 +429,11 @@ impl Default for PressConfig {
 
 /// A spinning blade that hurts on touch, travelling back and forth between
 /// its spot and the spot `travel_x_h`, `travel_y_h` away (or standing still
-/// when both are 0).
+/// when both are 0): slowing into each end and fastest halfway, at
+/// `speed_h_s` on average.
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(default)]
 pub struct BladeConfig {
-    pub style: BladeStyle,
     pub travel_x_h: f32,
     pub travel_y_h: f32,
     pub speed_h_s: f32,
@@ -447,7 +443,6 @@ pub struct BladeConfig {
 impl Default for BladeConfig {
     fn default() -> Self {
         Self {
-            style: BladeStyle::Gear,
             travel_x_h: 3.0,
             travel_y_h: 0.0,
             speed_h_s: 2.0,
@@ -672,7 +667,6 @@ impl DeviceKind {
                 param("damage", "Damage", number(&mut press.damage, 1.0, 0.0)),
             ],
             Self::Blade(blade) => vec![
-                param("style", "Look", ParamValue::Choice(&mut blade.style)),
                 param(
                     "travel_x_h",
                     "Travel x (H)",
