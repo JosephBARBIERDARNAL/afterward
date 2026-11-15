@@ -195,8 +195,19 @@ pub(super) fn land_the_blow(
             if !blow.pierces_shields && !session.has_bonus("shield_breaker") {
                 continue;
             }
-            if !blow.pierces_shields {
-                commands.write_message(BonusTell::new("shield_breaker", at(&enemy_transform)));
+            // A blow a bonus let through the layer shows it punching through.
+            let pierced_by = if blow.pierces_shields {
+                blow.bonus.as_deref().filter(|bonus| *bonus == "breaker")
+            } else {
+                Some("shield_breaker")
+            };
+            if let Some(bonus) = pierced_by {
+                commands.write_message(
+                    BonusTell::new(bonus, at(&enemy_transform)).with(
+                        TellEffect::new("pierce", 0.7)
+                            .flipped(enemy_transform.translation.x < blow.from_x),
+                    ),
+                );
             }
         }
         // Open Wound raises Executioner's line on a marked body.
@@ -339,10 +350,10 @@ pub(super) fn land_the_blow(
             let roll = random.roll();
             // A drop only Scavenger's better odds let fall says so.
             if roll < drop_chance.min(1.0) && roll >= item.base_drop_chance {
-                commands.write_message(BonusTell::new(
-                    "scavenger",
-                    TellAt::Spot(middle.extend(0.0)),
-                ));
+                commands.write_message(
+                    BonusTell::new("scavenger", TellAt::Spot(middle.extend(0.0)))
+                        .with(TellEffect::new("glint", 0.6)),
+                );
             }
             if roll < drop_chance.min(1.0) {
                 let mut pickup = Sprite::from_image(
@@ -405,8 +416,11 @@ pub(super) fn land_the_blow(
             if was_marked && session.has_bonus("hunters_feast") {
                 let healed = data.bonus_effect("hunters_feast", "marked_kill_healing");
                 session.health = (session.health + healed).min(session.max_health);
-                commands
-                    .write_message(BonusTell::new("hunters_feast", TellAt::Player).healing(healed));
+                commands.write_message(
+                    BonusTell::new("hunters_feast", TellAt::Player)
+                        .healing(healed)
+                        .drawn_from(middle.extend(0.0)),
+                );
             }
         }
     }
@@ -455,7 +469,8 @@ pub(super) fn land_the_blow(
     if !player.grounded && session.has_bonus("updraft") && player.jumps_used > takeoff {
         player.jumps_used = takeoff;
         commands.write_message(
-            BonusTell::new("updraft", TellAt::Player).with(TellEffect::AirRing(1.4)),
+            BonusTell::new("updraft", TellAt::Player)
+                .with(TellEffect::new("air_burst", 0.7).at_the_feet()),
         );
     }
     // A thrown body lands on whatever stood behind it, as a blow of its own.
@@ -571,7 +586,12 @@ pub(super) fn land_the_blow(
             } else {
                 "lifesteal"
             };
-            commands.write_message(BonusTell::new(by, TellAt::Player).quiet().healing(healing));
+            commands.write_message(
+                BonusTell::new(by, TellAt::Player)
+                    .quiet()
+                    .healing(healing)
+                    .drawn_from(blow.area.center().extend(0.0)),
+            );
         }
     }
 }

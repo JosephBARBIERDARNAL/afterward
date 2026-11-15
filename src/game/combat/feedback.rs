@@ -296,7 +296,10 @@ pub(in crate::game) fn update_health_pickups(
         session.health = (session.health + healing).min(session.max_health);
         sounds.push(SoundCue::Pickup);
         if session.has_bonus("field_dressing") {
-            commands.write_message(BonusTell::new("field_dressing", TellAt::Player));
+            commands.write_message(
+                BonusTell::new("field_dressing", TellAt::Player)
+                    .with(TellEffect::new("heal_burst", 1.3).on_the_floor()),
+            );
         }
         spawn_damage_number(
             &mut commands,

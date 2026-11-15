@@ -77,7 +77,8 @@ pub(in crate::game) fn update_projectiles(
                 session.deflector_used = true;
                 sounds.push(SoundCue::CoverBlock);
                 commands.write_message(
-                    BonusTell::new("deflector", TellAt::Player).with(TellEffect::Ring(1.6)),
+                    BonusTell::new("deflector", TellAt::Player)
+                        .with(TellEffect::new("shield_hit", 1.5)),
                 );
                 commands.entity(projectile_entity).despawn();
                 continue;

@@ -2,7 +2,7 @@ use super::{
     blows::{Blow, LandingResources, Launch, MeleeEnemiesQuery, Pull, land_the_blow},
     *,
 };
-use crate::game::{player::Thrown, tells::Fading};
+use crate::game::player::Thrown;
 
 #[derive(SystemParam)]
 pub(in crate::game) struct MeleeResources<'w> {
@@ -110,9 +110,10 @@ pub(in crate::game) fn player_melee(
         let drags = session.has_bonus("riptide");
         // Riptide shows how far its drag reaches.
         if drags {
-            commands.write_message(BonusTell::new("riptide", TellAt::Player).with(
-                TellEffect::Ring(2.0 * data.bonus_effect("undertow", "slam_pull_radius_h")),
-            ));
+            commands.write_message(
+                BonusTell::new("riptide", TellAt::Player)
+                    .with(TellEffect::new("whirlpool", 2.4).at_the_feet()),
+            );
         }
         land_the_blow(
             LandingResources {
@@ -166,15 +167,16 @@ pub(in crate::game) fn player_melee(
         // Undertow shows how far its drag reaches, and Meteor lands in a
         // burst as heavy as it hits.
         if drags {
-            commands.write_message(BonusTell::new("undertow", TellAt::Player).with(
-                TellEffect::Ring(2.0 * data.bonus_effect("undertow", "slam_pull_radius_h")),
-            ));
+            commands.write_message(
+                BonusTell::new("undertow", TellAt::Player)
+                    .with(TellEffect::new("whirlpool", 2.4).at_the_feet()),
+            );
         }
         if meteor > 1.0 {
             commands.write_message(
-                BonusTell::new("meteor", TellAt::Spot(feet.extend(0.0)))
+                BonusTell::new("meteor", TellAt::Player)
                     .quiet()
-                    .with(TellEffect::Burst(2.4)),
+                    .with(TellEffect::new("meteor_impact", 1.9).on_the_floor()),
             );
         }
         land_the_blow(
@@ -296,17 +298,21 @@ pub(in crate::game) fn player_melee(
                 boost: overcharge,
             },
         };
-        // Long Reach draws the reach it gave as a streak through the air.
-        if session.has_bonus("long_reach") {
-            commands.spawn((
-                Sprite::from_color(Color::WHITE.with_alpha(0.55), Vec2::new(area.width(), 3.0)),
-                Transform::from_translation(area.center().extend(5.5)),
-                Fading {
-                    timer: Timer::from_seconds(0.14, TimerMode::Once),
-                    alpha: 0.55,
-                },
-                RoomEntity,
-            ));
+        // Long Reach draws the arc of the blow as far as it reaches.
+        if session.has_bonus("long_reach")
+            && let Some(arc) = play_effect(
+                &mut commands,
+                &sheets,
+                "vfx_slash",
+                area.center().extend(5.5),
+                area.height().max(area.width() / 2.0) / H_WORLD_UNITS,
+                player.facing < 0.0,
+            )
+        {
+            commands
+                .entity(arc)
+                .entry::<Sprite>()
+                .and_modify(move |mut sprite| sprite.custom_size = Some(area.size()));
         }
         land_the_blow(
             LandingResources {
@@ -406,7 +412,8 @@ pub(in crate::game) fn player_melee(
             && session.has_bonus("overcharge")
         {
             commands.write_message(
-                BonusTell::new("overcharge", TellAt::Player).with(TellEffect::Ring(1.8)),
+                BonusTell::new("overcharge", TellAt::Player)
+                    .with(TellEffect::new("charge_flare", 1.3)),
             );
         }
         player.charge_s += dt;

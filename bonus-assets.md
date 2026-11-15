@@ -2,9 +2,10 @@
 
 Every bonus now shows itself in the game (`src/game/tells/`), but several of
 those tells are stand-ins I drew in code or Typst: a tinted glow, a plain
-ring, fading copies of a sprite. This is the art that would make them read
-better. Send examples (a pack page, a GIF, a sprite sheet) for any line and
-I'll cut it in and iterate.
+ring, fading copies of a sprite. The VFX packs under `src/assets/packs/`
+replaced most of them (see "In the game now"); what they do not cover is
+under "Still wanted". Send examples (a pack page, a GIF, a sprite sheet) for any
+line still wanted and I'll cut it in and iterate.
 
 What the game expects of an effect, so an example can be judged quickly:
 
@@ -17,34 +18,48 @@ What the game expects of an effect, so an example can be judged quickly:
   intelligence yellow, combined orange), so one sheet serves several bonuses.
 - Transparent background, no baked shadow.
 
-## Most wanted
+## Still wanted
 
-These replace the weakest placeholders.
+Nothing in the packs fits these. Each has a stand-in in the game; real art
+would read better.
 
-| # | What | Used by | Should look like | Size, frames | Play |
-|---|------|---------|------------------|--------------|------|
-| 1 | **Empowered aura** | Riposte, Retaliation | Energy or flame licking up around the body, clearly "your next hit is loaded". Now: a soft glow. | ~64×64, 6–8 | loop, tinted |
-| 2 | **Mark reticle, animated** | Marked Prey, Open Wound | A target closing in and locking onto the enemy as the mark lands, then a slow spin while it holds. Now: a still 13 px reticle. | 16–24 px, 4–6 lock + 4 hold | once, then loop, tinted |
-| 3 | **Shield bubble pop** | Room Ward, Deflector | A bubble or hex shield flashing around the player and shattering outward. Now: a plain ring. | ~64×64, 6–8 | once, tinted |
-| 4 | **Slash arcs** | Long Reach, Quick Hands, the chain | A swoosh crescent per blow, its length matching the hitbox, so a longer reach is *seen*. Now: a thin white streak. | ~64×32, 3–5 | once, tinted |
-| 5 | **Life orbs** | Lifesteal, Bloodlust, Hunter's Feast | Small red/green motes drifting from the struck enemy to the player. Now: only a green "+N". | 8–12 px orb, 4 | loop (moved by code) |
-| 6 | **Execute icon** | Executioner, Open Wound | A small skull or blade over an enemy below the execute line, pulsing. Now: a white line on the health bar and a flashing fill. | 9–13 px, 2–4 | loop |
+| #   | What                        | Used by                         | Should look like                                                                                                                                                                                                     | Size, frames                | Play                    |
+| --- | --------------------------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- | ----------------------- |
+| 2   | **Mark reticle, animated**  | Marked Prey, Open Wound         | A crosshair closing in and locking onto the enemy as the mark lands, then a slow spin while it holds. The packs only have 64–96 px lock-on rings (Holy pack `00.png` row 2, PVFX legacy `focus-charge`): far too big. | 16–24 px, 4–6 lock + 4 hold | once, then loop, tinted |
+| 11  | **Adrenaline heartbeat**    | Adrenaline                      | A red throb around the body, or a screen-edge vignette, beating while under 30% health. Nothing throbs in any pack: a vignette shader may be the better answer.                                                       | ~64×64, 6                   | loop                    |
+| 13  | **Speed lines**             | Fleet Feet, Tailwind            | Thin horizontal streaks trailing the runner. The packs only have one-shot dash dust and ornate wind gusts.                                                                                                           | ~32×16, 4                   | loop, tinted            |
+| 17  | **Invulnerability shimmer** | Slippery (and every roll)       | A ghostly flicker over the whole body while nothing can reach it mid-roll. Nothing body-shaped exists; the afterimages may stay.                                                                                    | full body, 4                | loop, tinted            |
+| 8b  | **A pull that contracts**   | Undertow, Riptide               | A ring closing *in* on the player. The packs have a flat whirlpool (fine as a stand-in) but nothing that shrinks toward the middle.                                                                                  | ~128×48 flat, 6–8           | once, tinted            |
 
-## Nice to have
+## In the game now
 
-| # | What | Used by | Should look like | Size, frames | Play |
-|---|------|---------|------------------|--------------|------|
-| 7 | **Meteor trail and crater** | Meteor | A fiery streak behind the falling hero, then a ground shockwave with debris. Now: orange copies of the sprite and the hit burst. | trail ~32×64, impact ~96×32, 6–8 | loop / once |
-| 8 | **Pull vortex** | Undertow, Riptide | A ring of water or wind *contracting* toward the player (the opposite of a blast). Now: an expanding ring showing the reach. | ~128×48 flat, 6–8 | once, tinted |
-| 9 | **Air burst under the feet** | Double Jump, Kick Off, Updraft | A puff or shock ring kicked downward on a mid-air jump. Now: a flat ring I drew (`art/effects/air_ring.typ`). | ~48×16, 5–6 | once, tinted |
-| 10 | **Charge-ready flash** | Overcharge (the charged blow) | A star glint or flare at the fist the moment the heavy blow is ready. Now: a ring. | ~32×32, 4–6 | once |
-| 11 | **Adrenaline heartbeat** | Adrenaline | A red throb around the body (or a screen-edge vignette) beating while under 30% health. Now: a red glow. | ~64×64, 6 | loop |
-| 12 | **Chain Reaction crackle** | Chain Reaction, Bloodrush | Small sparks or arcs crawling over the body while the kill buff burns. Now: a red glow. | ~64×64, 6–8 | loop, tinted |
-| 13 | **Speed lines / wind streaks** | Fleet Feet, Tailwind | Thin horizontal streaks trailing the runner. Now: green copies of the sprite. | ~32×16, 4 | loop, tinted |
-| 14 | **Shield pierce** | Shield Breaker, Breaker | The enemy shield cracking with a blow punching through it. The shield's own break plays; this would be the "through" part. | ~32×32, 5–6 | once |
-| 15 | **Alert "!" and unaware icons, animated** | Cold Read, Insight, Opportunist | A bouncing "!" over a wind-up, and a sleepy "z" or closed eye over an unaware enemy. Now: still icons I drew (`art/ui/alert.typ`, `art/ui/unaware.typ`). | 8–12 px, 2–4 | loop |
-| 16 | **Loot sparkle** | Scavenger | A glint over a health drop that only Scavenger's odds let fall. Now: a callout only. | ~16×16, 4–6 | once |
-| 17 | **Invulnerability shimmer** | Slippery (and every roll) | A ghostly flicker over the hero while nothing can reach them mid-roll. Now: pale green copies of the sprite. | full body, 4 | loop, tinted |
+Cut by `just vfx` (`scripts/cut_vfx.py`) from the packs kept under
+`src/assets/packs/`: AW is `aw_vfx/` (the AW VFX Mega Pack, the base), PVFX is
+`pvfx_foundry/` (PVFX Foundry, `strict` tier, for what AW lacks).
+
+| #   | Need                      | Effect used                                                      | Shown                                                    |
+| --- | ------------------------- | ---------------------------------------------------------------- | -------------------------------------------------------- |
+| 1   | Empowered aura            | AW `Arcane_Charge`                                               | looping over the player until the empowered blow lands   |
+| 3   | Shield bubble pop         | AW `Shield_Break` (Room Ward), AW `Shield_Hit` (Deflector)       | once over the player                                     |
+| 4   | Slash arcs                | AW `Slash_Horizontal`, frames 0–7                                | Long Reach: once, stretched over the blow's whole reach  |
+| 5   | Life orbs                 | AW `XP_Orb`                                                      | flying from the enemy to the player as health comes back |
+| 6   | Execute icon              | AW `Icon_Skull`                                                  | beside the health bar of a body below the line           |
+| 7   | Meteor crater             | AW `Explosion_Debris`                                            | once where the slam lands                                |
+| 8   | Pull vortex               | PVFX `water/whirlpool`                                           | once at the feet, Undertow and Riptide                   |
+| 9   | Air burst under the feet  | PVFX `impacts/shockwave-ring`, frames 0–9                        | mid-air jumps, Updraft                                   |
+| 10  | Charge-ready flash        | AW `Hit_Critical`                                                | Overcharge, as the charged blow is ready                 |
+| 12  | Chain Reaction crackle    | AW `Shock_Sparks`                                                | looping over the player while it burns                   |
+| 14  | Shield pierce             | AW `Hit_Directional`                                             | Shield Breaker, Breaker                                  |
+| 15  | Alert "!" and unaware     | AW `Icon_Exclamation`, AW `Sleep_Zzz`                            | over the enemy, beside the wind-up bar / while unaware   |
+| 16  | Loot sparkle              | AW `Coin_Sparkle`                                                | Scavenger's drop                                         |
+| –   | High Jump dust            | AW `Dust_Jump`                                                   | at a lifted takeoff                                      |
+| –   | Field Dressing            | AW `Heal_Burst`                                                  | over the player as the boosted pickup heals              |
+
+Not used yet, worth a look later: AW `Fire_Fireball` turned to point down,
+as Meteor's trail (the drop still leaves orange afterimages); AW
+`Hit_Spark_Small`, `Hit_Heavy` and PVFX `impacts/hit-spark` / `punch-hit` for
+every blow, not only bonuses; AW `Dust_Land` / `Dust_Dash` for landings and
+rolls.
 
 ## Already fine
 

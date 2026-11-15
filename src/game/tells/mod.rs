@@ -16,7 +16,7 @@ mod aura;
 mod overhead;
 mod tray;
 
-pub(super) use afterimages::{Fading, leave_afterimages, update_fading};
+pub(super) use afterimages::{leave_afterimages, update_fading};
 pub(super) use aura::{show_the_combo_window, wear_the_aura};
 pub(super) use overhead::update_overheads;
 #[cfg(test)]
@@ -36,6 +36,9 @@ pub(crate) struct BonusTell {
     pub(crate) effect: Option<TellEffect>,
     /// Health it gave back, written over the player.
     pub(crate) healed: Option<f32>,
+    /// Where that health was drawn from: an orb flies from there to the
+    /// player.
+    pub(crate) drawn_from: Option<Vec3>,
 }
 
 /// Where a tell is shown.
@@ -47,17 +50,48 @@ pub(crate) enum TellAt {
     Spot(Vec3),
 }
 
-/// What is played where a tell is shown, tinted in the bonus's colour.
+/// A sheet of `effects/vfx/` (`scripts/cut_vfx.py`) played once where a
+/// tell is shown.
 #[derive(Clone, Copy, Debug)]
-pub(crate) enum TellEffect {
-    /// A ring opening out to that many H across.
-    Ring(f32),
-    /// A flat ring under the feet, that many H across: air pushed off.
-    AirRing(f32),
-    /// The burst of a heavy blow, that many H tall, untinted.
-    Burst(f32),
-    /// A puff of dust kicked up from under the feet, that many H tall.
-    Dust(f32),
+pub(crate) struct TellEffect {
+    /// Its name in `effects/vfx/`, without the `vfx_` of its sheet's key.
+    pub(crate) sheet: &'static str,
+    /// How tall it is drawn, in H.
+    pub(crate) size_h: f32,
+    /// Where its middle stands above the spot, in H: the player's spot is
+    /// the middle of their body, half an H over their feet.
+    pub(crate) rise_h: f32,
+    /// Drawn facing left rather than right.
+    pub(crate) flip: bool,
+}
+
+impl TellEffect {
+    /// `sheet`, `size_h` tall, its middle on the spot.
+    pub(crate) fn new(sheet: &'static str, size_h: f32) -> Self {
+        Self {
+            sheet,
+            size_h,
+            rise_h: 0.0,
+            flip: false,
+        }
+    }
+
+    /// Standing on the floor under the player's spot.
+    pub(crate) fn on_the_floor(mut self) -> Self {
+        self.rise_h = self.size_h / 2.0 - 0.5;
+        self
+    }
+
+    /// Lying flat at the player's feet: a ring or a pool seen edge on.
+    pub(crate) fn at_the_feet(mut self) -> Self {
+        self.rise_h = -0.5;
+        self
+    }
+
+    pub(crate) fn flipped(mut self, flip: bool) -> Self {
+        self.flip = flip;
+        self
+    }
 }
 
 impl BonusTell {
@@ -69,6 +103,7 @@ impl BonusTell {
             callout: true,
             effect: None,
             healed: None,
+            drawn_from: None,
         }
     }
 
@@ -86,6 +121,48 @@ impl BonusTell {
     pub(crate) fn healing(mut self, healed: f32) -> Self {
         self.healed = Some(healed);
         self
+    }
+
+    /// The health it gave back flies to the player from `from`.
+    pub(crate) fn drawn_from(mut self, from: Vec3) -> Self {
+        self.drawn_from = Some(from);
+        self
+    }
+}
+
+/// An orb of health flying from where it was drawn to the player.
+#[derive(Component)]
+pub(super) struct LifeOrb {
+    from: Vec3,
+    timer: Timer,
+}
+
+/// How long an orb takes to reach the player, and how tall it is in H.
+const LIFE_ORB_S: f32 = 0.35;
+const LIFE_ORB_H: f32 = 0.4;
+
+/// Carries each orb to the player, faster as it closes in, and takes it
+/// away as it arrives.
+pub(super) fn fly_life_orbs(
+    mut commands: Commands,
+    time: Res<Time>,
+    players: Query<&Transform, (With<PlayerBody>, Without<LifeOrb>)>,
+    mut orbs: Query<(Entity, &mut Transform, &mut LifeOrb)>,
+) {
+    let Ok(player) = players.single() else {
+        return;
+    };
+    for (entity, mut transform, mut orb) in &mut orbs {
+        orb.timer.tick(time.delta());
+        if orb.timer.is_finished() {
+            commands.entity(entity).despawn();
+            continue;
+        }
+        let progress = orb.timer.fraction();
+        let to = player.translation.with_z(orb.from.z);
+        // A small arc up on the way, so a row of them reads as a stream.
+        let arc = Vec3::Y * (progress * (1.0 - progress)) * 1.2 * H_WORLD_UNITS;
+        transform.translation = orb.from.lerp(to, progress * progress) + arc;
     }
 }
 
@@ -135,38 +212,44 @@ pub(super) fn show_bonus_tells(
         if let Some(healed) = tell.healed {
             spawn_damage_number(&mut commands, config, at, Number::Healed(healed));
         }
+        if let Some(from) = tell.drawn_from
+            && let Some(sheet) = sheets.0.get("vfx_life_orb")
+        {
+            let from = from.with_z(20.0);
+            let mut orb = Sprite::from_atlas_image(
+                sheet.image.clone(),
+                TextureAtlas {
+                    layout: sheet.layout.clone(),
+                    index: 0,
+                },
+            );
+            orb.custom_size = Some(Vec2::splat(LIFE_ORB_H * H_WORLD_UNITS));
+            commands.spawn((
+                orb,
+                Transform::from_translation(from),
+                AnimatedSprite {
+                    sheet: "vfx_life_orb".into(),
+                    frame: 0,
+                    frames: sheet.frames,
+                    timer: Timer::from_seconds(1.0 / sheet.fps, TimerMode::Repeating),
+                    looping: true,
+                },
+                LifeOrb {
+                    from,
+                    timer: Timer::from_seconds(LIFE_ORB_S, TimerMode::Once),
+                },
+                RoomEntity,
+            ));
+        }
         if let Some(effect) = tell.effect {
-            let (key, size_h, tinted, z) = match effect {
-                TellEffect::Ring(size_h) => ("effect_tell_ring", size_h, true, 6.5),
-                TellEffect::AirRing(width_h) => (
-                    "effect_air_ring",
-                    // The sheet is 32 x 12: drawn `width_h` across.
-                    width_h * 12.0 / 32.0,
-                    true,
-                    3.8,
-                ),
-                TellEffect::Burst(size_h) => ("effect_hit_burst", size_h, false, 6.5),
-                TellEffect::Dust(size_h) => ("effect_dust", size_h, false, 3.8),
-            };
-            let feet = match effect {
-                TellEffect::AirRing(_) => -0.5 * H_WORLD_UNITS,
-                TellEffect::Dust(size_h) => (size_h / 2.0 - 0.5) * H_WORLD_UNITS,
-                _ => 0.0,
-            };
-            if let Some(played) = play_effect(
+            play_effect(
                 &mut commands,
                 &sheets,
-                key,
-                Vec3::new(at.x, at.y + feet, z),
-                size_h,
-                false,
-            ) && tinted
-            {
-                commands
-                    .entity(played)
-                    .entry::<Sprite>()
-                    .and_modify(move |mut sprite| sprite.color = color);
-            }
+                &format!("vfx_{}", effect.sheet),
+                Vec3::new(at.x, at.y + effect.rise_h * H_WORLD_UNITS, 6.5),
+                effect.size_h,
+                effect.flip,
+            );
         }
         if !tell.callout
             || called

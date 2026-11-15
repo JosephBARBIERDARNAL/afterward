@@ -269,14 +269,18 @@ pub(super) fn update_player(
                 // A jump a bonus lifts or gives shows the air it pushed off.
                 let lifted_by = if player.jumps_used >= tuning.jumps_per_takeoff {
                     Some(if session.has_bonus("kick_off") {
-                        ("kick_off", TellEffect::AirRing(1.8))
+                        ("kick_off", TellEffect::new("air_burst", 0.95).at_the_feet())
                     } else {
-                        ("double_jump", TellEffect::AirRing(1.3))
+                        (
+                            "double_jump",
+                            TellEffect::new("air_burst", 0.7).at_the_feet(),
+                        )
                     })
                 } else {
-                    session
-                        .has_bonus("high_jump")
-                        .then_some(("high_jump", TellEffect::Dust(0.9)))
+                    session.has_bonus("high_jump").then_some((
+                        "high_jump",
+                        TellEffect::new("jump_dust", 0.75).on_the_floor(),
+                    ))
                 };
                 if let Some((bonus, effect)) = lifted_by {
                     tells.write(BonusTell::new(bonus, TellAt::Player).quiet().with(effect));

@@ -35,39 +35,59 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
         ),
     ]
     .into_iter()
-    .map(|(key, path, size, frames, fps)| (key, path, UVec2::splat(size), frames, fps))
-    // Drawn white in Typst (`art/effects/`, `art/ui/mark.typ`), for the
-    // game to tint in the colour of the bonus each one tells.
-    .chain([
+    .map(|(key, path, size, frames, fps)| {
         (
-            "effect_tell_ring",
-            "effects/tell_ring.png",
-            UVec2::splat(32),
-            6,
-            22.0,
-        ),
-        (
-            "effect_air_ring",
-            "effects/air_ring.png",
-            UVec2::new(32, 12),
-            6,
-            24.0,
-        ),
-        ("tell_mark", "ui/mark.png", UVec2::splat(13), 1, 1.0),
-        ("tell_alert", "ui/alert.png", UVec2::new(5, 11), 1, 1.0),
-        ("tell_unaware", "ui/unaware.png", UVec2::new(7, 11), 1, 1.0),
-        // The sci-fi pack's puff of dust, kicked up by a jump High Jump lifts.
-        (
-            "effect_dust",
-            "effects/sci_fi/dust.png",
-            UVec2::splat(16),
-            5,
-            20.0,
-        ),
-    ])
+            key.to_owned(),
+            path.to_owned(),
+            UVec2::splat(size),
+            frames,
+            fps,
+        )
+    })
+    // Marked Prey's reticle, drawn white in Typst (`art/ui/mark.typ`) for the
+    // game to tint.
+    .chain([(
+        "tell_mark".to_owned(),
+        "ui/mark.png".to_owned(),
+        UVec2::splat(13),
+        1,
+        1.0,
+    )])
+    // What the bonuses show themselves with, cut out of the VFX packs by
+    // `scripts/cut_vfx.py` (`just vfx`): name, frame size, frames, pace.
+    .chain(
+        [
+            ("arcane_charge", UVec2::splat(48), 18, 15.0),
+            ("shield_break", UVec2::splat(48), 14, 24.0),
+            ("shield_hit", UVec2::splat(44), 12, 24.0),
+            ("slash", UVec2::new(64, 32), 8, 30.0),
+            ("life_orb", UVec2::splat(16), 18, 15.0),
+            ("skull", UVec2::splat(28), 10, 15.0),
+            ("alert", UVec2::splat(28), 10, 20.0),
+            ("unaware", UVec2::new(48, 64), 18, 10.0),
+            ("meteor_impact", UVec2::new(68, 62), 21, 24.0),
+            ("jump_dust", UVec2::new(44, 24), 14, 28.0),
+            ("charge_flare", UVec2::splat(56), 7, 18.0),
+            ("shock_sparks", UVec2::new(44, 50), 18, 15.0),
+            ("pierce", UVec2::new(48, 32), 4, 18.0),
+            ("glint", UVec2::splat(16), 12, 18.0),
+            ("heal_burst", UVec2::new(44, 76), 18, 24.0),
+            ("whirlpool", UVec2::new(72, 48), 20, 28.0),
+            ("air_burst", UVec2::new(120, 52), 10, 28.0),
+        ]
+        .map(|(name, size, frames, fps)| {
+            (
+                format!("vfx_{name}"),
+                format!("effects/vfx/{name}.png"),
+                size,
+                frames,
+                fps,
+            )
+        }),
+    )
     .map(|(key, path, size, frames, fps)| SpriteSheetSpec {
-        key: key.into(),
-        path: path.into(),
+        key,
+        path,
         frame_width: size.x,
         frame_height: size.y,
         frames,

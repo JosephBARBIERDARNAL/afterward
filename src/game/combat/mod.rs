@@ -107,8 +107,9 @@ fn apply_player_damage(
     }
     if session.has_bonus("room_ward") && !session.room_ward_used {
         session.room_ward_used = true;
-        commands
-            .write_message(BonusTell::new("room_ward", TellAt::Player).with(TellEffect::Ring(2.6)));
+        commands.write_message(
+            BonusTell::new("room_ward", TellAt::Player).with(TellEffect::new("shield_break", 1.7)),
+        );
         return;
     }
     let covered = player.covering && (attacker_x - transform.translation.x) * player.facing >= 0.0;

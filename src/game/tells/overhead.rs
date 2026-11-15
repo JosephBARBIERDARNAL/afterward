@@ -3,10 +3,13 @@
 //! - Marked Prey's reticle, with a bar emptying as the mark runs out;
 //! - with Cold Read or Insight, a "!" over a wind-up, with a bar emptying
 //!   until the blow comes;
-//! - with Opportunist, a "?" over an enemy that has not noticed anyone;
+//! - with Opportunist, a sleep over an enemy that has not noticed anyone;
 //! - with Executioner, a line on the health bar where its bonus starts, and
-//!   the bar flashing once the body is below it (at 50% on a marked body
-//!   with Open Wound).
+//!   once the body is below it the bar flashing and a skull beside it (at
+//!   50% on a marked body with Open Wound).
+//!
+//! The reticle is drawn white and tinted; the "!", the sleep and the skull
+//! are the VFX packs' (`effects/vfx/`), played once and held or looped.
 
 use super::{afterimages::category_color, *};
 use crate::game::combat::DeadEnemy;
@@ -20,6 +23,7 @@ pub(crate) enum OverheadKind {
     Unaware,
     ExecuteLine,
     ExecuteFlash,
+    ExecuteSkull,
 }
 
 /// One piece hung over `enemy`. A bar keeps the fullest value it has shown,
@@ -48,7 +52,6 @@ struct Piece {
 /// How wide a bar is drawn, in world units, and how many world units an
 /// icon's pixel takes.
 const BAR_WIDTH: f32 = 34.0;
-const ICON_SCALE: f32 = 1.5;
 /// The health bar's width and how far over the body it stands
 /// (`feedback::update_health_bars`).
 const HEALTH_BAR_WIDTH: f32 = 48.0;
@@ -81,31 +84,37 @@ pub(crate) fn update_overheads(
         // Over the shield icons when there are any.
         let mut row_y = health_bar_y + if enemy.armor > 0 { 30.0 } else { 13.0 };
         let mut pieces = Vec::new();
-        let icon_and_bar = |pieces: &mut Vec<Piece>, kinds, sheet, pixels: Vec2, color, left, y| {
-            let (icon, bar) = kinds;
-            pieces.push(Piece {
-                kind: icon,
-                at: Vec2::new(x - BAR_WIDTH / 2.0 - 4.0, y),
-                size: pixels * ICON_SCALE,
-                color,
-                sheet: Some(sheet),
-                left: None,
-            });
-            pieces.push(Piece {
-                kind: bar,
-                at: Vec2::new(x + 6.0, y),
-                size: Vec2::new(BAR_WIDTH, 3.0),
-                color,
-                sheet: None,
-                left: Some(left),
-            });
-        };
+        let icon_and_bar =
+            |pieces: &mut Vec<Piece>, kinds, sheet: &'static str, size, color, left, y| {
+                let (icon, bar) = kinds;
+                pieces.push(Piece {
+                    kind: icon,
+                    at: Vec2::new(x - BAR_WIDTH / 2.0 - 4.0, y),
+                    size,
+                    // The packs' icons wear their own colours.
+                    color: if sheet.starts_with("vfx_") {
+                        Color::WHITE
+                    } else {
+                        color
+                    },
+                    sheet: Some(sheet),
+                    left: None,
+                });
+                pieces.push(Piece {
+                    kind: bar,
+                    at: Vec2::new(x + 6.0, y),
+                    size: Vec2::new(BAR_WIDTH, 3.0),
+                    color,
+                    sheet: None,
+                    left: Some(left),
+                });
+            };
         if marks && enemy.marked_timer > 0.0 {
             icon_and_bar(
                 &mut pieces,
                 (OverheadKind::MarkIcon, OverheadKind::MarkBar),
                 "tell_mark",
-                Vec2::splat(13.0),
+                Vec2::splat(20.0),
                 category_color(&data, "intelligence"),
                 enemy.marked_timer,
                 row_y,
@@ -116,20 +125,22 @@ pub(crate) fn update_overheads(
             icon_and_bar(
                 &mut pieces,
                 (OverheadKind::WindupIcon, OverheadKind::WindupBar),
-                "tell_alert",
-                Vec2::new(5.0, 11.0),
+                "vfx_alert",
+                Vec2::splat(24.0),
                 Color::from(data.gameplay.effects.telegraph.color),
                 enemy.windup_remaining,
                 row_y,
             );
         }
         if ambushes && !enemy.engaged {
+            // The frame is mostly air under its letters: raised to sit on
+            // the row.
             pieces.push(Piece {
                 kind: OverheadKind::Unaware,
-                at: Vec2::new(x, row_y),
-                size: Vec2::new(7.0, 11.0) * ICON_SCALE,
-                color: category_color(&data, "combined"),
-                sheet: Some("tell_unaware"),
+                at: Vec2::new(x + 8.0, row_y + 12.0),
+                size: Vec2::new(48.0, 64.0) * 0.9,
+                color: Color::WHITE,
+                sheet: Some("vfx_unaware"),
                 left: None,
             });
         }
@@ -157,19 +168,36 @@ pub(crate) fn update_overheads(
                     sheet: None,
                     left: None,
                 });
+                pieces.push(Piece {
+                    kind: OverheadKind::ExecuteSkull,
+                    at: Vec2::new(x + HEALTH_BAR_WIDTH / 2.0 + 13.0, health_bar_y + 2.0),
+                    size: Vec2::splat(22.0),
+                    color: Color::WHITE,
+                    sheet: Some("vfx_skull"),
+                    left: None,
+                });
             }
         }
 
         for piece in pieces {
             let key = (enemy_entity, piece.kind);
             let Some(entity) = standing.remove(&key) else {
-                let mut sprite = match piece.sheet.and_then(|sheet| sheets.0.get(sheet)) {
-                    Some(sheet) => Sprite::from_image(sheet.image.clone()),
+                let sheet = piece
+                    .sheet
+                    .and_then(|key| sheets.0.get(key).map(|sheet| (key, sheet)));
+                let mut sprite = match sheet {
+                    Some((_, sheet)) => Sprite::from_atlas_image(
+                        sheet.image.clone(),
+                        TextureAtlas {
+                            layout: sheet.layout.clone(),
+                            index: 0,
+                        },
+                    ),
                     None => Sprite::from_color(Color::WHITE, Vec2::ONE),
                 };
                 sprite.color = piece.color;
                 sprite.custom_size = Some(piece.size);
-                commands.spawn((
+                let mut spawned = commands.spawn((
                     sprite,
                     Transform::from_xyz(piece.at.x, piece.at.y, 9.0),
                     Overhead {
@@ -179,6 +207,19 @@ pub(crate) fn update_overheads(
                     },
                     RoomEntity,
                 ));
+                // An icon that moves pops in and holds, but the sleep, which
+                // drifts for as long as it lasts.
+                if let Some((key, sheet)) = sheet
+                    && sheet.frames > 1
+                {
+                    spawned.insert(AnimatedSprite {
+                        sheet: key.to_owned(),
+                        frame: 0,
+                        frames: sheet.frames,
+                        timer: Timer::from_seconds(1.0 / sheet.fps, TimerMode::Repeating),
+                        looping: key == "vfx_unaware",
+                    });
+                }
                 continue;
             };
             let Ok((_, mut overhead, mut transform, mut sprite)) = overheads.get_mut(entity) else {

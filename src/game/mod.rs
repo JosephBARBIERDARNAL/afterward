@@ -403,6 +403,7 @@ impl Plugin for GamePlugin {
             (
                 tells::show_bonus_tells,
                 tells::update_callouts,
+                tells::fly_life_orbs,
                 tells::leave_afterimages,
                 tells::update_fading,
                 tells::wear_the_aura,

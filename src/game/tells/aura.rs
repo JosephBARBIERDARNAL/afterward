@@ -1,7 +1,8 @@
 //! What the player wears while a bonus holds them in a state: a glow behind
-//! the body (the next blow empowered, Chain Reaction burning, Adrenaline in),
-//! and with Deep Breath the window to chain the next blow, as a bar under the
-//! feet emptying.
+//! the body and, where the VFX packs have one, a loop over it (a rune ring
+//! while the next blow is empowered, sparks while Chain Reaction burns; only
+//! a glow for Adrenaline), and with Deep Breath the window to chain the next
+//! blow, as a bar under the feet emptying.
 
 use super::{afterimages::category_color, *};
 
@@ -17,10 +18,23 @@ enum AuraKind {
 #[derive(Component)]
 pub(crate) struct PlayerAura(AuraKind);
 
+impl AuraKind {
+    /// The loop worn over the body, if any: its sheet in `effects/vfx/` and
+    /// how tall it is drawn, in H.
+    fn worn(self) -> Option<(&'static str, f32)> {
+        match self {
+            Self::Empowered => Some(("vfx_arcane_charge", 1.6)),
+            Self::ChainReaction => Some(("vfx_shock_sparks", 1.3)),
+            Self::Adrenaline => None,
+        }
+    }
+}
+
 pub(crate) fn wear_the_aura(
     mut commands: Commands,
     data: Res<GameData>,
     session: Res<RunSession>,
+    sheets: Res<SpriteSheets>,
     players: Query<(Entity, &PlayerBody)>,
     auras: Query<(Entity, &PlayerAura)>,
 ) {
@@ -50,15 +64,41 @@ pub(crate) fn wear_the_aura(
     if let Some((aura, _)) = worn {
         commands.entity(aura).despawn();
     }
-    if let Some((kind, color)) = wanted {
-        commands.entity(entity).with_child((
-            PlayerAura(kind),
-            Glowing {
-                color,
-                radius_h: data.gameplay.effects.tells.aura_radius_h,
+    let Some((kind, color)) = wanted else {
+        return;
+    };
+    let mut aura = commands.spawn((
+        PlayerAura(kind),
+        Glowing {
+            color,
+            radius_h: data.gameplay.effects.tells.aura_radius_h,
+        },
+        Transform::default(),
+        Visibility::default(),
+        ChildOf(entity),
+    ));
+    if let Some((key, size_h)) = kind.worn()
+        && let Some(sheet) = sheets.0.get(key)
+    {
+        let mut sprite = Sprite::from_atlas_image(
+            sheet.image.clone(),
+            TextureAtlas {
+                layout: sheet.layout.clone(),
+                index: 0,
             },
-            Transform::default(),
-            Visibility::default(),
+        );
+        sprite.custom_size = Some(sheet.frame_size * size_h * H_WORLD_UNITS / sheet.frame_size.y);
+        // Over the body, as the sparks crawl on it and the ring circles it.
+        aura.with_child((
+            sprite,
+            Transform::from_xyz(0.0, 0.0, 0.2),
+            AnimatedSprite {
+                sheet: key.to_owned(),
+                frame: 0,
+                frames: sheet.frames,
+                timer: Timer::from_seconds(1.0 / sheet.fps, TimerMode::Repeating),
+                looping: true,
+            },
         ));
     }
 }

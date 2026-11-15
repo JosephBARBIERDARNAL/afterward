@@ -72,6 +72,12 @@ black-knight:
 sci-fi:
     python3 scripts/slice_sci_fi.py
 
+# Cut the effects the bonuses show themselves with out of the VFX packs
+# (packs/aw_vfx/, packs/pvfx_foundry/) into effects/vfx/. Needs ImageMagick;
+# the PNGs are committed, so only after a clip is added or recut.
+vfx:
+    python3 scripts/cut_vfx.py
+
 # Render the Typst pixel art in art/ to PNGs at the same path under src/assets/
 # (art/ui/enemy_shield.typ -> src/assets/ui/enemy_shield.png).
 # Files starting with `_` are shared libraries, not images.
