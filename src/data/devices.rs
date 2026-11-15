@@ -1,6 +1,6 @@
 //! Devices: the working pieces of a room (`devices:` of a room file) — traps
 //! that hurt on a cycle or on touch, platforms that move or fold, a press, a
-//! turret, buttons, doors and ladders. A device is placed like a prop, by the
+//! turret, buttons, doors, ladders, terminals and light strips. A device is placed like a prop, by the
 //! middle of its bottom edge, and carries the values that tune it; what it
 //! looks like and which of its pixels hurt or hold a body up is the same for
 //! every device of a kind, in `devices/devices.yaml`.
@@ -51,6 +51,7 @@ pub enum DeviceKind {
     Door(DoorConfig),
     Ladder(LadderConfig),
     Terminal(TerminalConfig),
+    LightStrip(LightStripConfig),
 }
 
 /// A device's kind alone: what the editor adds, and what decides its rows.
@@ -70,10 +71,11 @@ pub enum DeviceTag {
     Door,
     Ladder,
     Terminal,
+    LightStrip,
 }
 
 impl DeviceTag {
-    pub(crate) const ALL: [Self; 13] = [
+    pub(crate) const ALL: [Self; 14] = [
         Self::Laser,
         Self::FireTrap,
         Self::Spikes,
@@ -87,6 +89,7 @@ impl DeviceTag {
         Self::Door,
         Self::Ladder,
         Self::Terminal,
+        Self::LightStrip,
     ];
 }
 
@@ -107,6 +110,7 @@ impl Display for DeviceTag {
             Self::Door => "door",
             Self::Ladder => "ladder",
             Self::Terminal => "terminal",
+            Self::LightStrip => "light_strip",
         })
     }
 }
@@ -128,6 +132,7 @@ impl From<DeviceTag> for DeviceKind {
             DeviceTag::Door => Self::Door(DoorConfig::default()),
             DeviceTag::Ladder => Self::Ladder(LadderConfig::default()),
             DeviceTag::Terminal => Self::Terminal(TerminalConfig::default()),
+            DeviceTag::LightStrip => Self::LightStrip(LightStripConfig::default()),
         }
     }
 }
@@ -234,7 +239,7 @@ two_way_choice!(
     LaserColor { Red = "red", Blue = "blue" }
 );
 two_way_choice!(
-    /// Which way a laser's beam runs from its emitter at the spot.
+    /// Which way a laser's beam, or a light strip, runs from its emitter at the spot.
     Orientation { Vertical = "vertical", Horizontal = "horizontal" }
 );
 two_way_choice!(
@@ -532,6 +537,24 @@ impl Default for LadderConfig {
     }
 }
 
+/// A strip of lights, pure scenery, `length_h` long from end to end: its two
+/// ends with its middle repeated between them.
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+#[serde(default)]
+pub struct LightStripConfig {
+    pub orientation: Orientation,
+    pub length_h: f32,
+}
+
+impl Default for LightStripConfig {
+    fn default() -> Self {
+        Self {
+            orientation: Orientation::Vertical,
+            length_h: 1.5,
+        }
+    }
+}
+
 /// Builds a `Param`.
 fn param<'a>(key: &'static str, name: &'static str, value: ParamValue<'a>) -> Param<'a> {
     Param { key, name, value }
@@ -563,6 +586,7 @@ impl DeviceKind {
             Self::Door(_) => DeviceTag::Door,
             Self::Ladder(_) => DeviceTag::Ladder,
             Self::Terminal(_) => DeviceTag::Terminal,
+            Self::LightStrip(_) => DeviceTag::LightStrip,
         }
     }
 
@@ -725,6 +749,18 @@ impl DeviceKind {
             Self::Terminal(terminal) => {
                 vec![param("text", "Text", ParamValue::Text(&mut terminal.text))]
             }
+            Self::LightStrip(strip) => vec![
+                param(
+                    "orientation",
+                    "Runs",
+                    ParamValue::Choice(&mut strip.orientation),
+                ),
+                param(
+                    "length_h",
+                    "Length (H)",
+                    number(&mut strip.length_h, 0.5, 1.0),
+                ),
+            ],
         }
     }
 
@@ -747,6 +783,13 @@ impl DeviceKind {
                 HoverSize::Small => frame(DeviceTag::HoverPlatform) * Vec2::new(0.5, 1.0),
             },
             Self::Ladder(ladder) => Vec2::new(frame(DeviceTag::Ladder).x, ladder.height_h),
+            Self::LightStrip(strip) => {
+                let across = frame(DeviceTag::LightStrip).x;
+                match strip.orientation {
+                    Orientation::Vertical => Vec2::new(across, strip.length_h),
+                    Orientation::Horizontal => Vec2::new(strip.length_h, across),
+                }
+            }
             Self::FoldingPlatform(_)
             | Self::Press(_)
             | Self::Blade(_)

@@ -169,6 +169,7 @@ impl Device {
             DeviceKind::FireTrap(fire) => fire.color.name(),
             DeviceKind::HoverPlatform(platform) => platform.size.name(),
             DeviceKind::FoldingPlatform(platform) => platform.color.name(),
+            DeviceKind::LightStrip(strip) => strip.orientation.name(),
             _ => "default",
         }
     }
@@ -345,7 +346,7 @@ pub(super) fn spawn_devices(
             DeviceTag::Conveyor | DeviceTag::HoverPlatform | DeviceTag::FoldingPlatform => {
                 Some("solid")
             }
-            DeviceTag::Door | DeviceTag::Terminal => Some("solid"),
+            DeviceTag::Door => Some("solid"),
             DeviceTag::Press | DeviceTag::Turret => Some("body"),
             _ => None,
         };
@@ -522,6 +523,50 @@ fn pieces(
                         Vec2::new(0.0, y),
                         frame_h,
                     )
+                })
+                .collect()
+        }
+        DeviceKind::LightStrip(strip) => {
+            // Along the strip from its start (its top, or its left on the
+            // sideways sheet): the start cap, the middle repeated, the last
+            // repeat cut short where the end cap begins, then the end cap.
+            let part = |name: &str| {
+                art.kinds
+                    .get(&tag)
+                    .and_then(|kind| kind.boxes.get(name))
+                    .map_or((0.0, 0.0), |part| (part[1] as f32, part[3] as f32))
+            };
+            let (start, start_len) = part("start_cap");
+            let (middle, middle_len) = part("middle");
+            let (end, end_len) = part("end_cap");
+            let length = strip.length_h * px;
+            let mut parts = vec![(start, start_len, 0.0)];
+            let mut along = start_len;
+            while middle_len > 0.0 && along < length - end_len {
+                let cut = middle_len.min(length - end_len - along);
+                parts.push((middle, cut, along));
+                along += cut;
+            }
+            parts.push((end, end_len, length - end_len));
+            let vertical = strip.orientation == Orientation::Vertical;
+            let across = if vertical { width } else { height };
+            parts
+                .into_iter()
+                .map(|(from, len, at)| {
+                    let mid = (at + len / 2.0) / px - strip.length_h / 2.0;
+                    if vertical {
+                        (
+                            piece(Rect::new(0.0, from, across, from + len), 0),
+                            Vec2::new(0.0, -mid),
+                            Vec2::new(across, len) / px,
+                        )
+                    } else {
+                        (
+                            piece(Rect::new(from, 0.0, from + len, across), 0),
+                            Vec2::new(mid, 0.0),
+                            Vec2::new(len, across) / px,
+                        )
+                    }
                 })
                 .collect()
         }

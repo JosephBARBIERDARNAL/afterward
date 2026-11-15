@@ -51,6 +51,8 @@ devices:
   - { label: turret, kind: turret, position_h: { x: 42, y: 3 } }
   - { label: button, kind: button, position_h: { x: 43.25, y: 2 }, link: 1 }
   - { label: door, kind: door, position_h: { x: 45, y: 2 }, link: 1 }
+  - { label: light strip up, kind: light_strip, position_h: { x: 2.5, y: 3 }, length_h: 3 }
+  - { label: light strip along, kind: light_strip, position_h: { x: 12, y: 7 }, orientation: horizontal, length_h: 5 }
 enemy_spawns: []
 bonus:
   x_h: 46

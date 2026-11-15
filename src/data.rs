@@ -653,6 +653,7 @@ impl GameData {
                 !self.devices.kinds.contains_key(&device.kind.tag())
                     || match &device.kind {
                         DeviceKind::Laser(laser) => laser.length_h < 1.5,
+                        DeviceKind::LightStrip(strip) => strip.length_h < 1.0,
                         DeviceKind::Ladder(ladder) => ladder.height_h <= 0.0,
                         DeviceKind::FireTrap(fire) => {
                             fire.cells == 0 || fire.arm_s + fire.burn_s + fire.rest_s <= 0.0

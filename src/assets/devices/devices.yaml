@@ -125,11 +125,23 @@ kinds:
     fps: 1
     boxes:
       climb: [2, 0, 12, 16]
-  # Used with Interact, it types its text out in a bubble over it.
+  # Used with Interact, it types its text out in a bubble over it. Nothing
+  # of it is solid: it is walked past, not stood on.
   terminal:
     sheets:
       default: { sheet: props/sci_fi/terminal.png, frames: 1 }
     frame_px: [32, 32]
     fps: 1
+  # Scenery: its two ends, with `middle` repeated between them to its length.
+  # Boxes are given on the vertical sheet (from its top); the horizontal one
+  # is the same strip laid on its side (from its left).
+  light_strip:
+    sheets:
+      vertical: { sheet: props/sci_fi/light_strip_vertical.png, frames: 1 }
+      horizontal: { sheet: props/sci_fi/light_strip.png, frames: 1, frame_px: [48, 16] }
+    frame_px: [16, 48]
+    fps: 1
     boxes:
-      solid: [4, 9, 26, 23]
+      start_cap: [0, 0, 16, 13]
+      middle: [0, 13, 16, 4]
+      end_cap: [0, 37, 16, 11]

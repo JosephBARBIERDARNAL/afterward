@@ -150,12 +150,6 @@ props:
   sci_fi_pipe_elbow:
     sprite: props/sci_fi/pipe_elbow.png
     size_px: [16, 32]
-  sci_fi_light_strip_vertical:
-    sprite: props/sci_fi/light_strip_vertical.png
-    size_px: [16, 48]
-  sci_fi_light_strip:
-    sprite: props/sci_fi/light_strip.png
-    size_px: [48, 16]
   sci_fi_round_vent:
     sprite: props/sci_fi/round_vent.png
     size_px: [32, 32]
@@ -233,7 +227,6 @@ props:
   sci_fi_terminal:
     sprite: props/sci_fi/terminal.png
     size_px: [32, 32]
-    solid_px: [[4, 9, 26, 23]]
   sci_fi_lamp_off:
     sprite: props/sci_fi/lamp_off.png
     size_px: [32, 16]
