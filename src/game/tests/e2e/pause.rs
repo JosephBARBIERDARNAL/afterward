@@ -4,6 +4,10 @@ use super::*;
 fn the_pause_menu_adjusts_settings_resumes_restarts_and_leaves() {
     let mut game = HeadlessGame::new();
     game.start_run();
+    game.app
+        .world_mut()
+        .resource_mut::<RunSession>()
+        .last_stand_used = true;
     game.hit_player(10.0);
     let max_health = game.session().max_health;
     assert!(game.session().health < max_health);
@@ -44,6 +48,21 @@ fn the_pause_menu_adjusts_settings_resumes_restarts_and_leaves() {
     game.wait_for_screen(GameScreen::Playing, 10.0);
     assert_eq!(game.session().room_id, 0, "back in the opening room");
     assert_eq!(game.session().health, max_health);
+    assert!(
+        game.session().owned_bonuses.is_empty(),
+        "the bonus taken in room 0 went with the run"
+    );
+    assert!(!game.session().last_stand_used, "Last Stand is whole again");
+    assert_eq!(
+        game.layers(AudioClass::Music),
+        0,
+        "the chapter track went with the run"
+    );
+    assert_eq!(
+        game.layers(AudioClass::IntroMusic),
+        1,
+        "and the opening music carries the opening room again"
+    );
 
     // Leaving asks too: Enter stands on the way back, and the second
     // button gives the run up.

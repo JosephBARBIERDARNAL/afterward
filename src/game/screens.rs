@@ -67,9 +67,7 @@ pub(super) struct ScreenInputResources<'w> {
 /// mouse or the confirm key, or a letter shortcut typed straight at the
 /// screen. Both arrive here as a [`MenuAction`], so the two never drift apart.
 pub(super) fn handle_screen_input(
-    mut commands: Commands,
     resources: ScreenInputResources,
-    room_entities: Query<Entity, With<RoomEntity>>,
     mut windows: Query<&mut Window, With<PrimaryWindow>>,
     mut keyboard: MessageReader<KeyboardInput>,
     mut presses: MessageReader<MenuPressed>,
@@ -205,9 +203,8 @@ pub(super) fn handle_screen_input(
                 sounds.push(SoundCue::UiConfirm);
             }
             MenuAction::Restart => {
-                for entity in &room_entities {
-                    commands.entity(entity).despawn();
-                }
+                // The room and the run's music are taken down on the way out
+                // of `ConfirmLeave` (see `GamePlugin`).
                 next_screen.set(reset_run(&mut session, &data, *start_room, &mut random));
                 sounds.push(SoundCue::RunRestarted);
             }
@@ -289,28 +286,24 @@ pub(super) fn handle_screen_input(
 }
 
 /// Resets the run to `start_room` and returns the screen that opens it: the
-/// room entrance, like arriving there through a door.
+/// room entrance, like arriving there through a door. Everything the run held
+/// is dropped — only what the player chose before it (the difficulty, and the
+/// editor's playtest) carries over — so nothing of the run given up, a Last
+/// Stand spent or a trickle of healing included, follows the player in.
 pub(super) fn reset_run(
     session: &mut RunSession,
     data: &GameData,
     start_room: StartRoom,
     random: &mut RandomState,
 ) -> GameScreen {
-    session.room_id = start_room.0;
-    session.max_health = data.gameplay.player.max_health;
-    session.rerolls = data.gameplay.room_flow.bonus_rerolls_per_run;
-    session.owned_bonuses.clear();
-    session.next_bonus_category = None;
+    *session = RunSession {
+        room_id: start_room.0,
+        playtest: session.playtest,
+        difficulty: session.difficulty,
+        max_health: data.gameplay.player.max_health,
+        rerolls: data.gameplay.room_flow.bonus_rerolls_per_run,
+        ..default()
+    };
     session.grant_starting_bonuses(data, random);
-    session.bonus_category = None;
-    session.offered_bonuses.clear();
-    session.previous_offers.clear();
-    session.selected_choice = bonus_screen::BonusChoice::Offer(0);
-    session.bonus_reroll_animation_remaining_s = 0.0;
-    session.bonus_chosen_hold_remaining_s = 0.0;
-    session.room_ward_used = false;
-    session.room_cleared = false;
-    session.door_open = false;
-    session.world_loaded = false;
     GameScreen::RoomIntro
 }

@@ -239,6 +239,20 @@ impl Plugin for GamePlugin {
                 audio::start_intro_music,
             ),
         )
+        // A restart confirmed on the pause menu opens a new run the way the
+        // main menu does: the room given up is taken down, and so is what the
+        // run was playing, so the opening music carries the start room again.
+        .add_systems(
+            OnTransition {
+                exited: GameScreen::ConfirmLeave,
+                entered: GameScreen::RoomIntro,
+            },
+            (
+                world::cleanup_room,
+                audio::stop_run_audio,
+                audio::start_intro_music,
+            ),
+        )
         .add_systems(
             OnEnter(GameScreen::Transitioning),
             audio::fade_out_intro_music,
