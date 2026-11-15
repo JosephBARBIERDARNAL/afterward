@@ -400,7 +400,7 @@ pub struct TelegraphConfig {
     pub brightness: f32,
 }
 
-/// How fire is drawn (`shaders/vent.wgsl`): the colour of its warning embers
+/// How fire is drawn (`shaders/fire.wgsl`): the colour of its warning embers
 /// and of a flame's edge, the colour of a flame's core, and how many art
 /// pixels it is drawn with to the H.
 #[derive(Debug, Deserialize)]

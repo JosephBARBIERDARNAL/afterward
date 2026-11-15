@@ -394,7 +394,6 @@ pub(in crate::game) fn update_enemy_ai(
                         damage: attack.damage,
                         arm_s: hazard.arm_s,
                         burn_s: hazard.burn_s,
-                        rest_s: None,
                         elapsed_s: 0.0,
                     }
                     .lay(&mut commands);
@@ -537,7 +536,6 @@ pub(in crate::game) fn update_enemy_ai(
                                 size,
                                 heat: 1.0,
                                 burning: true,
-                                grate: false,
                             },
                             Transform::from_xyz(
                                 strike_feet.x + enemy.facing * attack.reach_h * H_WORLD_UNITS,

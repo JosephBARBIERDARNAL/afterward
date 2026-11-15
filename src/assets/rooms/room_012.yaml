@@ -99,43 +99,6 @@ enemy_spawns:
     position_h: { x: 18.5, y: 25 }
     facing: left
     wave: 2
-# Vents: each warns for arm_s, burns for burn_s, rests for rest_s, and
-# starts over, offset_s into that cycle as the room opens.
-hazards:
-  - rect_h: { x: 12, y: 1, width: 2, height: 1.5 }
-    damage: 12
-    arm_s: 0.8
-    burn_s: 0.6
-    rest_s: 1.4
-  - rect_h: { x: 1.5, y: 7, width: 2, height: 1.5 }
-    damage: 12
-    arm_s: 0.8
-    burn_s: 0.6
-    rest_s: 1.4
-    offset_s: 0.7
-  - rect_h: { x: 9, y: 9, width: 2, height: 1.5 }
-    damage: 12
-    arm_s: 0.8
-    burn_s: 0.6
-    rest_s: 1.4
-    offset_s: 1.4
-  - rect_h: { x: 8.5, y: 13, width: 2, height: 1.5 }
-    damage: 12
-    arm_s: 0.8
-    burn_s: 0.6
-    rest_s: 1.4
-    offset_s: 2.1
-  - rect_h: { x: 8, y: 17, width: 2, height: 1.5 }
-    damage: 12
-    arm_s: 0.8
-    burn_s: 0.6
-    rest_s: 1.4
-  - rect_h: { x: 2, y: 23, width: 2, height: 1.5 }
-    damage: 12
-    arm_s: 0.8
-    burn_s: 0.6
-    rest_s: 1.4
-    offset_s: 1.4
 # The bonus item, lying beside the door once every enemy is down.
 bonus:
   x_h: 20.75

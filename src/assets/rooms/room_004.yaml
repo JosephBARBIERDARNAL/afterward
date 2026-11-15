@@ -712,6 +712,30 @@ props:
 # Devices: traps, moving and folding platforms, buttons, doors and
 # ladders, each standing on a spot (the middle of its bottom edge).
 devices:
+  - kind: terminal
+    position_h: { x: 32.5, y: 33 }
+    text: AND IT HAS CONTINUED TO THIS DAY.
+    mirrored: true
+  - kind: laser
+    position_h: { x: 12.25, y: 33 }
+    color: red
+    orientation: vertical
+    length_h: 2
+    off_s: 1.2
+    warn_s: 0.5
+    on_s: 1
+    offset_s: 0
+    damage: 15
+  - kind: laser
+    position_h: { x: 13.75, y: 33 }
+    color: red
+    orientation: vertical
+    length_h: 2
+    off_s: 1.2
+    warn_s: 0.5
+    on_s: 1
+    offset_s: 0
+    damage: 15
   - kind: laser
     position_h: { x: 15, y: 25 }
     color: red
@@ -874,94 +898,11 @@ enemy_spawns:
     position_h: { x: 29, y: 33 }
     facing: left
     wave: 3
-# Vents: each warns for arm_s, burns for burn_s, rests for rest_s, and
-# starts over, offset_s into that cycle as the room opens.
-hazards:
-  - rect_h: { x: 14, y: 33, width: 2, height: 1.5 }
-    damage: 12
-    arm_s: 0.8
-    burn_s: 0.6
-    rest_s: 1.4
-  - rect_h: { x: 13, y: 25, width: 2, height: 1.5 }
-    damage: 12
-    arm_s: 0.8
-    burn_s: 0.6
-    rest_s: 1.4
-    offset_s: 0.7
-  - rect_h: { x: 5, y: 25, width: 2, height: 1.5 }
-    damage: 12
-    arm_s: 0.8
-    burn_s: 0.6
-    rest_s: 1.4
-    offset_s: 1.4
-  - rect_h: { x: 14, y: 17, width: 2, height: 1.5 }
-    damage: 12
-    arm_s: 0.8
-    burn_s: 0.6
-    rest_s: 1.4
-  - rect_h: { x: 4, y: 17, width: 2, height: 1.5 }
-    damage: 12
-    arm_s: 0.8
-    burn_s: 0.6
-    rest_s: 1.4
-    offset_s: 1.4
-  - rect_h: { x: 12, y: 9, width: 2, height: 1.5 }
-    damage: 12
-    arm_s: 0.8
-    burn_s: 0.6
-    rest_s: 1.4
-    offset_s: 0.7
-  - rect_h: { x: 5, y: 9, width: 2, height: 1.5 }
-    damage: 12
-    arm_s: 0.8
-    burn_s: 0.6
-    rest_s: 1.4
-    offset_s: 2.1
-  - rect_h: { x: 8, y: 1, width: 2, height: 1.5 }
-    damage: 12
-    arm_s: 0.8
-    burn_s: 0.6
-    rest_s: 1.4
-  - rect_h: { x: 14, y: 1, width: 2, height: 1.5 }
-    damage: 12
-    arm_s: 0.8
-    burn_s: 0.6
-    rest_s: 1.4
-    offset_s: 0.7
-  - rect_h: { x: 20, y: 1, width: 2, height: 1.5 }
-    damage: 12
-    arm_s: 0.8
-    burn_s: 0.6
-    rest_s: 1.4
-    offset_s: 1.4
-  - rect_h: { x: 26, y: 1, width: 2, height: 1.5 }
-    damage: 12
-    arm_s: 0.8
-    burn_s: 0.6
-    rest_s: 1.4
-    offset_s: 2.1
-  - rect_h: { x: 25, y: 9, width: 2, height: 1.5 }
-    damage: 12
-    arm_s: 0.8
-    burn_s: 0.6
-    rest_s: 1.4
-  - rect_h: { x: 28, y: 17, width: 2, height: 1.5 }
-    damage: 12
-    arm_s: 0.8
-    burn_s: 0.6
-    rest_s: 1.4
-    offset_s: 1.4
-  - rect_h: { x: 26, y: 25, width: 2, height: 1.5 }
-    damage: 12
-    arm_s: 0.8
-    burn_s: 0.6
-    rest_s: 1.4
-    offset_s: 0.7
 # The bonus item, lying beside the door once every enemy is down.
 bonus:
   x_h: 30
   y_h: 37
 exit:
-  x_h: 31.25
+  x_h: 32
   y_h: 37
 next_room_id: 5

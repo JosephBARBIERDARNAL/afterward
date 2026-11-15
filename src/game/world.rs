@@ -73,23 +73,6 @@ pub(super) fn draw_room(
     sheets: &SpriteSheets,
     shaders: &mut ShaderAssets,
 ) {
-    // The room's vents, wherever a room is drawn: they only burn in play.
-    for vent in &room.hazards {
-        combat::Hazard {
-            area: Rect::new(
-                vent.rect_h.x * H_WORLD_UNITS,
-                vent.rect_h.y * H_WORLD_UNITS,
-                vent.rect_h.right() * H_WORLD_UNITS,
-                vent.rect_h.top() * H_WORLD_UNITS,
-            ),
-            damage: vent.damage,
-            arm_s: vent.arm_s,
-            burn_s: vent.burn_s,
-            rest_s: Some(vent.rest_s),
-            elapsed_s: vent.offset_s,
-        }
-        .lay(commands);
-    }
     // The profiles are mixed rather than laid one over the other. Their skies
     // are blended in equal parts, each drawn over the ones before it at the
     // share that leaves them all even; a plain color is a sky like any other,

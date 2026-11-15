@@ -12,19 +12,19 @@ use bevy::{
 
 mod bolt;
 mod city_lights;
+mod fire;
 mod flood;
 mod glow;
-mod vent;
 
 pub(super) use bolt::Bolt;
 pub(super) use city_lights::CityLightsMaterial;
+pub(super) use fire::Flame;
 #[cfg(test)]
 pub(super) use flood::Flood;
 pub(super) use flood::show_the_flood;
 #[cfg(test)]
 pub(super) use glow::GlowAttached;
 pub(super) use glow::{Glowing, attach_glows, light_the_unlocked_door};
-pub(super) use vent::Flame;
 
 pub(super) struct ShaderPlugin;
 
@@ -34,7 +34,7 @@ impl Plugin for ShaderPlugin {
             Material2dPlugin::<CityLightsMaterial>::default(),
             Material2dPlugin::<glow::GlowMaterial>::default(),
             Material2dPlugin::<flood::FloodMaterial>::default(),
-            Material2dPlugin::<vent::VentMaterial>::default(),
+            Material2dPlugin::<fire::FireMaterial>::default(),
             Material2dPlugin::<bolt::BoltMaterial>::default(),
         ))
         .add_systems(
@@ -45,7 +45,7 @@ impl Plugin for ShaderPlugin {
             Update,
             (
                 glow::brighten_what_is_in_reach,
-                (vent::attach_flames, vent::stoke_the_flames).chain(),
+                (fire::attach_flames, fire::stoke_the_flames).chain(),
                 bolt::attach_bolts,
             ),
         );
@@ -68,7 +68,7 @@ pub(super) struct ShaderAssets<'w> {
     pub(super) city_lights: ResMut<'w, Assets<CityLightsMaterial>>,
     glows: ResMut<'w, Assets<glow::GlowMaterial>>,
     flood: ResMut<'w, Assets<flood::FloodMaterial>>,
-    vents: ResMut<'w, Assets<vent::VentMaterial>>,
+    fires: ResMut<'w, Assets<fire::FireMaterial>>,
     bolts: ResMut<'w, Assets<bolt::BoltMaterial>>,
 }
 
@@ -86,7 +86,7 @@ mod tests {
             city_lights::SHADER_PATH,
             flood::SHADER_PATH,
             glow::SHADER_PATH,
-            vent::SHADER_PATH,
+            fire::SHADER_PATH,
             bolt::SHADER_PATH,
             crate::game::ripple::SHADER_PATH,
         ] {

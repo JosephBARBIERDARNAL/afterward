@@ -50,10 +50,13 @@ platforms:
     rect_h: { x: 0, y: 0, width: 1, height: 0.5 }
   - label: trim
     material: sci_fi_green_edge
-    rect_h: { x: 16.5, y: 3.5, width: 7.5, height: 0.5 }
+    rect_h: { x: 16.5, y: 3, width: 7.5, height: 0.5 }
   - label: trim
     material: sci_fi_green_edge
-    rect_h: { x: 11.5, y: 6, width: 3.5, height: 0.5 }
+    rect_h: { x: 10.75, y: 5, width: 3.5, height: 0.5 }
+  - label: way up, step 3, trim
+    material: sci_fi_green_edge
+    rect_h: { x: 29.75, y: 3, width: 2.25, height: 0.5 }
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
 # Props: sprites standing on a spot (the middle of their bottom edge).
@@ -75,26 +78,27 @@ props:
     position_h: { x: 32.25, y: 0.5 }
   - label: corner
     prop: sci_fi_steel_block
-    position_h: { x: 16.25, y: 3.5 }
+    position_h: { x: 16.25, y: 3 }
   - label: corner
     prop: sci_fi_steel_block
-    position_h: { x: 24.25, y: 3.5 }
+    position_h: { x: 24.25, y: 3 }
   - label: corner
     prop: sci_fi_steel_block
-    position_h: { x: 11.25, y: 6 }
+    position_h: { x: 10.5, y: 5 }
   - label: corner
     prop: sci_fi_steel_block
-    position_h: { x: 15.25, y: 6 }
+    position_h: { x: 14.5, y: 5 }
   - prop: sci_fi_crate_stack
     position_h: { x: 6, y: 1 }
     solid: false
+    mirrored: true
     opacity: 0.8
   - prop: sci_fi_barrel
-    position_h: { x: 25.25, y: 1 }
+    position_h: { x: 22.75, y: 3.5 }
     solid: false
     opacity: 0.8
   - prop: sci_fi_small_crate
-    position_h: { x: 26.75, y: 1 }
+    position_h: { x: 11.25, y: 5.5 }
     solid: false
     mirrored: true
     opacity: 0.8
@@ -102,9 +106,22 @@ props:
     position_h: { x: 0.5, y: 3 }
   - prop: sci_fi_pipe_vertical
     position_h: { x: 32.5, y: 8 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 29.5, y: 3 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 32.25, y: 3 }
+# Devices: traps, moving and folding platforms, buttons, doors and
+# ladders, each standing on a spot (the middle of its bottom edge).
+devices:
+  - kind: terminal
+    position_h: { x: 31.5, y: 3.5 }
+    text: "CITY ACCESS LOG. 'Need help asap, room n° 5, please hurry!'"
+    mirrored: true
 enemy_spawns:
   - type_id: heavy_unit
-    position_h: { x: 17.5, y: 4 }
+    position_h: { x: 17.5, y: 3.5 }
     facing: left
     armor_layers: 3
   - type_id: dark_blade_unit
@@ -112,7 +129,7 @@ enemy_spawns:
     facing: left
     armor_layers: 3
   - type_id: dark_blade_unit
-    position_h: { x: 13.55, y: 6.5 }
+    position_h: { x: 12.8, y: 5.5 }
     facing: right
     armor_layers: 3
   - type_id: dark_blade_unit

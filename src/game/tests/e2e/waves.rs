@@ -104,14 +104,12 @@ fn a_patch_that_burns_warns_first_and_a_hit_ends_the_untouched_room() {
             size: Vec2::splat(2.0 * H_WORLD_UNITS),
             heat: 0.0,
             burning: false,
-            grate: false,
         },
         Hazard {
             area: Rect::from_center_half_size(player, Vec2::splat(H_WORLD_UNITS)),
             damage: 10.0,
             arm_s: 0.5,
             burn_s: 0.3,
-            rest_s: None,
             elapsed_s: 0.0,
         },
     ));
@@ -125,6 +123,6 @@ fn a_patch_that_burns_warns_first_and_a_hit_ends_the_untouched_room() {
     assert_eq!(
         world.query::<&Hazard>().iter(world).count(),
         0,
-        "a patch that is not a vent goes once it has burned"
+        "the patch goes once it has burned"
     );
 }

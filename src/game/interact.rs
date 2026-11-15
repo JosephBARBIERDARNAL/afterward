@@ -83,7 +83,7 @@ pub(super) fn spawn_interact_prompt(mut commands: Commands, data: Res<GameData>)
             prompt.spawn(key_badge(config.prompt_key_px)).with_child((
                 Text::new(""),
                 TextFont {
-                    font_size: FontSize::Px(config.prompt_key_px * 0.55),
+                    font_size: FontSize::Px(config.prompt_key_px * 0.5),
                     weight: FontWeight::BOLD,
                     ..default()
                 },

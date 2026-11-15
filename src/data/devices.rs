@@ -303,7 +303,7 @@ impl Default for LaserConfig {
 }
 
 /// A row of grates that warn for `arm_s`, burn for `burn_s` and rest for
-/// `rest_s`, like a vent. Their bases are solid.
+/// `rest_s`. Their bases are solid.
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(default)]
 pub struct FireTrapConfig {

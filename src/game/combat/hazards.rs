@@ -1,20 +1,18 @@
 //! Patches of the room that burn: the one a `hazard` attack lays under its
-//! mark, the blast a type with a `death_blast` leaves where it dies, and the
-//! vents a room lists under `hazards`. All three warn before they hurt, and
-//! are drawn as fire by the `Flame` they carry (`shaders/vent.rs`).
+//! mark and the blast a type with a `death_blast` leaves where it dies. Both
+//! warn before they hurt, go once they have burned, and are drawn as fire by
+//! the `Flame` they carry (`shaders/fire.rs`).
 
 use super::*;
 
 /// A patch that warns for `arm_s`, then burns for `burn_s` and hurts the
-/// player standing in it. One with a `rest_s` is a vent, which rests and
-/// starts over; one without goes once it has burned.
+/// player standing in it, and goes once it has burned.
 #[derive(Component)]
 pub(crate) struct Hazard {
     pub(crate) area: Rect,
     pub(crate) damage: f32,
     pub(crate) arm_s: f32,
     pub(crate) burn_s: f32,
-    pub(crate) rest_s: Option<f32>,
     pub(crate) elapsed_s: f32,
 }
 
@@ -26,7 +24,6 @@ impl Hazard {
             damage: blast.damage,
             arm_s: blast.fuse_s,
             burn_s: blast.burn_s,
-            rest_s: None,
             elapsed_s: 0.0,
         }
     }
@@ -40,7 +37,6 @@ impl Hazard {
                 size: self.area.size(),
                 heat: 0.0,
                 burning: false,
-                grate: self.rest_s.is_some(),
             },
             self,
             RoomEntity,
@@ -74,22 +70,18 @@ pub(in crate::game) fn update_hazards(
     let player_box = player_hurtbox(player_transform.translation, &data);
     for (entity, mut hazard, mut flame) in &mut hazards {
         hazard.elapsed_s += time.delta_secs().min(0.05);
-        let cycle_s = hazard.arm_s + hazard.burn_s + hazard.rest_s.unwrap_or(0.0);
-        if hazard.rest_s.is_none() && hazard.elapsed_s >= cycle_s {
+        if hazard.elapsed_s >= hazard.arm_s + hazard.burn_s {
             commands.entity(entity).despawn();
             continue;
         }
-        let into_s = hazard.elapsed_s.rem_euclid(cycle_s);
-        let burning = (hazard.arm_s..hazard.arm_s + hazard.burn_s).contains(&into_s);
-        // The warning builds as the burn comes; a vent at rest is cold.
+        let burning = hazard.elapsed_s >= hazard.arm_s;
+        // The warning builds as the burn comes.
         let heat = if burning {
             1.0
-        } else if into_s < hazard.arm_s {
-            into_s / hazard.arm_s
         } else {
-            0.0
+            hazard.elapsed_s / hazard.arm_s
         };
-        // Only a fire that has changed is written, so the ones at rest are
+        // Only a fire that has changed is written, so one burning steadily is
         // not drawn again every frame.
         let stoked = Flame {
             heat,

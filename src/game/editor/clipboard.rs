@@ -1,12 +1,9 @@
-//! Copy and paste: the selected platforms, decorations, vents, props, devices
-//! and enemies, kept
-//! relative to their lower-left corner so they paste at the cursor of any
+//! Copy and paste: the selected platforms, decorations, props, devices and
+//! enemies, kept relative to their lower-left corner so they paste at the cursor of any
 //! room.
 
 use super::*;
-use crate::data::{
-    DecorationConfig, DeviceConfig, EnemySpawnConfig, PlatformConfig, PropConfig, RoomHazardConfig,
-};
+use crate::data::{DecorationConfig, DeviceConfig, EnemySpawnConfig, PlatformConfig, PropConfig};
 
 #[derive(Clone)]
 pub(super) struct Clipboard {
@@ -14,7 +11,6 @@ pub(super) struct Clipboard {
     pub(super) origin: Vec2,
     platforms: Vec<PlatformConfig>,
     decorations: Vec<DecorationConfig>,
-    vents: Vec<RoomHazardConfig>,
     props: Vec<PropConfig>,
     devices: Vec<DeviceConfig>,
     enemies: Vec<EnemySpawnConfig>,
@@ -43,7 +39,6 @@ impl Clipboard {
             origin: anchor,
             platforms: Vec::new(),
             decorations: Vec::new(),
-            vents: Vec::new(),
             props: Vec::new(),
             devices: Vec::new(),
             enemies: Vec::new(),
@@ -59,9 +54,6 @@ impl Clipboard {
                     clipboard
                         .decorations
                         .extend(room.decorations.get(index).cloned());
-                }
-                EditorItem::Hazard(index) => {
-                    clipboard.vents.extend(room.hazards.get(index).cloned());
                 }
                 EditorItem::Prop(index) => {
                     clipboard.props.extend(room.props.get(index).cloned());
@@ -89,27 +81,24 @@ impl Clipboard {
         let start = (
             room.platforms.len(),
             room.decorations.len(),
-            room.hazards.len(),
             room.props.len(),
             room.devices.len(),
             room.enemy_spawns.len(),
         );
         room.platforms.extend(pasted.platforms);
         room.decorations.extend(pasted.decorations);
-        room.hazards.extend(pasted.vents);
         room.props.extend(pasted.props);
         room.devices.extend(pasted.devices);
         room.enemy_spawns.extend(pasted.enemies);
         (start.0..room.platforms.len())
             .map(EditorItem::Platform)
             .chain((start.1..room.decorations.len()).map(EditorItem::Decoration))
-            .chain((start.2..room.hazards.len()).map(EditorItem::Hazard))
-            .chain((start.3..room.props.len()).map(EditorItem::Prop))
+            .chain((start.2..room.props.len()).map(EditorItem::Prop))
             .chain(
-                (start.4..room.devices.len())
+                (start.3..room.devices.len())
                     .map(|index| EditorItem::Device(index, room.devices[index].kind.tag())),
             )
-            .chain((start.5..room.enemy_spawns.len()).map(EditorItem::Enemy))
+            .chain((start.4..room.enemy_spawns.len()).map(EditorItem::Enemy))
             .collect()
     }
 
@@ -122,8 +111,7 @@ impl Clipboard {
                 self.decorations
                     .iter_mut()
                     .map(|decoration| &mut decoration.rect_h),
-            )
-            .chain(self.vents.iter_mut().map(|vent| &mut vent.rect_h));
+            );
         for rect in rects {
             rect.x += offset.x;
             rect.y += offset.y;

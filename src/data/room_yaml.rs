@@ -5,7 +5,7 @@ use std::fmt::{self, Display, Formatter};
 
 use super::{
     Backdrop, DecorationConfig, DecorationLayer, DeviceConfig, EnemySpawnConfig, Facing, Fill,
-    ParamValue, Placement, PlatformConfig, PropConfig, RectH, RoomConfig, RoomHazardConfig, SizeH,
+    ParamValue, Placement, PlatformConfig, PropConfig, RectH, RoomConfig, SizeH,
 };
 
 const HEADER: &str = "\
@@ -86,14 +86,6 @@ impl Display for RoomConfig {
             "{}",
             YamlList("enemy_spawns", &self.enemy_spawns)
         )?;
-        if !self.hazards.is_empty() {
-            writeln!(
-                formatter,
-                "# Vents: each warns for arm_s, burns for burn_s, rests for rest_s, and\n\
-                 # starts over, offset_s into that cycle as the room opens."
-            )?;
-            write!(formatter, "{}", YamlList("hazards", &self.hazards))?;
-        }
         writeln!(
             formatter,
             "# The bonus item, lying beside the door once every enemy is down."
@@ -235,26 +227,6 @@ impl Display for DeviceConfig {
             ])
             .chain(params)
             .chain(placement_fields(&self.placement))
-            .collect();
-        write!(formatter, "{}", YamlEntry(fields))
-    }
-}
-
-impl Display for RoomHazardConfig {
-    fn fmt(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
-        let label = self
-            .label
-            .iter()
-            .map(|label| format!("label: {}", YamlText(label)));
-        let fields = label
-            .chain([
-                format!("rect_h: {}", self.rect_h),
-                format!("damage: {}", self.damage),
-                format!("arm_s: {}", self.arm_s),
-                format!("burn_s: {}", self.burn_s),
-                format!("rest_s: {}", self.rest_s),
-            ])
-            .chain((self.offset_s != 0.0).then(|| format!("offset_s: {}", self.offset_s)))
             .collect();
         write!(formatter, "{}", YamlEntry(fields))
     }

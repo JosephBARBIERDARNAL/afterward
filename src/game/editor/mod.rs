@@ -102,8 +102,6 @@ enum EditorItem {
     Enemy(usize),
     Platform(usize),
     Decoration(usize),
-    /// A vent of the room's `hazards`.
-    Hazard(usize),
     Prop(usize),
     /// A device of the room, with its kind: a device keeps the kind it was
     /// added as, which decides its inspector rows.
@@ -151,7 +149,6 @@ impl EditorItem {
                 .decorations
                 .get(index)
                 .map(|decoration| decoration.rect_h),
-            Self::Hazard(index) => room.hazards.get(index).map(|vent| vent.rect_h),
             Self::Prop(index) => room.props.get(index).and_then(|placed| {
                 let size = catalogs.props.size_h(&placed.prop)?;
                 Some(RectH {
@@ -184,7 +181,7 @@ impl EditorItem {
                 .map(|decoration| &decoration.placement),
             Self::Prop(index) => room.props.get(index).map(|placed| &placed.placement),
             Self::Device(index, _) => room.devices.get(index).map(|device| &device.placement),
-            Self::PlayerSpawn | Self::Exit | Self::Bonus | Self::Enemy(_) | Self::Hazard(_) => None,
+            Self::PlayerSpawn | Self::Exit | Self::Bonus | Self::Enemy(_) => None,
         }
     }
 
@@ -206,7 +203,7 @@ impl EditorItem {
                 .devices
                 .get_mut(index)
                 .map(|device| &mut device.placement),
-            Self::PlayerSpawn | Self::Exit | Self::Bonus | Self::Enemy(_) | Self::Hazard(_) => None,
+            Self::PlayerSpawn | Self::Exit | Self::Bonus | Self::Enemy(_) => None,
         }
     }
 
@@ -258,7 +255,7 @@ impl EditorItem {
                 .devices
                 .get(index)
                 .map(|device| Vec2::new(device.position_h.x_h, device.position_h.y_h)),
-            Self::Platform(_) | Self::Decoration(_) | Self::Hazard(_) => {
+            Self::Platform(_) | Self::Decoration(_) => {
                 self.rect(room).map(|rect| Vec2::new(rect.x, rect.y))
             }
         }
@@ -284,7 +281,7 @@ impl EditorItem {
                     (device.position_h.x_h, device.position_h.y_h) = origin.into();
                 }
             }
-            Self::Platform(_) | Self::Decoration(_) | Self::Hazard(_) => {
+            Self::Platform(_) | Self::Decoration(_) => {
                 if let Some(rect) = self.rect_mut(room) {
                     (rect.x, rect.y) = origin.into();
                 }
@@ -299,7 +296,6 @@ impl EditorItem {
                 .decorations
                 .get_mut(index)
                 .map(|decoration| &mut decoration.rect_h),
-            Self::Hazard(index) => room.hazards.get_mut(index).map(|vent| &mut vent.rect_h),
             Self::PlayerSpawn
             | Self::Exit
             | Self::Bonus
@@ -309,7 +305,7 @@ impl EditorItem {
         }
     }
 
-    /// A block's or a vent's rectangle, as the room file gives it.
+    /// A block's rectangle, as the room file gives it.
     fn rect(self, room: &RoomConfig) -> Option<RectH> {
         match self {
             Self::Platform(index) => room.platforms.get(index).map(|block| block.rect_h),
@@ -317,7 +313,6 @@ impl EditorItem {
                 .decorations
                 .get(index)
                 .map(|decoration| decoration.rect_h),
-            Self::Hazard(index) => room.hazards.get(index).map(|vent| vent.rect_h),
             Self::PlayerSpawn
             | Self::Exit
             | Self::Bonus
@@ -339,7 +334,6 @@ impl EditorItem {
             | Self::Exit
             | Self::Bonus
             | Self::Enemy(_)
-            | Self::Hazard(_)
             | Self::Prop(_)
             | Self::Device(..) => None,
         }
@@ -356,7 +350,6 @@ impl EditorItem {
             | Self::Exit
             | Self::Bonus
             | Self::Enemy(_)
-            | Self::Hazard(_)
             | Self::Prop(_)
             | Self::Device(..) => None,
         };
@@ -374,7 +367,6 @@ impl EditorItem {
                 Self::Platform(index)
                 | Self::Enemy(index)
                 | Self::Decoration(index)
-                | Self::Hazard(index)
                 | Self::Prop(index)
                 | Self::Device(index, _) => *index,
                 Self::PlayerSpawn | Self::Exit | Self::Bonus => 0,
@@ -390,9 +382,6 @@ impl EditorItem {
                 }
                 Self::Decoration(index) if index < room.decorations.len() => {
                     room.decorations.remove(index);
-                }
-                Self::Hazard(index) if index < room.hazards.len() => {
-                    room.hazards.remove(index);
                 }
                 Self::Prop(index) if index < room.props.len() => {
                     room.props.remove(index);
@@ -410,7 +399,6 @@ impl EditorItem {
         (0..room.platforms.len())
             .map(Self::Platform)
             .chain((0..room.decorations.len()).map(Self::Decoration))
-            .chain((0..room.hazards.len()).map(Self::Hazard))
             .chain((0..room.props.len()).map(Self::Prop))
             .chain(Self::devices(room))
             .chain((0..room.enemy_spawns.len()).map(Self::Enemy))
@@ -426,7 +414,7 @@ impl EditorItem {
     }
 
     /// Spawns are a body's size, props their sprite's and devices what their
-    /// values make them; only blocks, decorations and vents resize.
+    /// values make them; only blocks and decorations resize.
     fn is_body(self) -> bool {
         matches!(
             self,
@@ -453,10 +441,6 @@ impl EditorItem {
                 .decorations
                 .get(index)
                 .and_then(|decoration| decoration.label.as_deref()),
-            Self::Hazard(index) => room
-                .hazards
-                .get(index)
-                .and_then(|vent| vent.label.as_deref()),
             Self::Prop(index) => room
                 .props
                 .get(index)
@@ -484,7 +468,6 @@ impl EditorItem {
                 .map_or_else(String::new, |decoration| {
                     format!("decoration #{} ({})", index + 1, decoration.layer)
                 }),
-            Self::Hazard(index) => format!("vent #{}", index + 1),
             Self::Prop(index) => room.props.get(index).map_or_else(String::new, |placed| {
                 format!("prop #{} {} ({})", index + 1, placed.prop, placed.layer)
             }),
@@ -496,7 +479,7 @@ impl EditorItem {
         }
     }
 
-    /// The item under `point`: spawns first, then a vent or a prop (which
+    /// The item under `point`: spawns first, then a prop (which
     /// usually stand in front of something bigger than themselves), then the
     /// smallest block or decoration.
     fn at(room: &RoomConfig, catalogs: Catalogs, point: Vec2) -> Option<Self> {
@@ -512,7 +495,6 @@ impl EditorItem {
         let spawns = [Self::PlayerSpawn, Self::Exit, Self::Bonus]
             .into_iter()
             .chain((0..room.enemy_spawns.len()).rev().map(Self::Enemy))
-            .chain((0..room.hazards.len()).map(Self::Hazard))
             .chain((0..room.props.len()).rev().map(Self::Prop))
             .chain(Self::devices(room));
         let blocks = (0..room.platforms.len())

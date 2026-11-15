@@ -5,37 +5,19 @@
 use super::*;
 use crate::data::{
     BackgroundLayerRef, DecorationConfig, DecorationLayer, DeviceConfig, DeviceKind,
-    EnemySpawnConfig, Facing, Placement, PropConfig, RoomHazardConfig, SpawnPosition,
+    EnemySpawnConfig, Facing, Placement, PropConfig, SpawnPosition,
 };
 use std::fs;
 
-/// What a new item added with P, D, E, G, O or T (or the toolbar) is.
+/// What a new item added with P, D, E, O or T (or the toolbar) is.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum NewItem {
     Platform,
     Decoration,
     Enemy,
-    Vent,
     Prop,
     Device,
 }
-
-/// The vent G adds to a room that has none to copy: the size and cycle of
-/// the ones Chapter 1 was first given.
-const NEW_VENT: RoomHazardConfig = RoomHazardConfig {
-    label: None,
-    rect_h: RectH {
-        x: 0.0,
-        y: 0.0,
-        width: 2.0,
-        height: 1.5,
-    },
-    damage: 12.0,
-    arm_s: 0.8,
-    burn_s: 0.6,
-    rest_s: 1.4,
-    offset_s: 0.0,
-};
 
 /// A playtest setting: the rows of the settings Cmd+R opens.
 pub(super) const PLAYTEST_ROWS: usize = 3;
@@ -447,7 +429,7 @@ impl RoomEditor {
         self.view_dirty = true;
     }
 
-    /// Adds a platform, decoration, enemy, vent or prop around `at_h` and
+    /// Adds a platform, decoration, enemy, prop or device around `at_h` and
     /// selects it.
     fn add(&mut self, data: &mut GameData, new: NewItem, at_h: Vec2) {
         let Some(room) = data.rooms.get(&self.room_id) else {
@@ -521,20 +503,6 @@ impl RoomEditor {
                     placement: Placement::default(),
                 });
                 added = Some(EditorItem::Prop(room.props.len() - 1));
-            });
-            self.select(added);
-            return;
-        }
-        if new == NewItem::Vent {
-            // A copy of the room's last vent, so a row of them is laid
-            // quickly, standing with its foot where the cursor is.
-            let mut vent = room.hazards.last().cloned().unwrap_or(NEW_VENT);
-            vent.label = None;
-            vent.rect_h.x = snap(at_h.x - vent.rect_h.width / 2.0, false);
-            vent.rect_h.y = snap(at_h.y, false);
-            self.edit(data, |room| {
-                room.hazards.push(vent);
-                added = Some(EditorItem::Hazard(room.hazards.len() - 1));
             });
             self.select(added);
             return;

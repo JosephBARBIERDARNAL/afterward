@@ -1,6 +1,6 @@
 // An enemy's shot: a hot head with a tail burning out behind it, drawn on a
 // quad that reaches back from the shot along the way it came. On a grid of
-// art pixels and in three tones, like the fire of `vent.wgsl`.
+// art pixels and in three tones, like the fire of `fire.wgsl`.
 
 // The mesh2d vertex stage's output. Locations 3 and 4 (tangents and vertex
 // colors) are conditional and unused here.

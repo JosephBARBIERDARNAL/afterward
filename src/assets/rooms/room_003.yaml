@@ -426,6 +426,13 @@ props:
     position_h: { x: 0.5, y: 11 }
   - prop: sci_fi_pipe_vertical
     position_h: { x: 47.5, y: 13.5 }
+# Devices: traps, moving and folding platforms, buttons, doors and
+# ladders, each standing on a spot (the middle of its bottom edge).
+devices:
+  - kind: terminal
+    position_h: { x: 35.5, y: 9 }
+    text: AND ONE DAY, IT ALL BEGAN.
+    mirrored: true
 enemy_spawns:
   - type_id: blade_unit
     position_h: { x: 7.25, y: 5 }
@@ -465,6 +472,12 @@ enemy_spawns:
     facing: right
     armor_layers: 1
     wave: 2
+  - type_id: blade_unit
+    position_h: { x: 7.5, y: 10 }
+    facing: left
+  - type_id: blade_unit
+    position_h: { x: 5.3, y: 10 }
+    facing: left
 # The bonus item, lying beside the door once every enemy is down.
 bonus:
   x_h: 44.75

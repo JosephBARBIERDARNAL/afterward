@@ -7,7 +7,7 @@
 use super::*;
 use crate::data::{
     Backdrop, DecorationLayer, DeviceKind, DeviceTag, Facing, HexColor, MaterialId, ParamValue,
-    Placement, RoomHazardConfig,
+    Placement,
 };
 use std::sync::LazyLock;
 
@@ -21,10 +21,6 @@ const OPACITY_STEP: f32 = 0.05;
 /// row of icons over its health bar outgrows the bar by too much to read.
 const MAX_ARMOR_LAYERS: u8 = 5;
 const MAX_WAVE: u8 = 9;
-/// How far one Left/Right press changes a vent's damage, and its timings in
-/// seconds.
-const VENT_DAMAGE_STEP: f32 = 1.0;
-const VENT_TIME_STEP_S: f32 = 0.1;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum Field {
@@ -55,12 +51,6 @@ pub(super) enum Field {
     Opacity,
     Armor,
     Wave,
-    // A vent's cycle: it warns, burns, rests, and starts over.
-    Damage,
-    ArmTime,
-    BurnTime,
-    RestTime,
-    Offset,
     // Shared by every enemy of a type or by the player, in every room
     // (hitboxes.rs): the size the player is drawn at, then the hitboxes.
     BodyHeight,
@@ -164,18 +154,6 @@ impl Field {
                 Self::HurtboxWidth,
                 Self::HurtboxHeight,
             ],
-            Some(EditorItem::Hazard(_)) => &[
-                Self::Label,
-                Self::X,
-                Self::Y,
-                Self::Width,
-                Self::Height,
-                Self::Damage,
-                Self::ArmTime,
-                Self::BurnTime,
-                Self::RestTime,
-                Self::Offset,
-            ],
             Some(EditorItem::Prop(_)) => &[
                 Self::Label,
                 Self::PropType,
@@ -217,11 +195,6 @@ impl Field {
             Self::Opacity => "Opacity",
             Self::Armor => "Armor layers",
             Self::Wave => "Wave",
-            Self::Damage => "Damage",
-            Self::ArmTime => "Warns for (s)",
-            Self::BurnTime => "Burns for (s)",
-            Self::RestTime => "Rests for (s)",
-            Self::Offset => "Offset (s)",
             Self::BodyHeight => "Body height (H)",
             Self::HurtboxWidth => "Hurtbox width (H)",
             Self::HurtboxHeight => "Hurtbox height (H)",
@@ -274,7 +247,6 @@ impl Field {
                 | Self::Opacity
                 | Self::Solid
                 | Self::Armor
-                | Self::Offset
         )
     }
 
@@ -298,9 +270,6 @@ impl Field {
                 .decorations
                 .get(index)
                 .and_then(|decoration| decoration.label.clone()),
-            (Self::Label, Some(EditorItem::Hazard(index))) => {
-                room.hazards.get(index).and_then(|vent| vent.label.clone())
-            }
             (Self::Label, Some(EditorItem::Prop(index))) => room
                 .props
                 .get(index)
@@ -418,11 +387,6 @@ impl Field {
                     decoration.label = text;
                 }
             }
-            Some(EditorItem::Hazard(index)) => {
-                if let Some(vent) = room.hazards.get_mut(index) {
-                    vent.label = text;
-                }
-            }
             Some(EditorItem::Prop(index)) => {
                 if let Some(placed) = room.props.get_mut(index) {
                     placed.label = text;
@@ -469,13 +433,6 @@ impl Field {
             _ => None,
         };
         let defaults = spawn.and_then(|spawn| data.enemies.types.get(&spawn.type_id));
-        let vent = match item {
-            Some(EditorItem::Hazard(index)) => room.hazards.get(index),
-            _ => None,
-        };
-        let vent_value = |value: fn(&RoomHazardConfig) -> f32| {
-            vent.map_or_else(String::new, |vent| value(vent).to_string())
-        };
         match self {
             Self::Room => format!("{:02}", room.room_id),
             Self::RoomWidth => room.size.width_h.to_string(),
@@ -569,15 +526,6 @@ impl Field {
                 Some(wave) => format!("{wave}  (arrives once wave {} is down)", wave - 1),
                 None => String::new(),
             },
-            Self::Damage => vent_value(|vent| vent.damage),
-            Self::ArmTime => vent_value(|vent| vent.arm_s),
-            Self::BurnTime => vent_value(|vent| vent.burn_s),
-            Self::RestTime => vent_value(|vent| vent.rest_s),
-            Self::Offset => vent.map_or_else(String::new, |vent| {
-                // One whole cycle in, a vent is where it started.
-                let cycle_s = vent.arm_s + vent.burn_s + vent.rest_s;
-                format!("{}  (of a {cycle_s}s cycle)", vent.offset_s)
-            }),
             Self::BodyHeight
             | Self::HurtboxWidth
             | Self::HurtboxHeight
@@ -809,26 +757,6 @@ impl Field {
                     };
                 }
             }
-            Self::Damage | Self::ArmTime | Self::BurnTime | Self::RestTime | Self::Offset => {
-                if let Some(EditorItem::Hazard(index)) = item
-                    && let Some(vent) = room.hazards.get_mut(index)
-                {
-                    // A vent hurts and keeps a cycle that moves on: damage
-                    // stays at 1 and every stretch of it longer than nothing,
-                    // but it may start anywhere in it, from the very start.
-                    // Rounded to the step, so repeated presses don't drift.
-                    let (value, step, min) = match self {
-                        Self::Damage => (&mut vent.damage, VENT_DAMAGE_STEP, VENT_DAMAGE_STEP),
-                        Self::ArmTime => (&mut vent.arm_s, VENT_TIME_STEP_S, VENT_TIME_STEP_S),
-                        Self::BurnTime => (&mut vent.burn_s, VENT_TIME_STEP_S, VENT_TIME_STEP_S),
-                        Self::RestTime => (&mut vent.rest_s, VENT_TIME_STEP_S, VENT_TIME_STEP_S),
-                        _ => (&mut vent.offset_s, VENT_TIME_STEP_S, 0.0),
-                    };
-                    let per_unit = step.recip();
-                    *value =
-                        (((*value + steps * step) * per_unit).round() / per_unit).max(min) + 0.0;
-                }
-            }
             // Hitboxes live outside the room: see `Field::adjust_hitbox`.
             Self::Room
             | Self::Label
@@ -844,8 +772,8 @@ impl Field {
     }
 
     /// Removes a label or Background 2, strips an enemy's armor, stands a
-    /// turned platform square again, leaves a prop as solid as its sprite
-    /// is, or starts a vent's cycle as the room opens.
+    /// turned platform square again, or leaves a prop as solid as its sprite
+    /// is.
     pub(super) fn clear(self, room: &mut RoomConfig, item: Option<EditorItem>) {
         if self == Self::Label {
             Self::set_label(room, item, None);
@@ -876,12 +804,6 @@ impl Field {
             && let Some(spawn) = room.enemy_spawns.get_mut(index)
         {
             spawn.armor_layers = 0;
-            return;
-        }
-        if let (Self::Offset, Some(EditorItem::Hazard(index))) = (self, item)
-            && let Some(vent) = room.hazards.get_mut(index)
-        {
-            vent.offset_s = 0.0;
         }
     }
 }

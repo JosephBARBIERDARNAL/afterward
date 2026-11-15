@@ -1,10 +1,8 @@
-// Fire, for everything in a room that burns: a vent's jet, the patch a mage
-// sets alight, a rust monster's last blast, the wave a brute sends along the
-// floor. Drawn on a quad the size of what hurts, on a grid of art pixels and
+// Fire, for everything in a room that burns: the patch a mage sets alight,
+// a rust monster's last blast, the wave a brute sends along the floor. Drawn on a quad the size of what hurts, on a grid of art pixels and
 // in three tones, so it reads as pixel art beside the sprites.
 //
-// At rest a vent is only its grate, dark with dim slots. As the burn comes
-// (`heat` from 0 to 1) the slots light and embers climb out of it, more of
+// As the burn comes (`heat` from 0 to 1) embers climb off the floor, more of
 // them and higher; then the jet stands for as long as it burns.
 
 // The mesh2d vertex stage's output. Locations 3 and 4 (tangents and vertex
@@ -26,14 +24,13 @@ struct Globals {
 @group(0) @binding(1)
 var<uniform> globals: Globals;
 
-struct Vent {
+struct Fire {
     // The colour of the warning and of a flame's edge.
     warning: vec4<f32>,
     // The colour of a flame's core.
     burn: vec4<f32>,
     // x: heat, from 0 at rest to 1 as the burn comes
     // y: 1 while it burns
-    // z: 1 for a vent, which has a grate in the floor
     // w: this fire's seed, so two never flicker in step
     state: vec4<f32>,
     // xy: the quad's size in art pixels
@@ -41,15 +38,10 @@ struct Vent {
 }
 
 @group(2) @binding(0)
-var<uniform> vent: Vent;
+var<uniform> fire: Fire;
 
 // How many times a second the fire moves: few, like a hand-drawn loop.
 const STEPS_PER_S: f32 = 12.0;
-// How tall the grate is, in art pixels, and how far apart its slots are.
-const GRATE_ROWS: f32 = 3.0;
-const SLOT_EVERY: f32 = 3.0;
-const GRATE_COLOR: vec3<f32> = vec3<f32>(0.012, 0.011, 0.03);
-const SLOT_COLD: vec3<f32> = vec3<f32>(0.22, 0.05, 0.025);
 
 fn hash(at: vec2<f32>) -> f32 {
     return fract(sin(dot(at, vec2<f32>(127.1, 311.7))) * 43758.5453);
@@ -69,7 +61,7 @@ fn noise(at: vec2<f32>) -> f32 {
 
 @fragment
 fn fragment(input: VertexOutput) -> @location(0) vec4<f32> {
-    let cells = vent.grid.xy;
+    let cells = fire.grid.xy;
     let cell = min(floor(input.uv * cells), cells - vec2<f32>(1.0));
     // The art pixel, counted from the floor up.
     let pixel = vec2<f32>(cell.x, cells.y - 1.0 - cell.y);
@@ -77,9 +69,9 @@ fn fragment(input: VertexOutput) -> @location(0) vec4<f32> {
     let across = (pixel.x + 0.5) / cells.x * 2.0 - 1.0;
     let up = (pixel.y + 0.5) / cells.y;
     let time = floor(globals.time * STEPS_PER_S) / STEPS_PER_S;
-    let heat = vent.state.x;
-    let burning = vent.state.y > 0.5;
-    let seed = vent.state.w * 61.0;
+    let heat = fire.state.x;
+    let burning = fire.state.y > 0.5;
+    let seed = fire.state.w * 61.0;
 
     var color = vec3<f32>(0.0);
     var alpha = 0.0;
@@ -95,11 +87,11 @@ fn fragment(input: VertexOutput) -> @location(0) vec4<f32> {
         if up < top && body > 0.0 {
             alpha = 1.0;
             if body > 0.5 {
-                color = vent.burn.rgb;
+                color = fire.burn.rgb;
             } else if body > 0.22 {
-                color = mix(vent.warning.rgb, vent.burn.rgb, 0.45);
+                color = mix(fire.warning.rgb, fire.burn.rgb, 0.45);
             } else {
-                color = vent.warning.rgb;
+                color = fire.warning.rgb;
             }
         }
     } else if heat > 0.0 {
@@ -108,29 +100,20 @@ fn fragment(input: VertexOutput) -> @location(0) vec4<f32> {
         let column = hash(vec2<f32>(pixel.x, seed));
         let rise = fract(hash(vec2<f32>(pixel.x * 1.7, seed + 3.0)) + time * (0.7 + column));
         let ember = floor(rise * cells.y * (0.25 + 0.75 * heat));
-        if column < heat * 0.7 && pixel.y >= GRATE_ROWS * vent.state.z {
+        if column < heat * 0.7 {
             if pixel.y == ember {
-                color = mix(vent.warning.rgb, vent.burn.rgb, heat * 0.5);
+                color = mix(fire.warning.rgb, fire.burn.rgb, heat * 0.5);
                 alpha = 1.0 - rise * 0.5;
             } else if pixel.y == ember - 1.0 {
-                color = vent.warning.rgb;
+                color = fire.warning.rgb;
                 alpha = 0.45 * (1.0 - rise);
             }
         }
         // And a glow hugging the floor that swells with them.
         let glow = heat * max(1.0 - pixel.y / (2.0 + heat * 4.0), 0.0) * (1.0 - abs(across) * 0.6);
         if alpha == 0.0 && glow > 0.0 {
-            color = vent.warning.rgb;
+            color = fire.warning.rgb;
             alpha = glow * 0.5;
-        }
-    }
-
-    // The grate a vent burns through, over everything else.
-    if vent.state.z > 0.5 && pixel.y < GRATE_ROWS {
-        alpha = 1.0;
-        color = GRATE_COLOR;
-        if pixel.y == GRATE_ROWS - 1.0 && pixel.x % SLOT_EVERY == 1.0 {
-            color = mix(SLOT_COLD, vent.warning.rgb, select(heat, 1.0, burning));
         }
     }
     return vec4<f32>(color, alpha);

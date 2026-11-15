@@ -41,9 +41,6 @@ pub struct RoomConfig {
     #[serde(default)]
     pub devices: Vec<DeviceConfig>,
     pub enemy_spawns: Vec<EnemySpawnConfig>,
-    /// Vents: patches of the room that burn on a cycle, enemies or not.
-    #[serde(default)]
-    pub hazards: Vec<RoomHazardConfig>,
     /// Where the room's bonus item lies once every enemy is down.
     pub bonus: SpawnPosition,
     pub exit: SpawnPosition,
@@ -308,23 +305,6 @@ pub struct EnemySpawnConfig {
     /// waves before it is down, and arrives knowing where the player is.
     #[serde(default)]
     pub wave: u8,
-}
-
-/// A vent: `rect_h` warns for `arm_s`, burns for `burn_s` costing whoever
-/// stands in it `damage`, rests for `rest_s`, and starts over. `offset_s`
-/// is how far into that cycle it is as the room opens, so a row of vents
-/// can burn one after the other.
-#[derive(Debug, Clone, PartialEq, Deserialize)]
-pub struct RoomHazardConfig {
-    #[serde(default)]
-    pub label: Option<String>,
-    pub rect_h: RectH,
-    pub damage: f32,
-    pub arm_s: f32,
-    pub burn_s: f32,
-    pub rest_s: f32,
-    #[serde(default)]
-    pub offset_s: f32,
 }
 
 /// The way an enemy looks while it idles. It defaults to `Left`, the way the
