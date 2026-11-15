@@ -465,7 +465,9 @@ window:
 audio:
   footstep_interval_s: 0.42
   paused_music_volume_multiplier: 0.35
-  room_clear_music_volume_multiplier: 0.55
+  # How loud the music stays once a room is cleared, until its door is used:
+  # the fight is over, and the next room brings it back up.
+  room_clear_music_volume_multiplier: 0.4
   # How fast the music plays once a room is cleared, as a fraction of its
   # recorded speed: below 1 it drags, dropping in pitch as well as tempo.
   room_clear_music_speed: 0.8
