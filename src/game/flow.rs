@@ -3,7 +3,6 @@ use crate::game::{
     bonus_screen::BonusChoice,
     ripple::{Splash, Spot},
 };
-use yaml_serde::Value;
 
 pub(super) fn room_clear_check(
     enemies: Query<&EnemyBody>,
@@ -203,49 +202,28 @@ pub(super) fn handle_bonus_input(
         sounds.push(SoundCue::BonusRerolled);
         session.offered_bonuses =
             draw_bonus_offers(&data, &session, &mut random, &session.previous_offers);
-        session.previous_offers.clear();
-        let offered = session.offered_bonuses.clone();
-        session.previous_offers.extend(offered);
+        session.previous_offers = session
+            .offered_bonuses
+            .iter()
+            .map(|offer| offer.id.clone())
+            .collect();
         session.bonus_reroll_animation_remaining_s =
             data.gameplay.room_flow.bonus_reroll_animation_s;
         return;
     };
-    let Some(chosen_id) = session.offered_bonuses.get(chosen_index).cloned() else {
+    let Some(chosen_pick) = session.offered_bonuses.get(chosen_index).cloned() else {
         return;
     };
-    session.owned_bonuses.push(chosen_id.clone());
+    session.take(&data, chosen_pick);
     droplet_on(chosen);
     sounds.push(SoundCue::BonusSelected);
     // The build is worn for a moment: the player comes back into the room
-    // wrapped in the glow of the category they just took from.
-    if let Ok(mut player) = players.single_mut()
-        && let Some(aura) = session
-            .bonus_category
-            .as_deref()
-            .and_then(|category| category.parse::<BonusAura>().ok())
-    {
-        let duration_s = aura.clip(&data.player_animations.clips).duration_s();
-        player.start_action(PlayerAction::Aura(aura), duration_s);
-    }
-    if let Some(bonus) = data
-        .bonuses
-        .bonuses
-        .iter()
-        .find(|bonus| bonus.id == chosen_id)
-    {
-        if let Some(increase) = bonus
-            .effects
-            .get("max_health_increase")
-            .and_then(Value::as_f64)
-        {
-            session.max_health += increase as f32;
-        }
-        if let Some(rerolls) = bonus.effects.get("extra_rerolls").and_then(Value::as_u64) {
-            session.rerolls = session.rerolls.saturating_add(rerolls as u8);
-        }
-        if let Some(restore) = bonus.effects.get("restore_health").and_then(Value::as_f64) {
-            session.health = (session.health + restore as f32).min(session.max_health);
-        }
+    // wrapped in the glow of what they just took.
+    if let Ok(mut player) = players.single_mut() {
+        player.start_action(
+            PlayerAction::Aura,
+            data.player_animations.clips.aura.duration_s(),
+        );
     }
 
     for mut sprite in &mut doors {
@@ -265,17 +243,16 @@ pub(super) fn reroll_available(session: &RunSession, data: &GameData) -> bool {
     session.rerolls > 0 && eligible_bonuses(data, session, &session.previous_offers).count() >= 2
 }
 
-/// The bonuses of the picked-up item's category the player may still be
-/// offered: not already owned, and not in `excluded`.
+/// The bonuses the player may still be offered: not already owned, and not
+/// in `excluded`.
 fn eligible_bonuses<'a>(
     data: &'a GameData,
     session: &'a RunSession,
     excluded: &'a BTreeSet<String>,
-) -> impl Iterator<Item = &'a crate::data::BonusConfig> {
+) -> impl Iterator<Item = &'a BonusConfig> {
     data.bonuses
         .bonuses
         .iter()
-        .filter(|bonus| session.bonus_category.as_ref() == Some(&bonus.category))
         .filter(|bonus| session.may_be_offered(bonus))
         .filter(|bonus| !excluded.contains(&bonus.id))
 }
@@ -383,7 +360,6 @@ pub(super) fn update_room_transition(
     session.world_loaded = false;
     session.door_open = false;
     session.room_cleared = false;
-    session.bonus_category = None;
     session.room_ward_used = false;
     session.room_id = next_room_id;
     next_screen.set(if opening_room {
@@ -426,47 +402,53 @@ pub(super) fn update_room_transition_fade_out(
     });
 }
 
+/// Draws the bonus screen's offers: three different bonuses, each at one of
+/// its rarities. Every version of every eligible bonus is a ticket weighing
+/// its rarity's weight, so commons come up often and legendaries rarely; a
+/// room cleared untouched weighs every version above common heavier still,
+/// and a bonus that works with the build owned weighs heavier whatever its
+/// rarity.
 pub(super) fn draw_bonus_offers(
     data: &GameData,
     session: &RunSession,
     random: &mut RandomState,
     excluded: &BTreeSet<String>,
-) -> Vec<String> {
-    let mut eligible = eligible_bonuses(data, session, excluded).collect::<Vec<_>>();
-    let mut offers = Vec::with_capacity(BonusChoice::KEYS.len());
-    // A rarer bonus weighs less in the draw, so commons come up often and
-    // legendaries rarely.
-    // A room cleared untouched weighs everything above common heavier still,
-    // and one that works with the build owned weighs heavier whatever its
-    // rarity.
+) -> Vec<BonusPick> {
     let untouched = data.gameplay.room_flow.untouched.rarer_weight_multiplier;
-    let weight = |bonus: &crate::data::BonusConfig| {
-        data.bonuses.rarities[bonus.rarity].weight
-            * if session.flawless && bonus.rarity != crate::data::BonusRarity::Common {
-                untouched
-            } else {
-                1
-            }
-            * if session.synergy(data, bonus).is_some() {
+    let mut tickets = eligible_bonuses(data, session, excluded)
+        .flat_map(|bonus| {
+            let synergy = if session.synergy(data, bonus).is_some() {
                 data.bonuses.synergy.weight_multiplier
             } else {
                 1
-            }
-    };
-    while offers.len() < BonusChoice::KEYS.len() && !eligible.is_empty() {
-        let total = eligible.iter().copied().map(weight).sum::<u32>() as usize;
+            };
+            bonus.rarities.keys().map(move |rarity| {
+                let lean = if session.flawless && *rarity != BonusRarity::Common {
+                    untouched
+                } else {
+                    1
+                };
+                let weight = data.bonuses.rarities[*rarity].weight * lean * synergy;
+                (BonusPick::new(&bonus.id, *rarity), weight)
+            })
+        })
+        .collect::<Vec<_>>();
+    let mut offers = Vec::with_capacity(BonusChoice::KEYS.len());
+    while offers.len() < BonusChoice::KEYS.len() && !tickets.is_empty() {
+        let total = tickets.iter().map(|(_, weight)| weight).sum::<u32>() as usize;
         let mut drawn = random.index(total.max(1)) as u32;
-        let index = eligible
+        let index = tickets
             .iter()
-            .copied()
-            .position(|bonus| {
-                let weight = weight(bonus);
-                let landed = drawn < weight;
-                drawn -= if landed { 0 } else { weight };
+            .position(|(_, weight)| {
+                let landed = drawn < *weight;
+                drawn -= if landed { 0 } else { *weight };
                 landed
             })
             .unwrap_or(0);
-        offers.push(eligible.swap_remove(index).id.clone());
+        let (pick, _) = tickets.swap_remove(index);
+        // A bonus is offered once, at the one rarity drawn.
+        tickets.retain(|(other, _)| other.id != pick.id);
+        offers.push(pick);
     }
     offers
 }
@@ -477,39 +459,38 @@ pub(crate) struct PhaseTimer(pub(crate) Timer);
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::data::BonusRarity;
     use std::path::Path;
 
     #[test]
     fn the_draw_offers_three_different_bonuses_and_leans_on_the_common_ones() {
         let data = GameData::load(&Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets"))
             .expect("the game data should be valid");
-        let session = RunSession {
-            bonus_category: Some("combat".to_owned()),
-            ..default()
-        };
+        let session = RunSession::default();
         let mut random = RandomState(12345);
-        let mut drawn = BTreeMap::<String, usize>::new();
+        let mut drawn = BTreeMap::<BonusRarity, usize>::new();
         for _ in 0..500 {
             let offers = draw_bonus_offers(&data, &session, &mut random, &BTreeSet::new());
             assert_eq!(offers.len(), 3);
             assert_eq!(
-                offers.iter().collect::<BTreeSet<_>>().len(),
+                offers
+                    .iter()
+                    .map(|offer| &offer.id)
+                    .collect::<BTreeSet<_>>()
+                    .len(),
                 3,
                 "a draw never offers the same bonus twice"
             );
-            for id in offers {
-                let rarity = data
-                    .bonuses
-                    .bonuses
-                    .iter()
-                    .find(|bonus| bonus.id == id)
-                    .expect("an offered bonus exists")
-                    .rarity;
-                *drawn.entry(rarity.to_string()).or_default() += 1;
+            for offer in offers {
+                assert!(
+                    data.bonuses
+                        .bonus(&offer.id)
+                        .is_some_and(|bonus| bonus.rarities.contains_key(&offer.rarity)),
+                    "a bonus is offered at one of its own rarities"
+                );
+                *drawn.entry(offer.rarity).or_default() += 1;
             }
         }
-        let count = |rarity: BonusRarity| drawn.get(&rarity.to_string()).copied().unwrap_or(0);
+        let count = |rarity: BonusRarity| drawn.get(&rarity).copied().unwrap_or(0);
         assert!(
             count(BonusRarity::Common) > count(BonusRarity::Rare),
             "commons come up more often than rares: {drawn:?}"
@@ -517,6 +498,10 @@ mod tests {
         assert!(
             count(BonusRarity::Rare) > count(BonusRarity::Epic),
             "rares come up more often than epics: {drawn:?}"
+        );
+        assert!(
+            count(BonusRarity::Epic) > count(BonusRarity::Legendary),
+            "epics come up more often than legendaries: {drawn:?}"
         );
     }
 }

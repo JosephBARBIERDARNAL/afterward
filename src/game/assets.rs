@@ -113,7 +113,7 @@ fn health_pickup_sheet(pickup: &HealthPickupConfig) -> SpriteSheetSpec {
 }
 
 /// The obelisk a cleared room's bonus is taken from: one hovering loop, the
-/// same for every category.
+/// same every time.
 fn bonus_pickup_sheet(pickup: &BonusPickupConfig) -> SpriteSheetSpec {
     SpriteSheetSpec {
         key: BonusPickup::SHEET.into(),

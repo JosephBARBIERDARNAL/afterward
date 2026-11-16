@@ -5,7 +5,10 @@
 //! they say.
 
 use super::*;
-use crate::{data::Explanation, game::ui_style::DESCRIPTION_COLOR};
+use crate::{
+    data::Explanation,
+    game::{bonus_text::Description, ui_style::DESCRIPTION_COLOR},
+};
 use bevy::text::FontSize;
 
 /// How many boxes can stand at once; a description leaning on more words
@@ -45,7 +48,7 @@ pub(super) fn update_glossary(
     session: Res<RunSession>,
     build: Res<build_window::BuildFocus>,
     data: Res<GameData>,
-    mut shown: Local<Option<String>>,
+    mut shown: Local<Option<BonusPick>>,
     columns: Query<Entity, With<Glossary>>,
 ) {
     // The offer the focus stands on, while one is on show.
@@ -56,40 +59,57 @@ pub(super) fn update_glossary(
             session
                 .offered_bonuses
                 .get(index)
-                .and_then(|id| data.bonuses.bonuses.iter().find(|bonus| bonus.id == *id))
+                .and_then(|offer| Some((data.bonuses.bonus(&offer.id)?, offer.rarity)))
         }
         // The owned bonus the build window's focus stands on.
         (GameScreen::Build, _) => build.focused(&data),
         _ => None,
     };
-    if explained.map(|bonus| &bonus.id) == shown.as_ref() {
+    let explained_pick = explained.map(|(bonus, rarity)| BonusPick::new(&bonus.id, rarity));
+    if explained_pick == *shown {
         return;
     }
-    *shown = explained.map(|bonus| bonus.id.clone());
+    *shown = explained_pick;
     let Ok(column) = columns.single() else {
         return;
     };
     commands.entity(column).despawn_children();
-    let Some(bonus) = explained else {
+    let Some((bonus, rarity)) = explained else {
         return;
     };
+    let text = bonus.describe(rarity);
     commands.entity(column).with_children(|column| {
-        for explanation in data.bonuses.explain(bonus).into_iter().take(BOXES) {
-            // A word in white, a bonus in its category's colour.
-            let (name, definition, color) = match explanation {
-                Explanation::Term(term) => (&term.term, &term.definition, Color::WHITE),
-                Explanation::Bonus(named) => (
-                    &named.name,
-                    &named.description,
-                    data.bonuses
-                        .categories
-                        .get(&named.category)
-                        .map_or(Color::WHITE, |category| Color::from(category.color)),
-                ),
+        for explanation in data
+            .bonuses
+            .explain(&text, &bonus.id)
+            .into_iter()
+            .take(BOXES)
+        {
+            // A word in white, a bonus in the colour of its version told of:
+            // the one the run owns, else the most common one it comes at.
+            let (name, definition, except, color) = match explanation {
+                Explanation::Term(term) => {
+                    (&term.term, term.definition.clone(), None, Color::WHITE)
+                }
+                Explanation::Bonus(named) => {
+                    let rarity = session
+                        .owned(&data)
+                        .find(|(owned, _)| owned.id == named.id)
+                        .map(|(_, rarity)| rarity)
+                        .or_else(|| named.rarities.keys().next().copied())
+                        .unwrap_or(BonusRarity::Common);
+                    (
+                        &named.name,
+                        named.describe(rarity),
+                        Some(named.id.clone()),
+                        Color::from(data.bonuses.rarities[rarity].color),
+                    )
+                }
             };
             column
                 .spawn((
                     Node {
+                        flex_direction: FlexDirection::Column,
                         padding: UiRect::axes(px(12), px(8)),
                         border: UiRect::left(px(3)),
                         border_radius: BorderRadius::all(px(4)),
@@ -101,34 +121,38 @@ pub(super) fn update_glossary(
                 ))
                 .with_children(|card| {
                     card.spawn((
-                        Text::default(),
+                        Text::new(name.clone()),
+                        TextFont {
+                            font_size: FontSize::Px(17.0),
+                            ..default()
+                        },
+                        TextColor(color),
+                        FontRole::Display,
+                        Pickable::IGNORE,
+                    ));
+                    let mut words = card.spawn((
                         TextFont {
                             font_size: FontSize::Px(14.0),
                             ..default()
                         },
                         TextLayout::justify(Justify::Left),
                         Pickable::IGNORE,
-                    ))
-                    .with_children(|text| {
-                        text.spawn((
-                            TextSpan::new(format!("{name}\n")),
-                            TextFont {
-                                font_size: FontSize::Px(17.0),
-                                ..default()
-                            },
-                            TextColor(color),
-                            FontRole::Display,
-                        ));
-                        text.spawn((
-                            TextSpan::new(definition.clone()),
-                            TextFont {
-                                font_size: FontSize::Px(14.0),
-                                ..default()
-                            },
+                    ));
+                    // A bonus's description names other bonuses in bold; a
+                    // term's definition is plain words, whatever it shares
+                    // with a bonus's name.
+                    match except {
+                        Some(except) => words.insert(Description {
+                            text: definition,
+                            except,
+                            font_px: 14.0,
+                        }),
+                        None => words.insert((
+                            Text::new(definition),
                             TextColor(DESCRIPTION_COLOR),
                             FontRole::Regular,
-                        ));
-                    });
+                        )),
+                    };
                 });
         }
     });

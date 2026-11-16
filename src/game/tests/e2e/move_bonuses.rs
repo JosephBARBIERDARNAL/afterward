@@ -34,7 +34,7 @@ fn aftershock_makes_the_end_of_a_dash_hit_what_stands_beside_it() {
     game.app
         .world_mut()
         .resource_mut::<RunSession>()
-        .owned_bonuses = vec![String::from("aftershock")];
+        .owned_bonuses = vec![BonusPick::new("aftershock", BonusRarity::Rare)];
 
     game.tap(KeyCode::KeyL);
     game.run_seconds(1.5);
@@ -57,12 +57,16 @@ fn a_bonus_two_others_make_together_is_only_offered_to_a_run_owning_both() {
         .find(|bonus| bonus.id == "riptide")
         .expect("Riptide is a bonus");
     let mut session = RunSession {
-        owned_bonuses: vec![String::from("aftershock")],
+        owned_bonuses: vec![BonusPick::new("aftershock", BonusRarity::Rare)],
         ..default()
     };
     assert!(!session.may_be_offered(riptide), "half of it is not enough");
-    session.owned_bonuses.push(String::from("undertow"));
+    session
+        .owned_bonuses
+        .push(BonusPick::new("undertow", BonusRarity::Rare));
     assert!(session.may_be_offered(riptide));
-    session.owned_bonuses.push(String::from("riptide"));
+    session
+        .owned_bonuses
+        .push(BonusPick::new("riptide", BonusRarity::Rare));
     assert!(!session.may_be_offered(riptide), "nor is it offered twice");
 }

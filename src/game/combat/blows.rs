@@ -56,6 +56,7 @@ pub(super) struct Blow {
 
 /// The drag of a blow on every enemy within `radius_h` of where it was
 /// thrown from, toward that spot at `speed_h_s`.
+#[derive(Clone, Copy)]
 pub(super) struct Pull {
     pub(super) radius_h: f32,
     pub(super) speed_h_s: f32,
@@ -180,7 +181,7 @@ pub(super) fn land_the_blow(
         } else {
             1.0
         };
-        enemy.marked_timer = data.bonus_effect("marked_prey", "mark_duration_s");
+        enemy.marked_timer = session.bonus_effect(data, "marked_prey", "mark_duration_s");
         // Armor that is up when the blow lands costs it a layer, and keeps
         // the enemy at what it was doing: no flinch, no knockback, and a
         // wind-up carries on. An ordinary blow is soaked whole on top of
@@ -212,11 +213,11 @@ pub(super) fn land_the_blow(
         }
         // Open Wound raises Executioner's line on a marked body.
         let execute_below = if was_marked && session.has_bonus("open_wound") {
-            data.bonus_effect("open_wound", "marked_execute_health_fraction")
+            session.bonus_effect(data, "open_wound", "marked_execute_health_fraction")
         } else {
             0.0
         }
-        .max(data.bonus_effect("executioner", "execute_health_fraction"));
+        .max(session.bonus_effect(data, "executioner", "execute_health_fraction"));
         let executioner = if enemy.health / enemy.max_health < execute_below {
             session.bonus_multiplier(data, "executioner", "execute_damage_multiplier")
         } else {
@@ -225,7 +226,7 @@ pub(super) fn land_the_blow(
         if executioner > 1.0 {
             // Called out by the bonus that put the body under the line.
             let by = if enemy.health / enemy.max_health
-                < data.bonus_effect("executioner", "execute_health_fraction")
+                < session.bonus_effect(data, "executioner", "execute_health_fraction")
             {
                 "executioner"
             } else {
@@ -243,7 +244,7 @@ pub(super) fn land_the_blow(
         }
         let chain_reaction =
             if player.chain_reaction_timer > 0.0 && session.has_bonus("chain_reaction") {
-                1.0 + data.bonus_effect("chain_reaction", "kill_damage_bonus")
+                1.0 + session.bonus_effect(data, "chain_reaction", "kill_damage_bonus")
             } else {
                 1.0
             };
@@ -411,12 +412,12 @@ pub(super) fn land_the_blow(
                 }
             }
             player.chain_reaction_timer =
-                data.bonus_effect("chain_reaction", "kill_damage_duration_s");
+                session.bonus_effect(data, "chain_reaction", "kill_damage_duration_s");
             if session.has_bonus("chain_reaction") {
                 commands.write_message(BonusTell::new("chain_reaction", TellAt::Player));
             }
             if was_marked && session.has_bonus("hunters_feast") {
-                let healed = data.bonus_effect("hunters_feast", "marked_kill_healing");
+                let healed = session.bonus_effect(data, "hunters_feast", "marked_kill_healing");
                 session.health = (session.health + healed).min(session.max_health);
                 commands.write_message(
                     BonusTell::new("hunters_feast", TellAt::Player)
@@ -558,26 +559,29 @@ pub(super) fn land_the_blow(
     ));
     if session.has_bonus("rhythm_training") {
         if player.rhythm_timer > 0.0 {
-            let maximum = data.bonus_effect("rhythm_training", "combo_speed_max_bonus");
-            let step = data.bonus_effect("rhythm_training", "combo_speed_step");
+            let maximum = session.bonus_effect(data, "rhythm_training", "combo_speed_max_bonus");
+            let step = session.bonus_effect(data, "rhythm_training", "combo_speed_step");
             player.rhythm_stacks = player
                 .rhythm_stacks
                 .saturating_add(1)
                 .min((maximum / step) as u8);
         }
-        player.rhythm_timer = data.bonus_effect("rhythm_training", "hit_window_s");
+        player.rhythm_timer = session.bonus_effect(data, "rhythm_training", "hit_window_s");
     }
     if session.has_bonus("lifesteal") {
         // Bloodlust heals harder and lets more of it through each room.
         let (cap, healing) = if session.has_bonus("bloodlust") {
             (
-                data.bonus_effect("bloodlust", "room_healing_cap"),
-                data.bonus_effect("bloodlust", "strike_hit_healing_multiplier"),
+                session.bonus_effect(data, "bloodlust", "room_healing_cap"),
+                session.bonus_effect(data, "bloodlust", "strike_hit_healing_multiplier"),
             )
         } else {
-            (data.bonus_effect("lifesteal", "room_healing_cap"), 1.0)
+            (
+                session.bonus_effect(data, "lifesteal", "room_healing_cap"),
+                1.0,
+            )
         };
-        let healing = (data.bonus_effect("lifesteal", "strike_hit_healing") * healing)
+        let healing = (session.bonus_effect(data, "lifesteal", "strike_hit_healing") * healing)
             .min(cap - player.lifesteal_healing)
             .max(0.0);
         player.lifesteal_healing += healing;

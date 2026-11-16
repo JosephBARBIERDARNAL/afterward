@@ -231,7 +231,7 @@ room_flow:
   # A room is entered whole, so health carries no stake from one room to the
   # next; this is the stake instead. Clearing a room without losing any health
   # weighs every rarity above common `rarer_weight_multiplier` times heavier
-  # in the draw of its two bonuses, and its item glows `glow_multiplier`
+  # in the draw of its bonuses, and its item glows `glow_multiplier`
   # times further under `label`. A hit soaked by Room Ward or dashed through
   # costs nothing and so does not count.
   untouched:
@@ -258,10 +258,9 @@ room_flow:
     frames: 10
     px_per_h: 32
   # The bonus item lying on the room's `bonus` spot once every enemy is down.
-  # Its category is drawn at random; Interact pressed within `reach_h` of it
-  # opens the bonus screen, which then offers two bonuses of that category. It
-  # is the same obelisk whatever the category, told apart by the colour of its
-  # glow: `sheet` is one row of `frames` frames played in a loop at `fps`, the
+  # Interact pressed within `reach_h` of it opens the bonus screen, which then
+  # offers three bonuses, each at the rarity it was drawn at. It is the same
+  # obelisk every time, lit in `effects.glow.bonus_color`: `sheet` is one row of `frames` frames played in a loop at `fps`, the
   # hover and the shadow under it being part of the drawing, and a frame is
   # drawn `height_h` tall with its foot on the spot.
   bonus_pickup:
@@ -338,7 +337,8 @@ effects:
     health_brightness: 0.45
     # How much brighter the aura of the thing within reach of Interact burns.
     reach_boost: 1.6
-    # A bonus item lights in its category's colour; these two light in their own.
+    # The bonus item, a health drop and the unlocked door each light in their own.
+    bonus_color: "#FFD27A"
     health_color: "#4CF07A"
     door_color: "#7FD4FF"
   # Fire (`shaders/fire.wgsl`): the patch a mage sets alight, a rust
@@ -370,8 +370,8 @@ effects:
     brightness: 1.7
   # How a bonus shows that it is at work (`src/game/tells/`).
   tells:
-    # The bonus's name flashed in the room as it fires, in its category's
-    # colour: its size in px, how long it lasts, how fast it rises in H a
+    # The bonus's name flashed in the room as it fires, in the colour of the
+    # rarity it was taken at: its size in px, how long it lasts, how fast it rises in H a
     # second, and how often one bonus may be called out at most.
     callout_px: 15
     callout_s: 0.9
@@ -394,6 +394,12 @@ effects:
     boosted_color: "#FFC94A"
     healed_color: "#6BE38A"
     soaked_color: "#7FB6FF"
+    # What the tells are tinted: speed (a fast run, an untouchable dash), a
+    # heavier blow (Chain Reaction, a body thrown, Meteor's slam), and reading
+    # an enemy (Marked Prey's mark, Deep Breath's window).
+    speed_color: "#58AD68"
+    power_color: "#D74444"
+    insight_color: "#E6D772"
   # The flood the city drowned in, and the water the main menu is drawn over:
   # a web of cold light wandering over deep wine cells, quantized to a pixel
   # grid and to the four tones below.
@@ -466,7 +472,8 @@ enemy_markers:
 # editor. The others are picked by a text's `FontRole` where a different face
 # sets a piece of information apart:
 # - regular: running text read rather than glanced at (bonus descriptions,
-#   the category and rarity line);
+#   the rarity line; another bonus a description names is left in `default`,
+#   so it reads in bold);
 # - italic: asides (the controls screen's hints);
 # - bold_italic: what a bonus adds to a moment (the synergy line, the damage
 #   number of a blow a bonus made heavier, a bonus's call-out in the room);

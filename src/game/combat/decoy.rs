@@ -93,7 +93,7 @@ pub(in crate::game) fn plant_decoy(
             looping: false,
         },
         Decoy {
-            health: data.bonus_effect("decoy", "decoy_health"),
+            health: session.bonus_effect(&data, "decoy", "decoy_health"),
         },
         RoomEntity,
     ));

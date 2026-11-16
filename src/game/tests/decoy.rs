@@ -30,7 +30,11 @@ next_room_id: 2
 ",
     )
     .expect("the test layout should parse");
-    let decoy_health = data.bonus_effect("decoy", "decoy_health");
+    let decoy_health = data
+        .bonuses
+        .bonus("decoy")
+        .and_then(|decoy| decoy.effect(BonusRarity::Rare, "decoy_health"))
+        .expect("a rare Decoy has health");
     let mut sheets = data
         .player_animations
         .keyed()
@@ -159,7 +163,7 @@ next_room_id: 2
     app.world_mut()
         .resource_mut::<RunSession>()
         .owned_bonuses
-        .push("decoy".to_string());
+        .push(BonusPick::new("decoy", BonusRarity::Rare));
     let dashed_from = app
         .world()
         .get::<Transform>(player)

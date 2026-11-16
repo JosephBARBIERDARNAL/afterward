@@ -1,7 +1,7 @@
 //! How a bonus shows it is at work, so that owning one is felt as well as
 //! read on the bonus screen. Gameplay code writes a `BonusTell` where a bonus
-//! does its thing; `show_bonus_tells` calls the bonus out by name in its
-//! category's colour and plays what goes with it. What holds over time is
+//! does its thing; `show_bonus_tells` calls the bonus out by name in the
+//! colour of the rarity it was taken at and plays what goes with it. What holds over time is
 //! drawn from the run's state each frame instead: the marks and wind-ups over
 //! the enemies (`overhead.rs`), the glow and the fading copies of the player
 //! (`aura.rs`, `afterimages.rs`), and the row of what is in force under the
@@ -27,7 +27,7 @@ pub(super) use tray::{Line, lines, spawn_the_tray, update_the_tray};
 #[derive(Message, Clone, Debug)]
 pub(crate) struct BonusTell {
     /// The bonus's id in `config/bonuses.yaml`: its name is what is called
-    /// out, its category's colour what everything is tinted.
+    /// out, in the colour of the rarity it was taken at.
     pub(crate) bonus: String,
     pub(crate) at: TellAt,
     /// Whether its name is called out; a bonus that fires on every jump only
@@ -173,17 +173,29 @@ pub(super) struct Callout {
     color: Color,
 }
 
+/// What a tell is read against: the data, and the run that owns the bonus.
+#[derive(SystemParam)]
+pub(super) struct TellResources<'w> {
+    data: Res<'w, GameData>,
+    session: Res<'w, RunSession>,
+    sheets: Res<'w, SpriteSheets>,
+}
+
 pub(super) fn show_bonus_tells(
     mut commands: Commands,
     mut tells: MessageReader<BonusTell>,
-    data: Res<GameData>,
-    sheets: Res<SpriteSheets>,
+    resources: TellResources,
     time: Res<Time<Real>>,
     players: Query<&Transform, With<PlayerBody>>,
     // When each bonus was last called out, so one firing on every blow is
     // not called out on every blow.
     mut called: Local<BTreeMap<String, f32>>,
 ) {
+    let TellResources {
+        data,
+        session,
+        sheets,
+    } = resources;
     let config = &data.gameplay.effects.tells;
     let now = time.elapsed_secs();
     // Callouts shown together stand one above the other.
@@ -197,11 +209,12 @@ pub(super) fn show_bonus_tells(
         else {
             continue;
         };
-        let color = data
-            .bonuses
-            .categories
-            .get(&bonus.category)
-            .map_or(Color::WHITE, |category| Color::from(category.color));
+        let color = session
+            .owned(&data)
+            .find(|(owned, _)| owned.id == bonus.id)
+            .map_or(Color::WHITE, |(_, rarity)| {
+                Color::from(data.bonuses.rarities[rarity].color)
+            });
         let at = match tell.at {
             TellAt::Player => match players.single() {
                 Ok(transform) => transform.translation,

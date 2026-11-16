@@ -420,6 +420,11 @@ pub struct TellsConfig {
     pub boosted_color: HexColor,
     pub healed_color: HexColor,
     pub soaked_color: HexColor,
+    /// What the tells of speed, of a heavier blow and of reading an enemy
+    /// are tinted.
+    pub speed_color: HexColor,
+    pub power_color: HexColor,
+    pub insight_color: HexColor,
 }
 
 /// How an enemy's plain shot is drawn (`shaders/bolt.wgsl`): its two
@@ -535,6 +540,7 @@ pub struct GlowConfig {
     pub door_radius_h: f32,
     /// How bright a health drop's light burns, as a share of `strength`.
     pub health_brightness: f32,
+    pub bonus_color: HexColor,
     pub health_color: HexColor,
     pub door_color: HexColor,
     /// How much brighter the aura of the thing within reach of Interact burns.

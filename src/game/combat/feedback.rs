@@ -193,7 +193,7 @@ pub(in crate::game) fn update_healing_over_time(
         session.idle_healing = 0.0;
         return;
     }
-    let per_s = data.bonus_effect("recovery", "idle_regeneration_per_s");
+    let per_s = session.bonus_effect(&data, "recovery", "idle_regeneration_per_s");
     session.idle_healing += per_s * time.delta_secs().min(0.05);
     if session.idle_healing < 1.0 {
         return;
@@ -340,7 +340,7 @@ pub(in crate::game) fn update_health_pickups(
         if session.has_bonus("sated_fury") {
             commands.write_message(BonusTell::new("sated_fury", TellAt::Player));
             player_body.sated_fury_timer =
-                data.bonus_effect("sated_fury", "healing_pickup_combo_speed_duration_s");
+                session.bonus_effect(&data, "sated_fury", "healing_pickup_combo_speed_duration_s");
         }
         commands.entity(entity).despawn();
     }

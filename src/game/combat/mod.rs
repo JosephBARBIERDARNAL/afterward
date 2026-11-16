@@ -93,7 +93,7 @@ fn apply_player_damage(
         if session.has_bonus("riposte") && player.empowered.is_none() {
             player.empowered = Some((
                 "riposte",
-                data.bonus_effect("riposte", "empowered_blow_multiplier"),
+                session.bonus_effect(data, "riposte", "empowered_blow_multiplier"),
             ));
             commands.write_message(BonusTell::new("riposte", TellAt::Player));
         }
@@ -107,16 +107,18 @@ fn apply_player_damage(
         return;
     }
     let adrenaline = if session.health / session.max_health
-        < data.bonus_effect("adrenaline", "low_health_fraction")
+        < session.bonus_effect(data, "adrenaline", "low_health_fraction")
     {
         session.bonus_multiplier(data, "adrenaline", "low_health_damage_taken_multiplier")
     } else {
         1.0
     };
     let fortress = 1.0
-        - session
-            .keystone(data, "fortress")
-            .min(data.bonus_effect("fortress", "max_reduction"));
+        - session.keystone(data, "fortress").min(session.bonus_effect(
+            data,
+            "fortress",
+            "max_reduction",
+        ));
     let reduced_damage = damage
         * session.bonus_multiplier(data, "thick_skin", "damage_taken_multiplier")
         * adrenaline
@@ -130,7 +132,7 @@ fn apply_player_damage(
     if session.has_bonus("retaliation") && player.empowered.is_none() {
         player.empowered = Some((
             "retaliation",
-            data.bonus_effect("retaliation", "empowered_blow_multiplier"),
+            session.bonus_effect(data, "retaliation", "empowered_blow_multiplier"),
         ));
         commands.write_message(BonusTell::new("retaliation", TellAt::Player));
     }

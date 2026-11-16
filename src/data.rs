@@ -86,17 +86,6 @@ impl GameData {
         Ok(data)
     }
 
-    pub(crate) fn bonus_effect(&self, bonus_id: &str, effect_id: &str) -> f32 {
-        self.bonuses
-            .bonuses
-            .iter()
-            .find(|bonus| bonus.id == bonus_id)
-            .and_then(|bonus| bonus.effects.get(effect_id))
-            .and_then(|value| BonusEffect::try_from(value).ok())
-            .map(f32::from)
-            .unwrap_or_default()
-    }
-
     /// Checks the loaded data against the game's rules; the debug editor
     /// re-runs it before saving or playtesting an edited room.
     pub(crate) fn validate(&self) -> Result<(), InvalidGameData> {
@@ -441,16 +430,35 @@ impl GameData {
             return Err(InvalidGameData::from("bonus IDs must be unique"));
         }
         if self.bonuses.bonuses.iter().any(|bonus| {
-            !self.bonuses.categories.contains_key(&bonus.category)
-                || bonus
-                    .requires
-                    .iter()
-                    .chain(&bonus.synergies)
-                    .any(|named| !bonus_ids.contains(&named.as_str()))
+            bonus
+                .requires
+                .iter()
+                .chain(&bonus.synergies)
+                .any(|named| !bonus_ids.contains(&named.as_str()))
         }) {
             return Err(InvalidGameData::from(
-                "a bonus references an unknown category, or requires or works with an unknown bonus",
+                "a bonus requires or works with an unknown bonus",
             ));
+        }
+        for bonus in &self.bonuses.bonuses {
+            if bonus.rarities.is_empty() {
+                return Err(InvalidGameData::from(format!(
+                    "the bonus {} needs at least one rarity to be drawn at",
+                    bonus.id
+                )));
+            }
+            if let Some(missing) = bonus.description.effects().find(|effect| {
+                bonus
+                    .rarities
+                    .keys()
+                    .any(|rarity| bonus.effect(*rarity, effect).is_none())
+            }) {
+                return Err(InvalidGameData::from(format!(
+                    "the description of the bonus {} writes in {missing}, \
+                     which one of its rarities lacks",
+                    bonus.id
+                )));
+            }
         }
         if self.bonuses.glossary.iter().any(|term| {
             term.words.is_empty()
@@ -921,18 +929,5 @@ mod tests {
             data.gameplay.player.max_speed_h_s,
             data.gameplay.player.air_max_speed_h_s
         );
-    }
-
-    #[test]
-    fn bonus_category_icons_use_ascii_glyphs_available_in_the_game_font() {
-        for icon in [
-            BonusCategoryIcon::CrossedSwords,
-            BonusCategoryIcon::Shield,
-            BonusCategoryIcon::Wing,
-            BonusCategoryIcon::Light,
-            BonusCategoryIcon::Knot,
-        ] {
-            assert!(icon.to_string().is_ascii());
-        }
     }
 }

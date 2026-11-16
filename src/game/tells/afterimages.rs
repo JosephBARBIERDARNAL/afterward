@@ -35,14 +35,6 @@ pub(crate) fn update_fading(
     }
 }
 
-/// The colour of a bonus category, as the bonus screen paints it.
-pub(super) fn category_color(data: &GameData, category: &str) -> Color {
-    data.bonuses
-        .categories
-        .get(category)
-        .map_or(Color::WHITE, |category| Color::from(category.color))
-}
-
 type BodiesQuery<'w, 's> = Query<
     'w,
     's,
@@ -89,13 +81,13 @@ pub(crate) fn leave_afterimages(
             let fast_run = player.grounded
                 && player.velocity.x.abs() > tuning.max_speed_h_s * H_WORLD_UNITS * 1.02;
             if untouchable {
-                Some(category_color(&data, "agility").mix(&Color::WHITE, 0.4))
+                Some(Color::from(config.speed_color).mix(&Color::WHITE, 0.4))
             } else if player.slamming && session.has_bonus("meteor") {
-                Some(category_color(&data, "combat"))
+                Some(Color::from(config.power_color))
             } else if fast_chain {
                 Some(Color::from(config.boosted_color))
             } else if fast_run {
-                Some(category_color(&data, "agility"))
+                Some(Color::from(config.speed_color))
             } else {
                 None
             }
@@ -110,7 +102,7 @@ pub(crate) fn leave_afterimages(
                             .iter()
                             .any(|bonus| session.has_bonus(bonus))
                 })
-                .map(|_| category_color(&data, "combat"))
+                .map(|_| Color::from(config.power_color))
         };
         let Some(tint) = tint else {
             continue;

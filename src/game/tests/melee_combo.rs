@@ -225,7 +225,7 @@ next_room_id: 2
     app.world_mut()
         .resource_mut::<RunSession>()
         .owned_bonuses
-        .push(String::from("fire_kick"));
+        .push(BonusPick::new("fire_kick", BonusRarity::Epic));
     assert_eq!(blow(&mut app, KeyCode::KeyJ, 6), "player_strike_1");
     assert_eq!(blow(&mut app, KeyCode::KeyJ, 7), "player_strike_2");
     assert_eq!(
@@ -245,7 +245,7 @@ next_room_id: 2
     app.world_mut()
         .resource_mut::<RunSession>()
         .owned_bonuses
-        .push(String::from("explosive_strike"));
+        .push(BonusPick::new("explosive_strike", BonusRarity::Epic));
     assert_eq!(blow(&mut app, KeyCode::KeyJ, 6), "player_strike_1");
     assert_eq!(blow(&mut app, KeyCode::KeyJ, 7), "player_strike_2");
     assert_eq!(

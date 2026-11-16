@@ -11,7 +11,7 @@
 //! The reticle is drawn white and tinted; the "!", the sleep and the skull
 //! are the VFX packs' (`effects/vfx/`), played once and held or looped.
 
-use super::{afterimages::category_color, *};
+use super::*;
 use crate::game::combat::DeadEnemy;
 
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
@@ -115,7 +115,7 @@ pub(crate) fn update_overheads(
                 (OverheadKind::MarkIcon, OverheadKind::MarkBar),
                 "tell_mark",
                 Vec2::splat(20.0),
-                category_color(&data, "intelligence"),
+                Color::from(data.gameplay.effects.tells.insight_color),
                 enemy.marked_timer,
                 row_y,
             );
@@ -145,9 +145,13 @@ pub(crate) fn update_overheads(
             });
         }
         if executes {
-            let mut line = data.bonus_effect("executioner", "execute_health_fraction");
+            let mut line = session.bonus_effect(&data, "executioner", "execute_health_fraction");
             if enemy.marked_timer > 0.0 && marks && session.has_bonus("open_wound") {
-                line = line.max(data.bonus_effect("open_wound", "marked_execute_health_fraction"));
+                line = line.max(session.bonus_effect(
+                    &data,
+                    "open_wound",
+                    "marked_execute_health_fraction",
+                ));
             }
             let left_edge = x - HEALTH_BAR_WIDTH / 2.0;
             pieces.push(Piece {

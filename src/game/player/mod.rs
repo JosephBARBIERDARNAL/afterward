@@ -4,7 +4,7 @@ mod animation;
 mod body;
 
 use animation::{AnimationState, PlayerSprite};
-pub(super) use body::{BonusAura, LedgeClimb, PlayerAction, PlayerBody, Strike, Thrown};
+pub(super) use body::{LedgeClimb, PlayerAction, PlayerBody, Strike, Thrown};
 
 #[derive(SystemParam)]
 pub(super) struct PlayerUpdateResources<'w, 's> {
@@ -233,7 +233,7 @@ pub(super) fn update_player(
     // clip is no longer the one playing.
     let air_dashes = dash.air_dashes
         + if session.has_bonus("air_step") {
-            data.bonus_effect("air_step", "extra_air_dashes") as u8
+            session.bonus_effect(&data, "air_step", "extra_air_dashes") as u8
         } else {
             0
         };
@@ -338,7 +338,7 @@ pub(super) fn update_player(
             sounds.push(SoundCue::Jump);
         } else {
             let extra_jump = if session.has_bonus("double_jump") {
-                data.bonus_effect("double_jump", "extra_midair_jumps") as u8
+                session.bonus_effect(&data, "double_jump", "extra_midair_jumps") as u8
             } else {
                 0
             };
@@ -349,9 +349,9 @@ pub(super) fn update_player(
                         .bonus_multiplier(&data, "high_jump", "jump_height_multiplier")
                         .sqrt()
                 } else if session.has_bonus("kick_off") {
-                    data.bonus_effect("kick_off", "extra_jump_impulse_factor")
+                    session.bonus_effect(&data, "kick_off", "extra_jump_impulse_factor")
                 } else {
-                    data.bonus_effect("double_jump", "extra_jump_impulse_factor")
+                    session.bonus_effect(&data, "double_jump", "extra_jump_impulse_factor")
                 };
                 // A jump a bonus lifts or gives shows the air it pushed off,
                 // where it pushed off rather than where the player has risen

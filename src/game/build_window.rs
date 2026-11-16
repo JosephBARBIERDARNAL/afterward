@@ -1,38 +1,37 @@
 //! The build window: every bonus the run owns, and what each is doing, over
 //! the paused room (`GameScreen::Build`, opened and closed with
 //! `GameAction::ShowBuild`). The room stays in sight behind it, dimmed but not
-//! blurred. Each bonus is a chip in its rarity's colour, edged in its
-//! category's while it is at work; the one under the focus (pointed at, or
-//! walked to with the arrows) is described in full below the chips, and its
-//! words are explained at the bottom right like an offer's (`glossary.rs`).
+//! blurred. Each bonus is a chip named in the colour of the rarity it was
+//! taken at, and edged in it while it is at work; the one under the focus
+//! (pointed at, or walked to with the arrows) is described in full below the
+//! chips, and its words are explained at the bottom right like an offer's
+//! (`glossary.rs`).
 
 use super::*;
-use crate::{
-    data::BonusConfig,
-    game::{
-        tells::{Line, lines},
-        ui_style::{
-            CARD_BACKGROUND, CARD_HIGHLIGHT_BACKGROUND, DESCRIPTION_COLOR, DIMMED_EDGE_ALPHA,
-            MUTED, focus_ring, key_badge, overlay_root, title,
-        },
+use crate::game::{
+    bonus_text::Description,
+    tells::{Line, lines},
+    ui_style::{
+        CARD_BACKGROUND, CARD_HIGHLIGHT_BACKGROUND, DIMMED_EDGE_ALPHA, MUTED, focus_ring,
+        key_badge, overlay_root, title,
     },
 };
 use bevy::text::FontSize;
 
-/// The owned bonuses in the order the window lays them out (by category, then
-/// as `config/bonuses.yaml` lists them), and which of them the focus is on.
+/// The owned bonuses in the order the window lays them out (the order they
+/// were taken in), and which of them the focus is on.
 #[derive(Resource, Default)]
 pub(super) struct BuildFocus {
-    pub(super) order: Vec<String>,
+    pub(super) order: Vec<BonusPick>,
     pub(super) index: usize,
 }
 
 impl BuildFocus {
-    /// The bonus the focus stands on, if the run owns any.
-    pub(super) fn focused<'a>(&self, data: &'a GameData) -> Option<&'a BonusConfig> {
-        self.order
-            .get(self.index)
-            .and_then(|id| data.bonuses.bonuses.iter().find(|bonus| bonus.id == *id))
+    /// The bonus the focus stands on, and the rarity it was taken at, if the
+    /// run owns any.
+    pub(super) fn focused<'a>(&self, data: &'a GameData) -> Option<(&'a BonusConfig, BonusRarity)> {
+        let pick = self.order.get(self.index)?;
+        Some((data.bonuses.bonus(&pick.id)?, pick.rarity))
     }
 }
 
@@ -52,9 +51,14 @@ pub(super) struct BuildChip(pub(super) usize);
 pub(super) enum DetailSpan {
     Heading,
     Name,
-    Description,
     State,
 }
+
+/// The description of the bonus under the focus.
+#[derive(Component)]
+pub(super) struct DetailDescription;
+
+const DESCRIPTION_FONT_PX: f32 = 16.0;
 
 /// The key that closes the window, on its badge.
 #[derive(Component)]
@@ -96,14 +100,10 @@ pub(super) fn spawn_build_window(mut commands: Commands) {
                 ));
                 panel
                     .spawn((
-                        Text::default(),
-                        TextFont {
-                            font_size: FontSize::Px(16.0),
-                            ..default()
-                        },
-                        TextLayout::justify(Justify::Left),
                         Node {
                             min_height: px(96),
+                            flex_direction: FlexDirection::Column,
+                            row_gap: px(4),
                             padding: UiRect::top(px(10)),
                             border: UiRect::top(px(1)),
                             ..default()
@@ -111,24 +111,47 @@ pub(super) fn spawn_build_window(mut commands: Commands) {
                         BorderColor::all(MUTED),
                         Pickable::IGNORE,
                     ))
-                    .with_children(|text| {
-                        for (kind, font_size, role) in [
-                            (DetailSpan::Heading, 14.0, FontRole::Regular),
-                            (DetailSpan::Name, 26.0, FontRole::Display),
-                            (DetailSpan::Description, 16.0, FontRole::Regular),
-                            (DetailSpan::State, 15.0, FontRole::BoldItalic),
-                        ] {
-                            text.spawn((
+                    .with_children(|detail| {
+                        let text = |font_px: f32| {
+                            (
+                                Text::default(),
+                                TextFont {
+                                    font_size: FontSize::Px(font_px),
+                                    ..default()
+                                },
+                                TextLayout::justify(Justify::Left),
+                                Pickable::IGNORE,
+                            )
+                        };
+                        let span = |kind: DetailSpan, font_px: f32, role: FontRole| {
+                            (
                                 TextSpan::default(),
                                 TextFont {
-                                    font_size: FontSize::Px(font_size),
+                                    font_size: FontSize::Px(font_px),
                                     ..default()
                                 },
                                 TextColor(Color::WHITE),
                                 kind,
                                 role,
-                            ));
-                        }
+                            )
+                        };
+                        detail.spawn(text(16.0)).with_children(|heading| {
+                            heading.spawn(span(DetailSpan::Heading, 14.0, FontRole::Regular));
+                            heading.spawn(span(DetailSpan::Name, 26.0, FontRole::Display));
+                        });
+                        detail.spawn((
+                            text(DESCRIPTION_FONT_PX),
+                            Description {
+                                font_px: DESCRIPTION_FONT_PX,
+                                ..default()
+                            },
+                            DetailDescription,
+                        ));
+                        detail.spawn(text(15.0)).with_child(span(
+                            DetailSpan::State,
+                            15.0,
+                            FontRole::BoldItalic,
+                        ));
                     });
                 panel
                     .spawn(Node {
@@ -172,22 +195,12 @@ pub(super) fn open_build_window(
     mut focus: ResMut<BuildFocus>,
     grids: Query<Entity, With<BuildGrid>>,
 ) {
-    let categories = data.bonuses.categories.keys().collect::<Vec<_>>();
-    let mut owned = data
-        .bonuses
-        .bonuses
-        .iter()
-        .enumerate()
-        .filter(|(_, bonus)| session.has_bonus(&bonus.id))
-        .collect::<Vec<_>>();
-    owned.sort_by_key(|(listed, bonus)| {
-        (
-            categories.iter().position(|name| **name == bonus.category),
-            *listed,
-        )
-    });
+    let owned = session.owned(&data).collect::<Vec<_>>();
     *focus = BuildFocus {
-        order: owned.iter().map(|(_, bonus)| bonus.id.clone()).collect(),
+        order: owned
+            .iter()
+            .map(|(bonus, rarity)| BonusPick::new(&bonus.id, *rarity))
+            .collect(),
         index: 0,
     };
     let Ok(grid) = grids.single() else {
@@ -205,7 +218,7 @@ pub(super) fn open_build_window(
                 TextColor(MUTED),
             ));
         }
-        for (index, (_, bonus)) in owned.iter().enumerate() {
+        for (index, (bonus, rarity)) in owned.iter().enumerate() {
             grid.spawn((
                 Node {
                     padding: UiRect::axes(px(10), px(6)),
@@ -223,7 +236,7 @@ pub(super) fn open_build_window(
                     font_size: FontSize::Px(CHIP_FONT_PX),
                     ..default()
                 },
-                TextColor(Color::from(data.bonuses.rarities[bonus.rarity].color)),
+                TextColor(Color::from(data.bonuses.rarities[*rarity].color)),
                 FontRole::Display,
                 Pickable::IGNORE,
             ));
@@ -287,7 +300,7 @@ fn state_of(bonus: &BonusConfig, at_work: &[Line], session: &RunSession) -> (Str
             .left
             .map(|left| format!(", {:.0}% left", left * 100.0))
             .unwrap_or_default();
-        return (format!("\nIN FORCE: {}{left}", line.value), true);
+        return (format!("IN FORCE: {}{left}", line.value), true);
     }
     let spent = match bonus.id.as_str() {
         "room_ward" => session.room_ward_used.then_some("SPENT FOR THIS ROOM"),
@@ -295,10 +308,7 @@ fn state_of(bonus: &BonusConfig, at_work: &[Line], session: &RunSession) -> (Str
         "last_stand" => session.last_stand_used.then_some("SPENT FOR THIS RUN"),
         _ => None,
     };
-    (
-        spent.map(|spent| format!("\n{spent}")).unwrap_or_default(),
-        false,
-    )
+    (spent.map(str::to_owned).unwrap_or_default(), false)
 }
 
 pub(super) fn update_build_window(
@@ -311,6 +321,7 @@ pub(super) fn update_build_window(
         &mut Outline,
     )>,
     mut spans: Query<(&DetailSpan, &mut TextSpan, &mut TextColor)>,
+    mut descriptions: Query<&mut Description, With<DetailDescription>>,
     mut key_labels: Query<&mut Text, With<BuildKeyLabel>>,
 ) {
     let BuildWindowResources {
@@ -347,32 +358,21 @@ pub(super) fn update_build_window(
             )
         },
     );
-    let bonus_at = |index: usize| {
-        focus
-            .order
-            .get(index)
-            .and_then(|id| data.bonuses.bonuses.iter().find(|bonus| bonus.id == *id))
-    };
-    let category_color = |bonus: &BonusConfig| {
-        data.bonuses
-            .categories
-            .get(&bonus.category)
-            .map_or(Color::WHITE, |category| Color::from(category.color))
-    };
+    let rarity_color = |rarity: BonusRarity| Color::from(data.bonuses.rarities[rarity].color);
 
     for (chip, mut border, mut background, mut outline) in &mut chips {
-        let Some(bonus) = bonus_at(chip.0) else {
+        let Some((bonus, rarity)) = focus
+            .order
+            .get(chip.0)
+            .and_then(|pick| Some((data.bonuses.bonus(&pick.id)?, pick.rarity)))
+        else {
             continue;
         };
         let lit = chip.0 == focus.index;
         let working = state_of(bonus, &at_work, &session).1;
-        // A bonus at work wears its category's colour, the rest are muted;
-        // either comes up to full strength under the focus.
-        let edge = if working {
-            category_color(bonus)
-        } else {
-            MUTED
-        };
+        // A bonus at work is edged in its rarity's colour, the rest are
+        // muted; either comes up to full strength under the focus.
+        let edge = if working { rarity_color(rarity) } else { MUTED };
         *border = BorderColor::all(if lit || working {
             edge
         } else {
@@ -390,22 +390,12 @@ pub(super) fn update_build_window(
     for (kind, mut span, mut color) in &mut spans {
         let (content, tint) = match (focused, kind) {
             (None, _) => (String::new(), Color::WHITE),
-            (Some(bonus), DetailSpan::Heading) => (
-                format!(
-                    "{}   {}\n",
-                    bonus.category.to_uppercase(),
-                    bonus.rarity.to_string().to_uppercase()
-                ),
-                category_color(bonus),
+            (Some((_, rarity)), DetailSpan::Heading) => (
+                format!("{}\n", rarity.to_string().to_uppercase()),
+                rarity_color(rarity),
             ),
-            (Some(bonus), DetailSpan::Name) => (
-                format!("{}\n", bonus.name),
-                Color::from(data.bonuses.rarities[bonus.rarity].color),
-            ),
-            (Some(bonus), DetailSpan::Description) => {
-                (bonus.description.clone(), DESCRIPTION_COLOR)
-            }
-            (Some(bonus), DetailSpan::State) => (
+            (Some((bonus, rarity)), DetailSpan::Name) => (bonus.name.clone(), rarity_color(rarity)),
+            (Some((bonus, _)), DetailSpan::State) => (
                 state_of(bonus, &at_work, &session).0,
                 Color::from(data.bonuses.synergy.color),
             ),
@@ -414,6 +404,16 @@ pub(super) fn update_build_window(
             span.0 = content;
         }
         color.0 = tint;
+    }
+    let (text, except) = focused.map_or_else(Default::default, |(bonus, rarity)| {
+        (bonus.describe(rarity), bonus.id.clone())
+    });
+    for mut description in &mut descriptions {
+        description.set_if_neq(Description {
+            text: text.clone(),
+            except: except.clone(),
+            font_px: DESCRIPTION_FONT_PX,
+        });
     }
     for mut label in &mut key_labels {
         let key = controls.primary_label(GameAction::ShowBuild);

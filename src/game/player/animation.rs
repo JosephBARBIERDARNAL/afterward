@@ -82,7 +82,7 @@ impl PlayerSprite<'_> {
                 PlayerAction::Slam => "player_ground_slam",
                 PlayerAction::Dash { .. } => "player_dash",
                 PlayerAction::Rise => "player_rise",
-                PlayerAction::Aura(aura) => aura.clip_key(),
+                PlayerAction::Aura => "player_aura",
                 PlayerAction::Healing => "player_healing",
                 PlayerAction::Hit => "player_hit",
                 PlayerAction::Land => "player_land",

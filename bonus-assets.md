@@ -13,9 +13,9 @@ What the game expects of an effect, so an example can be judged quickly:
   tall per H; effects so far are 16–64 px frames.
 - **A horizontal strip of frames** (or a sheet I can cut), 6–12 frames,
   played once or looped as noted.
-- **White or greyscale** where noted "tinted": the game paints it in the
-  bonus category's colour (combat red, defense blue, agility green,
-  intelligence yellow, combined orange), so one sheet serves several bonuses.
+- **White or greyscale** where noted "tinted": the game paints it in one of
+  the tells' colours (`speed_color`, `power_color`, `insight_color` of
+  `effects.tells`) or a rarity's, so one sheet serves several bonuses.
 - Transparent background, no baked shadow.
 
 ## Still wanted
@@ -66,4 +66,4 @@ dashes.
 No new art needed: Decoy (its summon clip), Aftershock (the kill ring),
 Recovery (the healing plusses), Last Stand (the fall-and-rise clips), the
 finishers Power Strike, Fire Kick and Explosive Strike (their own strike
-clips), and the category auras when a bonus is taken.
+clips), and the aura worn when a bonus is taken.

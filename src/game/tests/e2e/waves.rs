@@ -78,12 +78,12 @@ fn a_room_sends_its_waves_in_one_after_the_other_and_is_only_cleared_after_the_l
         "nothing touched the player, and the room says so"
     );
 
-    // The door, once unlocked, promises the category of the next room's item.
+    // Choosing the bonus unlocks the door.
     game.take_bonus();
     game.tap(KeyCode::Digit1);
     game.wait_for_screen(GameScreen::Playing, 3.0);
     game.run_seconds(0.1);
-    assert!(game.session().next_bonus_category.is_some());
+    assert!(game.session().door_open);
 }
 
 #[test]

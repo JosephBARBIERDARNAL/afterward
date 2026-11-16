@@ -1,4 +1,4 @@
-// The hero's `aura_intelligence` sheet: 20 frames, each drawn in the window
+// The hero's `aura` sheet: 20 frames, each drawn in the window
 // of its cell that starts at (16, 41). See ../_player.typ.
 #import "../_player.typ": sheet
 

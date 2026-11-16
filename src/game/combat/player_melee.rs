@@ -100,14 +100,14 @@ pub(in crate::game) fn player_melee(
     let facing = player.facing;
     let chain = &melee.steps;
     // What Undertow gives the slam, and Riptide the dash's shock with it.
-    let pull = || Pull {
-        radius_h: data.bonus_effect("undertow", "slam_pull_radius_h"),
-        speed_h_s: data.bonus_effect("undertow", "slam_pull_h_s"),
+    let pull = Pull {
+        radius_h: session.bonus_effect(&data, "undertow", "slam_pull_radius_h"),
+        speed_h_s: session.bonus_effect(&data, "undertow", "slam_pull_h_s"),
     };
     // A dash has just ended: with Aftershock, the floor it ends on shocks
     // everything standing to either side.
     if player.dash_ended && session.has_bonus("aftershock") {
-        let reach = data.bonus_effect("aftershock", "dash_shock_reach_h") * H_WORLD_UNITS;
+        let reach = session.bonus_effect(&data, "aftershock", "dash_shock_reach_h") * H_WORLD_UNITS;
         // The shock is seen whether or not it reaches anybody.
         play_effect(
             &mut commands,
@@ -118,6 +118,7 @@ pub(in crate::game) fn player_melee(
             false,
         );
         let drags = session.has_bonus("riptide");
+        let damage = session.bonus_effect(&data, "aftershock", "dash_shock_damage");
         // Riptide shows how far its drag reaches.
         if drags {
             commands.write_message(
@@ -144,13 +145,13 @@ pub(in crate::game) fn player_melee(
                 ),
                 from_x: feet.x,
                 heavy: true,
-                damage: data.bonus_effect("aftershock", "dash_shock_damage"),
+                damage,
                 pierces_shields: false,
                 flinch_s: 0.32,
                 finisher: false,
                 punch: usize::MAX,
                 whiffs: false,
-                pull: drags.then(pull),
+                pull: drags.then_some(pull),
                 launch: None,
                 bonus: Some("aftershock".to_owned()),
                 boost: 1.0,
@@ -165,7 +166,7 @@ pub(in crate::game) fn player_melee(
         let breaks_shields = session.has_bonus("breaker");
         // Meteor: the slam lands harder, and as an airborne blow.
         let meteor = if session.has_bonus("meteor") {
-            data.bonus_effect("meteor", "slam_damage_multiplier")
+            session.bonus_effect(&data, "meteor", "slam_damage_multiplier")
                 * session.bonus_multiplier(
                     &data,
                     "aerial_assault",
@@ -209,7 +210,7 @@ pub(in crate::game) fn player_melee(
                 finisher: false,
                 punch: usize::MAX,
                 whiffs: false,
-                pull: drags.then(pull),
+                pull: drags.then_some(pull),
                 launch: None,
                 bonus: if breaks_shields {
                     Some("breaker".to_owned())
@@ -290,10 +291,13 @@ pub(in crate::game) fn player_melee(
                     whiffs: true,
                     pull: None,
                     launch: session.has_bonus("battering_ram").then(|| Launch {
-                        damage: data.bonus_effect("battering_ram", "launch_damage"),
-                        reach_h: data.bonus_effect("battering_ram", "launch_reach_h"),
-                        knockback_multiplier: data
-                            .bonus_effect("battering_ram", "launch_knockback_multiplier"),
+                        damage: session.bonus_effect(&data, "battering_ram", "launch_damage"),
+                        reach_h: session.bonus_effect(&data, "battering_ram", "launch_reach_h"),
+                        knockback_multiplier: session.bonus_effect(
+                            &data,
+                            "battering_ram",
+                            "launch_knockback_multiplier",
+                        ),
                     }),
                     // A finisher a bonus adds is called by its name.
                     bonus: step
@@ -373,9 +377,9 @@ pub(in crate::game) fn player_melee(
     // heavy blows included.
     let rhythm = 1.0
         + f32::from(player.rhythm_stacks)
-            * data.bonus_effect("rhythm_training", "combo_speed_step");
+            * session.bonus_effect(&data, "rhythm_training", "combo_speed_step");
     let sated_fury = if player.sated_fury_timer > 0.0 {
-        data.bonus_effect("sated_fury", "healing_pickup_combo_speed_multiplier")
+        session.bonus_effect(&data, "sated_fury", "healing_pickup_combo_speed_multiplier")
     } else {
         1.0
     };

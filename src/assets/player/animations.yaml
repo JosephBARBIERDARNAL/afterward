@@ -84,9 +84,5 @@ clips:
   # Going into a door and coming out of the next one.
   dissolve: { sheet: player/sheets/dissolve.png, frames: 12, fps: 28 }
   materialize: { sheet: player/sheets/materialize.png, frames: 12, fps: 28 }
-  # The aura worn for a moment when a bonus is taken, one per category; the
-  # defensive one is the guard's own sheet, played through once.
-  aura_combat: { sheet: player/sheets/aura_combat.png, frames: 20, fps: 36 }
-  aura_agility: { sheet: player/sheets/aura_agility.png, frames: 12, fps: 28 }
-  aura_intelligence: { sheet: player/sheets/aura_intelligence.png, frames: 20, fps: 36 }
-  aura_defense: { sheet: player/sheets/cover.png, frames: 24, fps: 40 }
+  # The aura worn for a moment when a bonus is taken.
+  aura: { sheet: player/sheets/aura.png, frames: 20, fps: 36 }

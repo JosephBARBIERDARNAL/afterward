@@ -282,14 +282,14 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
                             session
                                 .offered_bonuses
                                 .iter()
-                                .any(|offered| offered == preferred)
+                                .any(|offered| offered.id == *preferred)
                         });
                         let index = preferred_bonus
                             .and_then(|preferred| {
                                 session
                                     .offered_bonuses
                                     .iter()
-                                    .position(|offered| offered == preferred)
+                                    .position(|offered| offered.id == preferred)
                             })
                             .unwrap_or(0);
                         keys.press([KeyCode::Digit1, KeyCode::Digit2, KeyCode::Digit3][index]);

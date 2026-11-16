@@ -1,10 +1,10 @@
 //! The row of what the run's bonuses hold in force, under the health bar:
-//! one line per bonus at work, named in its category's colour, with what it
+//! one line per bonus at work, named in its rarity's colour, with what it
 //! is worth now and, for one that runs out, a bar emptying. A keystone shows
 //! what the build has made it worth, a once-a-room bonus that it is still
 //! ready, a timed one how long it has left.
 
-use super::{afterimages::category_color, *};
+use super::*;
 use bevy::text::FontSize;
 
 /// How many lines the tray can show at once.
@@ -132,17 +132,17 @@ pub(crate) fn lines(
     }
     let fraction = |left: f32, full: f32| (full > 0.0).then(|| (left / full).clamp(0.0, 1.0));
     if player.chain_reaction_timer > 0.0 {
-        let full = data.bonus_effect("chain_reaction", "kill_damage_duration_s");
+        let full = session.bonus_effect(data, "chain_reaction", "kill_damage_duration_s");
         add(
             "chain_reaction",
-            percent_of(data.bonus_effect("chain_reaction", "kill_damage_bonus")),
+            percent_of(session.bonus_effect(data, "chain_reaction", "kill_damage_bonus")),
             fraction(player.chain_reaction_timer, full),
         );
         add(
             "bloodrush",
             format!(
                 "chain x{:.1}",
-                data.bonus_effect("bloodrush", "combo_speed_multiplier")
+                session.bonus_effect(data, "bloodrush", "combo_speed_multiplier")
             ),
             fraction(player.chain_reaction_timer, full),
         );
@@ -152,11 +152,11 @@ pub(crate) fn lines(
             "sated_fury",
             format!(
                 "chain x{:.2}",
-                data.bonus_effect("sated_fury", "healing_pickup_combo_speed_multiplier")
+                session.bonus_effect(data, "sated_fury", "healing_pickup_combo_speed_multiplier")
             ),
             fraction(
                 player.sated_fury_timer,
-                data.bonus_effect("sated_fury", "healing_pickup_combo_speed_duration_s"),
+                session.bonus_effect(data, "sated_fury", "healing_pickup_combo_speed_duration_s"),
             ),
         );
     }
@@ -165,19 +165,23 @@ pub(crate) fn lines(
             "rhythm_training",
             percent_of(
                 f32::from(player.rhythm_stacks)
-                    * data.bonus_effect("rhythm_training", "combo_speed_step"),
+                    * session.bonus_effect(data, "rhythm_training", "combo_speed_step"),
             ),
             fraction(
                 player.rhythm_timer,
-                data.bonus_effect("rhythm_training", "hit_window_s"),
+                session.bonus_effect(data, "rhythm_training", "hit_window_s"),
             ),
         );
     }
-    if session.health / session.max_health < data.bonus_effect("adrenaline", "low_health_fraction")
+    if session.health / session.max_health
+        < session.bonus_effect(data, "adrenaline", "low_health_fraction")
     {
         add(
             "adrenaline",
-            percent_of(data.bonus_effect("adrenaline", "low_health_damage_taken_multiplier") - 1.0),
+            percent_of(
+                session.bonus_effect(data, "adrenaline", "low_health_damage_taken_multiplier")
+                    - 1.0,
+            ),
             None,
         );
     }
@@ -186,7 +190,7 @@ pub(crate) fn lines(
             "recovery",
             format!(
                 "+{:.0}/s",
-                data.bonus_effect("recovery", "idle_regeneration_per_s")
+                session.bonus_effect(data, "recovery", "idle_regeneration_per_s")
             ),
             None,
         );
@@ -202,9 +206,9 @@ pub(crate) fn lines(
     }
     if session.has_bonus("lifesteal") {
         let cap = if session.has_bonus("bloodlust") {
-            data.bonus_effect("bloodlust", "room_healing_cap")
+            session.bonus_effect(data, "bloodlust", "room_healing_cap")
         } else {
-            data.bonus_effect("lifesteal", "room_healing_cap")
+            session.bonus_effect(data, "lifesteal", "room_healing_cap")
         };
         let left = (cap - player.lifesteal_healing).max(0.0);
         add(
@@ -219,9 +223,11 @@ pub(crate) fn lines(
     add(
         "fortress",
         percent_of(
-            -session
-                .keystone(data, "fortress")
-                .min(data.bonus_effect("fortress", "max_reduction")),
+            -session.keystone(data, "fortress").min(session.bonus_effect(
+                data,
+                "fortress",
+                "max_reduction",
+            )),
         ),
         None,
     );
@@ -266,13 +272,19 @@ pub(crate) fn update_the_tray(
         }
         _ => Vec::new(),
     };
+    // A bonus is named in the colour of the rarity it was taken at.
     let named = |index: usize| {
         lines.get(index).and_then(|line| {
-            data.bonuses
-                .bonuses
-                .iter()
-                .find(|bonus| bonus.id == line.bonus)
-                .map(|bonus| (line, bonus))
+            session
+                .owned(&data)
+                .find(|(bonus, _)| bonus.id == line.bonus)
+                .map(|(bonus, rarity)| {
+                    (
+                        line,
+                        bonus,
+                        Color::from(data.bonuses.rarities[rarity].color),
+                    )
+                })
         })
     };
     for (row, mut visibility) in &mut rows {
@@ -283,16 +295,16 @@ pub(crate) fn update_the_tray(
         };
     }
     for (label, mut text, mut color) in &mut labels {
-        if let Some((_, bonus)) = named(label.0) {
+        if let Some((_, bonus, rarity_color)) = named(label.0) {
             let name = bonus.name.to_uppercase();
             if text.0 != name {
                 text.0 = name;
             }
-            color.0 = category_color(&data, &bonus.category);
+            color.0 = rarity_color;
         }
     }
     for (value, mut text) in &mut values {
-        if let Some((line, _)) = named(value.0)
+        if let Some((line, ..)) = named(value.0)
             && text.0 != line.value
         {
             text.0.clone_from(&line.value);
@@ -300,14 +312,14 @@ pub(crate) fn update_the_tray(
     }
     for (trough, mut node) in &mut troughs {
         node.display = match named(trough.0) {
-            Some((line, _)) if line.left.is_some() => Display::Flex,
+            Some((line, ..)) if line.left.is_some() => Display::Flex,
             _ => Display::None,
         };
     }
     for (fill, mut node, mut background) in &mut fills {
-        if let Some((line, bonus)) = named(fill.0) {
+        if let Some((line, _, rarity_color)) = named(fill.0) {
             node.width = percent(line.left.unwrap_or(0.0) * 100.0);
-            background.0 = category_color(&data, &bonus.category);
+            background.0 = rarity_color;
         }
     }
 }

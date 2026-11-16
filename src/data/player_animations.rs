@@ -55,10 +55,7 @@ impl PlayerAnimations {
             ("player_summon", &clips.summon),
             ("player_dissolve", &clips.dissolve),
             ("player_materialize", &clips.materialize),
-            ("player_aura_combat", &clips.aura_combat),
-            ("player_aura_agility", &clips.aura_agility),
-            ("player_aura_intelligence", &clips.aura_intelligence),
-            ("player_aura_defense", &clips.aura_defense),
+            ("player_aura", &clips.aura),
         ]
         .into_iter()
         .map(|(key, clip)| (key.to_string(), clip))
@@ -103,10 +100,7 @@ pub struct PlayerAnimationClips {
     pub summon: AnimationClip,
     pub dissolve: AnimationClip,
     pub materialize: AnimationClip,
-    pub aura_combat: AnimationClip,
-    pub aura_agility: AnimationClip,
-    pub aura_intelligence: AnimationClip,
-    pub aura_defense: AnimationClip,
+    pub aura: AnimationClip,
 }
 
 /// Which blow a step of the melee chain (light or heavy) lands, and so which clip it plays.

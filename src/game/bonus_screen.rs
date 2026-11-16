@@ -1,7 +1,10 @@
 use super::*;
-use crate::game::ui_style::{
-    ACTIVE_BORDER, CARD_BACKGROUND, CARD_HIGHLIGHT_BACKGROUND, DESCRIPTION_COLOR,
-    DIMMED_EDGE_ALPHA, MUTED, focus_ring, key_badge, overlay_root, title,
+use crate::game::{
+    bonus_text::Description,
+    ui_style::{
+        ACTIVE_BORDER, CARD_BACKGROUND, CARD_HIGHLIGHT_BACKGROUND, DIMMED_EDGE_ALPHA, MUTED,
+        focus_ring, key_badge, overlay_root, title,
+    },
 };
 use bevy::text::FontSize;
 
@@ -56,12 +59,21 @@ pub(super) struct BonusSpan {
 
 #[derive(Clone, Copy)]
 enum BonusSpanKind {
-    Category,
     Rarity,
     Name,
-    Description,
     Synergy,
 }
+
+/// The description of the offer in that place.
+#[derive(Component)]
+pub(super) struct OfferDescription(usize);
+
+/// Where the bonuses the run already owns are listed, under the offers, so
+/// the choice is made knowing the build it joins.
+#[derive(Component)]
+pub(super) struct OwnedBonuses;
+
+const DESCRIPTION_FONT_PX: f32 = 17.0;
 
 pub(super) fn spawn_bonus_screen(mut commands: Commands) {
     commands
@@ -109,42 +121,49 @@ pub(super) fn spawn_bonus_screen(mut commands: Commands) {
                                 ));
                                 parent
                                     .spawn((
-                                        Text::default(),
-                                        TextFont {
-                                            font_size: FontSize::Px(18.0),
-                                            ..default()
-                                        },
-                                        TextLayout::justify(Justify::Left),
                                         Node {
                                             flex_grow: 1.0,
                                             min_width: px(0),
+                                            flex_direction: FlexDirection::Column,
+                                            row_gap: px(4),
                                             ..default()
                                         },
                                         Pickable::IGNORE,
                                     ))
                                     .with_children(|parent| {
                                         // The name stands out in the display
-                                        // face, the words around it are read in
-                                        // the regular one, and what the bonus
+                                        // face, the words under it are read in
+                                        // the regular one (another bonus they
+                                        // name in bold), and what the bonus
                                         // works with in bold italic.
-                                        for (kind, font_size, role) in [
-                                            (BonusSpanKind::Category, 15.0, FontRole::Regular),
-                                            (BonusSpanKind::Rarity, 15.0, FontRole::Regular),
-                                            (BonusSpanKind::Name, 28.0, FontRole::Display),
-                                            (BonusSpanKind::Description, 17.0, FontRole::Regular),
-                                            (BonusSpanKind::Synergy, 15.0, FontRole::BoldItalic),
-                                        ] {
-                                            parent.spawn((
-                                                TextSpan::default(),
-                                                TextFont {
-                                                    font_size: FontSize::Px(font_size),
-                                                    ..default()
-                                                },
-                                                TextColor(Color::WHITE),
-                                                BonusSpan { index, kind },
-                                                role,
-                                            ));
-                                        }
+                                        parent.spawn(offer_text(18.0)).with_children(|parent| {
+                                            for (kind, font_size, role) in [
+                                                (BonusSpanKind::Rarity, 15.0, FontRole::Regular),
+                                                (BonusSpanKind::Name, 28.0, FontRole::Display),
+                                            ] {
+                                                parent.spawn(offer_span(
+                                                    BonusSpan { index, kind },
+                                                    font_size,
+                                                    role,
+                                                ));
+                                            }
+                                        });
+                                        parent.spawn((
+                                            offer_text(DESCRIPTION_FONT_PX),
+                                            Description {
+                                                font_px: DESCRIPTION_FONT_PX,
+                                                ..default()
+                                            },
+                                            OfferDescription(index),
+                                        ));
+                                        parent.spawn(offer_text(15.0)).with_child(offer_span(
+                                            BonusSpan {
+                                                index,
+                                                kind: BonusSpanKind::Synergy,
+                                            },
+                                            15.0,
+                                            FontRole::BoldItalic,
+                                        ));
                                     });
                             });
                     }
@@ -188,8 +207,103 @@ pub(super) fn spawn_bonus_screen(mut commands: Commands) {
                                 Pickable::IGNORE,
                             ));
                         });
+                    parent.spawn((
+                        Text::new("YOUR BONUSES"),
+                        TextFont {
+                            font_size: FontSize::Px(14.0),
+                            ..default()
+                        },
+                        TextColor(MUTED),
+                        Node {
+                            margin: UiRect::top(px(10)),
+                            ..default()
+                        },
+                    ));
+                    parent.spawn((
+                        Node {
+                            flex_direction: FlexDirection::Row,
+                            flex_wrap: FlexWrap::Wrap,
+                            column_gap: px(6),
+                            row_gap: px(6),
+                            ..default()
+                        },
+                        OwnedBonuses,
+                    ));
                 });
         });
+}
+
+/// A text of an offer's box, left-aligned, its words in its spans.
+fn offer_text(font_px: f32) -> impl Bundle {
+    (
+        Text::default(),
+        TextFont {
+            font_size: FontSize::Px(font_px),
+            ..default()
+        },
+        TextLayout::justify(Justify::Left),
+        Pickable::IGNORE,
+    )
+}
+
+fn offer_span(span: BonusSpan, font_px: f32, role: FontRole) -> impl Bundle {
+    (
+        TextSpan::default(),
+        TextFont {
+            font_size: FontSize::Px(font_px),
+            ..default()
+        },
+        TextColor(Color::WHITE),
+        span,
+        role,
+    )
+}
+
+/// Lists the bonuses the run owns as the bonus screen opens, each in the
+/// colour of the rarity it was taken at, in the order they were taken.
+pub(super) fn list_owned_bonuses(
+    mut commands: Commands,
+    data: Res<GameData>,
+    session: Res<RunSession>,
+    lists: Query<Entity, With<OwnedBonuses>>,
+) {
+    let Ok(list) = lists.single() else {
+        return;
+    };
+    commands.entity(list).despawn_children();
+    commands.entity(list).with_children(|list| {
+        if session.owned_bonuses.is_empty() {
+            list.spawn((
+                Text::new("None yet."),
+                TextFont {
+                    font_size: FontSize::Px(14.0),
+                    ..default()
+                },
+                TextColor(MUTED),
+            ));
+        }
+        for (bonus, rarity) in session.owned(&data) {
+            list.spawn((
+                Node {
+                    padding: UiRect::axes(px(8), px(4)),
+                    border: UiRect::all(px(1)),
+                    border_radius: BorderRadius::all(px(5)),
+                    ..default()
+                },
+                BackgroundColor(CARD_BACKGROUND),
+                BorderColor::all(MUTED),
+            ))
+            .with_child((
+                Text::new(bonus.name.clone()),
+                TextFont {
+                    font_size: FontSize::Px(14.0),
+                    ..default()
+                },
+                TextColor(Color::from(data.bonuses.rarities[rarity].color)),
+                FontRole::Display,
+            ));
+        }
+    });
 }
 
 #[derive(SystemParam)]
@@ -211,6 +325,7 @@ pub(super) fn update_bonus_screen(
     )>,
     mut labels: Query<(&BonusLabel, &mut Text, &mut TextColor)>,
     mut spans: Query<(&BonusSpan, &mut TextSpan, &mut TextColor), Without<BonusLabel>>,
+    mut descriptions: Query<(&OfferDescription, &mut Description)>,
 ) {
     let BonusScreenResources {
         screen,
@@ -236,14 +351,13 @@ pub(super) fn update_bonus_screen(
         session
             .offered_bonuses
             .get(index)
-            .and_then(|id| data.bonuses.bonuses.iter().find(|bonus| bonus.id == *id))
             .filter(|_| !rerolling)
+            .and_then(|offer| Some((data.bonuses.bonus(&offer.id)?, offer.rarity)))
     };
-    // A bonus is painted by how rare it is, and by nothing else: its category
-    // is said in words beside it rather than in a colour.
+    // A bonus is painted by the rarity it was drawn at, and by nothing else.
     let rarity_color = |index: usize| {
-        offer(index).map_or(MUTED, |bonus| {
-            Color::from(data.bonuses.rarities[bonus.rarity].color)
+        offer(index).map_or(MUTED, |(_, rarity)| {
+            Color::from(data.bonuses.rarities[rarity].color)
         })
     };
 
@@ -296,38 +410,33 @@ pub(super) fn update_bonus_screen(
         let (content, span_color) = match (offer(span.index), span.kind) {
             (None, BonusSpanKind::Name) if rerolling => ("...".to_owned(), MUTED),
             (None, _) => (String::new(), Color::WHITE),
-            (Some(bonus), BonusSpanKind::Category) => {
-                let icon = data
-                    .bonuses
-                    .categories
-                    .get(&bonus.category)
-                    .map(|category| category.icon.to_string())
-                    .unwrap_or_default();
-                (
-                    format!("{icon} {}   ", bonus.category.to_uppercase()),
-                    MUTED,
-                )
-            }
-            (Some(bonus), BonusSpanKind::Rarity) => (
-                format!("{}\n", bonus.rarity.to_string().to_uppercase()),
+            (Some((_, rarity)), BonusSpanKind::Rarity) => (
+                format!("{}\n", rarity.to_string().to_uppercase()),
                 rarity_color(span.index),
             ),
-            (Some(bonus), BonusSpanKind::Name) => (format!("{}\n", bonus.name), Color::WHITE),
-            (Some(bonus), BonusSpanKind::Description) => {
-                (bonus.description.clone(), DESCRIPTION_COLOR)
-            }
+            (Some((bonus, _)), BonusSpanKind::Name) => (bonus.name.clone(), Color::WHITE),
             // What the bonus works with in the build already owned, so the
             // right pick stands out from the other two.
-            (Some(bonus), BonusSpanKind::Synergy) => (
+            (Some((bonus, _)), BonusSpanKind::Synergy) => (
                 session
                     .synergy(&data, bonus)
-                    .map(|synergy| format!("\n+ {synergy}"))
+                    .map(|synergy| format!("+ {synergy}"))
                     .unwrap_or_default(),
                 Color::from(data.bonuses.synergy.color),
             ),
         };
         text.0 = content;
         color.0 = span_color;
+    }
+    for (place, mut description) in &mut descriptions {
+        let (text, except) = offer(place.0).map_or_else(Default::default, |(bonus, rarity)| {
+            (bonus.describe(rarity), bonus.id.clone())
+        });
+        description.set_if_neq(Description {
+            text,
+            except,
+            font_px: DESCRIPTION_FONT_PX,
+        });
     }
 }
 

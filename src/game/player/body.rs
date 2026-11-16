@@ -1,8 +1,7 @@
 //! The player body: movement, the melee chain, and bonus-timer state.
 
 use super::*;
-use crate::data::{AnimationClip, MeleeStrike};
-use std::str::FromStr;
+use crate::data::MeleeStrike;
 
 #[derive(Component)]
 pub(crate) struct PlayerBody {
@@ -134,51 +133,6 @@ impl PlayerBody {
     }
 }
 
-/// The glow a taken bonus leaves on the player, one per bonus category.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub(crate) enum BonusAura {
-    Combat,
-    Defense,
-    Agility,
-    Intelligence,
-}
-
-impl FromStr for BonusAura {
-    type Err = &'static str;
-
-    fn from_str(category: &str) -> Result<Self, Self::Err> {
-        match category {
-            // The combined category wears the combat glow; it has none of
-            // its own, and every combined bonus has some bite to it.
-            "combat" | "combined" => Ok(Self::Combat),
-            "defense" => Ok(Self::Defense),
-            "agility" => Ok(Self::Agility),
-            "intelligence" => Ok(Self::Intelligence),
-            _ => Err("unknown bonus category"),
-        }
-    }
-}
-
-impl BonusAura {
-    pub(crate) fn clip(self, clips: &crate::data::PlayerAnimationClips) -> &AnimationClip {
-        match self {
-            Self::Combat => &clips.aura_combat,
-            Self::Defense => &clips.aura_defense,
-            Self::Agility => &clips.aura_agility,
-            Self::Intelligence => &clips.aura_intelligence,
-        }
-    }
-
-    pub(crate) fn clip_key(self) -> &'static str {
-        match self {
-            Self::Combat => "player_aura_combat",
-            Self::Defense => "player_aura_defense",
-            Self::Agility => "player_aura_agility",
-            Self::Intelligence => "player_aura_intelligence",
-        }
-    }
-}
-
 /// A blow in the air.
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct Strike {
@@ -227,7 +181,7 @@ pub(crate) enum PlayerAction {
     /// Getting up off the floor again, which only Last Stand asks for.
     Rise,
     /// The glow worn for a moment when a bonus is taken.
-    Aura(BonusAura),
+    Aura,
     /// Healing: a health drop off the floor, or a bonus paying out on a
     /// cleared room.
     Healing,

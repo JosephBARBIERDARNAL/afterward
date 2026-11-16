@@ -7,14 +7,15 @@ use bevy::{
 };
 
 use crate::data::{
-    DifficultyColors, EnemyAttackConfig, EnemyDetectionConfig, EnemyMaterial, EnemyTypeId,
-    FootstepSound, GameData, HexColor, PLAYER_COLLISION_WIDTH_H,
+    BonusConfig, BonusRarity, DifficultyColors, EnemyAttackConfig, EnemyDetectionConfig,
+    EnemyMaterial, EnemyTypeId, FootstepSound, GameData, HexColor, PLAYER_COLLISION_WIDTH_H,
 };
 
 mod assets;
 mod audio;
 mod bonus_pickup;
 mod bonus_screen;
+mod bonus_text;
 mod build_window;
 mod camera;
 mod collision;
@@ -72,11 +73,11 @@ use flow::PhaseTimer;
 use fonts::FontRole;
 use interact::{InReach, Interactable};
 use menus::{MenuAction, MenuFocus, PendingLeave, VolumeChannel};
-use player::{BonusAura, PlayerAction, PlayerBody, Strike};
+use player::{PlayerAction, PlayerBody, Strike};
 use prologue::Prologue;
 use random::RandomState;
 use room_pan::RoomPan;
-use session::{Difficulty, RunSession};
+use session::{BonusPick, Difficulty, RunSession};
 use settings::{PlayerSettings, PreferencesDir, SettingsReturn};
 use shaders::{Bolt, CityLightsMaterial, Flame, Glowing, ShaderAssets};
 use sprites::{AnimatedSprite, SpriteSheet, SpriteSheetSpec, SpriteSheets, set_animation};
@@ -264,12 +265,14 @@ impl Plugin for GamePlugin {
         )
         .add_systems(OnEnter(GameScreen::Prologue), prologue::start_prologue)
         .add_systems(OnEnter(GameScreen::Build), build_window::open_build_window)
+        .add_systems(OnEnter(GameScreen::Bonus), bonus_screen::list_owned_bonuses)
         .add_systems(
             Update,
             (
                 build_window::navigate_build_window.run_if(in_state(GameScreen::Build)),
                 build_window::update_build_window,
                 glossary::update_glossary,
+                bonus_text::write_descriptions.after(bonus_screen::update_bonus_screen),
             )
                 .chain(),
         )
@@ -372,11 +375,7 @@ impl Plugin for GamePlugin {
                     devices::press_buttons,
                     devices::read_terminals,
                 ),
-                (
-                    bonus_pickup::promise_the_next_bonus,
-                    shaders::light_the_unlocked_door,
-                )
-                    .chain(),
+                shaders::light_the_unlocked_door,
                 flow::handle_door_touch,
                 flow::room_clear_check,
             )

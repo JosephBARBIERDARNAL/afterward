@@ -1,14 +1,12 @@
 //! The bonus item hovering over a cleared room's `bonus` spot: the same
-//! obelisk every time, glowing in the colour of the category drawn when it
-//! appears. Interact pressed within reach of it opens the bonus screen, which
-//! then offers three bonuses of that category.
+//! obelisk every time. Interact pressed within reach of it opens the bonus
+//! screen, which then offers three bonuses, each at the rarity it was drawn
+//! at.
 
 use super::*;
 
 #[derive(Component)]
-pub(super) struct BonusPickup {
-    pub(super) category: String,
-}
+pub(super) struct BonusPickup;
 
 impl BonusPickup {
     /// Its sheet's key in `SpriteSheets`.
@@ -18,7 +16,7 @@ impl BonusPickup {
 /// Lays the item out once the room is cleared, as long as no bonus has been
 /// picked there yet. A room without enemies is cleared the moment it opens, so
 /// its item is simply there from the start. A run is longer than the bonuses
-/// are many: once no category can still offer a choice of two, the room lays
+/// are many: once the pool cannot still offer a choice of two, the room lays
 /// nothing and its door simply opens.
 pub(super) fn spawn_bonus_pickup(
     mut commands: Commands,
@@ -29,7 +27,6 @@ pub(super) fn spawn_bonus_pickup(
 ) {
     let BonusPickupResources {
         data,
-        mut random,
         mut session,
         mut sounds,
         ..
@@ -37,8 +34,7 @@ pub(super) fn spawn_bonus_pickup(
     if !session.room_cleared || session.door_open || !pickups.is_empty() {
         return;
     }
-    let categories = session.categories_on_offer(&data);
-    if categories.is_empty() {
+    if !session.has_offers(&data) {
         for mut sprite in &mut doors {
             if let Some(atlas) = sprite.texture_atlas.as_mut() {
                 atlas.index = ExitDoor::UNLOCKED_FRAME;
@@ -48,14 +44,7 @@ pub(super) fn spawn_bonus_pickup(
         sounds.push(SoundCue::DoorAppear);
         return;
     }
-    // The door the player came through wore this item's colour: the category
-    // was drawn as it unlocked. A run's first room draws it here.
-    let promised = session.next_bonus_category.take();
-    let (category, config) = categories
-        .iter()
-        .copied()
-        .find(|(name, _)| Some(*name) == promised.as_ref())
-        .unwrap_or_else(|| categories[random.index(categories.len())]);
+    let color = Color::from(data.gameplay.effects.glow.bonus_color);
     let untouched = &data.gameplay.room_flow.untouched;
     let room = &data.rooms[&session.room_id];
     let item = &data.gameplay.room_flow.bonus_pickup;
@@ -88,15 +77,13 @@ pub(super) fn spawn_bonus_pickup(
             (room.bonus.y_h + item.height_h / 2.0) * H_WORLD_UNITS,
             2.5,
         ),
-        BonusPickup {
-            category: category.clone(),
-        },
+        BonusPickup,
         Interactable {
             reach_h: Vec2::splat(item.reach_h),
             verb: "take",
         },
         Glowing {
-            color: Color::from(config.color),
+            color,
             radius_h: data.gameplay.effects.glow.bonus_radius_h
                 * if session.flawless {
                     untouched.glow_multiplier
@@ -115,32 +102,12 @@ pub(super) fn spawn_bonus_pickup(
                 font_size: bevy::text::FontSize::Px(14.0),
                 ..default()
             },
-            TextColor(Color::from(config.color)),
+            TextColor(color),
             FontRole::Display,
             Transform::from_xyz(0.0, (item.height_h / 2.0 + 0.9) * H_WORLD_UNITS, 0.5),
         ));
     }
     sounds.push(SoundCue::BonusAppear);
-}
-
-/// Draws the category of the next room's bonus item the moment this room's
-/// door unlocks, so the door can wear its colour
-/// (`shaders::light_the_unlocked_door`) and the player knows what the next
-/// room is fought for.
-pub(super) fn promise_the_next_bonus(
-    data: Res<GameData>,
-    mut random: ResMut<RandomState>,
-    mut session: ResMut<RunSession>,
-) {
-    if !session.door_open || session.next_bonus_category.is_some() {
-        return;
-    }
-    let categories = session.categories_on_offer(&data);
-    if categories.is_empty() {
-        return;
-    }
-    let (category, _) = categories[random.index(categories.len())];
-    session.next_bonus_category = Some(category.clone());
 }
 
 #[derive(SystemParam)]
@@ -159,7 +126,7 @@ pub(super) struct BonusPickupResources<'w> {
 pub(super) fn update_bonus_pickup(
     resources: BonusPickupResources,
     mut commands: Commands,
-    pickups: Query<(Entity, &BonusPickup)>,
+    pickups: Query<Entity, With<BonusPickup>>,
 ) {
     let BonusPickupResources {
         data,
@@ -171,17 +138,18 @@ pub(super) fn update_bonus_pickup(
         mut next_screen,
         mut sounds,
     } = resources;
-    for (entity, pickup) in &pickups {
+    for entity in &pickups {
         if in_reach.0 != Some(entity) || !controls.just_pressed(GameAction::Interact, &keys) {
             continue;
         }
         in_reach.0 = None;
-        session.bonus_category = Some(pickup.category.clone());
         session.offered_bonuses =
             flow::draw_bonus_offers(&data, &session, &mut random, &BTreeSet::new());
-        session.previous_offers.clear();
-        let offered = session.offered_bonuses.clone();
-        session.previous_offers.extend(offered);
+        session.previous_offers = session
+            .offered_bonuses
+            .iter()
+            .map(|offer| offer.id.clone())
+            .collect();
         session.selected_choice = bonus_screen::BonusChoice::Offer(0);
         sounds.push(SoundCue::Pickup);
         commands.entity(entity).despawn();

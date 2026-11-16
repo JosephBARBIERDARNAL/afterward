@@ -7,11 +7,6 @@ fn a_reroll_replaces_every_offer_and_the_keyboard_picks_the_second() {
     game.defeat_enemies();
     game.take_bonus();
     let first_offers = game.session().offered_bonuses.clone();
-    let category = game
-        .session()
-        .bonus_category
-        .clone()
-        .expect("the item picked up names the category to offer");
     let rerolls = game.session().rerolls;
 
     game.tap(KeyCode::KeyR);
@@ -23,26 +18,16 @@ fn a_reroll_replaces_every_offer_and_the_keyboard_picks_the_second() {
     assert!(
         second_offers
             .iter()
-            .all(|bonus| !first_offers.contains(bonus)),
+            .all(|offer| first_offers.iter().all(|first| first.id != offer.id)),
         "a reroll offers new bonuses only: {first_offers:?} -> {second_offers:?}"
     );
-    let offered_categories = first_offers
-        .iter()
-        .chain(&second_offers)
-        .map(|id| {
-            game.data()
-                .bonuses
-                .bonuses
-                .iter()
-                .find(|bonus| bonus.id == *id)
-                .map(|bonus| bonus.category.clone())
-                .expect("every offer is a bonus of the pool")
-        })
-        .collect::<BTreeSet<_>>();
-    assert_eq!(
-        offered_categories,
-        BTreeSet::from([category]),
-        "every offer comes from the picked-up item's category"
+    assert!(
+        first_offers.iter().chain(&second_offers).all(|offer| game
+            .data()
+            .bonuses
+            .bonus(&offer.id)
+            .is_some_and(|bonus| bonus.rarities.contains_key(&offer.rarity))),
+        "every offer is a bonus of the pool, at one of its rarities"
     );
 
     // Selection waits for the reroll animation, then Down + Enter picks the
@@ -89,7 +74,7 @@ fn the_focused_offer_is_explained_at_the_bottom_right() {
     game.defeat_enemies();
     game.take_bonus();
     // The title of each box, in the order the column stands them: a box
-    // holds one text, whose first span names what it explains.
+    // opens on a text naming what it explains.
     let glossed = |game: &mut HeadlessGame| {
         let world = game.app.world_mut();
         let column = world
@@ -105,11 +90,9 @@ fn the_focused_offer_is_explained_at_the_bottom_right() {
         children(column)
             .into_iter()
             .map(|card| {
-                let text = children(card)[0];
-                let title = children(text)[0];
                 world
-                    .get::<TextSpan>(title)
-                    .expect("a box's text opens on its title")
+                    .get::<Text>(children(card)[0])
+                    .expect("a box opens on its title")
                     .0
                     .trim()
                     .to_owned()
@@ -121,12 +104,10 @@ fn the_focused_offer_is_explained_at_the_bottom_right() {
         let offer = &game.session().offered_bonuses[index];
         let bonus = data
             .bonuses
-            .bonuses
-            .iter()
-            .find(|bonus| bonus.id == *offer)
+            .bonus(&offer.id)
             .expect("every offer is a bonus of the pool");
         data.bonuses
-            .explain(bonus)
+            .explain(&bonus.describe(offer.rarity), &bonus.id)
             .into_iter()
             .take(4)
             .map(|explanation| match explanation {
@@ -178,8 +159,8 @@ fn the_build_window_lists_the_run_and_closes_with_its_key_or_escape() {
         .bonuses
         .bonuses
         .iter()
-        .map(|bonus| bonus.id.clone())
-        .filter(|id| !game.session().has_bonus(id))
+        .filter(|bonus| !game.session().has_bonus(&bonus.id))
+        .filter_map(|bonus| Some(BonusPick::new(&bonus.id, *bonus.rarities.keys().next()?)))
         .take(2)
         .collect::<Vec<_>>();
     game.app

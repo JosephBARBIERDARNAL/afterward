@@ -35,9 +35,12 @@ fn a_bonus_at_work_is_seen_over_the_enemies_it_concerns_and_in_the_tray() {
     game.app
         .world_mut()
         .resource_mut::<RunSession>()
-        .owned_bonuses = ["aftershock", "marked_prey", "opportunist", "room_ward"]
-        .map(String::from)
-        .to_vec();
+        .owned_bonuses = vec![
+        BonusPick::new("aftershock", BonusRarity::Rare),
+        BonusPick::new("marked_prey", BonusRarity::Uncommon),
+        BonusPick::new("opportunist", BonusRarity::Common),
+        BonusPick::new("room_ward", BonusRarity::Epic),
+    ];
     game.run_seconds(0.1);
     let overheads = |game: &mut HeadlessGame, kind: OverheadKind| {
         game.app

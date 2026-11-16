@@ -4,7 +4,7 @@
 //! a glow for Adrenaline), and with Deep Breath the window to chain the next
 //! blow, as a bar under the feet emptying.
 
-use super::{afterimages::category_color, *};
+use super::*;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum AuraKind {
@@ -43,7 +43,7 @@ pub(crate) fn wear_the_aura(
     };
     let adrenaline = session.has_bonus("adrenaline")
         && session.health / session.max_health
-            < data.bonus_effect("adrenaline", "low_health_fraction");
+            < session.bonus_effect(&data, "adrenaline", "low_health_fraction");
     // The state that matters most for the next blow wins.
     let wanted = if player.empowered.is_some() {
         Some((
@@ -51,7 +51,10 @@ pub(crate) fn wear_the_aura(
             Color::from(data.gameplay.effects.tells.boosted_color),
         ))
     } else if player.chain_reaction_timer > 0.0 && session.has_bonus("chain_reaction") {
-        Some((AuraKind::ChainReaction, category_color(&data, "combat")))
+        Some((
+            AuraKind::ChainReaction,
+            Color::from(data.gameplay.effects.tells.power_color),
+        ))
     } else if adrenaline {
         Some((AuraKind::Adrenaline, Color::srgb(0.9, 0.16, 0.22)))
     } else {
@@ -129,7 +132,10 @@ pub(crate) fn show_the_combo_window(
     let Ok((mut bar_transform, mut sprite, mut visibility)) = bars.single_mut() else {
         if open {
             commands.spawn((
-                Sprite::from_color(category_color(&data, "intelligence"), Vec2::ZERO),
+                Sprite::from_color(
+                    Color::from(data.gameplay.effects.tells.insight_color),
+                    Vec2::ZERO,
+                ),
                 Transform::default(),
                 Visibility::Hidden,
                 ComboWindowBar,

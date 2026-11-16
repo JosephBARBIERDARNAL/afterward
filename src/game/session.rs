@@ -50,6 +50,23 @@ pub(crate) struct Playtest {
     pub(crate) starting_bonuses: usize,
 }
 
+/// A bonus at the rarity it was drawn at: one offered on the bonus screen,
+/// or one the run owns.
+#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
+pub(crate) struct BonusPick {
+    pub(crate) id: String,
+    pub(crate) rarity: BonusRarity,
+}
+
+impl BonusPick {
+    pub(crate) fn new(id: &str, rarity: BonusRarity) -> Self {
+        Self {
+            id: id.to_owned(),
+            rarity,
+        }
+    }
+}
+
 #[derive(Resource, Debug)]
 pub(crate) struct RunSession {
     pub(crate) room_id: u16,
@@ -60,11 +77,8 @@ pub(crate) struct RunSession {
     pub(crate) health: f32,
     pub(crate) max_health: f32,
     pub(crate) rerolls: u8,
-    pub(crate) owned_bonuses: Vec<String>,
-    /// The category of the bonus item picked up in this room, which the offers
-    /// and the rerolls are drawn from.
-    pub(crate) bonus_category: Option<String>,
-    pub(crate) offered_bonuses: Vec<String>,
+    pub(crate) owned_bonuses: Vec<BonusPick>,
+    pub(crate) offered_bonuses: Vec<BonusPick>,
     pub(crate) previous_offers: BTreeSet<String>,
     pub(crate) selected_choice: bonus_screen::BonusChoice,
     pub(crate) bonus_reroll_animation_remaining_s: f32,
@@ -81,9 +95,6 @@ pub(crate) struct RunSession {
     /// The room was cleared untouched: its bonus is drawn leaning toward
     /// the rarer ones, and its item says so.
     pub(crate) flawless: bool,
-    /// The category the next room's bonus item will be of, drawn as this
-    /// room's door unlocks so the door can wear its colour.
-    pub(crate) next_bonus_category: Option<String>,
     /// Every enemy is down, so the room's bonus item may be laid out.
     pub(crate) room_cleared: bool,
     pub(crate) door_open: bool,
@@ -99,32 +110,66 @@ pub(crate) struct RunSession {
 
 impl RunSession {
     pub(crate) fn has_bonus(&self, id: &str) -> bool {
-        self.owned_bonuses.iter().any(|owned| owned == id)
+        self.owned_bonuses.iter().any(|owned| owned.id == id)
+    }
+
+    /// The owned bonuses, each with the rarity it was taken at.
+    pub(crate) fn owned<'a>(
+        &'a self,
+        data: &'a GameData,
+    ) -> impl Iterator<Item = (&'a BonusConfig, BonusRarity)> + 'a {
+        self.owned_bonuses
+            .iter()
+            .filter_map(|owned| Some((data.bonuses.bonus(&owned.id)?, owned.rarity)))
+    }
+
+    /// An effect of an owned bonus, at the rarity it was taken at, or 0
+    /// without the bonus.
+    pub(crate) fn bonus_effect(&self, data: &GameData, id: &str, effect: &str) -> f32 {
+        self.owned(data)
+            .find(|(bonus, _)| bonus.id == id)
+            .and_then(|(bonus, rarity)| bonus.effect(rarity, effect))
+            .unwrap_or_default()
+    }
+
+    /// An owned bonus's multiplier effect, or 1 without the bonus.
+    pub(crate) fn bonus_multiplier(&self, data: &GameData, id: &str, effect: &str) -> f32 {
+        if self.has_bonus(id) {
+            self.bonus_effect(data, id, effect)
+        } else {
+            1.0
+        }
     }
 
     /// Whether a bonus may still be offered: not one already owned, and not
     /// one that builds on bonuses the run has yet to take.
-    pub(crate) fn may_be_offered(&self, bonus: &crate::data::BonusConfig) -> bool {
+    pub(crate) fn may_be_offered(&self, bonus: &BonusConfig) -> bool {
         !self.has_bonus(&bonus.id) && bonus.requires.iter().all(|id| self.has_bonus(id))
     }
 
-    /// The categories that can still offer a choice of two.
-    pub(crate) fn categories_on_offer<'a>(
-        &self,
-        data: &'a GameData,
-    ) -> Vec<(&'a String, &'a crate::data::BonusCategoryConfig)> {
+    /// Whether the pool can still offer a choice of two. A run is longer
+    /// than the bonuses are many: once it cannot, a cleared room lays no
+    /// bonus and its door simply opens.
+    pub(crate) fn has_offers(&self, data: &GameData) -> bool {
         data.bonuses
-            .categories
+            .bonuses
             .iter()
-            .filter(|(name, _)| {
-                data.bonuses
-                    .bonuses
-                    .iter()
-                    .filter(|bonus| bonus.category == **name && self.may_be_offered(bonus))
-                    .count()
-                    >= 2
-            })
-            .collect()
+            .filter(|bonus| self.may_be_offered(bonus))
+            .count()
+            >= 2
+    }
+
+    /// Takes a bonus at the rarity it was drawn at, and pays out what it
+    /// gives once, the moment it is taken.
+    pub(crate) fn take(&mut self, data: &GameData, pick: BonusPick) {
+        self.owned_bonuses.push(pick.clone());
+        let Some(bonus) = data.bonuses.bonus(&pick.id) else {
+            return;
+        };
+        let effect = |key| bonus.effect(pick.rarity, key).unwrap_or_default();
+        self.max_health += effect("max_health_increase");
+        self.rerolls = self.rerolls.saturating_add(effect("extra_rerolls") as u8);
+        self.health = (self.health + effect("restore_health")).min(self.max_health);
     }
 
     /// Whether the room being played has anyone to fight. One that does not
@@ -141,54 +186,42 @@ impl RunSession {
         self.room_cleared && self.has_enemies(data)
     }
 
-    /// How many owned bonuses a keystone counts: those of its own category
-    /// for one with `per_bonus_in_category`, those that build on others for
-    /// one with `per_combo`, and none for any other bonus.
-    fn counted_by(&self, data: &GameData, keystone: &crate::data::BonusConfig) -> usize {
-        let counts = |owned: &crate::data::BonusConfig| {
-            if keystone.effects.contains_key("per_bonus_in_category") {
-                owned.category == keystone.category
-            } else {
-                keystone.effects.contains_key("per_combo") && !owned.requires.is_empty()
-            }
-        };
-        data.bonuses
-            .bonuses
-            .iter()
-            .filter(|owned| self.has_bonus(&owned.id) && counts(owned))
+    /// How many owned bonuses a keystone counts: every one of them (itself
+    /// included) for one with `per_bonus_owned`, those that build on others
+    /// for one with `per_combo`, and none for any other bonus.
+    fn counted_by(&self, data: &GameData, keystone: &BonusConfig) -> usize {
+        if keystone.has_effect("per_bonus_owned") {
+            return self.owned_bonuses.len();
+        }
+        if !keystone.has_effect("per_combo") {
+            return 0;
+        }
+        self.owned(data)
+            .filter(|(owned, _)| !owned.requires.is_empty())
             .count()
     }
 
-    /// What an owned keystone adds: its `per_bonus_in_category` or its
-    /// `per_combo` for every owned bonus it counts (itself included when it
-    /// counts its own category), or 0 without it.
+    /// What an owned keystone adds: its `per_bonus_owned` or its `per_combo`
+    /// for every owned bonus it counts, or 0 without it.
     pub(crate) fn keystone(&self, data: &GameData, id: &str) -> f32 {
         data.bonuses
-            .bonuses
-            .iter()
-            .find(|bonus| bonus.id == id && self.has_bonus(id))
+            .bonus(id)
+            .filter(|_| self.has_bonus(id))
             .map_or(0.0, |keystone| {
-                (data.bonus_effect(id, "per_bonus_in_category")
-                    + data.bonus_effect(id, "per_combo"))
+                (self.bonus_effect(data, id, "per_bonus_owned")
+                    + self.bonus_effect(data, id, "per_combo"))
                     * self.counted_by(data, keystone) as f32
             })
     }
 
     /// What a bonus works with in the build already owned, in words, or
     /// nothing when it stands alone: the bonuses it builds on, the owned ones
-    /// it lists (or that list it) as `synergies`, or the owned bonuses a
-    /// keystone counts. Such a bonus weighs heavier in the draw, and the bonus
-    /// screen says why.
-    pub(crate) fn synergy(
-        &self,
-        data: &GameData,
-        bonus: &crate::data::BonusConfig,
-    ) -> Option<String> {
-        let owned = data
-            .bonuses
-            .bonuses
-            .iter()
-            .filter(|owned| self.has_bonus(&owned.id));
+    /// it lists (or that list it) as `synergies`, or the combos Harmony
+    /// counts. Such a bonus weighs heavier in the draw, and the bonus screen
+    /// says why. A keystone counting every bonus owned works with any build,
+    /// so it is not singled out.
+    pub(crate) fn synergy(&self, data: &GameData, bonus: &BonusConfig) -> Option<String> {
+        let owned = self.owned(data).map(|(owned, _)| owned);
         if !bonus.requires.is_empty() {
             let parts = owned
                 .filter(|owned| bonus.requires.contains(&owned.id))
@@ -205,17 +238,18 @@ impl RunSession {
         if !partners.is_empty() {
             return Some(format!("SYNERGY: {}", partners.join(", ")));
         }
+        if !bonus.has_effect("per_combo") {
+            return None;
+        }
         match self.counted_by(data, bonus) {
             0 => None,
-            count if bonus.effects.contains_key("per_combo") => {
-                Some(format!("SYNERGY: {count} combos owned"))
-            }
-            count => Some(format!("SYNERGY: {count} {} owned", bonus.category)),
+            count => Some(format!("SYNERGY: {count} combos owned")),
         }
     }
 
     /// Pays out what a playtest (or `--bonuses`) asked the run to open with,
-    /// each as if chosen, and opens it whole.
+    /// each at one of its rarities drawn at random and as if chosen, and
+    /// opens it whole.
     pub(crate) fn grant_starting_bonuses(&mut self, data: &GameData, random: &mut RandomState) {
         let mut pool = data
             .bonuses
@@ -226,25 +260,11 @@ impl RunSession {
         let granted = self.playtest.starting_bonuses.min(pool.len());
         for _ in 0..granted {
             let bonus = pool.swap_remove(random.index(pool.len()));
-            self.owned_bonuses.push(bonus.id.clone());
-            if let Some(increase) = bonus
-                .effects
-                .get("max_health_increase")
-                .and_then(yaml_serde::Value::as_f64)
-            {
-                self.max_health += increase as f32;
-            }
+            let rarities = bonus.rarities.keys().copied().collect::<Vec<_>>();
+            let rarity = rarities[random.index(rarities.len())];
+            self.take(data, BonusPick::new(&bonus.id, rarity));
         }
         self.health = self.max_health;
-    }
-
-    /// An owned bonus's multiplier effect, or 1 without the bonus.
-    pub(crate) fn bonus_multiplier(&self, data: &GameData, id: &str, effect: &str) -> f32 {
-        if self.has_bonus(id) {
-            data.bonus_effect(id, effect)
-        } else {
-            1.0
-        }
     }
 }
 
@@ -258,7 +278,6 @@ impl Default for RunSession {
             max_health: 100.0,
             rerolls: 3,
             owned_bonuses: Vec::new(),
-            bonus_category: None,
             offered_bonuses: Vec::new(),
             previous_offers: BTreeSet::new(),
             selected_choice: bonus_screen::BonusChoice::Offer(0),
@@ -268,7 +287,6 @@ impl Default for RunSession {
             wave_wait_s: 0.0,
             untouched: true,
             flawless: false,
-            next_bonus_category: None,
             room_cleared: false,
             door_open: false,
             room_ward_used: false,
@@ -289,32 +307,34 @@ mod tests {
     fn keystones_count_the_build_and_the_screen_says_what_a_bonus_works_with() {
         let data = GameData::load(&Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets"))
             .expect("the game data should be valid");
-        let bonus = |id: &str| {
-            data.bonuses
-                .bonuses
-                .iter()
-                .find(|bonus| bonus.id == id)
-                .expect("the bonus is in the pool")
-        };
+        let bonus = |id: &str| data.bonuses.bonus(id).expect("the bonus is in the pool");
         let session = RunSession {
-            owned_bonuses: [
-                "heavy_hands",
-                "finisher",
-                "arsenal",
-                "marked_prey",
-                "aftershock",
-            ]
-            .map(String::from)
-            .to_vec(),
+            owned_bonuses: vec![
+                BonusPick::new("heavy_hands", BonusRarity::Common),
+                BonusPick::new("finisher", BonusRarity::Uncommon),
+                BonusPick::new("arsenal", BonusRarity::Legendary),
+                BonusPick::new("marked_prey", BonusRarity::Uncommon),
+                BonusPick::new("aftershock", BonusRarity::Rare),
+            ],
             ..default()
         };
-        // Arsenal counts the three combat bonuses owned, itself included.
-        let per_bonus = data.bonus_effect("arsenal", "per_bonus_in_category");
-        assert!((session.keystone(&data, "arsenal") - 3.0 * per_bonus).abs() < 1e-6);
+        // Arsenal counts the five bonuses owned, itself included, at the
+        // rarity it was taken at.
+        let per_bonus = bonus("arsenal")
+            .effect(BonusRarity::Legendary, "per_bonus_owned")
+            .expect("a legendary Arsenal");
+        assert!((session.keystone(&data, "arsenal") - 5.0 * per_bonus).abs() < 1e-6);
         assert_eq!(
             session.keystone(&data, "fortress"),
             0.0,
             "an unowned keystone adds nothing"
+        );
+        assert_eq!(
+            session.bonus_effect(&data, "aftershock", "dash_shock_damage"),
+            bonus("aftershock")
+                .effect(BonusRarity::Rare, "dash_shock_damage")
+                .expect("a rare Aftershock"),
+            "an owned bonus works at the rarity it was taken at"
         );
 
         assert_eq!(
@@ -329,16 +349,7 @@ mod tests {
         assert_eq!(
             session.synergy(&data, bonus("fortress")),
             None,
-            "a keystone with nothing of its category owned stands alone"
-        );
-        assert_eq!(
-            RunSession {
-                owned_bonuses: vec!["fleet_feet".to_owned()],
-                ..default()
-            }
-            .synergy(&data, bonus("tailwind"))
-            .as_deref(),
-            Some("SYNERGY: 1 agility owned")
+            "a keystone counting every bonus works with any build"
         );
     }
 }

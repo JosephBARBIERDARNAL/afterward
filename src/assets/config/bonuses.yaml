@@ -1,27 +1,8 @@
-# Each category paints the bonus screen and the glow of the item the player
-# picks up once a room is cleared; the three bonuses offered then come from
-# that item's category.
-categories:
-  combat:
-    color: "#D74444"
-    icon: crossed_swords
-  defense:
-    color: "#4F8FD6"
-    icon: shield
-  agility:
-    color: "#58AD68"
-    icon: wing
-  intelligence:
-    color: "#E6D772"
-    icon: light
-  combined:
-    color: "#E8843F"
-    icon: knot
-
-# A bonus wears its rarity's colour, and nothing else's: white for common,
-# green for uncommon, blue for rare, purple for epic and orange for legendary.
-# The weight is how heavily a bonus of that rarity weighs in the draw against
-# the others still on offer, so commons come up often and legendaries rarely.
+# A bonus is drawn at one of its rarities, and wears that rarity's colour:
+# white for common, green for uncommon, blue for rare, purple for epic and
+# orange for legendary. Each version of a bonus at one rarity counts in the
+# draw at that rarity's weight, against every version of every other bonus
+# still on offer, so commons come up often and legendaries rarely.
 rarities:
   common: { color: "#E4E4EE", weight: 40 }
   uncommon: { color: "#58AD68", weight: 25 }
@@ -36,8 +17,7 @@ rarities:
 #   all owned);
 # - `synergies`: bonuses it works well with without needing them, either way
 #   round (listing one on either side is enough);
-# - a keystone's own count: `per_bonus_in_category` grows with every owned
-#   bonus of its category, `per_combo` with every owned combo.
+# - Harmony's own count: `per_combo` grows with every owned combo.
 synergy: { color: "#F2C14E", weight_multiplier: 3 }
 
 # The words bonus descriptions lean on, each explained in a box at the bottom
@@ -90,9 +70,20 @@ glossary:
     definition: A bonus that is what two others do together, offered only once you own both.
 
 # Every bonus here is read by the game: one that nothing reads is taken out
-# rather than left to thin the draw. Rarity follows what a bonus does: a plain
-# number is common, one with a condition uncommon, one that changes what a
-# move does rare, and the few a run is built around epic or legendary.
+# rather than left to thin the draw.
+#
+# `rarities` lists the versions a bonus is drawn at, each with the effects it
+# has on top of (or in place of) the shared `effects`: the rarer version of a
+# bonus does more of the same. Where a bigger number would mean nothing (a
+# move added, a once-a-room shield) the bonus comes at one rarity only. The
+# rarest a bonus starts at follows what it does: a plain number is common, one
+# with a condition uncommon, one that changes what a move does rare, and the
+# few a run is built around epic or legendary.
+#
+# `description` writes the version's numbers in: `{effect}` as it is,
+# `{effect:%}` as a share (0.04 is 4%), `{effect:+%}` as what a multiplier
+# adds (1.2 is 20%), `{effect:-%}` as what it takes away (0.9 is 10%). Another
+# bonus named in a description is written in bold.
 #
 # Fire Kick, Power Strike and Explosive Strike are the rival heavy finishers:
 # each is a step of `player.melee.heavy` in `config/gameplay.yaml` that only a
@@ -101,368 +92,441 @@ glossary:
 bonuses:
   - id: heavy_hands
     name: Heavy Hands
-    description: Increase strike damage by 20%.
-    category: combat
-    rarity: common
-    effects: { strike_damage_multiplier: 1.2 }
+    description: Increase strike damage by {strike_damage_multiplier:+%}.
+    rarities:
+      common: { strike_damage_multiplier: 1.2 }
+      uncommon: { strike_damage_multiplier: 1.24 }
+      rare: { strike_damage_multiplier: 1.28 }
+      epic: { strike_damage_multiplier: 1.32 }
+      legendary: { strike_damage_multiplier: 1.4 }
   - id: finisher
     name: Finisher
-    description: The chain's last blow deals 50% more damage.
-    category: combat
-    rarity: uncommon
-    effects: { finisher_damage_multiplier: 1.5 }
+    description: The chain's last blow deals {finisher_damage_multiplier:+%} more damage.
+    rarities:
+      uncommon: { finisher_damage_multiplier: 1.5 }
+      rare: { finisher_damage_multiplier: 1.6 }
+      epic: { finisher_damage_multiplier: 1.7 }
+      legendary: { finisher_damage_multiplier: 1.9 }
   - id: quick_hands
     name: Quick Hands
-    description: The chain throws its blows 15% faster.
-    category: combat
-    rarity: common
-    effects: { combo_speed_multiplier: 1.15 }
+    description: The chain throws its blows {combo_speed_multiplier:+%} faster.
+    rarities:
+      common: { combo_speed_multiplier: 1.15 }
+      uncommon: { combo_speed_multiplier: 1.18 }
+      rare: { combo_speed_multiplier: 1.21 }
+      epic: { combo_speed_multiplier: 1.24 }
+      legendary: { combo_speed_multiplier: 1.3 }
   - id: long_reach
     name: Long Reach
-    description: Blows reach 25% further.
-    category: combat
-    rarity: uncommon
-    effects: { strike_reach_multiplier: 1.25 }
+    description: Blows reach {strike_reach_multiplier:+%} further.
+    rarities:
+      uncommon: { strike_reach_multiplier: 1.25 }
+      rare: { strike_reach_multiplier: 1.3 }
+      epic: { strike_reach_multiplier: 1.35 }
+      legendary: { strike_reach_multiplier: 1.45 }
   - id: fire_kick
     name: Fire Kick
     description: The heavy blow after two of the chain becomes a blazing kick, dealing 62 damage.
-    category: combat
-    rarity: epic
     effects: { adds_combo_step: 1 }
+    rarities: { epic: {} }
   - id: power_strike
     name: Power Strike
     description: The heavy blow after two of the chain becomes a crushing strike, dealing 55 damage.
-    category: combat
-    rarity: rare
     effects: { adds_combo_step: 1 }
+    rarities: { rare: {} }
   - id: explosive_strike
     name: Explosive Strike
     description: The heavy blow after two of the chain becomes a blast that hits every side at once, dealing 45 damage.
-    category: combat
-    rarity: epic
     effects: { adds_combo_step: 1 }
+    rarities: { epic: {} }
   - id: thick_skin
     name: Thick Skin
-    description: Reduce damage taken by 10%.
-    category: defense
-    rarity: common
-    effects: { damage_taken_multiplier: 0.9 }
+    description: Reduce damage taken by {damage_taken_multiplier:-%}.
+    rarities:
+      common: { damage_taken_multiplier: 0.9 }
+      uncommon: { damage_taken_multiplier: 0.88 }
+      rare: { damage_taken_multiplier: 0.86 }
+      epic: { damage_taken_multiplier: 0.84 }
+      legendary: { damage_taken_multiplier: 0.8 }
   - id: room_ward
     name: Room Ward
     description: Negate the first damage event in each room.
-    category: defense
-    rarity: epic
-    effects: { negate_first_damage_each_room: true }
+    effects: { negate_first_damage_each_room: 1 }
+    rarities: { epic: {} }
   - id: vitality
     name: Vitality
-    description: Increase maximum health by 15 and restore 15 health.
-    category: defense
-    rarity: uncommon
-    effects: { max_health_increase: 15, restore_health: 15 }
+    description: Increase maximum health by {max_health_increase} and restore {restore_health} health.
+    rarities:
+      uncommon: { max_health_increase: 15, restore_health: 15 }
+      rare: { max_health_increase: 18, restore_health: 18 }
+      epic: { max_health_increase: 21, restore_health: 21 }
+      legendary: { max_health_increase: 25, restore_health: 25 }
   - id: scavenger
     name: Scavenger
-    description: Increase health pickup drop chance by 25%.
-    category: defense
-    rarity: common
-    effects: { health_drop_chance_multiplier: 1.25 }
+    description: Increase health pickup drop chance by {health_drop_chance_multiplier:+%}.
+    rarities:
+      common: { health_drop_chance_multiplier: 1.25 }
+      uncommon: { health_drop_chance_multiplier: 1.3 }
+      rare: { health_drop_chance_multiplier: 1.35 }
+      epic: { health_drop_chance_multiplier: 1.4 }
+      legendary: { health_drop_chance_multiplier: 1.5 }
   - id: fleet_feet
     name: Fleet Feet
-    description: Increase movement speed by 10%.
-    category: agility
-    rarity: common
-    effects: { movement_speed_multiplier: 1.1 }
+    description: Increase movement speed by {movement_speed_multiplier:+%}.
+    rarities:
+      common: { movement_speed_multiplier: 1.1 }
+      uncommon: { movement_speed_multiplier: 1.12 }
+      rare: { movement_speed_multiplier: 1.14 }
+      epic: { movement_speed_multiplier: 1.16 }
+      legendary: { movement_speed_multiplier: 1.2 }
   - id: high_jump
     name: High Jump
-    description: Increase jump height by 15%.
-    category: agility
-    rarity: common
-    effects: { jump_height_multiplier: 1.15 }
+    description: Increase jump height by {jump_height_multiplier:+%}.
+    rarities:
+      common: { jump_height_multiplier: 1.15 }
+      uncommon: { jump_height_multiplier: 1.18 }
+      rare: { jump_height_multiplier: 1.21 }
+      epic: { jump_height_multiplier: 1.24 }
+      legendary: { jump_height_multiplier: 1.3 }
+  # Kick Off makes the mid-air jump whole, so even the legendary Double Jump
+  # stays short of it.
   - id: double_jump
     name: Double Jump
-    description: Gain one additional mid-air jump at 80% of normal jump impulse.
-    category: agility
-    rarity: epic
-    effects: { extra_midair_jumps: 1, extra_jump_impulse_factor: 0.8 }
+    description: Gain one additional mid-air jump at {extra_jump_impulse_factor:%} of normal jump impulse.
+    effects: { extra_midair_jumps: 1 }
+    rarities:
+      epic: { extra_jump_impulse_factor: 0.8 }
+      legendary: { extra_jump_impulse_factor: 0.9 }
   - id: marked_prey
     name: Marked Prey
-    description: A blow marks an enemy for 2 seconds; further blows on it deal 15% more damage.
-    category: intelligence
-    rarity: uncommon
-    effects: { mark_duration_s: 2, marked_strike_damage_multiplier: 1.15 }
+    description: A blow marks an enemy for {mark_duration_s} seconds; further blows on it deal {marked_strike_damage_multiplier:+%} more damage.
+    rarities:
+      uncommon: { mark_duration_s: 2, marked_strike_damage_multiplier: 1.15 }
+      rare: { mark_duration_s: 2.5, marked_strike_damage_multiplier: 1.18 }
+      epic: { mark_duration_s: 3, marked_strike_damage_multiplier: 1.21 }
+      legendary: { mark_duration_s: 3.5, marked_strike_damage_multiplier: 1.25 }
   - id: rhythm_training
     name: Rhythm Training
-    description: Blows landing within 1.5 seconds of each other speed the chain by 4%, up to 16%.
-    category: intelligence
-    rarity: uncommon
-    effects:
-      { hit_window_s: 1.5, combo_speed_step: 0.04, combo_speed_max_bonus: 0.16 }
+    description: Blows landing within {hit_window_s} seconds of each other speed the chain by {combo_speed_step:%}, up to {combo_speed_max_bonus:%}.
+    effects: { hit_window_s: 1.5 }
+    rarities:
+      uncommon: { combo_speed_step: 0.04, combo_speed_max_bonus: 0.16 }
+      rare: { combo_speed_step: 0.05, combo_speed_max_bonus: 0.2 }
+      epic: { combo_speed_step: 0.06, combo_speed_max_bonus: 0.24 }
+      legendary: { combo_speed_step: 0.07, combo_speed_max_bonus: 0.28 }
   - id: chain_reaction
     name: Chain Reaction
-    description: Killing an enemy increases damage by 15% for 2 seconds.
-    category: intelligence
-    rarity: rare
-    effects: { kill_damage_bonus: 0.15, kill_damage_duration_s: 2 }
+    description: Killing an enemy increases damage by {kill_damage_bonus:%} for {kill_damage_duration_s} seconds.
+    rarities:
+      rare: { kill_damage_bonus: 0.15, kill_damage_duration_s: 2 }
+      epic: { kill_damage_bonus: 0.2, kill_damage_duration_s: 2.5 }
+      legendary: { kill_damage_bonus: 0.25, kill_damage_duration_s: 3 }
   - id: deep_breath
     name: Deep Breath
-    description: The window to chain the next blow lasts 30% longer.
-    category: intelligence
-    rarity: common
-    effects: { combo_window_multiplier: 1.3 }
+    description: The window to chain the next blow lasts {combo_window_multiplier:+%} longer.
+    rarities:
+      common: { combo_window_multiplier: 1.3 }
+      uncommon: { combo_window_multiplier: 1.36 }
+      rare: { combo_window_multiplier: 1.42 }
+      epic: { combo_window_multiplier: 1.48 }
+      legendary: { combo_window_multiplier: 1.6 }
   - id: lifesteal
     name: Lifesteal
-    description: Landing a blow restores 1 health, up to 5 health per room.
-    category: combined
-    rarity: legendary
+    description: Landing a blow restores {strike_hit_healing} health, up to {room_healing_cap} health per room.
     effects: { strike_hit_healing: 1, room_healing_cap: 5 }
+    rarities: { legendary: {} }
   - id: aerial_assault
     name: Aerial Assault
-    description: Deal 20% more strike damage while airborne.
-    category: combined
-    rarity: uncommon
-    effects: { airborne_strike_damage_multiplier: 1.2 }
+    description: Deal {airborne_strike_damage_multiplier:+%} more strike damage while airborne.
+    rarities:
+      uncommon: { airborne_strike_damage_multiplier: 1.2 }
+      rare: { airborne_strike_damage_multiplier: 1.24 }
+      epic: { airborne_strike_damage_multiplier: 1.28 }
+      legendary: { airborne_strike_damage_multiplier: 1.35 }
   - id: sated_fury
     name: Sated Fury
-    description: Healing pickups speed the chain by 15% for 3 seconds.
-    category: combined
-    rarity: common
-    effects:
-      {
-        healing_pickup_combo_speed_multiplier: 1.15,
-        healing_pickup_combo_speed_duration_s: 3,
-      }
-
+    description: Healing pickups speed the chain by {healing_pickup_combo_speed_multiplier:+%} for {healing_pickup_combo_speed_duration_s} seconds.
+    rarities:
+      common:
+        {
+          healing_pickup_combo_speed_multiplier: 1.15,
+          healing_pickup_combo_speed_duration_s: 3,
+        }
+      uncommon:
+        {
+          healing_pickup_combo_speed_multiplier: 1.18,
+          healing_pickup_combo_speed_duration_s: 3.5,
+        }
+      rare:
+        {
+          healing_pickup_combo_speed_multiplier: 1.21,
+          healing_pickup_combo_speed_duration_s: 4,
+        }
+      epic:
+        {
+          healing_pickup_combo_speed_multiplier: 1.24,
+          healing_pickup_combo_speed_duration_s: 4.5,
+        }
+      legendary:
+        {
+          healing_pickup_combo_speed_multiplier: 1.3,
+          healing_pickup_combo_speed_duration_s: 5,
+        }
   - id: shield_breaker
     name: Shield Breaker
     description: A blow that breaks a shield still wounds the enemy behind it.
-    category: combat
-    rarity: rare
     effects: { shield_pierce: 1 }
+    rarities: { rare: {} }
   - id: executioner
     name: Executioner
-    description: Deal 30% more damage to enemies below 30% health.
-    category: combat
-    rarity: uncommon
-    effects: { execute_health_fraction: 0.3, execute_damage_multiplier: 1.3 }
+    description: Deal {execute_damage_multiplier:+%} more damage to enemies below {execute_health_fraction:%} health.
+    effects: { execute_health_fraction: 0.3 }
+    rarities:
+      uncommon: { execute_damage_multiplier: 1.3 }
+      rare: { execute_damage_multiplier: 1.36 }
+      epic: { execute_damage_multiplier: 1.42 }
+      legendary: { execute_damage_multiplier: 1.5 }
   - id: air_step
     name: Air Step
     description: Dash once more in mid-air before landing.
-    category: agility
-    rarity: uncommon
     synergies: [aftershock, double_jump]
     effects: { extra_air_dashes: 1 }
+    rarities: { uncommon: {} }
   - id: steadfast
     name: Steadfast
-    description: Increase maximum health by 10.
-    category: defense
-    rarity: common
-    effects: { max_health_increase: 10 }
+    description: Increase maximum health by {max_health_increase}.
+    rarities:
+      common: { max_health_increase: 10 }
+      uncommon: { max_health_increase: 12 }
+      rare: { max_health_increase: 14 }
+      epic: { max_health_increase: 16 }
+      legendary: { max_health_increase: 20 }
   - id: field_dressing
     name: Field Dressing
-    description: Health pickups restore 50% more.
-    category: defense
-    rarity: common
-    effects: { health_pickup_multiplier: 1.5 }
+    description: Health pickups restore {health_pickup_multiplier:+%} more.
+    rarities:
+      common: { health_pickup_multiplier: 1.5 }
+      uncommon: { health_pickup_multiplier: 1.6 }
+      rare: { health_pickup_multiplier: 1.7 }
+      epic: { health_pickup_multiplier: 1.8 }
+      legendary: { health_pickup_multiplier: 2 }
   - id: adrenaline
     name: Adrenaline
-    description: Below 30% health, reduce damage taken by 20%.
-    category: defense
-    rarity: uncommon
-    effects:
-      { low_health_fraction: 0.3, low_health_damage_taken_multiplier: 0.8 }
+    description: Below {low_health_fraction:%} health, reduce damage taken by {low_health_damage_taken_multiplier:-%}.
+    effects: { low_health_fraction: 0.3 }
+    rarities:
+      uncommon: { low_health_damage_taken_multiplier: 0.8 }
+      rare: { low_health_damage_taken_multiplier: 0.76 }
+      epic: { low_health_damage_taken_multiplier: 0.72 }
+      legendary: { low_health_damage_taken_multiplier: 0.65 }
   - id: deflector
     name: Deflector
     description: Negate the first projectile that would hit you in each room.
-    category: defense
-    rarity: rare
     effects: { negate_first_projectile_each_room: 1 }
+    rarities: { rare: {} }
   - id: recovery
     name: Recovery
-    description: Restore 1 health per second while no enemy is engaged.
-    category: defense
-    rarity: epic
-    effects: { idle_regeneration_per_s: 1 }
+    description: Restore {idle_regeneration_per_s} health per second while no enemy is engaged.
+    rarities:
+      epic: { idle_regeneration_per_s: 1 }
+      legendary: { idle_regeneration_per_s: 1.5 }
   - id: last_stand
     name: Last Stand
     description: Once per run, survive an otherwise fatal hit at 1 health.
-    category: defense
-    rarity: legendary
     effects: { survive_fatal_hits: 1 }
+    rarities: { legendary: {} }
   - id: kick_off
     name: Kick Off
     description: A mid-air jump is as strong as one from the ground.
-    category: agility
-    rarity: rare
     requires: [double_jump]
     effects: { extra_jump_impulse_factor: 1 }
+    rarities: { rare: {} }
   - id: decoy
     name: Decoy
-    description: Dashing leaves a double of you behind for enemies to swing at.
-    category: agility
-    rarity: rare
-    effects: { decoy_health: 30 }
+    description: Dashing leaves a double of you behind, with {decoy_health} health, for enemies to swing at.
+    rarities:
+      rare: { decoy_health: 30 }
+      epic: { decoy_health: 40 }
+      legendary: { decoy_health: 55 }
   - id: cold_read
     name: Cold Read
-    description: Enemy wind-ups last 10% longer.
-    category: intelligence
-    rarity: common
-    effects: { enemy_windup_multiplier: 1.1 }
+    description: Enemy wind-ups last {enemy_windup_multiplier:+%} longer.
+    rarities:
+      common: { enemy_windup_multiplier: 1.1 }
+      uncommon: { enemy_windup_multiplier: 1.12 }
+      rare: { enemy_windup_multiplier: 1.14 }
+      epic: { enemy_windup_multiplier: 1.16 }
+      legendary: { enemy_windup_multiplier: 1.2 }
   - id: foresight
     name: Foresight
-    description: Gain one extra reroll.
-    category: intelligence
-    rarity: epic
-    effects: { extra_rerolls: 1 }
+    description: Add {extra_rerolls} to your rerolls.
+    rarities:
+      epic: { extra_rerolls: 1 }
+      legendary: { extra_rerolls: 2 }
   - id: opportunist
     name: Opportunist
-    description: Deal 20% more damage to enemies that have not noticed you.
-    category: combined
-    rarity: common
-    effects: { unaware_damage_multiplier: 1.2 }
+    description: Deal {unaware_damage_multiplier:+%} more damage to enemies that have not noticed you.
+    rarities:
+      common: { unaware_damage_multiplier: 1.2 }
+      uncommon: { unaware_damage_multiplier: 1.24 }
+      rare: { unaware_damage_multiplier: 1.28 }
+      epic: { unaware_damage_multiplier: 1.32 }
+      legendary: { unaware_damage_multiplier: 1.4 }
   # Bonuses that change what a move does rather than how hard it hits: the
   # dash, the slam and the heavy blow each have one, and `requires` marks a
   # bonus that is only offered to a run owning the ones it names — what two of
   # them do together.
   - id: aftershock
     name: Aftershock
-    description: A dash ends in a shock that hits everything beside you for 18 damage.
-    category: agility
-    rarity: rare
-    effects: { dash_shock_damage: 18, dash_shock_reach_h: 1.6 }
+    description: A dash ends in a shock that hits everything beside you for {dash_shock_damage} damage.
+    effects: { dash_shock_reach_h: 1.6 }
+    rarities:
+      rare: { dash_shock_damage: 18 }
+      epic: { dash_shock_damage: 22 }
+      legendary: { dash_shock_damage: 27 }
   - id: undertow
     name: Undertow
-    description: The slam drags every enemy within 5 H in to you.
-    category: combat
-    rarity: rare
-    effects: { slam_pull_radius_h: 5, slam_pull_h_s: 10 }
+    description: The slam drags every enemy within {slam_pull_radius_h} H in to you.
+    effects: { slam_pull_h_s: 10 }
+    rarities:
+      rare: { slam_pull_radius_h: 5 }
+      epic: { slam_pull_radius_h: 6 }
+      legendary: { slam_pull_radius_h: 7 }
   - id: battering_ram
     name: Battering Ram
-    description: A heavy blow throws what it hits into whatever stands behind, for 25 damage.
-    category: combat
-    rarity: rare
-    effects:
-      { launch_damage: 25, launch_reach_h: 3, launch_knockback_multiplier: 5.6 }
+    description: A heavy blow throws what it hits into whatever stands behind, for {launch_damage} damage.
+    effects: { launch_reach_h: 3, launch_knockback_multiplier: 5.6 }
+    rarities:
+      rare: { launch_damage: 25 }
+      epic: { launch_damage: 30 }
+      legendary: { launch_damage: 38 }
   - id: riptide
     name: Riptide
     description: "Aftershock and Undertow together: the dash's shock drags enemies in too."
-    category: combined
-    rarity: rare
     requires: [aftershock, undertow]
-    effects: {}
+    rarities: { rare: {} }
   - id: breaker
     name: Breaker
     description: "Undertow and Battering Ram together: the slam goes through shields."
-    category: combined
-    rarity: rare
     requires: [undertow, battering_ram]
-    effects: {}
-  # Keystones: each grows with the bonuses the run already owns, so following
-  # one colour of door from room to room pays more the further it goes.
+    rarities: { rare: {} }
+  # Keystones: each grows with the bonuses the run already owns, so it pays
+  # more the later it is taken.
   - id: arsenal
     name: Arsenal
-    description: Blows deal 4% more damage for every combat bonus you own, this one included.
-    category: combat
-    rarity: epic
-    effects: { per_bonus_in_category: 0.04 }
+    description: Blows deal {per_bonus_owned:%} more damage for every bonus you own, this one included.
+    rarities:
+      epic: { per_bonus_owned: 0.02 }
+      legendary: { per_bonus_owned: 0.025 }
   - id: fortress
     name: Fortress
-    description: Take 3% less damage for every defense bonus you own, this one included, up to 40%.
-    category: defense
-    rarity: epic
-    effects: { per_bonus_in_category: 0.03, max_reduction: 0.4 }
+    description: Take {per_bonus_owned:%} less damage for every bonus you own, this one included, up to {max_reduction:%}.
+    effects: { max_reduction: 0.4 }
+    rarities:
+      epic: { per_bonus_owned: 0.015 }
+      legendary: { per_bonus_owned: 0.02 }
   - id: tailwind
     name: Tailwind
-    description: Move and throw the chain 3% faster for every agility bonus you own, this one included.
-    category: agility
-    rarity: epic
-    effects: { per_bonus_in_category: 0.03 }
+    description: Move and throw the chain {per_bonus_owned:%} faster for every bonus you own, this one included.
+    rarities:
+      epic: { per_bonus_owned: 0.015 }
+      legendary: { per_bonus_owned: 0.02 }
   - id: insight
     name: Insight
-    description: Enemy wind-ups last 5% longer for every intelligence bonus you own, this one included.
-    category: intelligence
-    rarity: epic
+    description: Enemy wind-ups last {per_bonus_owned:%} longer for every bonus you own, this one included.
     synergies: [cold_read]
-    effects: { per_bonus_in_category: 0.05 }
+    rarities:
+      epic: { per_bonus_owned: 0.025 }
+      legendary: { per_bonus_owned: 0.03 }
   - id: harmony
     name: Harmony
-    description: Blows deal 8% more damage for every combo you own.
-    category: combined
-    rarity: legendary
+    description: Blows deal {per_combo:%} more damage for every combo you own.
     effects: { per_combo: 0.08 }
+    rarities: { legendary: {} }
   # Combos: what two bonuses already owned do together.
   - id: open_wound
     name: Open Wound
-    description: "Marked Prey and Executioner together: Executioner strikes a marked enemy below 50% health."
-    category: intelligence
-    rarity: rare
+    description: "Marked Prey and Executioner together: Executioner strikes a marked enemy below {marked_execute_health_fraction:%} health."
     requires: [marked_prey, executioner]
-    effects: { marked_execute_health_fraction: 0.5 }
+    rarities:
+      rare: { marked_execute_health_fraction: 0.5 }
+      epic: { marked_execute_health_fraction: 0.6 }
   - id: hunters_feast
     name: Hunter's Feast
-    description: Killing a marked enemy restores 4 health.
-    category: combined
-    rarity: uncommon
+    description: Killing a marked enemy restores {marked_kill_healing} health.
     requires: [marked_prey]
     synergies: [executioner, lifesteal]
-    effects: { marked_kill_healing: 4 }
+    rarities:
+      uncommon: { marked_kill_healing: 4 }
+      rare: { marked_kill_healing: 5 }
+      epic: { marked_kill_healing: 6 }
+      legendary: { marked_kill_healing: 8 }
   - id: bloodrush
     name: Bloodrush
-    description: While Chain Reaction burns, the chain is thrown 20% faster.
-    category: combat
-    rarity: rare
+    description: While Chain Reaction burns, the chain is thrown {combo_speed_multiplier:+%} faster.
     requires: [chain_reaction]
     synergies: [quick_hands, rhythm_training]
-    effects: { combo_speed_multiplier: 1.2 }
+    rarities:
+      rare: { combo_speed_multiplier: 1.2 }
+      epic: { combo_speed_multiplier: 1.25 }
+      legendary: { combo_speed_multiplier: 1.3 }
   - id: meteor
     name: Meteor
-    description: The slam deals 30% more damage, and Aerial Assault's bonus counts on it.
-    category: combat
-    rarity: rare
+    description: The slam deals {slam_damage_multiplier:+%} more damage, and Aerial Assault's bonus counts on it.
     requires: [aerial_assault]
     synergies: [undertow, breaker]
-    effects: { slam_damage_multiplier: 1.3 }
+    rarities:
+      rare: { slam_damage_multiplier: 1.3 }
+      epic: { slam_damage_multiplier: 1.4 }
+      legendary: { slam_damage_multiplier: 1.5 }
   - id: updraft
     name: Updraft
     description: A blow landed in mid-air gives you back your mid-air jump.
-    category: agility
-    rarity: rare
     requires: [double_jump]
     synergies: [aerial_assault, meteor]
-    effects: {}
+    rarities: { rare: {} }
   - id: bloodlust
     name: Bloodlust
-    description: Lifesteal heals twice as much per blow, up to 15 health per room.
-    category: defense
-    rarity: epic
+    description: Lifesteal heals twice as much per blow, up to {room_healing_cap} health per room.
     requires: [lifesteal]
     synergies: [retaliation]
     effects: { strike_hit_healing_multiplier: 2, room_healing_cap: 15 }
+    rarities: { epic: {} }
   # The empowered blow: two ways to earn one, and everything that lands next
   # (the chain, light or heavy, Aftershock's shock) spends it.
   - id: riposte
     name: Riposte
-    description: Dashing through an enemy's blow makes your next blow deal 50% more damage.
-    category: agility
-    rarity: rare
+    description: Dashing through an enemy's blow makes your next blow deal {empowered_blow_multiplier:+%} more damage.
     synergies: [aftershock, slippery, overcharge]
-    effects: { empowered_blow_multiplier: 1.5 }
+    rarities:
+      rare: { empowered_blow_multiplier: 1.5 }
+      epic: { empowered_blow_multiplier: 1.6 }
+      legendary: { empowered_blow_multiplier: 1.75 }
   - id: retaliation
     name: Retaliation
-    description: Taking damage makes your next blow deal 50% more damage.
-    category: defense
-    rarity: uncommon
+    description: Taking damage makes your next blow deal {empowered_blow_multiplier:+%} more damage.
     synergies: [thick_skin, fortress, adrenaline, overcharge]
-    effects: { empowered_blow_multiplier: 1.5 }
+    rarities:
+      uncommon: { empowered_blow_multiplier: 1.5 }
+      rare: { empowered_blow_multiplier: 1.6 }
+      epic: { empowered_blow_multiplier: 1.7 }
+      legendary: { empowered_blow_multiplier: 1.85 }
   - id: slippery
     name: Slippery
-    description: The dash's untouchable stretch lasts 40% longer.
-    category: agility
-    rarity: common
+    description: The dash's untouchable stretch lasts {dash_invulnerability_multiplier:+%} longer.
     synergies: [aftershock, decoy]
-    effects: { dash_invulnerability_multiplier: 1.4 }
+    rarities:
+      common: { dash_invulnerability_multiplier: 1.4 }
+      uncommon: { dash_invulnerability_multiplier: 1.48 }
+      rare: { dash_invulnerability_multiplier: 1.56 }
+      epic: { dash_invulnerability_multiplier: 1.64 }
+      legendary: { dash_invulnerability_multiplier: 1.8 }
   - id: overcharge
     name: Overcharge
-    description: The heavy blow comes out 30% faster and deals 40% more damage.
-    category: combat
-    rarity: uncommon
+    description: The heavy blow comes out {heavy_speed_multiplier:+%} faster and deals {heavy_damage_multiplier:+%} more damage.
     synergies: [battering_ram, shield_breaker]
-    effects: { heavy_speed_multiplier: 1.3, heavy_damage_multiplier: 1.4 }
+    rarities:
+      uncommon: { heavy_speed_multiplier: 1.3, heavy_damage_multiplier: 1.4 }
+      rare: { heavy_speed_multiplier: 1.35, heavy_damage_multiplier: 1.5 }
+      epic: { heavy_speed_multiplier: 1.4, heavy_damage_multiplier: 1.6 }
+      legendary: { heavy_speed_multiplier: 1.5, heavy_damage_multiplier: 1.75 }
