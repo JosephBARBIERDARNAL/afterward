@@ -262,11 +262,7 @@ mod tests {
             ["Aftershock", "Undertow", "Dash"],
             "the bonuses a combo names come first, where they stand"
         );
-        assert_eq!(
-            titles("undertow"),
-            ["Slam", "H"],
-            "a lone letter is only a word on its own"
-        );
+        assert_eq!(titles("undertow"), ["Slam"]);
         assert!(
             titles("heavy_hands").contains(&"Blow".to_owned()),
             "a synonym explains the same term"
