@@ -251,26 +251,6 @@ devices:
     on_s: 1
     offset_s: 1.1
     damage: 10.5
-  - kind: blade
-    position_h: { x: 13.5, y: 1 }
-    travel_x_h: 8
-    travel_y_h: 0
-    speed_h_s: 2
-    damage: 10.5
-  - kind: blade
-    position_h: { x: 27, y: 1 }
-    travel_x_h: 3.5
-    travel_y_h: 0
-    speed_h_s: 2
-    damage: 10.5
-  - kind: light_strip
-    position_h: { x: 17.5, y: 1.25 }
-    orientation: horizontal
-    length_h: 8.5
-  - kind: light_strip
-    position_h: { x: 28.75, y: 1.25 }
-    orientation: horizontal
-    length_h: 4
 enemy_spawns:
   - type_id: blade_unit
     position_h: { x: 8.5, y: 5 }

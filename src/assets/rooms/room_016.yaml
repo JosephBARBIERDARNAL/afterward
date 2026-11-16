@@ -298,7 +298,7 @@ devices:
     colorway: dusk
   - kind: terminal
     position_h: { x: 3, y: 14 }
-    text: "PLAZA. THE MARKET NEVER REOPENED."
+    text: PLAZA. THE MARKET NEVER REOPENED.
     colorway: dusk
   - label: the beam under mezzanine A
     kind: laser
@@ -323,19 +323,6 @@ devices:
     on_s: 1
     offset_s: 1.1
     damage: 10.5
-    colorway: dusk
-  - label: the blade across the square
-    kind: blade
-    position_h: { x: 12.5, y: 1 }
-    travel_x_h: 9
-    travel_y_h: 0
-    speed_h_s: 2.5
-    damage: 10.5
-    colorway: dusk
-  - kind: light_strip
-    position_h: { x: 29, y: 1.25 }
-    orientation: horizontal
-    length_h: 8
     colorway: dusk
 enemy_spawns:
   - type_id: catto_purple

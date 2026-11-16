@@ -48,7 +48,7 @@ platforms:
     rect_h: { x: 1, y: 7, width: 6.5, height: 0.5 }
     colorway: dusk
   - material: sci_fi_trim_ceiling
-    rect_h: { x: 25.5, y: 7, width: 5.5, height: 0.5 }
+    rect_h: { x: 25.5, y: 7.25, width: 5.5, height: 0.25 }
     colorway: dusk
   - material: sci_fi_green_edge
     rect_h: { x: 1, y: 7.5, width: 6.5, height: 0.5 }
@@ -117,9 +117,6 @@ props:
   - prop: sci_fi_ceiling_lamp
     position_h: { x: 4, y: 6.5 }
     colorway: dusk
-  - prop: sci_fi_ceiling_lamp
-    position_h: { x: 28, y: 6.5 }
-    colorway: dusk
   - prop: sci_fi_barrel
     position_h: { x: 2, y: 1 }
     solid: false
@@ -134,8 +131,8 @@ props:
 # ladders, each standing on a spot (the middle of its bottom edge).
 devices:
   - kind: terminal
-    position_h: { x: 5, y: 8 }
-    text: "WARDEN UNIT. STILL ON DUTY."
+    position_h: { x: 3.25, y: 1 }
+    text: WARDEN UNIT. STILL ON DUTY.
     colorway: dusk
   - label: the ferry
     kind: hover_platform
@@ -168,11 +165,6 @@ devices:
     kind: ladder
     position_h: { x: 24.75, y: 1 }
     height_h: 7
-    colorway: dusk
-  - kind: light_strip
-    position_h: { x: 16, y: 1.5 }
-    orientation: horizontal
-    length_h: 3
     colorway: dusk
 enemy_spawns:
   - label: the warden

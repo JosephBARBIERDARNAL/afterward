@@ -84,10 +84,10 @@ platforms:
     rect_h: { x: 0.5, y: 15, width: 0.5, height: 13 }
     colorway: dusk
   - material: sci_fi_trim_ceiling
-    rect_h: { x: 23.5, y: 16, width: 5.5, height: 0.5 }
+    rect_h: { x: 23, y: 16, width: 6, height: 0.5 }
     colorway: dusk
   - material: sci_fi_green_edge
-    rect_h: { x: 23.5, y: 16.5, width: 5.5, height: 0.5 }
+    rect_h: { x: 23, y: 16.5, width: 6, height: 0.5 }
     colorway: dusk
   - material: sci_fi_trim_wall_left
     rect_h: { x: 29, y: 17, width: 0.5, height: 5.5 }
@@ -210,7 +210,7 @@ props:
     colorway: dusk
   - label: corner
     prop: sci_fi_steel_block
-    position_h: { x: 23.25, y: 16 }
+    position_h: { x: 22.75, y: 16 }
     colorway: dusk
   - label: corner
     prop: sci_fi_steel_block
@@ -218,7 +218,7 @@ props:
     colorway: dusk
   - label: corner
     prop: sci_fi_steel_block
-    position_h: { x: 23.25, y: 16.5 }
+    position_h: { x: 22.75, y: 16.5 }
     colorway: dusk
   - label: corner
     prop: sci_fi_steel_block
@@ -257,13 +257,13 @@ props:
     position_h: { x: 29.25, y: 23 }
     colorway: dusk
   - prop: sci_fi_framed_fan
-    position_h: { x: 5, y: 2.5 }
+    position_h: { x: 6, y: 2 }
     colorway: dusk
   - prop: sci_fi_framed_fan
-    position_h: { x: 14, y: 19.25 }
+    position_h: { x: 15, y: 19.25 }
     colorway: dusk
   - prop: sci_fi_framed_fan
-    position_h: { x: 25, y: 1.75 }
+    position_h: { x: 25, y: 2 }
     colorway: dusk
   - prop: sci_fi_pipe_vertical
     position_h: { x: 0.5, y: 17 }
@@ -277,7 +277,7 @@ props:
     opacity: 0.8
     colorway: dusk
   - prop: sci_fi_barrel
-    position_h: { x: 2, y: 9.5 }
+    position_h: { x: 1.5, y: 6 }
     solid: false
     opacity: 0.8
     colorway: dusk
@@ -313,13 +313,8 @@ devices:
     speed_h_s: 1.5
     colorway: dusk
   - kind: terminal
-    position_h: { x: 5, y: 6 }
-    text: "WATER TOWER 3. THE TANK IS FULL. IT ALWAYS IS."
-    colorway: dusk
-  - kind: light_strip
-    position_h: { x: 16, y: 1.25 }
-    orientation: horizontal
-    length_h: 6
+    position_h: { x: 2.75, y: 9.5 }
+    text: WATER TOWER 3. THE TANK IS FULL. IT ALWAYS IS.
     colorway: dusk
 enemy_spawns:
   - type_id: catto_rust

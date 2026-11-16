@@ -256,8 +256,8 @@ props:
 # ladders, each standing on a spot (the middle of its bottom edge).
 devices:
   - kind: terminal
-    position_h: { x: 6.5, y: 2 }
-    text: "SORTING FLOOR. KEEP OFF THE BELTS."
+    position_h: { x: 38.25, y: 8 }
+    text: SORTING FLOOR. KEEP OFF THE BELTS.
     colorway: dusk
   - kind: spikes
     position_h: { x: 14, y: 0.5 }
@@ -276,54 +276,21 @@ devices:
     colorway: dusk
   - label: belt 1, with you
     kind: conveyor
-    position_h: { x: 13, y: 2.75 }
+    position_h: { x: 14.25, y: 1.5 }
     cells: 12
-    speed_h_s: 2.5
+    speed_h_s: 3
     colorway: dusk
   - label: belt 2, against you
     kind: conveyor
-    position_h: { x: 30, y: 2.75 }
-    cells: 14
+    position_h: { x: 26.25, y: 3.75 }
+    cells: 10
     speed_h_s: -2
     colorway: dusk
   - label: belt 3a
     kind: conveyor
-    position_h: { x: 43.5, y: 2.75 }
-    cells: 6
+    position_h: { x: 45, y: 1.5 }
+    cells: 10
     speed_h_s: 3
-    colorway: dusk
-  - label: belt 3b
-    kind: conveyor
-    position_h: { x: 47.5, y: 2.75 }
-    cells: 4
-    speed_h_s: -3
-    colorway: dusk
-  - label: island 1 grates
-    kind: fire_trap
-    position_h: { x: 22, y: 2 }
-    color: orange
-    cells: 8
-    arm_s: 0.6
-    burn_s: 1.2
-    rest_s: 1.8
-    offset_s: 0
-    damage: 8.4
-    colorway: dusk
-  - label: island 2 grates
-    kind: fire_trap
-    position_h: { x: 38, y: 2 }
-    color: orange
-    cells: 8
-    arm_s: 0.6
-    burn_s: 1.2
-    rest_s: 1.8
-    offset_s: 1.2
-    damage: 8.4
-    colorway: dusk
-  - kind: light_strip
-    position_h: { x: 4.5, y: 2.25 }
-    orientation: horizontal
-    length_h: 5
     colorway: dusk
 enemy_spawns:
   - type_id: catto

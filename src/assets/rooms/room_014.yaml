@@ -183,9 +183,6 @@ props:
   - prop: sci_fi_pipe_vertical
     position_h: { x: 12.75, y: 10.5 }
     colorway: dusk
-  - prop: sci_fi_pipe_vertical
-    position_h: { x: 27.25, y: 10.5 }
-    colorway: dusk
   - prop: sci_fi_ceiling_lamp
     position_h: { x: 7, y: 7 }
     colorway: dusk
@@ -216,7 +213,7 @@ props:
 devices:
   - kind: terminal
     position_h: { x: 5.5, y: 1 }
-    text: "FURNACE 2. NEVER LET IT GO OUT."
+    text: FURNACE 2. NEVER LET IT GO OUT.
     colorway: dusk
   - kind: fire_trap
     position_h: { x: 8.5, y: 1 }
