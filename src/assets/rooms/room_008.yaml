@@ -8,7 +8,6 @@ size:
   height_h: 28
 background_profiles: [sci_fi_industrial]
 hidden_background_layers: [sci_fi_industrial/4, sci_fi_industrial/5]
-layer_opacity: { sci_fi_industrial/1: 0.8, sci_fi_industrial/2: 0.8 }
 player_spawn:
   x_h: 2.5
   y_h: 1
@@ -260,7 +259,7 @@ props:
 # ladders, each standing on a spot (the middle of its bottom edge).
 devices:
   - kind: terminal
-    position_h: { x: 30, y: 10 }
+    position_h: { x: 42.25, y: 7 }
     text: PERSONAL NOTE. IT'S GETTING WORSE.
     mirrored: true
   - kind: laser

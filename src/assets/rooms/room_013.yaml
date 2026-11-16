@@ -9,8 +9,8 @@ size:
 background_profiles: [dead_city_ephemeral]
 hidden_background_layers: [dead_city_ephemeral/4, dead_city_ephemeral/5]
 player_spawn:
-  x_h: 2.5
-  y_h: 1
+  x_h: 5.25
+  y_h: 10
 # Solid platforms: land on their top, stop against their sides, bump
 # your head on their underside. They stop shots too.
 platforms:
@@ -24,10 +24,10 @@ platforms:
     rect_h: { x: 1, y: 0.5, width: 3, height: 0.5 }
     colorway: dusk
   - material: sci_fi_dark_rivets
-    rect_h: { x: 4.5, y: 0.5, width: 2, height: 2.5 }
+    rect_h: { x: 3.5, y: 0.5, width: 2, height: 9 }
     colorway: dusk
   - material: sci_fi_green_edge
-    rect_h: { x: 7, y: 0.5, width: 38, height: 0.5 }
+    rect_h: { x: 6, y: 0.5, width: 39, height: 0.5 }
     colorway: dusk
   - material: sci_fi_dark_rivets
     rect_h: { x: 45.5, y: 0.5, width: 6.5, height: 2 }
@@ -36,10 +36,10 @@ platforms:
     rect_h: { x: 0.5, y: 1, width: 0.5, height: 15 }
     colorway: dusk
   - material: sci_fi_trim_wall_left
-    rect_h: { x: 4, y: 1, width: 0.5, height: 2 }
+    rect_h: { x: 3, y: 1, width: 0.5, height: 8.5 }
     colorway: dusk
   - material: sci_fi_trim_wall_right
-    rect_h: { x: 6.5, y: 1, width: 0.5, height: 2 }
+    rect_h: { x: 5.5, y: 1, width: 0.5, height: 8.5 }
     colorway: dusk
   - material: sci_fi_trim_wall_left
     rect_h: { x: 45, y: 1, width: 0.5, height: 1.5 }
@@ -51,7 +51,7 @@ platforms:
     rect_h: { x: 51.5, y: 2.5, width: 0.5, height: 13.5 }
     colorway: dusk
   - material: sci_fi_green_edge
-    rect_h: { x: 4.5, y: 3, width: 2, height: 0.5 }
+    rect_h: { x: 3.5, y: 9.5, width: 2, height: 0.5 }
     colorway: dusk
   - material: sci_fi_trim_wall_left
     rect_h: { x: 51, y: 3, width: 0.5, height: 13 }
@@ -80,6 +80,12 @@ platforms:
   - material: sci_fi_green_edge
     rect_h: { x: 48, y: 6, width: 3, height: 0.5 }
     colorway: dusk
+  - material: sci_fi_trim_ceiling
+    rect_h: { x: 24, y: 13, width: 3.5, height: 0.5 }
+    colorway: dusk
+  - material: sci_fi_green_edge
+    rect_h: { x: 24, y: 13.5, width: 3.5, height: 0.5 }
+    colorway: dusk
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
 # Props: sprites standing on a spot (the middle of their bottom edge).
@@ -90,11 +96,11 @@ props:
     colorway: dusk
   - label: corner
     prop: sci_fi_steel_block
-    position_h: { x: 4.25, y: 0.5 }
+    position_h: { x: 3.25, y: 0.5 }
     colorway: dusk
   - label: corner
     prop: sci_fi_steel_block
-    position_h: { x: 6.75, y: 0.5 }
+    position_h: { x: 5.75, y: 0.5 }
     colorway: dusk
   - label: corner
     prop: sci_fi_steel_block
@@ -110,11 +116,11 @@ props:
     colorway: dusk
   - label: corner
     prop: sci_fi_steel_block
-    position_h: { x: 4.25, y: 3 }
+    position_h: { x: 3.25, y: 9.5 }
     colorway: dusk
   - label: corner
     prop: sci_fi_steel_block
-    position_h: { x: 6.75, y: 3 }
+    position_h: { x: 5.75, y: 9.5 }
     colorway: dusk
   - label: corner
     prop: sci_fi_steel_block
@@ -165,7 +171,7 @@ props:
     position_h: { x: 29.75, y: 10 }
     colorway: dusk
   - prop: sci_fi_framed_fan
-    position_h: { x: 5.5, y: 1.75 }
+    position_h: { x: 4.75, y: 3.5 }
     colorway: dusk
   - prop: sci_fi_framed_fan
     position_h: { x: 50.5, y: 0.75 }
@@ -202,14 +208,30 @@ props:
     prop: sci_fi_steel_block
     position_h: { x: 51.25, y: 6 }
     colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 23.75, y: 13 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 27.75, y: 13 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 23.75, y: 13.5 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 27.75, y: 13.5 }
+    colorway: dusk
+  - prop: sci_fi_barrel
+    position_h: { x: 24.5, y: 14 }
+    solid: false
+    opacity: 0.8
+    colorway: dusk
 # Devices: traps, moving and folding platforms, buttons, doors and
 # ladders, each standing on a spot (the middle of its bottom edge).
 devices:
-  - kind: terminal
-    position_h: { x: 50.25, y: 6.5 }
-    text: SIGNAL HALL. THE BEAMS STILL KEEP TIME.
-    mirrored: true
-    colorway: dusk
   - kind: laser
     position_h: { x: 10, y: 1 }
     color: red
@@ -343,109 +365,93 @@ devices:
     damage: 10.5
     colorway: dusk
   - kind: laser
-    position_h: { x: 12, y: 5.75 }
+    position_h: { x: 19, y: 6 }
     color: red
-    orientation: horizontal
-    length_h: 3
-    off_s: 1.5
-    warn_s: 0.5
-    on_s: 0.8
+    orientation: vertical
+    length_h: 1.5
+    off_s: 1.6
+    warn_s: 0.4
+    on_s: 0.9
     offset_s: 0
     damage: 10.5
     colorway: dusk
   - kind: laser
-    position_h: { x: 16, y: 5.75 }
+    position_h: { x: 33, y: 6 }
     color: red
-    orientation: horizontal
-    length_h: 3
-    off_s: 1.5
-    warn_s: 0.5
-    on_s: 0.8
-    offset_s: 0.5
+    orientation: vertical
+    length_h: 1.5
+    off_s: 1.6
+    warn_s: 0.4
+    on_s: 0.9
+    offset_s: 0
     damage: 10.5
     colorway: dusk
   - kind: laser
-    position_h: { x: 24, y: 5.75 }
+    position_h: { x: 26.75, y: 6 }
     color: red
-    orientation: horizontal
-    length_h: 3
-    off_s: 1.5
-    warn_s: 0.5
-    on_s: 0.8
-    offset_s: 1
-    damage: 10.5
-    colorway: dusk
-  - kind: laser
-    position_h: { x: 28, y: 5.75 }
-    color: red
-    orientation: horizontal
-    length_h: 3
-    off_s: 1.5
-    warn_s: 0.5
-    on_s: 0.8
+    orientation: vertical
+    length_h: 3.5
+    off_s: 1.6
+    warn_s: 0.4
+    on_s: 0.9
     offset_s: 1.5
     damage: 10.5
     colorway: dusk
-  - kind: laser
-    position_h: { x: 36, y: 5.75 }
-    color: red
-    orientation: horizontal
-    length_h: 3
-    off_s: 1.5
-    warn_s: 0.5
-    on_s: 0.8
-    offset_s: 2
-    damage: 10.5
+  - kind: press
+    position_h: { x: 2.25, y: 6 }
+    rest_s: 1.5
+    hold_s: 0.6
+    offset_s: 0
+    damage: 17.5
+    rotation_deg: -90
     colorway: dusk
-  - kind: laser
-    position_h: { x: 40, y: 5.75 }
-    color: red
-    orientation: horizontal
-    length_h: 3
-    off_s: 1.5
-    warn_s: 0.5
-    on_s: 0.8
-    offset_s: 2.5
-    damage: 10.5
+  - kind: press
+    position_h: { x: 1.75, y: 2.75 }
+    rest_s: 1.5
+    hold_s: 0.6
+    offset_s: 0
+    damage: 17.5
+    rotation_deg: 90
+    colorway: dusk
+  - kind: terminal
+    position_h: { x: 1.5, y: 1 }
+    text: SIGNAL HALL. THE BEAMS STILL KEEP TIME.
     colorway: dusk
 enemy_spawns:
-  - type_id: catto
-    position_h: { x: 15, y: 1 }
-    facing: left
   - type_id: abomination
     position_h: { x: 25, y: 1 }
-    facing: left
-  - type_id: catto
-    position_h: { x: 13, y: 6 }
-    facing: left
-  - type_id: mad_ghost
-    position_h: { x: 22, y: 6 }
-    facing: left
-  - type_id: mage
-    position_h: { x: 26, y: 10.5 }
     facing: left
   - type_id: abomination
     position_h: { x: 38, y: 6 }
     facing: left
     wave: 1
-  - type_id: catto
-    position_h: { x: 35, y: 1 }
+  - type_id: abomination
+    position_h: { x: 26.25, y: 14 }
     facing: left
     wave: 1
-  - type_id: catto
-    position_h: { x: 39, y: 1 }
+  - type_id: abomination
+    position_h: { x: 17, y: 1 }
     facing: left
+  - type_id: abomination
+    position_h: { x: 35.75, y: 1 }
+    facing: right
     wave: 1
-  - type_id: mad_ghost
+  - type_id: abomination
+    position_h: { x: 41, y: 1 }
+    facing: right
+    wave: 1
+  - type_id: abomination
     position_h: { x: 30, y: 6 }
     facing: left
     wave: 1
-  - type_id: mad_ghost
-    position_h: { x: 47, y: 3 }
+  - type_id: abomination
+    position_h: { x: 23.5, y: 6 }
     facing: left
-    wave: 1
-  - type_id: mad_ghost
-    position_h: { x: 6.25, y: 3.5 }
+  - type_id: abomination
+    position_h: { x: 25, y: 10.5 }
+    facing: left
+  - type_id: abomination
+    position_h: { x: 11.5, y: 6 }
     facing: left
 # The bonus item, lying beside the door once every enemy is down.
 bonus:

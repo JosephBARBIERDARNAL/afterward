@@ -48,7 +48,7 @@ synergy: { color: "#F2C14E", weight_multiplier: 3 }
 glossary:
   - term: Chain
     words: [chain, "chain's"]
-    definition: Your melee combo. Each press of Attack throws its next blow; wait too long between them and it starts again from the first.
+    definition: Your melee combo. Each press of Attack throws its next blow.
   - term: Blow
     words: [blow, blows, strike]
     definition: One hit of the chain. It hurts everything its reach touches, so one blow can catch two enemies standing together.
@@ -60,13 +60,13 @@ glossary:
     definition: Attack with Down held in mid-air drives you into the floor, which breaks to both sides of you.
   - term: Dash
     words: [dash, dashes, dashing, "dash's"]
-    definition: A short burst on the ground or in mid-air. Nothing can touch you through most of it, which is how a shot is gone through.
+    definition: A short burst on the ground or in mid-air. Nothing can touch you through most of it.
   - term: Airborne
     words: [airborne, mid-air]
     definition: Off the ground, jumping or falling. A mid-air jump is one taken before landing.
   - term: Wind-up
     words: [wind-up, wind-ups]
-    definition: The moment an enemy warms up before it strikes, glowing brighter until the blow lands. The longer it lasts, the more time to get out of the way.
+    definition: The moment an enemy warms up before it strikes.
   - term: Shield
     words: [shield, shields]
     definition: A layer of armor over an enemy's health bar. Each soaks one ordinary blow whole (a heavy blow goes through), and while one is up the enemy is never interrupted.
@@ -88,18 +88,6 @@ glossary:
   - term: Combo
     words: [combo, combos]
     definition: A bonus that is what two others do together, offered only once you own both.
-  - term: Damage event
-    words: [damage event]
-    definition: One hit taken, however much it would have cost.
-  - term: Projectile
-    words: [projectile, shot]
-    definition: What an enemy or a turret fires. Platforms stop it, and a dash goes through it.
-  - term: Reroll
-    words: [reroll]
-    definition: Draws three new bonuses on the bonus screen. A run has only a few.
-  - term: H
-    words: [h]
-    definition: The hero's height, the unit every distance in the game is measured in.
 
 # Every bonus here is read by the game: one that nothing reads is taken out
 # rather than left to thin the draw. Rarity follows what a bonus does: a plain

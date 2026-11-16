@@ -8,9 +8,8 @@ size:
   height_h: 13.5
 background_profiles: [sci_fi_industrial]
 hidden_background_layers: [sci_fi_industrial/4, sci_fi_industrial/5]
-layer_opacity: { sci_fi_industrial/1: 0.8, sci_fi_industrial/2: 0.8 }
 player_spawn:
-  x_h: 4.25
+  x_h: 5.5
   y_h: 1
 # Solid platforms: land on their top, stop against their sides, bump
 # your head on their underside. They stop shots too.
@@ -58,7 +57,7 @@ props:
     prop: sci_fi_steel_block
     position_h: { x: 23.25, y: 3 }
   - prop: sci_fi_barrel
-    position_h: { x: 9, y: 1 }
+    position_h: { x: 16.5, y: 3.5 }
     solid: false
     opacity: 0.8
   - prop: sci_fi_small_crate
@@ -97,13 +96,13 @@ devices:
     offset_s: 1.1
     damage: 10.5
   - kind: blade
-    position_h: { x: 7, y: 1 }
+    position_h: { x: 10.25, y: 1 }
     travel_x_h: 4
     travel_y_h: 0
     speed_h_s: 2
     damage: 10.5
   - kind: light_strip
-    position_h: { x: 9, y: 1.25 }
+    position_h: { x: 12.25, y: 1.25 }
     orientation: horizontal
     length_h: 4.5
 enemy_spawns:
@@ -116,11 +115,11 @@ enemy_spawns:
     facing: left
     armor_layers: 3
   - type_id: dark_blade_unit
-    position_h: { x: 13.5, y: 1 }
+    position_h: { x: 16.5, y: 1 }
     facing: left
     armor_layers: 3
   - type_id: dark_heavy_unit
-    position_h: { x: 11, y: 1 }
+    position_h: { x: 14.75, y: 1 }
     facing: left
     armor_layers: 3
 # The bonus item, lying beside the door once every enemy is down.

@@ -299,20 +299,20 @@ props:
     position_h: { x: 47.5, y: 10 }
     colorway: dusk
   - prop: sci_fi_framed_fan
-    position_h: { x: 5, y: 4 }
+    position_h: { x: 7, y: 4.5 }
     colorway: dusk
   - prop: sci_fi_framed_fan
-    position_h: { x: 43, y: 3 }
+    position_h: { x: 41.25, y: 3.75 }
     colorway: dusk
-  - prop: sci_fi_ceiling_lamp
-    position_h: { x: 14.25, y: 8.5 }
+  - prop: sci_fi_framed_fan
+    position_h: { x: 4, y: 2.25 }
     colorway: dusk
 # Devices: traps, moving and folding platforms, buttons, doors and
 # ladders, each standing on a spot (the middle of its bottom edge).
 devices:
   - kind: terminal
-    position_h: { x: 5, y: 8 }
-    text: "FLOOD LOG. THE BRIDGE WENT FIRST."
+    position_h: { x: 15.5, y: 10.5 }
+    text: FLOOD LOG. THE BRIDGE WENT FIRST.
     colorway: dusk
   - label: what is left of the middle
     kind: folding_platform
@@ -320,29 +320,6 @@ devices:
     color: steel
     stand_s: 0.6
     return_s: 2.5
-    colorway: dusk
-  - label: the blade in the street
-    kind: blade
-    position_h: { x: 11.5, y: 1 }
-    travel_x_h: 9.5
-    travel_y_h: 0
-    speed_h_s: 2
-    damage: 10.5
-    colorway: dusk
-  - label: up the east pier
-    kind: ladder
-    position_h: { x: 38.25, y: 1 }
-    height_h: 6
-    colorway: dusk
-  - kind: light_strip
-    position_h: { x: 9.75, y: 2 }
-    orientation: vertical
-    length_h: 4.5
-    colorway: dusk
-  - kind: light_strip
-    position_h: { x: 39.25, y: 2 }
-    orientation: vertical
-    length_h: 3.5
     colorway: dusk
 enemy_spawns:
   - type_id: catto

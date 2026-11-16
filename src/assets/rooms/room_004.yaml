@@ -8,7 +8,6 @@ size:
   height_h: 40
 background_profiles: [sci_fi_industrial]
 hidden_background_layers: [sci_fi_industrial/4, sci_fi_industrial/5]
-layer_opacity: { sci_fi_industrial/1: 0.8, sci_fi_industrial/2: 0.8 }
 player_spawn:
   x_h: 2.5
   y_h: 37

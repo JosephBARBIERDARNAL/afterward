@@ -8,7 +8,6 @@ size:
   height_h: 40
 background_profiles: [sci_fi_industrial]
 hidden_background_layers: [sci_fi_industrial/4, sci_fi_industrial/5]
-layer_opacity: { sci_fi_industrial/1: 0.8, sci_fi_industrial/2: 0.8 }
 player_spawn:
   x_h: 2.25
   y_h: 37
@@ -451,10 +450,6 @@ props:
     solid: false
     mirrored: true
     opacity: 0.8
-  - prop: sci_fi_barrel
-    position_h: { x: 21, y: 8 }
-    solid: false
-    opacity: 0.8
   - prop: sci_fi_small_crate
     position_h: { x: 4, y: 21 }
     solid: false
@@ -472,11 +467,13 @@ props:
   - prop: sci_fi_pipe_vertical
     position_h: { x: 3.5, y: 3 }
   - prop: sci_fi_pipe_vertical
-    position_h: { x: 12.5, y: 4.75 }
+    position_h: { x: 21.5, y: 4.75 }
   - prop: sci_fi_pipe_vertical
     position_h: { x: 21.5, y: 12 }
   - prop: sci_fi_pipe_vertical
     position_h: { x: 5.5, y: 16.25 }
+  - prop: sci_fi_framed_fan
+    position_h: { x: 15, y: 5 }
 # Devices: traps, moving and folding platforms, buttons, doors and
 # ladders, each standing on a spot (the middle of its bottom edge).
 devices:
@@ -510,20 +507,10 @@ devices:
     travel_y_h: 0
     speed_h_s: 2
     damage: 10.5
-  - kind: blade
-    position_h: { x: 13.5, y: 8 }
-    travel_x_h: 6
-    travel_y_h: 0
-    speed_h_s: 2
-    damage: 10.5
   - kind: light_strip
     position_h: { x: 7.75, y: 1.25 }
     orientation: horizontal
     length_h: 6
-  - kind: light_strip
-    position_h: { x: 16.5, y: 8.25 }
-    orientation: horizontal
-    length_h: 6.5
 enemy_spawns:
   - type_id: blade_unit
     position_h: { x: 10, y: 33 }
@@ -563,6 +550,14 @@ enemy_spawns:
     position_h: { x: 28, y: 1 }
     facing: left
     armor_layers: 2
+    wave: 2
+  - type_id: blade_unit
+    position_h: { x: 20, y: 8 }
+    facing: left
+    wave: 2
+  - type_id: heavy_unit
+    position_h: { x: 24, y: 8 }
+    facing: left
     wave: 2
 # The bonus item, lying beside the door once every enemy is down.
 bonus:
