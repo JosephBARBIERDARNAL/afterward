@@ -262,17 +262,17 @@ devices:
   - kind: spikes
     position_h: { x: 14, y: 0.5 }
     cells: 20
-    damage: 10
+    damage: 7
     colorway: dusk
   - kind: spikes
     position_h: { x: 30, y: 0.5 }
     cells: 20
-    damage: 10
+    damage: 7
     colorway: dusk
   - kind: spikes
     position_h: { x: 45, y: 0.5 }
     cells: 16
-    damage: 10
+    damage: 7
     colorway: dusk
   - label: belt 1, with you
     kind: conveyor
@@ -307,7 +307,7 @@ devices:
     burn_s: 1.2
     rest_s: 1.8
     offset_s: 0
-    damage: 12
+    damage: 8.4
     colorway: dusk
   - label: island 2 grates
     kind: fire_trap
@@ -318,7 +318,7 @@ devices:
     burn_s: 1.2
     rest_s: 1.8
     offset_s: 1.2
-    damage: 12
+    damage: 8.4
     colorway: dusk
   - kind: light_strip
     position_h: { x: 4.5, y: 2.25 }

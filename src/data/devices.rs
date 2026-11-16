@@ -298,7 +298,7 @@ impl Default for LaserConfig {
             warn_s: 0.5,
             on_s: 1.0,
             offset_s: 0.0,
-            damage: 15.0,
+            damage: 10.5,
         }
     }
 }
@@ -327,7 +327,7 @@ impl Default for FireTrapConfig {
             burn_s: 1.2,
             rest_s: 1.4,
             offset_s: 0.0,
-            damage: 12.0,
+            damage: 8.4,
         }
     }
 }
@@ -344,7 +344,7 @@ impl Default for SpikesConfig {
     fn default() -> Self {
         Self {
             cells: 4,
-            damage: 10.0,
+            damage: 7.0,
         }
     }
 }
@@ -427,7 +427,7 @@ impl Default for PressConfig {
             rest_s: 1.5,
             hold_s: 0.6,
             offset_s: 0.0,
-            damage: 25.0,
+            damage: 17.5,
         }
     }
 }
@@ -451,7 +451,7 @@ impl Default for BladeConfig {
             travel_x_h: 3.0,
             travel_y_h: 0.0,
             speed_h_s: 2.0,
-            damage: 15.0,
+            damage: 10.5,
         }
     }
 }
@@ -475,7 +475,7 @@ impl Default for TurretConfig {
             interval_s: 1.8,
             offset_s: 0.0,
             shot_speed_h_s: 9.0,
-            damage: 10.0,
+            damage: 7.0,
         }
     }
 }

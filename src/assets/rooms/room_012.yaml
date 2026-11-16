@@ -497,7 +497,7 @@ devices:
     travel_x_h: 3.5
     travel_y_h: 0
     speed_h_s: 2
-    damage: 15
+    damage: 10.5
     colorway: dusk
   - label: the blade on the west shelf
     kind: blade
@@ -505,7 +505,7 @@ devices:
     travel_x_h: 3.5
     travel_y_h: 0
     speed_h_s: 2
-    damage: 15
+    damage: 10.5
     colorway: dusk
   - label: the blade on the top slab
     kind: blade
@@ -513,7 +513,7 @@ devices:
     travel_x_h: 8
     travel_y_h: 0
     speed_h_s: 2.5
-    damage: 15
+    damage: 10.5
     colorway: dusk
   - kind: light_strip
     position_h: { x: 17, y: 16.75 }

@@ -747,7 +747,7 @@ devices:
     warn_s: 0.5
     on_s: 1
     offset_s: 0
-    damage: 15
+    damage: 10.5
   - kind: laser
     position_h: { x: 13.75, y: 33 }
     color: red
@@ -757,7 +757,7 @@ devices:
     warn_s: 0.5
     on_s: 1
     offset_s: 0
-    damage: 15
+    damage: 10.5
   - kind: laser
     position_h: { x: 15, y: 25 }
     color: red
@@ -767,7 +767,7 @@ devices:
     warn_s: 0.5
     on_s: 1
     offset_s: 1.35
-    damage: 15
+    damage: 10.5
   - kind: laser
     position_h: { x: 6.5, y: 17 }
     color: red
@@ -777,7 +777,7 @@ devices:
     warn_s: 0.5
     on_s: 1
     offset_s: 0
-    damage: 15
+    damage: 10.5
   - kind: laser
     position_h: { x: 13, y: 9 }
     color: red
@@ -787,7 +787,7 @@ devices:
     warn_s: 0.5
     on_s: 1
     offset_s: 1.35
-    damage: 15
+    damage: 10.5
   - kind: laser
     position_h: { x: 14, y: 1 }
     color: red
@@ -797,7 +797,7 @@ devices:
     warn_s: 0.5
     on_s: 1
     offset_s: 0
-    damage: 15
+    damage: 10.5
   - kind: laser
     position_h: { x: 26, y: 1 }
     color: red
@@ -807,7 +807,7 @@ devices:
     warn_s: 0.5
     on_s: 1
     offset_s: 1.35
-    damage: 15
+    damage: 10.5
 enemy_spawns:
   - label: fodder on floor A
     type_id: blade_unit

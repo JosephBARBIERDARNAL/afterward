@@ -156,7 +156,7 @@ devices:
     warn_s: 0.5
     on_s: 1
     offset_s: 0
-    damage: 15
+    damage: 10.5
     colorway: dusk
   - label: the beam under the east slab
     kind: laser
@@ -168,7 +168,7 @@ devices:
     warn_s: 0.5
     on_s: 1
     offset_s: 1.2
-    damage: 15
+    damage: 10.5
     colorway: dusk
   - kind: light_strip
     position_h: { x: 15, y: 1.25 }

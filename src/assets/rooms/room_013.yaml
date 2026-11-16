@@ -219,7 +219,7 @@ devices:
     warn_s: 0.4
     on_s: 0.9
     offset_s: 0
-    damage: 15
+    damage: 10.5
     colorway: dusk
   - kind: laser
     position_h: { x: 13, y: 1 }
@@ -230,7 +230,7 @@ devices:
     warn_s: 0.4
     on_s: 0.9
     offset_s: 0.25
-    damage: 15
+    damage: 10.5
     colorway: dusk
   - kind: laser
     position_h: { x: 16, y: 1 }
@@ -241,7 +241,7 @@ devices:
     warn_s: 0.4
     on_s: 0.9
     offset_s: 0.5
-    damage: 15
+    damage: 10.5
     colorway: dusk
   - kind: laser
     position_h: { x: 19, y: 1 }
@@ -252,7 +252,7 @@ devices:
     warn_s: 0.4
     on_s: 0.9
     offset_s: 0.75
-    damage: 15
+    damage: 10.5
     colorway: dusk
   - kind: laser
     position_h: { x: 22, y: 1 }
@@ -263,7 +263,7 @@ devices:
     warn_s: 0.4
     on_s: 0.9
     offset_s: 1
-    damage: 15
+    damage: 10.5
     colorway: dusk
   - kind: laser
     position_h: { x: 25, y: 1 }
@@ -274,7 +274,7 @@ devices:
     warn_s: 0.4
     on_s: 0.9
     offset_s: 1.25
-    damage: 15
+    damage: 10.5
     colorway: dusk
   - kind: laser
     position_h: { x: 28, y: 1 }
@@ -285,7 +285,7 @@ devices:
     warn_s: 0.4
     on_s: 0.9
     offset_s: 1.5
-    damage: 15
+    damage: 10.5
     colorway: dusk
   - kind: laser
     position_h: { x: 31, y: 1 }
@@ -296,7 +296,7 @@ devices:
     warn_s: 0.4
     on_s: 0.9
     offset_s: 1.75
-    damage: 15
+    damage: 10.5
     colorway: dusk
   - kind: laser
     position_h: { x: 34, y: 1 }
@@ -307,7 +307,7 @@ devices:
     warn_s: 0.4
     on_s: 0.9
     offset_s: 2
-    damage: 15
+    damage: 10.5
     colorway: dusk
   - kind: laser
     position_h: { x: 37, y: 1 }
@@ -318,7 +318,7 @@ devices:
     warn_s: 0.4
     on_s: 0.9
     offset_s: 2.25
-    damage: 15
+    damage: 10.5
     colorway: dusk
   - kind: laser
     position_h: { x: 40, y: 1 }
@@ -329,7 +329,7 @@ devices:
     warn_s: 0.4
     on_s: 0.9
     offset_s: 2.5
-    damage: 15
+    damage: 10.5
     colorway: dusk
   - kind: laser
     position_h: { x: 43, y: 1 }
@@ -340,7 +340,7 @@ devices:
     warn_s: 0.4
     on_s: 0.9
     offset_s: 2.75
-    damage: 15
+    damage: 10.5
     colorway: dusk
   - kind: laser
     position_h: { x: 12, y: 5.75 }
@@ -351,7 +351,7 @@ devices:
     warn_s: 0.5
     on_s: 0.8
     offset_s: 0
-    damage: 15
+    damage: 10.5
     colorway: dusk
   - kind: laser
     position_h: { x: 16, y: 5.75 }
@@ -362,7 +362,7 @@ devices:
     warn_s: 0.5
     on_s: 0.8
     offset_s: 0.5
-    damage: 15
+    damage: 10.5
     colorway: dusk
   - kind: laser
     position_h: { x: 24, y: 5.75 }
@@ -373,7 +373,7 @@ devices:
     warn_s: 0.5
     on_s: 0.8
     offset_s: 1
-    damage: 15
+    damage: 10.5
     colorway: dusk
   - kind: laser
     position_h: { x: 28, y: 5.75 }
@@ -384,7 +384,7 @@ devices:
     warn_s: 0.5
     on_s: 0.8
     offset_s: 1.5
-    damage: 15
+    damage: 10.5
     colorway: dusk
   - kind: laser
     position_h: { x: 36, y: 5.75 }
@@ -395,7 +395,7 @@ devices:
     warn_s: 0.5
     on_s: 0.8
     offset_s: 2
-    damage: 15
+    damage: 10.5
     colorway: dusk
   - kind: laser
     position_h: { x: 40, y: 5.75 }
@@ -406,7 +406,7 @@ devices:
     warn_s: 0.5
     on_s: 0.8
     offset_s: 2.5
-    damage: 15
+    damage: 10.5
     colorway: dusk
 enemy_spawns:
   - type_id: catto

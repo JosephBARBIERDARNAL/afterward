@@ -250,7 +250,7 @@ devices:
     travel_x_h: 6.5
     travel_y_h: 0
     speed_h_s: 2
-    damage: 15
+    damage: 10.5
     colorway: dusk
   - kind: light_strip
     position_h: { x: 16.5, y: 1.25 }
@@ -272,7 +272,7 @@ devices:
     warn_s: 0.5
     on_s: 1
     offset_s: 0.6
-    damage: 15
+    damage: 10.5
     colorway: dusk
   - label: the blade in the trench
     kind: blade
@@ -280,7 +280,7 @@ devices:
     travel_x_h: 6.5
     travel_y_h: 0
     speed_h_s: 2
-    damage: 15
+    damage: 10.5
     colorway: dusk
 enemy_spawns:
   - type_id: catto

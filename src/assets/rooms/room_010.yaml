@@ -85,7 +85,7 @@ devices:
     warn_s: 0.5
     on_s: 1
     offset_s: 0
-    damage: 15
+    damage: 10.5
   - kind: laser
     position_h: { x: 19, y: 1 }
     color: red
@@ -95,13 +95,13 @@ devices:
     warn_s: 0.5
     on_s: 1
     offset_s: 1.1
-    damage: 15
+    damage: 10.5
   - kind: blade
     position_h: { x: 7, y: 1 }
     travel_x_h: 4
     travel_y_h: 0
     speed_h_s: 2
-    damage: 15
+    damage: 10.5
   - kind: light_strip
     position_h: { x: 9, y: 1.25 }
     orientation: horizontal

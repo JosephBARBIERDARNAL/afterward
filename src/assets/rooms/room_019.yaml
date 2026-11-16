@@ -175,7 +175,7 @@ devices:
     travel_x_h: 5
     travel_y_h: 0
     speed_h_s: 2
-    damage: 15
+    damage: 10.5
     colorway: dusk
   - label: the blade under the east slab
     kind: blade
@@ -183,7 +183,7 @@ devices:
     travel_x_h: -5
     travel_y_h: 0
     speed_h_s: 2
-    damage: 15
+    damage: 10.5
     colorway: dusk
   - kind: light_strip
     position_h: { x: 17, y: 1.25 }
