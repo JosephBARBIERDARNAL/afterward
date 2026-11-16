@@ -193,18 +193,37 @@ platforms:
     rect_h: { x: 1, y: 36.5, width: 4.5, height: 0.5 }
   - material: sci_fi_trim_wall_right
     rect_h: { x: 0.5, y: 37, width: 0.5, height: 3 }
-  - label: fire escape, the ramp down to the east wall
+  - label: fire escape, the upper step down to the east wall
     material: sci_fi_green_edge
-    rect_h: { x: 21.34, y: 26.52, width: 9, height: 0.5 }
-    rotation_deg: -30
-  - label: fire escape, the ramp down to the roof
+    rect_h: { x: 23.5, y: 26.5, width: 1.5, height: 0.5 }
+  - label: fire escape, the lower step down to the east wall
     material: sci_fi_green_edge
-    rect_h: { x: 20.75, y: 19.5, width: 9, height: 0.5 }
-    rotation_deg: 25
+    rect_h: { x: 27, y: 24, width: 1.5, height: 0.5 }
+  - label: fire escape, the step from the roof to the east wall
+    material: sci_fi_green_edge
+    rect_h: { x: 26.5, y: 19, width: 1.5, height: 0.5 }
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
 # Props: sprites standing on a spot (the middle of their bottom edge).
 props:
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 23.25, y: 26.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 25.25, y: 26.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 26.75, y: 24 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 28.75, y: 24 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 26.25, y: 19 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 28.25, y: 19 }
   - label: corner
     prop: sci_fi_steel_block
     position_h: { x: 0.75, y: 4.5 }

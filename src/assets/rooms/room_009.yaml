@@ -113,14 +113,19 @@ platforms:
     rect_h: { x: 43.5, y: 10.5, width: 6.5, height: 0.5 }
   - material: sci_fi_green_edge
     rect_h: { x: 31.5, y: 11.5, width: 8.5, height: 0.5 }
-  - label: the ramp down from the middle roof to the west roof
+  - label: the step from the west roof to the middle roof
     material: sci_fi_green_edge
-    rect_h: { x: 25.25, y: 10.5, width: 6.1, height: 0.5 }
-    rotation_deg: 20
+    rect_h: { x: 27.5, y: 10.5, width: 1.5, height: 0.5 }
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
 # Props: sprites standing on a spot (the middle of their bottom edge).
 props:
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 27.25, y: 10.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 29.25, y: 10.5 }
   - label: corner
     prop: sci_fi_steel_block
     position_h: { x: 0.75, y: 0.5 }
