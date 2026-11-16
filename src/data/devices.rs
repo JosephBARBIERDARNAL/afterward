@@ -141,6 +141,7 @@ impl From<DeviceTag> for DeviceKind {
 /// editor's inspector, and the value itself.
 pub(crate) struct Param<'a> {
     pub(crate) key: &'static str,
+    #[cfg(debug_assertions)]
     pub(crate) name: &'static str,
     pub(crate) value: ParamValue<'a>,
 }
@@ -149,13 +150,17 @@ pub(crate) enum ParamValue<'a> {
     /// A number stepped by `step`, never below `min`.
     Number {
         value: &'a mut f32,
+        #[cfg(debug_assertions)]
         step: f32,
+        #[cfg(debug_assertions)]
         min: f32,
     },
     /// A whole number within `min..=max`.
     Whole {
         value: &'a mut u32,
+        #[cfg(debug_assertions)]
         min: u32,
+        #[cfg(debug_assertions)]
         max: u32,
     },
     /// One of a few named options, walked through in turn.
@@ -164,6 +169,7 @@ pub(crate) enum ParamValue<'a> {
     Text(&'a mut String),
 }
 
+#[cfg(debug_assertions)]
 impl ParamValue<'_> {
     /// Steps the value `steps` times (negative to go back).
     pub(crate) fn step(&mut self, steps: f32) {
@@ -198,6 +204,7 @@ impl Display for ParamValue<'_> {
 /// A device value that is one of a few named options.
 pub(crate) trait DeviceChoice {
     /// The option after this one (or before it), going round.
+    #[cfg(debug_assertions)]
     fn step(&mut self, forward: bool);
     /// Its name in the room file.
     fn name(&self) -> &'static str;
@@ -217,6 +224,7 @@ macro_rules! two_way_choice {
         }
 
         impl DeviceChoice for $name {
+            #[cfg(debug_assertions)]
             fn step(&mut self, _forward: bool) {
                 *self = match self {
                     Self::$first => Self::$second,
@@ -256,6 +264,7 @@ two_way_choice!(
 );
 
 impl DeviceChoice for Facing {
+    #[cfg(debug_assertions)]
     fn step(&mut self, _forward: bool) {
         *self = match self {
             Self::Left => Self::Right,
@@ -555,19 +564,50 @@ impl Default for LightStripConfig {
     }
 }
 
-/// Builds a `Param`.
-fn param<'a>(key: &'static str, name: &'static str, value: ParamValue<'a>) -> Param<'a> {
-    Param { key, name, value }
+/// Builds a `Param`; its inspector row's name is the editor's alone, so a
+/// release build leaves it out.
+macro_rules! param {
+    ($key:expr, $name:expr, $value:expr $(,)?) => {
+        Param {
+            key: $key,
+            #[cfg(debug_assertions)]
+            name: $name,
+            value: $value,
+        }
+    };
 }
 
-/// A number stepped by `step`, never below `min`.
-fn number(value: &mut f32, step: f32, min: f32) -> ParamValue<'_> {
-    ParamValue::Number { value, step, min }
+/// A number stepped by `step`, never below `min` (stepping is the editor's
+/// alone, so a release build leaves both out).
+macro_rules! number {
+    ($value:expr, $step:expr, $min:expr $(,)?) => {
+        ParamValue::Number {
+            value: $value,
+            #[cfg(debug_assertions)]
+            step: $step,
+            #[cfg(debug_assertions)]
+            min: $min,
+        }
+    };
+}
+
+/// A whole number within `min..=max` (bounds the editor's alone, as for
+/// `number!`).
+macro_rules! whole {
+    ($value:expr, $min:expr, $max:expr $(,)?) => {
+        ParamValue::Whole {
+            value: $value,
+            #[cfg(debug_assertions)]
+            min: $min,
+            #[cfg(debug_assertions)]
+            max: $max,
+        }
+    };
 }
 
 /// A duration in seconds, stepped by a tenth.
 fn seconds(value: &mut f32) -> ParamValue<'_> {
-    number(value, 0.1, 0.0)
+    number!(value, 0.1, 0.0)
 }
 
 impl DeviceKind {
@@ -595,170 +635,134 @@ impl DeviceKind {
     pub(crate) fn params(&mut self) -> Vec<Param<'_>> {
         match self {
             Self::Laser(laser) => vec![
-                param("color", "Colour", ParamValue::Choice(&mut laser.color)),
-                param(
+                param!("color", "Colour", ParamValue::Choice(&mut laser.color)),
+                param!(
                     "orientation",
                     "Runs",
                     ParamValue::Choice(&mut laser.orientation),
                 ),
-                param(
+                param!(
                     "length_h",
                     "Length (H)",
-                    number(&mut laser.length_h, 0.5, 1.5),
+                    number!(&mut laser.length_h, 0.5, 1.5),
                 ),
-                param("off_s", "Off for (s)", seconds(&mut laser.off_s)),
-                param("warn_s", "Warns for (s)", seconds(&mut laser.warn_s)),
-                param("on_s", "On for (s)", seconds(&mut laser.on_s)),
-                param("offset_s", "Offset (s)", seconds(&mut laser.offset_s)),
-                param("damage", "Damage", number(&mut laser.damage, 1.0, 0.0)),
+                param!("off_s", "Off for (s)", seconds(&mut laser.off_s)),
+                param!("warn_s", "Warns for (s)", seconds(&mut laser.warn_s)),
+                param!("on_s", "On for (s)", seconds(&mut laser.on_s)),
+                param!("offset_s", "Offset (s)", seconds(&mut laser.offset_s)),
+                param!("damage", "Damage", number!(&mut laser.damage, 1.0, 0.0)),
             ],
             Self::FireTrap(fire) => vec![
-                param("color", "Colour", ParamValue::Choice(&mut fire.color)),
-                param(
-                    "cells",
-                    "Grates",
-                    ParamValue::Whole {
-                        value: &mut fire.cells,
-                        min: 1,
-                        max: 32,
-                    },
-                ),
-                param("arm_s", "Warns for (s)", seconds(&mut fire.arm_s)),
-                param("burn_s", "Burns for (s)", seconds(&mut fire.burn_s)),
-                param("rest_s", "Rests for (s)", seconds(&mut fire.rest_s)),
-                param("offset_s", "Offset (s)", seconds(&mut fire.offset_s)),
-                param("damage", "Damage", number(&mut fire.damage, 1.0, 0.0)),
+                param!("color", "Colour", ParamValue::Choice(&mut fire.color)),
+                param!("cells", "Grates", whole!(&mut fire.cells, 1, 32),),
+                param!("arm_s", "Warns for (s)", seconds(&mut fire.arm_s)),
+                param!("burn_s", "Burns for (s)", seconds(&mut fire.burn_s)),
+                param!("rest_s", "Rests for (s)", seconds(&mut fire.rest_s)),
+                param!("offset_s", "Offset (s)", seconds(&mut fire.offset_s)),
+                param!("damage", "Damage", number!(&mut fire.damage, 1.0, 0.0)),
             ],
             Self::Spikes(spikes) => vec![
-                param(
-                    "cells",
-                    "Cells",
-                    ParamValue::Whole {
-                        value: &mut spikes.cells,
-                        min: 1,
-                        max: 64,
-                    },
-                ),
-                param("damage", "Damage", number(&mut spikes.damage, 1.0, 0.0)),
+                param!("cells", "Cells", whole!(&mut spikes.cells, 1, 64),),
+                param!("damage", "Damage", number!(&mut spikes.damage, 1.0, 0.0)),
             ],
             Self::Conveyor(belt) => vec![
-                param(
-                    "cells",
-                    "Cells",
-                    ParamValue::Whole {
-                        value: &mut belt.cells,
-                        min: 2,
-                        max: 64,
-                    },
-                ),
-                param(
+                param!("cells", "Cells", whole!(&mut belt.cells, 2, 64),),
+                param!(
                     "speed_h_s",
                     "Speed (H/s, - left)",
-                    number(&mut belt.speed_h_s, 0.25, f32::MIN),
+                    number!(&mut belt.speed_h_s, 0.25, f32::MIN),
                 ),
             ],
             Self::HoverPlatform(platform) => vec![
-                param("size", "Size", ParamValue::Choice(&mut platform.size)),
-                param(
+                param!("size", "Size", ParamValue::Choice(&mut platform.size)),
+                param!(
                     "travel_x_h",
                     "Travel x (H)",
-                    number(&mut platform.travel_x_h, 0.5, f32::MIN),
+                    number!(&mut platform.travel_x_h, 0.5, f32::MIN),
                 ),
-                param(
+                param!(
                     "travel_y_h",
                     "Travel y (H)",
-                    number(&mut platform.travel_y_h, 0.5, f32::MIN),
+                    number!(&mut platform.travel_y_h, 0.5, f32::MIN),
                 ),
-                param(
+                param!(
                     "speed_h_s",
                     "Speed (H/s)",
-                    number(&mut platform.speed_h_s, 0.25, 0.25),
+                    number!(&mut platform.speed_h_s, 0.25, 0.25),
                 ),
             ],
             Self::FoldingPlatform(platform) => vec![
-                param("color", "Colour", ParamValue::Choice(&mut platform.color)),
-                param("stand_s", "Holds for (s)", seconds(&mut platform.stand_s)),
-                param(
+                param!("color", "Colour", ParamValue::Choice(&mut platform.color)),
+                param!("stand_s", "Holds for (s)", seconds(&mut platform.stand_s)),
+                param!(
                     "return_s",
                     "Back after (s)",
                     seconds(&mut platform.return_s),
                 ),
             ],
             Self::Press(press) => vec![
-                param("rest_s", "Rests up (s)", seconds(&mut press.rest_s)),
-                param("hold_s", "Holds down (s)", seconds(&mut press.hold_s)),
-                param("offset_s", "Offset (s)", seconds(&mut press.offset_s)),
-                param("damage", "Damage", number(&mut press.damage, 1.0, 0.0)),
+                param!("rest_s", "Rests up (s)", seconds(&mut press.rest_s)),
+                param!("hold_s", "Holds down (s)", seconds(&mut press.hold_s)),
+                param!("offset_s", "Offset (s)", seconds(&mut press.offset_s)),
+                param!("damage", "Damage", number!(&mut press.damage, 1.0, 0.0)),
             ],
             Self::Blade(blade) => vec![
-                param(
+                param!(
                     "travel_x_h",
                     "Travel x (H)",
-                    number(&mut blade.travel_x_h, 0.5, f32::MIN),
+                    number!(&mut blade.travel_x_h, 0.5, f32::MIN),
                 ),
-                param(
+                param!(
                     "travel_y_h",
                     "Travel y (H)",
-                    number(&mut blade.travel_y_h, 0.5, f32::MIN),
+                    number!(&mut blade.travel_y_h, 0.5, f32::MIN),
                 ),
-                param(
+                param!(
                     "speed_h_s",
                     "Speed (H/s)",
-                    number(&mut blade.speed_h_s, 0.25, 0.25),
+                    number!(&mut blade.speed_h_s, 0.25, 0.25),
                 ),
-                param("damage", "Damage", number(&mut blade.damage, 1.0, 0.0)),
+                param!("damage", "Damage", number!(&mut blade.damage, 1.0, 0.0)),
             ],
             Self::Turret(turret) => vec![
-                param("facing", "Faces", ParamValue::Choice(&mut turret.facing)),
-                param(
+                param!("facing", "Faces", ParamValue::Choice(&mut turret.facing)),
+                param!(
                     "interval_s",
                     "Fires every (s)",
-                    number(&mut turret.interval_s, 0.1, 0.2),
+                    number!(&mut turret.interval_s, 0.1, 0.2),
                 ),
-                param("offset_s", "Offset (s)", seconds(&mut turret.offset_s)),
-                param(
+                param!("offset_s", "Offset (s)", seconds(&mut turret.offset_s)),
+                param!(
                     "shot_speed_h_s",
                     "Shot speed (H/s)",
-                    number(&mut turret.shot_speed_h_s, 0.5, 0.5),
+                    number!(&mut turret.shot_speed_h_s, 0.5, 0.5),
                 ),
-                param("damage", "Damage", number(&mut turret.damage, 1.0, 0.0)),
+                param!("damage", "Damage", number!(&mut turret.damage, 1.0, 0.0)),
             ],
-            Self::Button(button) => vec![param(
+            Self::Button(button) => vec![param!(
                 "link",
                 "Opens door #",
-                ParamValue::Whole {
-                    value: &mut button.link,
-                    min: 1,
-                    max: 99,
-                },
+                whole!(&mut button.link, 1, 99),
             )],
-            Self::Door(door) => vec![param(
-                "link",
-                "Door #",
-                ParamValue::Whole {
-                    value: &mut door.link,
-                    min: 1,
-                    max: 99,
-                },
-            )],
-            Self::Ladder(ladder) => vec![param(
+            Self::Door(door) => vec![param!("link", "Door #", whole!(&mut door.link, 1, 99),)],
+            Self::Ladder(ladder) => vec![param!(
                 "height_h",
                 "Height (H)",
-                number(&mut ladder.height_h, 0.5, 1.0),
+                number!(&mut ladder.height_h, 0.5, 1.0),
             )],
             Self::Terminal(terminal) => {
-                vec![param("text", "Text", ParamValue::Text(&mut terminal.text))]
+                vec![param!("text", "Text", ParamValue::Text(&mut terminal.text))]
             }
             Self::LightStrip(strip) => vec![
-                param(
+                param!(
                     "orientation",
                     "Runs",
                     ParamValue::Choice(&mut strip.orientation),
                 ),
-                param(
+                param!(
                     "length_h",
                     "Length (H)",
-                    number(&mut strip.length_h, 0.5, 1.0),
+                    number!(&mut strip.length_h, 0.5, 1.0),
                 ),
             ],
         }

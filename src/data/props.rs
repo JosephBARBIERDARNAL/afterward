@@ -31,6 +31,7 @@ impl PropCatalog {
 
     /// Whether bodies stand on `placed` and bump into it: as its room entry
     /// says, else as its sprite is.
+    #[cfg(debug_assertions)]
     pub(crate) fn is_solid(&self, placed: &PropConfig) -> bool {
         placed.solid.unwrap_or_else(|| {
             self.props
@@ -92,6 +93,7 @@ pub struct PropSprite {
 
 impl PropSprite {
     /// Whether a prop of this sprite is solid unless its room says otherwise.
+    #[cfg(debug_assertions)]
     pub(crate) fn solid_by_default(&self) -> bool {
         !self.solid_px.is_empty()
     }

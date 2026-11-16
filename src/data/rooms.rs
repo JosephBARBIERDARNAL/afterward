@@ -72,6 +72,7 @@ impl RoomConfig {
 
     /// Fades `layer` in or out by `step`, within 0..=1; one drawn whole is
     /// left out of the map.
+    #[cfg(debug_assertions)]
     pub(crate) fn fade_layer(&mut self, layer: BackgroundLayerRef, step: f32) {
         let opacity = self.layer_opacity(&layer.profile, layer.layer);
         // Rounded to tenths, so repeated presses don't drift.
@@ -85,6 +86,7 @@ impl RoomConfig {
 
     /// Hides a drawn layer of one of the room's profiles, or shows a hidden
     /// one again.
+    #[cfg(debug_assertions)]
     pub(crate) fn toggle_layer(&mut self, layer: BackgroundLayerRef) {
         match self
             .hidden_background_layers
@@ -102,6 +104,7 @@ impl RoomConfig {
     }
 
     /// Forgets hidden and faded layers of profiles the room no longer draws.
+    #[cfg(debug_assertions)]
     pub(crate) fn forget_unused_layers(&mut self) {
         let profiles = &self.background_profiles;
         let drawn = |layer: &BackgroundLayerRef| {

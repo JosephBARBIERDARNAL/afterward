@@ -14,6 +14,7 @@ use std::{
 use bevy::color::{Hsla, Srgba};
 use serde::{Deserialize, Deserializer, de::Error as DeserializeError};
 
+#[cfg(debug_assertions)]
 use super::HexColor;
 
 #[derive(Debug, Deserialize)]
@@ -26,6 +27,7 @@ pub struct Colorways {
 #[derive(Debug, Clone, Deserialize)]
 pub struct Colorway {
     /// The color the editor's swatch for it is painted.
+    #[cfg(debug_assertions)]
     pub swatch: HexColor,
     pub shifts: Vec<HueShift>,
 }
