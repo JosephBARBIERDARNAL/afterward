@@ -4,69 +4,87 @@
 room_id: 19
 chapter_id: 2
 size:
-  width_h: 34
+  width_h: 40
   height_h: 16
 background_profiles: [dead_city_ephemeral]
 hidden_background_layers: [dead_city_ephemeral/4, dead_city_ephemeral/5]
 player_spawn:
-  x_h: 2.5
-  y_h: 3
+  x_h: 9
+  y_h: 1
 # Solid platforms: land on their top, stop against their sides, bump
 # your head on their underside. They stop shots too.
 platforms:
   - material: sci_fi_dark_rivets
-    rect_h: { x: 0, y: 0, width: 34, height: 0.5 }
+    rect_h: { x: 0, y: 0, width: 0.5, height: 16 }
     colorway: dusk
   - material: sci_fi_dark_rivets
-    rect_h: { x: 0, y: 0.5, width: 4.5, height: 2 }
-    colorway: dusk
-  - material: sci_fi_green_edge
-    rect_h: { x: 5, y: 0.5, width: 24, height: 0.5 }
+    rect_h: { x: 1, y: 0, width: 38, height: 0.5 }
     colorway: dusk
   - material: sci_fi_dark_rivets
-    rect_h: { x: 29.5, y: 0.5, width: 4.5, height: 2 }
+    rect_h: { x: 39.5, y: 0, width: 0.5, height: 16 }
     colorway: dusk
   - material: sci_fi_trim_wall_right
-    rect_h: { x: 4.5, y: 1, width: 0.5, height: 1.5 }
+    rect_h: { x: 0.5, y: 0.5, width: 0.5, height: 15 }
+    colorway: dusk
+  - material: sci_fi_green_edge
+    rect_h: { x: 1, y: 0.5, width: 38, height: 0.5 }
     colorway: dusk
   - material: sci_fi_trim_wall_left
-    rect_h: { x: 29, y: 1, width: 0.5, height: 1.5 }
+    rect_h: { x: 39, y: 0.5, width: 0.5, height: 15 }
     colorway: dusk
-  - material: sci_fi_dark_rivets
-    rect_h: { x: 0, y: 2.5, width: 0.5, height: 13.5 }
-    colorway: dusk
-  - material: sci_fi_green_edge
-    rect_h: { x: 1, y: 2.5, width: 3.5, height: 0.5 }
-    colorway: dusk
-  - material: sci_fi_green_edge
-    rect_h: { x: 29.5, y: 2.5, width: 3.5, height: 0.5 }
-    colorway: dusk
-  - material: sci_fi_dark_rivets
-    rect_h: { x: 33.5, y: 2.5, width: 0.5, height: 13.5 }
+  - material: sci_fi_trim_wall_left
+    rect_h: { x: 6.5, y: 2.5, width: 0.5, height: 3 }
     colorway: dusk
   - material: sci_fi_trim_wall_right
-    rect_h: { x: 0.5, y: 3, width: 0.5, height: 13 }
+    rect_h: { x: 7, y: 2.5, width: 0.5, height: 3 }
     colorway: dusk
   - material: sci_fi_trim_wall_left
-    rect_h: { x: 33, y: 3, width: 0.5, height: 13 }
+    rect_h: { x: 33, y: 2.5, width: 0.5, height: 3 }
+    colorway: dusk
+  - material: sci_fi_trim_wall_right
+    rect_h: { x: 33.5, y: 2.5, width: 0.5, height: 3 }
     colorway: dusk
   - material: sci_fi_trim_ceiling
-    rect_h: { x: 7.5, y: 4.5, width: 5, height: 0.5 }
+    rect_h: { x: 1, y: 6, width: 12.5, height: 0.5 }
     colorway: dusk
   - material: sci_fi_trim_ceiling
-    rect_h: { x: 21.5, y: 4.5, width: 5, height: 0.5 }
+    rect_h: { x: 26.5, y: 6, width: 12.5, height: 0.5 }
     colorway: dusk
   - material: sci_fi_green_edge
-    rect_h: { x: 7.5, y: 5, width: 5, height: 0.5 }
+    rect_h: { x: 1, y: 6.5, width: 12.5, height: 0.5 }
     colorway: dusk
   - material: sci_fi_green_edge
-    rect_h: { x: 21.5, y: 5, width: 5, height: 0.5 }
+    rect_h: { x: 26.5, y: 6.5, width: 12.5, height: 0.5 }
+    colorway: dusk
+  - material: sci_fi_trim_wall_left
+    rect_h: { x: 6.5, y: 8.5, width: 0.5, height: 3 }
+    colorway: dusk
+  - material: sci_fi_trim_wall_right
+    rect_h: { x: 7, y: 8.5, width: 0.5, height: 3 }
     colorway: dusk
   - material: sci_fi_trim_ceiling
-    rect_h: { x: 14.5, y: 7, width: 5, height: 0.5 }
+    rect_h: { x: 17.5, y: 8.5, width: 5, height: 0.5 }
+    colorway: dusk
+  - material: sci_fi_trim_wall_left
+    rect_h: { x: 33, y: 8.5, width: 0.5, height: 3 }
+    colorway: dusk
+  - material: sci_fi_trim_wall_right
+    rect_h: { x: 33.5, y: 8.5, width: 0.5, height: 3 }
     colorway: dusk
   - material: sci_fi_green_edge
-    rect_h: { x: 14.5, y: 7.5, width: 5, height: 0.5 }
+    rect_h: { x: 17.5, y: 9, width: 5, height: 0.5 }
+    colorway: dusk
+  - material: sci_fi_trim_ceiling
+    rect_h: { x: 1, y: 12, width: 6, height: 0.5 }
+    colorway: dusk
+  - material: sci_fi_trim_ceiling
+    rect_h: { x: 33, y: 12, width: 6, height: 0.5 }
+    colorway: dusk
+  - material: sci_fi_green_edge
+    rect_h: { x: 1, y: 12.5, width: 6, height: 0.5 }
+    colorway: dusk
+  - material: sci_fi_green_edge
+    rect_h: { x: 33, y: 12.5, width: 6, height: 0.5 }
     colorway: dusk
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
@@ -74,144 +92,234 @@ decorations: []
 props:
   - label: corner
     prop: sci_fi_steel_block
-    position_h: { x: 4.75, y: 0.5 }
+    position_h: { x: 0.75, y: 0 }
     colorway: dusk
   - label: corner
     prop: sci_fi_steel_block
-    position_h: { x: 29.25, y: 0.5 }
+    position_h: { x: 39.25, y: 0 }
     colorway: dusk
   - label: corner
     prop: sci_fi_steel_block
-    position_h: { x: 0.75, y: 2.5 }
+    position_h: { x: 6.75, y: 2 }
     colorway: dusk
   - label: corner
     prop: sci_fi_steel_block
-    position_h: { x: 4.75, y: 2.5 }
+    position_h: { x: 7.25, y: 2 }
     colorway: dusk
   - label: corner
     prop: sci_fi_steel_block
-    position_h: { x: 29.25, y: 2.5 }
+    position_h: { x: 33.25, y: 2 }
     colorway: dusk
   - label: corner
     prop: sci_fi_steel_block
-    position_h: { x: 33.25, y: 2.5 }
+    position_h: { x: 33.75, y: 2 }
     colorway: dusk
   - label: corner
     prop: sci_fi_steel_block
-    position_h: { x: 7.25, y: 4.5 }
+    position_h: { x: 6.75, y: 5.5 }
     colorway: dusk
   - label: corner
     prop: sci_fi_steel_block
-    position_h: { x: 12.75, y: 4.5 }
+    position_h: { x: 7.25, y: 5.5 }
     colorway: dusk
   - label: corner
     prop: sci_fi_steel_block
-    position_h: { x: 21.25, y: 4.5 }
+    position_h: { x: 33.25, y: 5.5 }
     colorway: dusk
   - label: corner
     prop: sci_fi_steel_block
-    position_h: { x: 26.75, y: 4.5 }
+    position_h: { x: 33.75, y: 5.5 }
     colorway: dusk
   - label: corner
     prop: sci_fi_steel_block
-    position_h: { x: 7.25, y: 5 }
+    position_h: { x: 13.75, y: 6 }
     colorway: dusk
   - label: corner
     prop: sci_fi_steel_block
-    position_h: { x: 12.75, y: 5 }
+    position_h: { x: 26.25, y: 6 }
     colorway: dusk
   - label: corner
     prop: sci_fi_steel_block
-    position_h: { x: 21.25, y: 5 }
+    position_h: { x: 13.75, y: 6.5 }
     colorway: dusk
   - label: corner
     prop: sci_fi_steel_block
-    position_h: { x: 26.75, y: 5 }
+    position_h: { x: 26.25, y: 6.5 }
     colorway: dusk
   - label: corner
     prop: sci_fi_steel_block
-    position_h: { x: 14.25, y: 7 }
+    position_h: { x: 6.75, y: 8 }
     colorway: dusk
   - label: corner
     prop: sci_fi_steel_block
-    position_h: { x: 19.75, y: 7 }
+    position_h: { x: 7.25, y: 8 }
     colorway: dusk
   - label: corner
     prop: sci_fi_steel_block
-    position_h: { x: 14.25, y: 7.5 }
+    position_h: { x: 33.25, y: 8 }
     colorway: dusk
   - label: corner
     prop: sci_fi_steel_block
-    position_h: { x: 19.75, y: 7.5 }
+    position_h: { x: 33.75, y: 8 }
     colorway: dusk
-  - prop: sci_fi_framed_fan
-    position_h: { x: 3, y: 1.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 17.25, y: 8.5 }
     colorway: dusk
-  - prop: sci_fi_framed_fan
-    position_h: { x: 31, y: 1.5 }
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 22.75, y: 8.5 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 17.25, y: 9 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 22.75, y: 9 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 6.75, y: 11.5 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 7.25, y: 11.5 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 33.25, y: 11.5 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 33.75, y: 11.5 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 7.25, y: 12 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 32.75, y: 12 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 7.25, y: 12.5 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 32.75, y: 12.5 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 0.75, y: 15.5 }
+    colorway: dusk
+  - label: corner
+    prop: sci_fi_steel_block
+    position_h: { x: 39.25, y: 15.5 }
+    colorway: dusk
+  - prop: sci_fi_ceiling_lamp
+    position_h: { x: 3.5, y: 4.5 }
+    colorway: dusk
+  - prop: sci_fi_ceiling_lamp
+    position_h: { x: 3.5, y: 10.5 }
+    colorway: dusk
+  - prop: sci_fi_ceiling_lamp
+    position_h: { x: 36.5, y: 4.5 }
+    colorway: dusk
+  - prop: sci_fi_ceiling_lamp
+    position_h: { x: 36.5, y: 10.5 }
     colorway: dusk
   - prop: sci_fi_pipe_vertical
-    position_h: { x: 0.5, y: 8 }
+    position_h: { x: 0.5, y: 13 }
     colorway: dusk
   - prop: sci_fi_pipe_vertical
-    position_h: { x: 33.5, y: 8 }
+    position_h: { x: 39.5, y: 13 }
     colorway: dusk
-  - prop: sci_fi_small_crate
-    position_h: { x: 16, y: 8 }
+  - prop: sci_fi_crate_stack
+    position_h: { x: 18, y: 1 }
     solid: false
     opacity: 0.8
     colorway: dusk
 # Devices: traps, moving and folding platforms, buttons, doors and
 # ladders, each standing on a spot (the middle of its bottom edge).
 devices:
+  - label: cell 1
+    kind: door
+    position_h: { x: 7, y: 1 }
+    link: 1
+    colorway: dusk
+  - label: opens cell 1
+    kind: button
+    position_h: { x: 8.25, y: 1 }
+    link: 1
+    colorway: dusk
+  - label: cell 2
+    kind: door
+    position_h: { x: 7, y: 7 }
+    link: 2
+    colorway: dusk
+  - label: opens cell 2
+    kind: button
+    position_h: { x: 8.25, y: 7 }
+    link: 2
+    colorway: dusk
+  - label: cell 3
+    kind: door
+    position_h: { x: 33.5, y: 1 }
+    link: 3
+    colorway: dusk
+  - label: opens cell 3
+    kind: button
+    position_h: { x: 32.25, y: 1 }
+    link: 3
+    colorway: dusk
+  - label: cell 4
+    kind: door
+    position_h: { x: 33.5, y: 7 }
+    link: 4
+    colorway: dusk
+  - label: opens cell 4
+    kind: button
+    position_h: { x: 32.25, y: 7 }
+    link: 4
+    colorway: dusk
   - kind: terminal
-    position_h: { x: 4, y: 3 }
-    text: "VAULT 9. THE GOLD WALKS."
-    mirrored: true
+    position_h: { x: 11, y: 1 }
+    text: "VAULT 9. FOUR CELLS. THE GOLD WALKS."
     colorway: dusk
-  - label: the blade under the west slab
-    kind: blade
-    position_h: { x: 8, y: 1 }
-    travel_x_h: 5
-    travel_y_h: 0
-    speed_h_s: 2
-    damage: 10.5
+  - label: up the west side
+    kind: ladder
+    position_h: { x: 14.25, y: 1 }
+    height_h: 6
     colorway: dusk
-  - label: the blade under the east slab
-    kind: blade
-    position_h: { x: 26, y: 1 }
-    travel_x_h: -5
-    travel_y_h: 0
-    speed_h_s: 2
-    damage: 10.5
-    colorway: dusk
-  - kind: light_strip
-    position_h: { x: 17, y: 1.25 }
-    orientation: horizontal
-    length_h: 6
+  - label: up the east side
+    kind: ladder
+    position_h: { x: 25.75, y: 1 }
+    height_h: 6
     colorway: dusk
 enemy_spawns:
   - type_id: abomination_gold
-    position_h: { x: 17, y: 1 }
-    facing: left
+    position_h: { x: 3.5, y: 1 }
+    facing: right
+    armor_layers: 1
+  - type_id: mage_gold
+    position_h: { x: 3.5, y: 7 }
+    facing: right
     armor_layers: 1
   - type_id: catto_gold
-    position_h: { x: 10, y: 5.5 }
+    position_h: { x: 36.5, y: 1 }
     facing: left
     armor_layers: 1
   - type_id: mad_ghost_gold
-    position_h: { x: 24, y: 5.5 }
-    facing: left
-    armor_layers: 1
-  - type_id: mage_gold
-    position_h: { x: 17, y: 8 }
+    position_h: { x: 36.5, y: 7 }
     facing: left
     armor_layers: 1
 # The bonus item, lying beside the door once every enemy is down.
 bonus:
-  x_h: 29.75
-  y_h: 3
+  x_h: 28
+  y_h: 7
 exit:
-  x_h: 31
-  y_h: 3
+  x_h: 30.5
+  y_h: 7
 next_room_id: 20
