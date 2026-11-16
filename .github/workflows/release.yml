@@ -1,7 +1,7 @@
 name: Release
 
 # Pushing a version tag (`git tag v0.1.0 && git push origin v0.1.0`) builds the
-# game in release mode for each platform, packs the binary with its `assets/`
+# game in its `dist` profile (Cargo.toml) for each platform, packs the binary with its `assets/`
 # folder beside it, and publishes the archives as a GitHub release.
 
 on:
@@ -48,7 +48,7 @@ jobs:
           key: ${{ matrix.target }}
 
       - name: Build release binary
-        run: cargo build --release --locked --bin afterward --target ${{ matrix.target }}
+        run: cargo build --profile dist --locked --bin afterward --target ${{ matrix.target }}
 
       - name: Package
         shell: bash
@@ -60,10 +60,10 @@ jobs:
           # game reads the pieces cut out of them, never the packs.
           rm -rf "dist/$name/assets/packs"
           if [ "$RUNNER_OS" = "Windows" ]; then
-            cp "target/${{ matrix.target }}/release/afterward.exe" "dist/$name/"
+            cp "target/${{ matrix.target }}/dist/afterward.exe" "dist/$name/"
             (cd dist && 7z a -tzip "$name.zip" "$name" > /dev/null)
           else
-            cp "target/${{ matrix.target }}/release/afterward" "dist/$name/"
+            cp "target/${{ matrix.target }}/dist/afterward" "dist/$name/"
             (cd dist && tar -czf "$name.tar.gz" "$name")
           fi
           rm -rf "dist/$name"

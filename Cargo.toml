@@ -62,12 +62,43 @@ allow_attributes_without_reason = "warn"
 unsafe_code = "forbid"
 
 [dependencies]
-bevy = { version = "0.20.1", features = ["mp3", "wav"] }
+# Bevy's defaults bring its whole 3D stack (PBR, glTF, morph animation...)
+# and scenes, which a 2D game never uses: only what the game draws, plays and
+# reads is kept (sprites, UI, gizmos for the debug overlays, audio).
+bevy = { version = "0.20.1", default-features = false, features = [
+    "default_app",
+    "default_platform",
+    "2d_api",
+    "bevy_render",
+    "bevy_core_pipeline",
+    "bevy_sprite_render",
+    "bevy_gizmos_render",
+    "ui_api",
+    "bevy_ui_render",
+    "bevy_ui_widgets",
+    "bevy_picking",
+    "sprite_picking",
+    "ui_picking",
+    "bevy_audio",
+    "mp3",
+    "wav",
+] }
 serde = { version = "1.0", features = ["derive"] }
 yaml_serde = "0.10.7"
 
 [profile.dev]
 opt-level = 1
+
+# What the release workflow ships (`cargo build --profile dist`): stripped,
+# optimised across crates as one program, and tuned for size. Slower to build
+# than `--release`, which stays the quick optimised build.
+[profile.dist]
+inherits = "release"
+strip = true
+lto = "fat"
+codegen-units = 1
+opt-level = "s"
+panic = "abort"
 
 [profile.dev.package."*"]
 opt-level = 3

@@ -33,6 +33,7 @@ Once you finish making a change (fixing a bug or adding a feature), make sure al
 - `cargo clippy --locked --all-targets -- -D warnings` — check Rust lint.
 - `cargo test --locked` — run Rust tests.
 - `cargo build --locked --bin afterward` — compile the native game.
+- `cargo build --profile dist --locked --bin afterward` — the build a release ships (`[profile.dist]`: stripped, fat LTO, sized for download; several minutes). Bevy is pulled in with only the 2D, UI and audio features the game uses: a Bevy module that stops resolving may need its feature added in `Cargo.toml`.
 
 Git hooks are managed by [prek](https://prek.j178.dev) from `prek.toml`: file hygiene, YAML/TOML syntax, `cargo fmt`, Clippy, and typstyle on commit, `cargo test` on push. Install them once with `prek install --install-hooks`; `prek run --all-files` runs them on the whole repo. Fixers (trailing whitespace, final newline) edit files in place: re-add and commit again.
 
