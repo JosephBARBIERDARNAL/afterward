@@ -88,7 +88,7 @@ platforms:
     rect_h: { x: 34, y: 8.5, width: 3.5, height: 0.5 }
   - label: the ledge the whole room stands on, underside
     material: sci_fi_trim_ceiling
-    rect_h: { x: 34.5, y: 8, width: 2.5, height: 0.5 }
+    rect_h: { x: 32.5, y: 8, width: 4.5, height: 0.5 }
   - label: the ledge the whole room stands on, face right
     material: sci_fi_trim_wall_right
     rect_h: { x: 37.5, y: 8, width: 0.5, height: 0.5 }
@@ -278,7 +278,7 @@ props:
     position_h: { x: 11.75, y: 6.5 }
   - label: corner
     prop: sci_fi_steel_block
-    position_h: { x: 34.25, y: 8 }
+    position_h: { x: 32.25, y: 8 }
   - label: corner
     prop: sci_fi_steel_block
     position_h: { x: 37.25, y: 8 }
@@ -349,7 +349,7 @@ props:
     prop: sci_fi_steel_block
     position_h: { x: 26.75, y: 11.5 }
   - prop: sci_fi_crate_stack
-    position_h: { x: 6.75, y: 2 }
+    position_h: { x: 7.5, y: 2 }
     solid: false
     opacity: 0.8
   - prop: sci_fi_small_crate
@@ -358,7 +358,7 @@ props:
     mirrored: true
     opacity: 0.8
   - prop: sci_fi_barrel
-    position_h: { x: 27.5, y: 1 }
+    position_h: { x: 26.75, y: 1 }
     solid: false
     opacity: 0.8
   - prop: sci_fi_small_crate
@@ -368,7 +368,7 @@ props:
   - prop: sci_fi_pipe_vertical
     position_h: { x: 0.5, y: 4 }
   - prop: sci_fi_pipe_vertical
-    position_h: { x: 47.5, y: 8 }
+    position_h: { x: 47.5, y: 10.25 }
   - prop: sci_fi_framed_fan
     position_h: { x: 10.75, y: 0.25 }
     opacity: 0.90000004

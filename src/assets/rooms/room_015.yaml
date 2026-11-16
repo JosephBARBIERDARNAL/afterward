@@ -118,7 +118,7 @@ props:
     position_h: { x: 4, y: 6.5 }
     colorway: dusk
   - prop: sci_fi_barrel
-    position_h: { x: 2, y: 1 }
+    position_h: { x: 1.5, y: 1 }
     solid: false
     opacity: 0.8
     colorway: dusk
@@ -131,7 +131,7 @@ props:
 # ladders, each standing on a spot (the middle of its bottom edge).
 devices:
   - kind: terminal
-    position_h: { x: 3.25, y: 1 }
+    position_h: { x: 2.5, y: 1 }
     text: WARDEN UNIT. STILL ON DUTY.
     colorway: dusk
   - label: the ferry

@@ -406,19 +406,20 @@ props:
     prop: sci_fi_steel_block
     position_h: { x: 47.25, y: 11.5 }
   - prop: sci_fi_crate_stack
-    position_h: { x: 6, y: 1 }
+    position_h: { x: 1.5, y: 5 }
     solid: false
+    mirrored: true
     opacity: 0.8
   - prop: sci_fi_small_crate
-    position_h: { x: 34.75, y: 1 }
+    position_h: { x: 34, y: 1 }
     solid: false
     opacity: 0.8
   - prop: sci_fi_barrel
-    position_h: { x: 39, y: 1 }
+    position_h: { x: 41.25, y: 1 }
     solid: false
     opacity: 0.8
   - prop: sci_fi_small_crate
-    position_h: { x: 9.75, y: 10 }
+    position_h: { x: 12.5, y: 10 }
     solid: false
     opacity: 0.8
   - prop: sci_fi_pipe_vertical

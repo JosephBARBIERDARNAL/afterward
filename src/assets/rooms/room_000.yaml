@@ -4,7 +4,7 @@
 room_id: 0
 chapter_id: 1
 size:
-  width_h: 55
+  width_h: 62
   height_h: 16
 background_profiles: [sci_fi_industrial]
 hidden_background_layers: [sci_fi_industrial/4, sci_fi_industrial/5]
@@ -44,28 +44,28 @@ platforms:
     rect_h: { x: 34.5, y: 0, width: 0.5, height: 1.5 }
   - label: pillar face left
     material: sci_fi_trim_wall_left
-    rect_h: { x: 38.5, y: 0, width: 0.5, height: 2 }
+    rect_h: { x: 44.5, y: 0, width: 0.5, height: 2 }
   - label: pillar base
     material: sci_fi_dark_rivets
-    rect_h: { x: 39, y: 0, width: 3.5, height: 2 }
+    rect_h: { x: 45, y: 0, width: 4.5, height: 2 }
   - label: pillar trim
     material: sci_fi_green_edge
-    rect_h: { x: 39, y: 2, width: 3.5, height: 0.5 }
+    rect_h: { x: 45, y: 2, width: 4.5, height: 0.5 }
   - label: pillar face right
     material: sci_fi_trim_wall_right
-    rect_h: { x: 42.5, y: 0, width: 0.5, height: 2 }
+    rect_h: { x: 49.5, y: 0, width: 0.5, height: 2 }
   - label: exit ledge trim
     material: sci_fi_green_edge
-    rect_h: { x: 51, y: 9, width: 3, height: 0.5 }
+    rect_h: { x: 58, y: 9, width: 3, height: 0.5 }
   - label: exit ledge underside
     material: sci_fi_trim_ceiling
-    rect_h: { x: 51, y: 8.5, width: 3, height: 0.5 }
+    rect_h: { x: 58, y: 8.5, width: 3, height: 0.5 }
   - label: right wall face
     material: sci_fi_trim_wall_left
-    rect_h: { x: 54, y: 0, width: 0.5, height: 16 }
+    rect_h: { x: 61, y: 0, width: 0.5, height: 16 }
   - label: right wall
     material: sci_fi_dark_rivets
-    rect_h: { x: 54.5, y: 0, width: 0.5, height: 16 }
+    rect_h: { x: 61.5, y: 0, width: 0.5, height: 16 }
 # Decorations: non-solid panels behind the platforms or in front of the bodies.
 decorations: []
 # Props: sprites standing on a spot (the middle of their bottom edge).
@@ -93,29 +93,29 @@ props:
     position_h: { x: 34.75, y: 1.5 }
   - label: corner
     prop: sci_fi_steel_block
-    position_h: { x: 38.75, y: 2 }
+    position_h: { x: 44.75, y: 2 }
   - label: corner
     prop: sci_fi_steel_block
-    position_h: { x: 42.75, y: 2 }
+    position_h: { x: 49.75, y: 2 }
   - label: corner
     prop: sci_fi_steel_block
-    position_h: { x: 50.75, y: 9 }
+    position_h: { x: 57.75, y: 9 }
   - label: corner
     prop: sci_fi_steel_block
-    position_h: { x: 50.75, y: 8.5 }
+    position_h: { x: 57.75, y: 8.5 }
   - label: corner
     prop: sci_fi_steel_block
-    position_h: { x: 54.25, y: 9 }
+    position_h: { x: 61.25, y: 9 }
   - prop: sci_fi_crate_stack
     position_h: { x: 26, y: 2 }
     solid: false
     opacity: 0.8
   - prop: sci_fi_small_crate
-    position_h: { x: 17.75, y: 2 }
+    position_h: { x: 19.5, y: 2 }
     solid: false
     opacity: 0.8
   - prop: sci_fi_barrel
-    position_h: { x: 19.25, y: 2 }
+    position_h: { x: 20.25, y: 2 }
     solid: false
     opacity: 0.8
   - prop: sci_fi_small_crate
@@ -124,19 +124,15 @@ props:
     mirrored: true
     opacity: 0.8
   - prop: sci_fi_pipe_vertical
-    position_h: { x: 0.5, y: 3 }
-  - prop: sci_fi_pipe_vertical
-    position_h: { x: 54.5, y: 11 }
+    position_h: { x: 61.5, y: 11 }
   - prop: sci_fi_bench
-    position_h: { x: 37.5, y: 3.25 }
+    position_h: { x: 49, y: 5 }
   - prop: sci_fi_bench
-    position_h: { x: 41.25, y: 5.75 }
+    position_h: { x: 51.75, y: 7.5 }
   - prop: sci_fi_bench
-    position_h: { x: 44.75, y: 7.5 }
-  - prop: sci_fi_bench
-    position_h: { x: 48.75, y: 9 }
+    position_h: { x: 55.75, y: 9 }
   - prop: sci_fi_barrel
-    position_h: { x: 41.5, y: 2.5 }
+    position_h: { x: 48.5, y: 2.5 }
     opacity: 0.8
   - prop: sci_fi_framed_fan
     position_h: { x: 9, y: 0.25 }
@@ -147,7 +143,7 @@ props:
   - prop: sci_fi_pipe_vertical
     position_h: { x: 0.5, y: 11.25 }
   - prop: sci_fi_pipe_vertical
-    position_h: { x: 54.5, y: 1.75 }
+    position_h: { x: 61.5, y: 1.75 }
 # Devices: traps, moving and folding platforms, buttons, doors and
 # ladders, each standing on a spot (the middle of its bottom edge).
 devices:
@@ -158,9 +154,9 @@ devices:
 enemy_spawns: []
 # The bonus item, lying beside the door once every enemy is down.
 bonus:
-  x_h: 51.5
+  x_h: 58.5
   y_h: 9.5
 exit:
-  x_h: 53
+  x_h: 60
   y_h: 9.5
 next_room_id: 1

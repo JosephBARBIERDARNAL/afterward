@@ -225,7 +225,7 @@ props:
     position_h: { x: 39.5, y: 13 }
     colorway: dusk
   - prop: sci_fi_crate_stack
-    position_h: { x: 18, y: 1 }
+    position_h: { x: 22, y: 9.5 }
     solid: false
     opacity: 0.8
     colorway: dusk
@@ -239,7 +239,7 @@ devices:
     colorway: dusk
   - label: opens cell 1
     kind: button
-    position_h: { x: 8.25, y: 1 }
+    position_h: { x: 7.75, y: 1 }
     link: 1
     colorway: dusk
   - label: cell 2
@@ -249,7 +249,7 @@ devices:
     colorway: dusk
   - label: opens cell 2
     kind: button
-    position_h: { x: 8.25, y: 7 }
+    position_h: { x: 7.75, y: 7 }
     link: 2
     colorway: dusk
   - label: cell 3
@@ -259,7 +259,7 @@ devices:
     colorway: dusk
   - label: opens cell 3
     kind: button
-    position_h: { x: 32.25, y: 1 }
+    position_h: { x: 32.75, y: 1 }
     link: 3
     colorway: dusk
   - label: cell 4
@@ -269,11 +269,11 @@ devices:
     colorway: dusk
   - label: opens cell 4
     kind: button
-    position_h: { x: 32.25, y: 7 }
+    position_h: { x: 32.75, y: 7 }
     link: 4
     colorway: dusk
   - kind: terminal
-    position_h: { x: 18.75, y: 9.5 }
+    position_h: { x: 18.25, y: 9.5 }
     text: VAULT 9. FOUR CELLS. THE GOLD WALKS.
     colorway: dusk
   - label: up the west side
@@ -295,6 +295,7 @@ enemy_spawns:
     position_h: { x: 3.5, y: 7 }
     facing: right
     armor_layers: 1
+    wave: 1
   - type_id: catto_gold
     position_h: { x: 36.5, y: 1 }
     facing: left
@@ -303,6 +304,26 @@ enemy_spawns:
     position_h: { x: 36.5, y: 7 }
     facing: left
     armor_layers: 1
+  - type_id: mage
+    position_h: { x: 2, y: 1 }
+    facing: right
+    armor_layers: 1
+    wave: 1
+  - type_id: mage
+    position_h: { x: 38, y: 1 }
+    facing: left
+    armor_layers: 1
+    wave: 1
+  - type_id: mage
+    position_h: { x: 37.75, y: 7 }
+    facing: left
+    armor_layers: 1
+    wave: 1
+  - type_id: mage
+    position_h: { x: 4.25, y: 7 }
+    facing: right
+    armor_layers: 1
+    wave: 1
 # The bonus item, lying beside the door once every enemy is down.
 bonus:
   x_h: 28

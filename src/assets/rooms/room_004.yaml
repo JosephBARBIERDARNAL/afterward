@@ -696,11 +696,11 @@ props:
     solid: false
     opacity: 0.8
   - prop: sci_fi_crate_stack
-    position_h: { x: 17.5, y: 1 }
+    position_h: { x: 1.75, y: 1 }
     solid: false
     opacity: 0.8
   - prop: sci_fi_small_crate
-    position_h: { x: 3.75, y: 37 }
+    position_h: { x: 6.5, y: 35 }
     solid: false
     mirrored: true
     opacity: 0.8
@@ -733,10 +733,6 @@ props:
 # Devices: traps, moving and folding platforms, buttons, doors and
 # ladders, each standing on a spot (the middle of its bottom edge).
 devices:
-  - kind: terminal
-    position_h: { x: 32.5, y: 33 }
-    text: AND IT HAS CONTINUED TO THIS DAY.
-    mirrored: true
   - kind: laser
     position_h: { x: 12.25, y: 33 }
     color: red
@@ -807,6 +803,10 @@ devices:
     on_s: 1
     offset_s: 1.35
     damage: 10.5
+  - kind: terminal
+    position_h: { x: 32.5, y: 3 }
+    text: AND IT HAS CONTINUED TO THIS DAY.
+    mirrored: true
 enemy_spawns:
   - label: fodder on floor A
     type_id: blade_unit
@@ -916,7 +916,12 @@ enemy_spawns:
     wave: 3
   - label: shooter on floor R4
     type_id: rifle_unit
-    position_h: { x: 29, y: 33 }
+    position_h: { x: 31, y: 33 }
+    facing: left
+    wave: 3
+  - label: shooter on floor R4
+    type_id: rifle_unit
+    position_h: { x: 28.75, y: 33 }
     facing: left
     wave: 3
 # The bonus item, lying beside the door once every enemy is down.

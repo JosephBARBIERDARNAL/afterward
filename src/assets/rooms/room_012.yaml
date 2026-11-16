@@ -394,7 +394,7 @@ props:
     opacity: 0.8
     colorway: dusk
   - prop: sci_fi_crate_stack
-    position_h: { x: 3, y: 18 }
+    position_h: { x: 1.75, y: 18 }
     solid: false
     opacity: 0.8
     colorway: dusk

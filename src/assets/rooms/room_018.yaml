@@ -306,11 +306,11 @@ devices:
     colorway: dusk
   - label: the lift
     kind: hover_platform
-    position_h: { x: 18.5, y: 3 }
+    position_h: { x: 19.25, y: 1 }
     size: large
     travel_x_h: 0
-    travel_y_h: 6
-    speed_h_s: 1.5
+    travel_y_h: 23
+    speed_h_s: 3.5
     colorway: dusk
   - kind: terminal
     position_h: { x: 2.75, y: 9.5 }
