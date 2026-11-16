@@ -163,7 +163,7 @@ pub(in crate::game) fn navigate_menus(
             },
         })
     } else if controls.just_pressed(GameAction::Interact, &keys)
-        || keys.just_pressed(KeyCode::Enter)
+        || controls.just_pressed(GameAction::Confirm, &keys)
     {
         splashes.write_batch(middle_of(standing_on));
         actions.get(standing_on).map(|action| MenuPressed {

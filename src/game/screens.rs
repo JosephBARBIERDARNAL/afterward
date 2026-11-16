@@ -93,10 +93,12 @@ pub(super) fn handle_screen_input(
     } = resources;
     let screen = *screen.get();
     let pausing = controls.just_pressed(GameAction::Pause, &keys);
+    // Leaving a menu: Pause, or Back (Escape, or the pad's Circle).
+    let leaving = pausing || controls.just_pressed(GameAction::Back, &keys);
 
     // The controls screen, while it listens, belongs to the key being bound.
     if screen == GameScreen::Controls && controls.rebinding.is_some() {
-        if keys.just_pressed(KeyCode::Escape) {
+        if controls.just_pressed(GameAction::Back, &keys) {
             controls.rebinding = None;
             sounds.push(SoundCue::UiCancel);
         } else if controls.capture_key(&keys) {
@@ -115,7 +117,7 @@ pub(super) fn handle_screen_input(
             sounds.push(SoundCue::UiConfirm);
             return;
         }
-        GameScreen::Build if showing_build || pausing => {
+        GameScreen::Build if showing_build || leaving => {
             next_screen.set(GameScreen::Playing);
             sounds.push(SoundCue::UiCancel);
             return;
@@ -125,7 +127,7 @@ pub(super) fn handle_screen_input(
             sounds.push(SoundCue::UiCancel);
             return;
         }
-        GameScreen::Paused if pausing => {
+        GameScreen::Paused if leaving => {
             next_screen.set(GameScreen::Playing);
             sounds.push(SoundCue::UiConfirm);
             return;
@@ -159,11 +161,13 @@ pub(super) fn handle_screen_input(
         | GameScreen::Controls
         | GameScreen::Difficulty
         | GameScreen::ConfirmLeave
-            if pausing =>
+            if leaving =>
         {
             Some(MenuAction::Back)
         }
-        GameScreen::Dead | GameScreen::Complete if keys.just_pressed(KeyCode::Escape) => {
+        GameScreen::Dead | GameScreen::Complete
+            if controls.just_pressed(GameAction::Back, &keys) =>
+        {
             Some(MenuAction::Back)
         }
         _ => None,

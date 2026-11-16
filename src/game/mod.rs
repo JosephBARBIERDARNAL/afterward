@@ -185,6 +185,10 @@ impl Plugin for GamePlugin {
         .insert_resource(PhaseTimer(Timer::from_seconds(0.5, TimerMode::Once)))
         .add_systems(PreStartup, fonts::load_the_game_fonts)
         .add_systems(
+            PreUpdate,
+            controls::read_gamepads.after(bevy::input::InputSystems),
+        )
+        .add_systems(
             Startup,
             (
                 camera::spawn_camera,

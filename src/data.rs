@@ -301,10 +301,17 @@ impl GameData {
             &controls.interact,
             &controls.pause,
             &controls.toggle_fullscreen,
+            &controls.confirm,
+            &controls.back,
         ];
         if default_bindings.iter().any(|binding| binding.is_empty()) {
             return Err(InvalidGameData::from(
                 "each game action needs a default key binding",
+            ));
+        }
+        if !(0.0..1.0).contains(&controls.gamepad.stick_threshold) {
+            return Err(InvalidGameData::from(
+                "controls.gamepad.stick_threshold must be between 0 and 1",
             ));
         }
 

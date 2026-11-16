@@ -48,6 +48,7 @@ mod difficulty;
 mod editor;
 mod enemy_markers;
 mod flyers;
+mod gamepad;
 mod hitboxes;
 mod impact;
 mod ledges;

@@ -226,6 +226,10 @@ Nothing is generated: every sound in the game is a real recording. A `SoundCue` 
 - A blow of the chain that lands plays the punch of its own step, from the list `audio.recorded_effects.punch_hits` (a heavy blow and the slam play the last of them), over the `damage_*` of what it landed on. One that reaches nobody plays `punch_missed` instead, at the moment it would have connected; the slam never does, since it lands on the floor either way. `combat/blows.rs` decides both.
 - Recordings are cropped to what is audible, faded at both ends and peak-normalized, and stored as mono WAV in `audio/sfx/` so a cue sounds the frame it fires rather than after an MP3 decoder's padding.
 
+### Gamepad
+
+A gamepad (tried with a DualSense) plays beside the keyboard. `controls.gamepad` of `config/gameplay.yaml` binds each action to pad buttons and left-stick directions (digital, past `stick_threshold`); they are read from the YAML only, never rebound on the controls screen. `controls::read_gamepads` (`PreUpdate`) turns every connected pad into the actions it holds, which `ControlBindings::pressed` and `just_pressed` hear as they hear a key, so no system reads a pad itself. `Confirm` (Enter, Cross) and `Back` (Escape, Circle) are the menu actions a pad needs. Whichever of the keyboard and a pad was touched last decides whether the labels (prompts, menu badges, the controls screen) name keys or PlayStation buttons (`controls/pad.rs`).
+
 ### Interact
 
 The bonus item, the unlocked door, buttons and terminals are used with Interact (E by default), never by walking into them (`src/game/interact.rs`, tuned from `room_flow.interact`). Each carries `Interactable`: its reach in H, and the verb Interact does there ("take", "enter", "press", "read"); `mark_what_is_in_reach` writes the nearest one the player stands within reach of to `InReach`, and `update_bonus_pickup`, `handle_door_touch`, `press_buttons` and `read_terminals` act on it when the key goes down. A locked door is never in reach. Health drops are not part of this: they are still taken on contact.

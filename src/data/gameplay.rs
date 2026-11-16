@@ -1,6 +1,7 @@
 //! Gameplay tuning from `config/gameplay.yaml`: viewport, player, melee, room flow, audio, and controls.
 
 use serde::Deserialize;
+use std::collections::BTreeMap;
 
 use super::{HexColor, ImageSizeConfig, MeleeStrike, RectH};
 
@@ -123,6 +124,20 @@ pub struct ControlsConfig {
     pub choose_third_bonus: Vec<String>,
     pub reroll_bonus: Vec<String>,
     pub show_build: Vec<String>,
+    /// Presses the button a menu's focus stands on, beside `interact`.
+    pub confirm: Vec<String>,
+    /// Leaves a menu, beside `pause`.
+    pub back: Vec<String>,
+    pub gamepad: GamepadControlsConfig,
+}
+
+/// A gamepad's buttons, by action id (`jump`, `move_left`...), read beside the
+/// keys. Gamepad buttons are not rebound from the controls screen.
+#[derive(Debug, Deserialize)]
+pub struct GamepadControlsConfig {
+    /// How far the left stick leans (0 to 1) before it holds a direction.
+    pub stick_threshold: f32,
+    pub bindings: BTreeMap<String, Vec<String>>,
 }
 
 #[derive(Debug, Deserialize)]

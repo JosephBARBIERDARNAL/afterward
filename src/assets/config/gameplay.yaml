@@ -573,3 +573,30 @@ controls:
   reroll_bonus: [KeyR]
   # Opens the window listing the run's bonuses and what each is doing.
   show_build: [Tab]
+  # Presses the menu button the focus stands on, and leaves a menu.
+  confirm: [Enter]
+  back: [Escape]
+  # Read beside the keys, by action. Names are Bevy's (South is Cross on a
+  # DualSense, East Circle, West Square, North Triangle, LeftTrigger L1,
+  # RightTrigger2 R2, Select Create, Start Options), plus LeftStickLeft,
+  # LeftStickRight, LeftStickUp and LeftStickDown. The screen shows the pad's
+  # names while it is the last thing touched.
+  gamepad:
+    stick_threshold: 0.5
+    bindings:
+      move_left: [DPadLeft, LeftStickLeft]
+      move_right: [DPadRight, LeftStickRight]
+      move_up: [DPadUp, LeftStickUp]
+      move_down: [DPadDown, LeftStickDown]
+      navigate_up: [DPadUp, LeftStickUp]
+      navigate_down: [DPadDown, LeftStickDown]
+      jump: [South]
+      attack: [West]
+      heavy_attack: [North]
+      dash: [East, RightTrigger2]
+      interact: [RightTrigger]
+      pause: [Start]
+      reroll_bonus: [LeftTrigger]
+      show_build: [Select]
+      confirm: [South]
+      back: [East]

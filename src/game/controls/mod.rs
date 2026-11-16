@@ -1,5 +1,5 @@
 use crate::{
-    data::{ControlsConfig, GameData},
+    data::{ControlsConfig, GameData, GamepadControlsConfig},
     game::settings::PreferencesDir,
 };
 use bevy::{
@@ -18,8 +18,10 @@ use std::{
 };
 
 mod key_codes;
+mod pad;
 
 use key_codes::{KeyBindingName, KeyLabel};
+use pad::PadInput;
 
 /// The letters typed this frame on the active keyboard layout. Menu letter
 /// shortcuts match these instead of key positions, so M is the key labeled M
@@ -48,7 +50,7 @@ impl<'a> FromIterator<&'a KeyboardInput> for TypedLetters {
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub(super) enum GameAction {
     MoveLeft,
     MoveRight,
@@ -73,10 +75,14 @@ pub(super) enum GameAction {
     RerollBonus,
     /// Opens the window listing the run's bonuses, and closes it.
     ShowBuild,
+    /// Presses the menu button the focus stands on.
+    Confirm,
+    /// Leaves a menu.
+    Back,
 }
 
 impl GameAction {
-    pub const ALL: [Self; 18] = [
+    pub const ALL: [Self; 20] = [
         Self::MoveLeft,
         Self::MoveRight,
         Self::MoveUp,
@@ -95,6 +101,8 @@ impl GameAction {
         Self::ChooseThirdBonus,
         Self::RerollBonus,
         Self::ShowBuild,
+        Self::Confirm,
+        Self::Back,
     ];
 
     pub fn label(self) -> &'static str {
@@ -117,6 +125,8 @@ impl GameAction {
             Self::ChooseThirdBonus => "THIRD BONUS",
             Self::RerollBonus => "REROLL BONUSES",
             Self::ShowBuild => "SHOW BONUSES",
+            Self::Confirm => "MENU CONFIRM",
+            Self::Back => "MENU BACK",
         }
     }
 }
@@ -144,6 +154,8 @@ impl FromStr for GameAction {
             "choose_third_bonus" => Ok(Self::ChooseThirdBonus),
             "reroll_bonus" => Ok(Self::RerollBonus),
             "show_build" => Ok(Self::ShowBuild),
+            "confirm" => Ok(Self::Confirm),
+            "back" => Ok(Self::Back),
             _ => Err("unknown game action"),
         }
     }
@@ -170,6 +182,8 @@ impl Display for GameAction {
             Self::ChooseThirdBonus => "choose_third_bonus",
             Self::RerollBonus => "reroll_bonus",
             Self::ShowBuild => "show_build",
+            Self::Confirm => "confirm",
+            Self::Back => "back",
         })
     }
 }
@@ -181,6 +195,14 @@ pub(super) struct ControlBindings {
     /// The action waiting for a key to be bound to it, while the controls
     /// screen is listening for one.
     pub(crate) rebinding: Option<GameAction>,
+    /// The gamepad buttons of each action, from the YAML; never rebound.
+    pad: BTreeMap<GameAction, Vec<PadInput>>,
+    stick_threshold: f32,
+    /// The actions a gamepad holds, read once a frame by [`read_gamepads`].
+    pad_held: ButtonInput<GameAction>,
+    /// Whether a gamepad was touched after the keyboard, which makes the
+    /// labels name its buttons.
+    pad_in_use: bool,
 }
 
 struct DefaultBindings(BTreeMap<GameAction, Vec<KeyCode>>);
@@ -227,38 +249,74 @@ impl From<&ControlsConfig> for DefaultBindings {
             ),
             (GameAction::RerollBonus, parse_keys(&controls.reroll_bonus)),
             (GameAction::ShowBuild, parse_keys(&controls.show_build)),
+            (GameAction::Confirm, parse_keys(&controls.confirm)),
+            (GameAction::Back, parse_keys(&controls.back)),
         ]))
     }
 }
 
+/// The gamepad buttons of each action, as `controls.gamepad` of the YAML
+/// names them. A name that reads as no action or no button is left out.
+struct PadBindings(BTreeMap<GameAction, Vec<PadInput>>);
+
+impl From<&GamepadControlsConfig> for PadBindings {
+    fn from(gamepad: &GamepadControlsConfig) -> Self {
+        Self(
+            gamepad
+                .bindings
+                .iter()
+                .filter_map(|(action, names)| {
+                    let inputs = names.iter().filter_map(|name| name.parse().ok());
+                    Some((action.parse().ok()?, inputs.collect()))
+                })
+                .collect(),
+        )
+    }
+}
+
 impl ControlBindings {
+    /// Whether the action is held, on the keyboard or a gamepad.
     pub fn pressed(&self, action: GameAction, keys: &ButtonInput<KeyCode>) -> bool {
-        self.bindings
-            .get(&action)
-            .is_some_and(|bindings| keys.any_pressed(bindings.iter().copied()))
+        self.pad_held.pressed(action)
+            || self
+                .bindings
+                .get(&action)
+                .is_some_and(|bindings| keys.any_pressed(bindings.iter().copied()))
     }
 
+    /// Whether the action was pressed this frame, on the keyboard or a gamepad.
     pub fn just_pressed(&self, action: GameAction, keys: &ButtonInput<KeyCode>) -> bool {
-        self.bindings
-            .get(&action)
-            .is_some_and(|bindings| keys.any_just_pressed(bindings.iter().copied()))
+        self.pad_held.just_pressed(action)
+            || self
+                .bindings
+                .get(&action)
+                .is_some_and(|bindings| keys.any_just_pressed(bindings.iter().copied()))
+    }
+
+    /// The gamepad's buttons for the action while the pad is in use and it
+    /// has some, else its keys.
+    fn labels(&self, action: GameAction) -> Vec<String> {
+        match self.pad.get(&action) {
+            Some(inputs) if self.pad_in_use && !inputs.is_empty() => inputs
+                .iter()
+                .map(|input| input.label().to_owned())
+                .collect(),
+            _ => self
+                .bindings
+                .get(&action)
+                .into_iter()
+                .flatten()
+                .map(|key| KeyLabel::from(*key).to_string())
+                .collect(),
+        }
     }
 
     pub fn binding_label(&self, action: GameAction) -> String {
-        self.bindings
-            .get(&action)
-            .into_iter()
-            .flatten()
-            .map(|key| KeyLabel::from(*key).to_string())
-            .collect::<Vec<_>>()
-            .join(" / ")
+        self.labels(action).join(" / ")
     }
 
     pub fn primary_label(&self, action: GameAction) -> String {
-        self.bindings
-            .get(&action)
-            .and_then(|bindings| bindings.first())
-            .map_or_else(String::new, |key| KeyLabel::from(*key).to_string())
+        self.labels(action).into_iter().next().unwrap_or_default()
     }
 
     /// Binds the next key pressed to the action being rebound, taking it off
@@ -289,6 +347,40 @@ impl ControlBindings {
     }
 }
 
+/// Reads every connected gamepad into the actions it holds, so
+/// [`ControlBindings::pressed`] hears a pad as it hears a key. Whichever of
+/// the keyboard and a pad was touched last decides which names the screen
+/// shows.
+pub(super) fn read_gamepads(
+    gamepads: Query<&Gamepad>,
+    keys: Res<ButtonInput<KeyCode>>,
+    mut bindings: ResMut<ControlBindings>,
+) {
+    // Written every frame: bypassed so that nothing watching the bindings
+    // for a rebind thinks they changed.
+    let bindings = bindings.bypass_change_detection();
+    bindings.pad_held.clear();
+    let threshold = bindings.stick_threshold;
+    for (action, inputs) in &bindings.pad {
+        let held = gamepads.iter().any(|pad| {
+            inputs.iter().any(|input| {
+                input.held(pad, threshold)
+                    || matches!(input, PadInput::Button(button) if pad.just_pressed(*button))
+            })
+        });
+        match (held, bindings.pad_held.pressed(*action)) {
+            (true, false) => bindings.pad_held.press(*action),
+            (false, true) => bindings.pad_held.release(*action),
+            _ => {}
+        }
+    }
+    if keys.get_just_pressed().next().is_some() {
+        bindings.pad_in_use = false;
+    } else if bindings.pad_held.get_just_pressed().next().is_some() {
+        bindings.pad_in_use = true;
+    }
+}
+
 #[derive(Deserialize, Serialize, Default)]
 struct SavedBindings {
     bindings: BTreeMap<String, Vec<String>>,
@@ -299,7 +391,10 @@ pub(super) fn initialize_control_bindings(
     preferences: Res<PreferencesDir>,
     mut bindings: ResMut<ControlBindings>,
 ) {
-    let defaults = DefaultBindings::from(&data.gameplay.controls).0;
+    let controls = &data.gameplay.controls;
+    bindings.pad = PadBindings::from(&controls.gamepad).0;
+    bindings.stick_threshold = controls.gamepad.stick_threshold;
+    let defaults = DefaultBindings::from(controls).0;
     bindings.defaults = defaults.clone();
     bindings.bindings = defaults;
 

@@ -187,7 +187,9 @@ pub(super) fn handle_bonus_input(
         .position(|action| controls.just_pressed(*action, &keys))
     {
         BonusChoice::Offer(index)
-    } else if controls.just_pressed(GameAction::Interact, &keys) {
+    } else if controls.just_pressed(GameAction::Interact, &keys)
+        || controls.just_pressed(GameAction::Confirm, &keys)
+    {
         session.selected_choice
     } else {
         return;
