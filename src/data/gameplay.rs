@@ -169,6 +169,17 @@ pub struct PlayerConfig {
     pub dash: DashConfig,
     pub wall: WallConfig,
     pub climb: ClimbConfig,
+    pub ledge: LedgeConfig,
+}
+
+/// Climbing over the edge of a platform caught in mid-air.
+#[derive(Debug, Deserialize)]
+pub struct LedgeConfig {
+    /// How far above the feet a platform's top may stand and still be
+    /// climbed onto rather than clung to.
+    pub reach_h: f32,
+    /// How long the climb takes, from the hand on the edge to standing.
+    pub climb_s: f32,
 }
 
 /// Climbing a ladder: Up or Down inside its column grabs it, Up and Down

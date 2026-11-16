@@ -50,6 +50,7 @@ mod enemy_markers;
 mod flyers;
 mod hitboxes;
 mod impact;
+mod ledges;
 mod main_menu;
 mod menus;
 mod move_bonuses;

@@ -88,6 +88,10 @@ pub(in crate::game) fn player_melee(
         player.slam_landed = false;
         return;
     }
+    // Both hands are on the edge: a press made now waits in the buffer.
+    if player.ledge_climb.is_some() {
+        return;
+    }
     let feet = Vec2::new(
         transform.translation.x,
         transform.translation.y - 0.5 * H_WORLD_UNITS,

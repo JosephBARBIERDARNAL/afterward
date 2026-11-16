@@ -171,12 +171,21 @@ player:
     jump_push_h_s: 7
     control_lock_s: 0.18
   # Ladders (devices of kind `ladder`): Up or Down within `reach_h` of a
-  # ladder's middle grabs it, Up and Down climb it at `speed_h_s`, stepping
-  # sideways off its top leaves it onto the ledge, and Jump lets go with a hop.
+  # ladder's middle grabs it, Up and Down climb it at `speed_h_s` (sped up by
+  # what speeds the player's run), stepping sideways off its top leaves it
+  # onto the ledge, Left or Right alone lets go of it that way, and Jump lets
+  # go with a hop.
   climb:
-    speed_h_s: 3.5
+    speed_h_s: 4.5
     reach_h: 0.35
     jump_off_impulse_h_s: 9
+  # Ledges: a player in mid-air pressed into a platform's side whose top
+  # stands no more than `reach_h` above their feet, with room to stand on it,
+  # climbs over the edge in `climb_s` instead of clinging to it. Only a
+  # taller side, or one roofed over, is a wall to cling to.
+  ledge:
+    reach_h: 1.4
+    climb_s: 0.24
 
 # The healing a dying enemy sometimes leaves behind: the medical cross of
 # `sprite`, drawn `size_h` tall where the enemy fell.

@@ -241,6 +241,35 @@ fn up_climbs_a_ladder_the_player_hangs_on_it_and_jump_lets_go() {
 }
 
 #[test]
+fn left_or_right_alone_lets_go_of_a_ladder_that_way() {
+    let mut game = play_in(hall(
+        "  - { kind: ladder, position_h: { x: 3, y: 1 }, height_h: 4 }",
+    ));
+    game.key(KeyCode::KeyW, ButtonState::Pressed);
+    game.run_seconds(0.4);
+    game.key(KeyCode::KeyW, ButtonState::Released);
+    let on_the_ladder = player_x(&mut game);
+    let climbing = |game: &mut HeadlessGame| {
+        let world = game.app.world_mut();
+        world
+            .query::<&PlayerBody>()
+            .single(world)
+            .expect("the player stands in the room")
+            .climbing
+            .is_some()
+    };
+    assert!(climbing(&mut game), "Up grabs the ladder");
+    game.key(KeyCode::KeyD, ButtonState::Pressed);
+    game.run_seconds(0.3);
+    game.key(KeyCode::KeyD, ButtonState::Released);
+    assert!(!climbing(&mut game), "Right lets go of it");
+    assert!(
+        player_x(&mut game) > on_the_ladder + 0.5 * H_WORLD_UNITS,
+        "and the player drops off it moving right"
+    );
+}
+
+#[test]
 fn a_terminal_types_its_text_in_a_bubble_with_the_typing_heard_until_it_is_written() {
     let mut game = play_in(hall(
         "  - { kind: terminal, position_h: { x: 3.75, y: 1 }, text: \"HELLO THERE\" }",

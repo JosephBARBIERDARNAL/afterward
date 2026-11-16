@@ -9,6 +9,11 @@ pub(super) struct AnimationState {
     pub(super) dt: f32,
     pub(super) enemies_alive: bool,
     pub(super) health_fraction: f32,
+    /// How many times its clip's pace the ladder is climbed at, as fast as
+    /// the bonuses speed the player's run.
+    pub(super) climb_pace: f32,
+    /// How long a climb over a ledge takes, which its clip is fitted to.
+    pub(super) ledge_climb_s: f32,
 }
 
 /// The player's sprite and the sheets its clips come from.
@@ -28,6 +33,16 @@ impl PlayerSprite<'_> {
     fn restart(&mut self, key: &str, looping: bool) {
         self.animation.sheet.clear();
         self.play(key, looping);
+    }
+
+    /// Plays the clip `key`, already on, at `speed` times its own pace.
+    fn pace(&mut self, key: &str, speed: f32) {
+        if let Some(sheet) = self.sheets.0.get(key) {
+            self.animation.timer = Timer::from_seconds(
+                (1.0 / (sheet.fps * speed)).max(f32::EPSILON),
+                TimerMode::Repeating,
+            );
+        }
     }
 
     /// Whether `key` plays and has reached its last frame.
@@ -51,6 +66,16 @@ impl PlayerSprite<'_> {
             self.play("player_death", false);
             return;
         }
+        if player.ledge_climb.is_some() {
+            if self.animation.sheet != "player_ledge_climb" {
+                self.restart("player_ledge_climb", false);
+                self.pace(
+                    "player_ledge_climb",
+                    animations.clips.ledge_climb.duration_s() / state.ledge_climb_s,
+                );
+            }
+            return;
+        }
         if let Some(action) = player.action {
             let key = match action {
                 PlayerAction::Strike { strike, .. } => strike.clip_key(),
@@ -71,12 +96,7 @@ impl PlayerSprite<'_> {
                     PlayerAction::Strike { speed, .. } | PlayerAction::Dash { speed } => speed,
                     _ => 1.0,
                 };
-                if let Some(sheet) = self.sheets.0.get(key) {
-                    self.animation.timer = Timer::from_seconds(
-                        (1.0 / (sheet.fps * speed)).max(f32::EPSILON),
-                        TimerMode::Repeating,
-                    );
-                }
+                self.pace(key, speed);
             } else {
                 self.play(key, false);
             }
@@ -88,7 +108,10 @@ impl PlayerSprite<'_> {
         }
         if player.climbing.is_some() {
             // Hanging still on the ladder holds the frame the climb is on.
-            self.play("player_climb", true);
+            if self.animation.sheet != "player_climb" {
+                self.play("player_climb", true);
+                self.pace("player_climb", state.climb_pace);
+            }
             if player.velocity.y == 0.0 {
                 self.animation.timer.reset();
             }

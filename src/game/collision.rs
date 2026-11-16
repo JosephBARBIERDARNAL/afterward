@@ -389,6 +389,59 @@ impl<'a> Platforms<'a> {
             })
     }
 
+    /// The ledge a body at `x` with its feet at `feet_y`, pressed into a
+    /// platform's side on the side `direction` points to, can climb over:
+    /// where its feet stand once on top, the top being no more than `reach`
+    /// above its feet. Only a side whose top is near and has room to stand on
+    /// past its edge is a ledge; anything taller, or roofed over, is a wall.
+    pub(super) fn ledge(&self, x: f32, feet_y: f32, direction: f32, reach: f32) -> Option<Vec2> {
+        let (top, edge) = self
+            .0
+            .iter()
+            .filter(|platform| platform.tilt.is_none())
+            .filter_map(|platform| {
+                let edge = if direction < 0.0 {
+                    platform.right
+                } else {
+                    platform.left
+                };
+                let touching = (edge - x - direction * HALF_BODY_WIDTH).abs() <= CONTACT_TOLERANCE;
+                let rise = platform.top - feet_y;
+                (touching && rise > CONTACT_TOLERANCE && rise <= reach)
+                    .then_some((platform.top, edge))
+            })
+            // A ledge built of slabs stacked on one another is climbed onto
+            // the highest of them.
+            .max_by(|first, second| first.0.total_cmp(&second.0))?;
+        // Onto the top, a body's width past the edge, and the column the body
+        // rises up in to get there: both must be clear.
+        let stand_x = edge + direction * (HALF_BODY_WIDTH + CONTACT_TOLERANCE);
+        let (low, high) = (stand_x.min(x), stand_x.max(x));
+        let clear = |left: f32, right: f32, bottom: f32, top: f32| {
+            !self.0.iter().any(|platform| {
+                let reach = match &platform.tilt {
+                    None => (platform.right > left && platform.left < right)
+                        .then_some((platform.bottom, platform.top)),
+                    Some(tilt) => tilt.reach_within(0, left, right),
+                };
+                reach.is_some_and(|(under, over)| under < top && over > bottom)
+            })
+        };
+        let body_top = top + H_WORLD_UNITS;
+        (clear(
+            low - HALF_BODY_WIDTH,
+            high + HALF_BODY_WIDTH,
+            top + CONTACT_TOLERANCE,
+            body_top,
+        ) && clear(
+            x - HALF_BODY_WIDTH + CONTACT_TOLERANCE,
+            x + HALF_BODY_WIDTH - CONTACT_TOLERANCE,
+            feet_y + H_WORLD_UNITS,
+            body_top,
+        ))
+        .then_some(Vec2::new(stand_x, top))
+    }
+
     /// The highest floor under a body at `x` whose feet are at `feet_y`: where
     /// it would land if it stepped off what it stands on there.
     pub(super) fn floor_below(&self, x: f32, feet_y: f32) -> Option<f32> {

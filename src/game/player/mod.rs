@@ -4,7 +4,7 @@ mod animation;
 mod body;
 
 use animation::{AnimationState, PlayerSprite};
-pub(super) use body::{BonusAura, PlayerAction, PlayerBody, Strike, Thrown};
+pub(super) use body::{BonusAura, LedgeClimb, PlayerAction, PlayerBody, Strike, Thrown};
 
 #[derive(SystemParam)]
 pub(super) struct PlayerUpdateResources<'w, 's> {
@@ -110,9 +110,54 @@ pub(super) fn update_player(
     if held(GameAction::MoveRight) {
         direction += 1.0;
     }
+    let animation_state = |moving| AnimationState {
+        moving,
+        jog_speed,
+        dt,
+        enemies_alive: enemies.iter().any(|enemy| enemy.health > 0.0),
+        health_fraction: session.health / session.max_health.max(1.0),
+        climb_pace: movement_multiplier,
+        ledge_climb_s: tuning.ledge.climb_s,
+    };
+    // Climbing over a ledge: the body is carried up beside the edge, then
+    // over onto the top, and nothing else moves it meanwhile.
+    if let Some(mut ledge) = player.ledge_climb {
+        ledge.elapsed_s += dt;
+        let progress = (ledge.elapsed_s / tuning.ledge.climb_s).min(1.0);
+        let ease = |from: f32, to: f32| {
+            let t = ((progress - from) / (to - from)).clamp(0.0, 1.0);
+            t * t * (3.0 - 2.0 * t)
+        };
+        let feet = ledge.from
+            + Vec2::new(
+                (ledge.to.x - ledge.from.x) * ease(0.4, 1.0),
+                (ledge.to.y - ledge.from.y) * ease(0.0, 0.6),
+            );
+        transform.translation.x = feet.x;
+        transform.translation.y = feet.y + H_WORLD_UNITS / 2.0;
+        player.velocity = Vec2::ZERO;
+        player.ledge_climb = (progress < 1.0 && alive).then_some(ledge);
+        if player.ledge_climb.is_none() {
+            // On the top: the ordinary movement takes over next frame.
+            player.grounded = alive;
+            player.jumps_used = 0;
+            player.air_dashes_used = 0;
+            sounds.push(SoundCue::Landing);
+        }
+        sprite_view.update(
+            &mut player,
+            &data.player_animations,
+            &animation_state(false),
+        );
+        sprite_view.sprite.flip_x = player.facing < 0.0;
+        return;
+    }
+
     // A ladder: Up or Down inside its column grabs it, and while the player
-    // climbs it nothing but the ladder holds them up.
+    // climbs it nothing but the ladder holds them up. What speeds the run
+    // speeds the climb.
     let climb = &tuning.climb;
+    let climb_speed = climb.speed_h_s * movement_multiplier * H_WORLD_UNITS;
     let feet_now = transform.translation.y - H_WORLD_UNITS / 2.0;
     if player.climbing.is_none()
         && alive
@@ -132,11 +177,10 @@ pub(super) fn update_player(
     if let Some(ladder) = player.climbing {
         let up_down = f32::from(u8::from(held(GameAction::MoveUp)))
             - f32::from(u8::from(held(GameAction::MoveDown)));
-        let feet = (feet_now + up_down * climb.speed_h_s * H_WORLD_UNITS * dt)
-            .clamp(ladder.min.y, ladder.max.y);
+        let feet = (feet_now + up_down * climb_speed * dt).clamp(ladder.min.y, ladder.max.y);
         transform.translation.x = ladder.center().x;
         transform.translation.y = feet + H_WORLD_UNITS / 2.0;
-        player.velocity = Vec2::new(0.0, up_down * climb.speed_h_s * H_WORLD_UNITS);
+        player.velocity = Vec2::new(0.0, up_down * climb_speed);
         player.grounded = false;
         player.wall_cling = None;
         player.jumps_used = 0;
@@ -156,6 +200,14 @@ pub(super) fn update_player(
             );
             player.jumps_used = 1;
             sounds.push(SoundCue::Jump);
+        } else if direction != 0.0 && !at_top && up_down == 0.0 {
+            // Left or Right alone lets go of the ladder that way: the player
+            // drops off it already moving.
+            player.climbing = None;
+            player.velocity = Vec2::new(
+                direction * tuning.air_max_speed_h_s * movement_multiplier * H_WORLD_UNITS,
+                0.0,
+            );
         } else if (at_top && direction != 0.0)
             || (at_bottom && held(GameAction::MoveDown))
             || !ladders.iter().any(|other| other.area == ladder)
@@ -165,14 +217,11 @@ pub(super) fn update_player(
             player.climbing = None;
             player.velocity = Vec2::ZERO;
         }
-        let state = AnimationState {
-            moving: false,
-            jog_speed,
-            dt,
-            enemies_alive: enemies.iter().any(|enemy| enemy.health > 0.0),
-            health_fraction: session.health / session.max_health.max(1.0),
-        };
-        sprite_view.update(&mut player, &data.player_animations, &state);
+        sprite_view.update(
+            &mut player,
+            &data.player_animations,
+            &animation_state(false),
+        );
         sprite_view.sprite.flip_x = player.facing < 0.0;
         return;
     }
@@ -416,16 +465,43 @@ pub(super) fn update_player(
         player.velocity.y = player.velocity.y.min(0.0);
     }
 
-    // Clinging to a wall: airborne, falling, and pressed into a platform's
-    // side by the player's own steering.
+    // Pressed into a platform's side in mid-air by the player's own
+    // steering: a ledge within reach is climbed over, and only a true wall,
+    // too tall or roofed over, is clung to on the way down.
     let feet = transform.translation.y - H_WORLD_UNITS / 2.0;
-    player.wall_cling = (!player.grounded
+    let pressed_into_side = !player.grounded
         && player.dash_s.is_none()
-        && player.velocity.y <= 0.0
         && player.wall_control_lock_s == 0.0
         && direction != 0.0
-        && platforms.wall_beside(transform.translation.x, feet, direction))
-    .then_some(direction);
+        && platforms.wall_beside(transform.translation.x, feet, direction);
+    let ledge = (pressed_into_side && alive && !player.slamming && player.strike.is_none())
+        .then(|| {
+            platforms.ledge(
+                transform.translation.x,
+                feet,
+                direction,
+                tuning.ledge.reach_h * H_WORLD_UNITS,
+            )
+        })
+        .flatten();
+    if let Some(top) = ledge {
+        player.ledge_climb = Some(LedgeClimb {
+            from: Vec2::new(transform.translation.x, feet),
+            to: top,
+            elapsed_s: 0.0,
+        });
+        player.facing = direction;
+        player.velocity = Vec2::ZERO;
+        player.jump_held = false;
+        if matches!(
+            player.action,
+            Some(PlayerAction::Land | PlayerAction::WallJump)
+        ) {
+            player.action = None;
+        }
+    }
+    player.wall_cling =
+        (pressed_into_side && ledge.is_none() && player.velocity.y <= 0.0).then_some(direction);
 
     if player.grounded || player.wall_cling.is_some() {
         player.air_dashes_used = 0;
@@ -463,13 +539,10 @@ pub(super) fn update_player(
         player.footstep_timer = 0.0;
     }
 
-    let state = AnimationState {
-        moving,
-        jog_speed,
-        dt,
-        enemies_alive: enemies.iter().any(|enemy| enemy.health > 0.0),
-        health_fraction: session.health / session.max_health.max(1.0),
-    };
-    sprite_view.update(&mut player, &data.player_animations, &state);
+    sprite_view.update(
+        &mut player,
+        &data.player_animations,
+        &animation_state(moving),
+    );
     sprite_view.sprite.flip_x = player.facing < 0.0;
 }

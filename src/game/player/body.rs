@@ -52,6 +52,8 @@ pub(crate) struct PlayerBody {
     pub(crate) wall_cling: Option<f32>,
     /// The ladder the player is climbing: its column, in world units.
     pub(crate) climbing: Option<Rect>,
+    /// Climbing over the edge of a platform, while it lasts.
+    pub(crate) ledge_climb: Option<LedgeClimb>,
     /// Seconds left of the lock a wall jump puts on movement input, so the
     /// push actually carries the player off the wall.
     pub(crate) wall_control_lock_s: f32,
@@ -104,6 +106,7 @@ impl Default for PlayerBody {
             crouching: false,
             wall_cling: None,
             climbing: None,
+            ledge_climb: None,
             wall_control_lock_s: 0.0,
             idle_s: 0.0,
             fidget_right: false,
@@ -193,6 +196,17 @@ pub(crate) struct Strike {
 pub(crate) enum Thrown {
     Step(usize),
     Heavy(usize),
+}
+
+/// A climb over a platform's edge: the body is carried from where it caught
+/// the edge, up beside it and then over onto the top.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(crate) struct LedgeClimb {
+    /// Where the feet were when the edge was caught.
+    pub(crate) from: Vec2,
+    /// Where the feet stand once on top.
+    pub(crate) to: Vec2,
+    pub(crate) elapsed_s: f32,
 }
 
 /// A one-shot player animation played over the movement clips.
