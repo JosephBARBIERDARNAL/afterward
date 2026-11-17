@@ -242,7 +242,12 @@ pub(super) fn handle_bonus_input(
 }
 
 pub(super) fn reroll_available(session: &RunSession, data: &GameData) -> bool {
-    session.rerolls > 0 && eligible_bonuses(data, session, &session.previous_offers).count() >= 2
+    session.rerolls > 0
+        && eligible_bonuses(data, session, &session.previous_offers)
+            .map(BonusConfig::kind)
+            .collect::<BTreeSet<_>>()
+            .len()
+            >= 2
 }
 
 /// The bonuses the player may still be offered: not already owned, and not
@@ -431,7 +436,7 @@ pub(super) fn draw_bonus_offers(
                     1
                 };
                 let weight = data.bonuses.rarities[*rarity].weight * lean * synergy;
-                (BonusPick::new(&bonus.id, *rarity), weight)
+                ((BonusPick::new(&bonus.id, *rarity), bonus.kind()), weight)
             })
         })
         .collect::<Vec<_>>();
@@ -447,9 +452,10 @@ pub(super) fn draw_bonus_offers(
                 landed
             })
             .unwrap_or(0);
-        let (pick, _) = tickets.swap_remove(index);
-        // A bonus is offered once, at the one rarity drawn.
-        tickets.retain(|(other, _)| other.id != pick.id);
+        let ((pick, kind), _) = tickets.swap_remove(index);
+        // A bonus is offered once, at the one rarity drawn, and never beside
+        // another of its family.
+        tickets.retain(|((_, other), _)| *other != kind);
         offers.push(pick);
     }
     offers
@@ -481,6 +487,16 @@ mod tests {
                     .len(),
                 3,
                 "a draw never offers the same bonus twice"
+            );
+            assert_eq!(
+                offers
+                    .iter()
+                    .filter_map(|offer| data.bonuses.bonus(&offer.id))
+                    .map(BonusConfig::kind)
+                    .collect::<BTreeSet<_>>()
+                    .len(),
+                3,
+                "a draw never offers two bonuses of one family"
             );
             for offer in offers {
                 assert!(

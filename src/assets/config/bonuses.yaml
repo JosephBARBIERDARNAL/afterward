@@ -89,10 +89,15 @@ glossary:
 # each is a step of `player.melee.heavy` in `config/gameplay.yaml` that only a
 # run owning it throws, in place of the heavy blow after two of the chain, and
 # a run holding more than one throws the last of them listed there.
+#
+# `family` names what a bonus raises when another bonus raises the same: two
+# bonuses of one family are never offered side by side, so a choice never
+# sets one beside a plainly better version of itself.
 bonuses:
   - id: heavy_hands
     name: Heavy Hands
     description: Increase strike damage by {strike_damage_multiplier:+%}.
+    family: strike_damage
     rarities:
       common: { strike_damage_multiplier: 1.2 }
       uncommon: { strike_damage_multiplier: 1.24 }
@@ -142,6 +147,7 @@ bonuses:
   - id: thick_skin
     name: Thick Skin
     description: Reduce damage taken by {damage_taken_multiplier:-%}.
+    family: damage_taken
     rarities:
       common: { damage_taken_multiplier: 0.9 }
       uncommon: { damage_taken_multiplier: 0.88 }
@@ -153,14 +159,6 @@ bonuses:
     description: Negate the first damage event in each room.
     effects: { negate_first_damage_each_room: 1 }
     rarities: { epic: {} }
-  - id: vitality
-    name: Vitality
-    description: Increase maximum health by {max_health_increase} and restore {restore_health} health.
-    rarities:
-      uncommon: { max_health_increase: 15, restore_health: 15 }
-      rare: { max_health_increase: 18, restore_health: 18 }
-      epic: { max_health_increase: 21, restore_health: 21 }
-      legendary: { max_health_increase: 25, restore_health: 25 }
   - id: scavenger
     name: Scavenger
     description: Increase health pickup drop chance by {health_drop_chance_multiplier:+%}.
@@ -294,13 +292,14 @@ bonuses:
     rarities: { uncommon: {} }
   - id: steadfast
     name: Steadfast
-    description: Increase maximum health by {max_health_increase}.
+    description: Increase maximum health by {max_health_increase}, and heal as much.
+    family: max_health
     rarities:
       common: { max_health_increase: 10 }
-      uncommon: { max_health_increase: 12 }
-      rare: { max_health_increase: 14 }
-      epic: { max_health_increase: 16 }
-      legendary: { max_health_increase: 20 }
+      uncommon: { max_health_increase: 14 }
+      rare: { max_health_increase: 18 }
+      epic: { max_health_increase: 21 }
+      legendary: { max_health_increase: 25 }
   - id: field_dressing
     name: Field Dressing
     description: Health pickups restore {health_pickup_multiplier:+%} more.
@@ -351,6 +350,7 @@ bonuses:
   - id: cold_read
     name: Cold Read
     description: Enemy wind-ups last {enemy_windup_multiplier:+%} longer.
+    family: enemy_windup
     rarities:
       common: { enemy_windup_multiplier: 1.1 }
       uncommon: { enemy_windup_multiplier: 1.12 }
@@ -415,12 +415,14 @@ bonuses:
   - id: arsenal
     name: Arsenal
     description: Blows deal {per_bonus_owned:%} more damage for every bonus you own, this one included.
+    family: strike_damage
     rarities:
       epic: { per_bonus_owned: 0.02 }
       legendary: { per_bonus_owned: 0.025 }
   - id: fortress
     name: Fortress
     description: Take {per_bonus_owned:%} less damage for every bonus you own, this one included, up to {max_reduction:%}.
+    family: damage_taken
     effects: { max_reduction: 0.4 }
     rarities:
       epic: { per_bonus_owned: 0.015 }
@@ -434,6 +436,7 @@ bonuses:
   - id: insight
     name: Insight
     description: Enemy wind-ups last {per_bonus_owned:%} longer for every bonus you own, this one included.
+    family: enemy_windup
     synergies: [cold_read]
     rarities:
       epic: { per_bonus_owned: 0.025 }

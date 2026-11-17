@@ -222,9 +222,18 @@ pub struct BonusConfig {
     /// heavier in the draw, and the bonus screen names the ones owned.
     #[serde(default)]
     pub synergies: Vec<String>,
+    /// What the bonus raises when another raises the same: two bonuses of
+    /// one family are never offered side by side.
+    #[serde(default)]
+    pub family: Option<String>,
 }
 
 impl BonusConfig {
+    /// What a choice holds once at most: the bonus's family, else the bonus.
+    pub(crate) fn kind(&self) -> &str {
+        self.family.as_deref().unwrap_or(&self.id)
+    }
+
     /// An effect of the version at `rarity`: its own, else the shared one.
     pub(crate) fn effect(&self, rarity: BonusRarity, key: &str) -> Option<f32> {
         self.rarities

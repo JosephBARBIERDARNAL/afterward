@@ -271,7 +271,7 @@ fn chapter_one_combat_run_reaches_completion_with_unique_bonus_choices() {
                     if *screen.get() == GameScreen::Bonus {
                         let preferred_bonus = [
                             "room_ward",
-                            "vitality",
+                            "steadfast",
                             "thick_skin",
                             "vampiric_rounds",
                             "last_round",

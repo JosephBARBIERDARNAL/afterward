@@ -155,7 +155,9 @@ impl RunSession {
             .bonuses
             .iter()
             .filter(|bonus| self.may_be_offered(bonus))
-            .count()
+            .map(BonusConfig::kind)
+            .collect::<BTreeSet<_>>()
+            .len()
             >= 2
     }
 
@@ -167,9 +169,10 @@ impl RunSession {
             return;
         };
         let effect = |key| bonus.effect(pick.rarity, key).unwrap_or_default();
+        // Health rises with the maximum it raises.
         self.max_health += effect("max_health_increase");
+        self.health += effect("max_health_increase");
         self.rerolls = self.rerolls.saturating_add(effect("extra_rerolls") as u8);
-        self.health = (self.health + effect("restore_health")).min(self.max_health);
     }
 
     /// Whether the room being played has anyone to fight. One that does not
