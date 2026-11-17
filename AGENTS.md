@@ -356,6 +356,14 @@ Three types of `enemies/enemy_types.yaml` come from the sci-fi pack (`enemies/sc
 - `sci_fi_orb` and `sci_fi_drone` fly: `flight` on a type (`combat/flight.rs`) makes it see all round it within its detection range, fly straight at a spot by its mark (stopped by the platforms, one axis at a time) and keep no floor, so `update_enemy_platform_physics` leaves it alone. The orb is a flying mine (`contact_h`): it goes off on reaching the player, who is hit at once (a blast left to burn would never go off if it was the room's last enemy, as the room clears as it dies), and one blow sets it off where it is. The drone hovers `hover_h` above its mark and, right over it, winds up and drops its shot straight down (`CombatProjectile::velocity_y`).
 - They have no hurt or death clips of their own: `<type>_hurt` and `<type>_dead` are cut from their idle frames, and `idle_sheet` lists them so they spawn in their own sheet.
 
+### The character packs
+
+Nine more types of `enemies/enemy_types.yaml` are cut from six character packs kept in `packs/` (`dark_fantasy_boss/`, `shadow_series/`, `pixel_art_09/`, `zweihander/`, `character_pack/`, `pixel_art_05/`; none ships a licence file) by `scripts/cut_enemy_packs.py` (`just enemy-packs`, needs ImageMagick): one strip per clip in `enemies/<type>/`, every frame of a type one size with its body in the middle (the most solid column of its first idle frame) and the empty rows cut off. Its `TYPES` table is where a clip is added or recut, and what it prints is the frame size and `sprite:` padding to copy into `assets/monster_sheets.rs` and the YAML. Only test room 999 holds them, in waves 2 to 7.
+
+- `horned_brute` and `wetlands_boss` are bosses: the brute calls a `hazard` up under the player from afar and slams up close; the wetlands boss's slash sends a `shockwave`, and from further off it curls up and rolls at the player (a `telegraphed_lunge`).
+- `hallokin` pounces and breathes flame along the floor; `blind_huntress` dashes in, cuts twice and rolls out of a beating (`roll:`); `crimson_duelist` and `zweihander` hold a `parry`; `glyph_gunner` keeps its distance and fires its own bullet (`glyph_gunner_shot`); `moon_blade` dashes through; `antler_wisp` throws an orb from afar, then closes in.
+- `zweihander`, `moon_blade` and `antler_wisp` are drawn from player packs, which lack some clips: the script stands others in (the Zweihander walks in its idle stance with a procedural bob, a flinch or a fall stands in for a death), and a clip that connects on its first frame is given an idle frame before it as its wind-up.
+
 ### Typst pixel art
 
 The HUD pieces in `src/assets/ui/` and the health drop in `src/assets/pickups/` are drawn in code with [Typst](https://typst.app) instead of a paint program (the surface textures are the sci-fi pack's, cut by `just sci-fi`). Sources live in `art/`, mirroring their output path under `src/assets/` (`art/ui/enemy_shield.typ` renders `src/assets/ui/enemy_shield.png`).

@@ -1,5 +1,6 @@
-//! The monsters of `assets/monster_sheets.rs`: each finds a standing player
-//! and wounds them with the attack its type is given.
+//! The monsters of `assets/monster_sheets.rs`, and the types cut from the
+//! character packs: each finds a standing player and wounds them with the
+//! attacks its type is given.
 
 use super::super::*;
 use crate::game::combat::CombatProjectile;
@@ -8,7 +9,7 @@ use std::{path::Path, time::Duration};
 use bevy::{prelude::MinimalPlugins, state::app::StatesPlugin, time::TimeUpdateStrategy};
 
 #[test]
-fn every_monster_reaches_a_standing_player_and_the_eye_beast_does_it_with_its_void_ball() {
+fn every_monster_reaches_a_standing_player_and_a_shot_of_its_own_is_what_it_fires() {
     for monster in [
         "abomination",
         "mage",
@@ -18,6 +19,15 @@ fn every_monster_reaches_a_standing_player_and_the_eye_beast_does_it_with_its_vo
         "abomination_rust",
         "mage_gold",
         "catto_purple",
+        "horned_brute",
+        "wetlands_boss",
+        "hallokin",
+        "blind_huntress",
+        "crimson_duelist",
+        "glyph_gunner",
+        "zweihander",
+        "moon_blade",
+        "antler_wisp",
     ] {
         let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
         let mut data = GameData::load(&asset_root).expect("Chapter 1 data should load");
@@ -50,12 +60,32 @@ exit: {{ x_h: 45, y_h: 1 }}
             frames,
             fps: 12.0,
         };
-        let sheets = BTreeMap::from([
-            (String::from("player_idle"), sheet(1)),
-            (format!("{monster}_idle"), sheet(4)),
-            (format!("{monster}_attack"), sheet(13)),
-            (String::from("eye_beast_shot"), sheet(3)),
-        ]);
+        // Every clip its attacks play, long enough for any strike frame.
+        let own_shot = ["eye_beast", "glyph_gunner"].contains(&monster);
+        let clips = data.enemies.types[monster]
+            .attack
+            .iter()
+            .chain(&data.enemies.types[monster].attacks)
+            .flat_map(|attack| {
+                [
+                    attack.clip.clone(),
+                    attack
+                        .guard
+                        .as_ref()
+                        .map(|guard| guard.counter_clip.clone()),
+                ]
+            })
+            .flatten()
+            .map(|clip| (format!("{monster}_{clip}"), sheet(30)));
+        let sheets = BTreeMap::from_iter(
+            [
+                (String::from("player_idle"), sheet(1)),
+                (format!("{monster}_idle"), sheet(4)),
+            ]
+            .into_iter()
+            .chain(clips)
+            .chain(own_shot.then(|| (format!("{monster}_shot"), sheet(3)))),
+        );
 
         let mut app = App::new();
         app.add_plugins((MinimalPlugins, StatesPlugin))
@@ -102,7 +132,7 @@ exit: {{ x_h: 45, y_h: 1 }}
                 .iter(world)
             {
                 shots_seen += 1;
-                assert_eq!(shot.sheet, "eye_beast_shot");
+                assert_eq!(shot.sheet, format!("{monster}_shot"));
                 assert_eq!(transform.scale, Vec3::splat(scale));
             }
             if world.resource::<RunSession>().health < 100.0 {
@@ -115,8 +145,8 @@ exit: {{ x_h: 45, y_h: 1 }}
         );
         assert_eq!(
             shots_seen > 0,
-            monster == "eye_beast",
-            "only the eye beast fires, and its shot wears its own sheet"
+            own_shot,
+            "a {monster}'s shot wears its own sheet exactly when it has one"
         );
     }
 }

@@ -44,20 +44,17 @@ pub(super) fn load_sprites(
 
     let mut sheets = BTreeMap::new();
     for spec in specs {
-        // Sheets under `ui/`, `pickups/`, `effects/`, `props/`, `doors/` and
-        // the sci-fi enemies are pixel art drawn near 1:1, and the Black Knight and the monsters are pixel art drawn
-        // larger than their sheets, so they keep their hard pixel edges; the
-        // other character sheets are scaled down and look better with the
-        // default filtering.
+        // Sheets under `ui/`, `pickups/`, `effects/`, `props/` and `doors/`
+        // are pixel art drawn near 1:1, and every enemy but the robots of
+        // `enemies/type1*/` is pixel art drawn larger than its sheets, so they
+        // keep their hard pixel edges; the robots' sheets are scaled down and
+        // look better with the default filtering.
         let image = if spec.path.starts_with("ui/")
             || spec.path.starts_with("pickups/")
             || spec.path.starts_with("effects/")
             || spec.path.starts_with("props/")
             || spec.path.starts_with("doors/")
-            || spec.path.starts_with("enemies/sci_fi/")
-            || spec.path.starts_with("enemies/black_knight/")
-            || spec.path.starts_with("enemies/horror/")
-            || spec.path.starts_with("enemies/eye_beast/")
+            || (spec.path.starts_with("enemies/") && !spec.path.starts_with("enemies/type1"))
         {
             crate::game::ui_style::load_pixel_art(&asset_server, spec.path)
         } else {

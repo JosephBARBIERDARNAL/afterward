@@ -100,6 +100,56 @@ enemy_spawns:
     position_h: { x: 8, y: 3.5 }
     facing: right
     wave: 1
+  - label: pumpkin imp
+    type_id: hallokin
+    position_h: { x: 14, y: 1 }
+    facing: left
+    wave: 2
+  - label: pumpkin imp
+    type_id: hallokin
+    position_h: { x: 22, y: 1 }
+    facing: left
+    wave: 2
+  - label: gunner on the walkway
+    type_id: glyph_gunner
+    position_h: { x: 14.5, y: 6 }
+    facing: left
+    wave: 2
+  - label: dashing blade
+    type_id: moon_blade
+    position_h: { x: 18, y: 1 }
+    facing: left
+    wave: 3
+  - label: orb thrower
+    type_id: antler_wisp
+    position_h: { x: 23, y: 1 }
+    facing: left
+    wave: 3
+  - label: dashing duellist
+    type_id: blind_huntress
+    position_h: { x: 17, y: 1 }
+    facing: left
+    wave: 4
+  - label: parrying swordsman
+    type_id: crimson_duelist
+    position_h: { x: 22, y: 1 }
+    facing: left
+    wave: 4
+  - label: greatsword elite
+    type_id: zweihander
+    position_h: { x: 20, y: 1 }
+    facing: left
+    wave: 5
+  - label: spike-calling brute
+    type_id: horned_brute
+    position_h: { x: 22, y: 1 }
+    facing: left
+    wave: 6
+  - label: rolling boss
+    type_id: wetlands_boss
+    position_h: { x: 22, y: 1 }
+    facing: left
+    wave: 7
 # The bonus item: never laid here, as the test room's waves start over.
 bonus:
   x_h: 32

@@ -105,6 +105,15 @@ impl EnemyTypeId {
             "sci_fi_walker" => "sci_fi_walker_idle",
             "sci_fi_orb" => "sci_fi_orb_idle",
             "sci_fi_drone" => "sci_fi_drone_idle",
+            "horned_brute" => "horned_brute_idle",
+            "wetlands_boss" => "wetlands_boss_idle",
+            "hallokin" => "hallokin_idle",
+            "blind_huntress" => "blind_huntress_idle",
+            "crimson_duelist" => "crimson_duelist_idle",
+            "glyph_gunner" => "glyph_gunner_idle",
+            "zweihander" => "zweihander_idle",
+            "moon_blade" => "moon_blade_idle",
+            "antler_wisp" => "antler_wisp_idle",
             _ => "enemy_swordsman_idle",
         }
     }

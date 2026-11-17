@@ -66,6 +66,13 @@ monsters:
 black-knight:
     python3 scripts/slice_black_knight.py
 
+# Cut the character packs (packs/dark_fantasy_boss/, shadow_series/,
+# pixel_art_05/, pixel_art_09/, zweihander/, character_pack/) into one enemy
+# folder each under enemies/. Needs ImageMagick; the PNGs are committed, so
+# only after a pack or a clip changes.
+enemy-packs:
+    python3 scripts/cut_enemy_packs.py
+
 # Cut the sci-fi pack (packs/sci_fi/) into materials, props, devices, enemies,
 # effects and a background. Needs ImageMagick; the PNGs are committed, so only
 # after the pack or a piece changes.

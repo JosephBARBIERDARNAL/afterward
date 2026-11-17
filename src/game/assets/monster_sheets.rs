@@ -251,5 +251,156 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
         fps,
         first_cell: UVec2::ZERO,
     });
-    horror.chain(eye_beast).chain(sci_fi).collect()
+    // The character packs `scripts/cut_enemy_packs.py` cuts (`just
+    // enemy-packs`): one strip per clip in `enemies/<type>/`, every frame of
+    // a type the size given here, its body in the middle. Each clip is its
+    // name, its frames and its pace.
+    type Clips = &'static [(&'static str, usize, f32)];
+    let packs: [(&str, UVec2, Clips); 9] = [
+        (
+            "horned_brute",
+            UVec2::new(60, 42),
+            &[
+                ("idle", 16, 8.0),
+                ("walk", 16, 10.0),
+                ("attack", 16, 12.0),
+                ("hurt", 3, 10.0),
+                ("dead", 16, 10.0),
+            ],
+        ),
+        (
+            "wetlands_boss",
+            UVec2::new(236, 87),
+            &[
+                ("idle", 14, 10.0),
+                ("walk", 14, 12.0),
+                ("attack", 10, 12.0),
+                ("roll_attack", 14, 14.0),
+                ("hurt", 1, 8.0),
+                ("dead", 33, 14.0),
+            ],
+        ),
+        (
+            "hallokin",
+            UVec2::new(72, 30),
+            &[
+                ("idle", 6, 8.0),
+                ("walk", 4, 10.0),
+                ("jump", 3, 10.0),
+                ("fall", 3, 10.0),
+                ("attack", 7, 12.0),
+                ("pounce", 5, 12.0),
+                ("hurt", 1, 8.0),
+                ("dead", 12, 12.0),
+            ],
+        ),
+        (
+            "blind_huntress",
+            UVec2::new(178, 48),
+            &[
+                ("idle", 12, 10.0),
+                ("walk", 8, 12.0),
+                ("jump", 4, 10.0),
+                ("fall", 4, 10.0),
+                ("attack", 4, 12.0),
+                ("combo", 5, 12.0),
+                ("dash_attack", 3, 12.0),
+                ("roll", 4, 14.0),
+                ("hurt", 1, 8.0),
+                ("dead", 10, 10.0),
+            ],
+        ),
+        (
+            "crimson_duelist",
+            UVec2::new(92, 35),
+            &[
+                ("idle", 8, 10.0),
+                ("walk", 8, 12.0),
+                ("attack", 21, 16.0),
+                ("guard", 5, 14.0),
+                ("counter", 5, 14.0),
+                ("hurt", 9, 14.0),
+                ("dead", 7, 12.0),
+            ],
+        ),
+        (
+            "glyph_gunner",
+            UVec2::new(64, 61),
+            &[
+                ("idle", 8, 10.0),
+                ("walk", 8, 12.0),
+                ("attack", 23, 14.0),
+                ("hurt", 3, 12.0),
+                ("dead", 7, 12.0),
+            ],
+        ),
+        (
+            "zweihander",
+            UVec2::new(250, 189),
+            &[
+                ("idle", 7, 10.0),
+                ("walk", 7, 10.0),
+                ("attack", 12, 16.0),
+                ("combo", 13, 16.0),
+                ("heavy", 20, 16.0),
+                ("guard", 9, 14.0),
+                ("counter", 6, 16.0),
+                ("roll", 7, 16.0),
+                ("hurt", 4, 12.0),
+                ("dead", 4, 8.0),
+            ],
+        ),
+        (
+            "moon_blade",
+            UVec2::new(194, 81),
+            &[
+                ("idle", 16, 12.0),
+                ("walk", 10, 14.0),
+                ("jump", 6, 12.0),
+                ("fall", 6, 12.0),
+                ("attack", 12, 16.0),
+                ("dash_slash", 14, 16.0),
+                ("hurt", 2, 10.0),
+                ("dead", 6, 10.0),
+            ],
+        ),
+        (
+            "antler_wisp",
+            UVec2::new(132, 89),
+            &[
+                ("idle", 8, 12.0),
+                ("walk", 8, 16.0),
+                ("attack", 18, 20.0),
+                ("cast", 21, 20.0),
+                ("hurt", 2, 10.0),
+                ("dead", 34, 20.0),
+            ],
+        ),
+    ];
+    let packs = packs
+        .into_iter()
+        .flat_map(|(enemy, frame, clips)| {
+            clips
+                .iter()
+                .map(move |&(clip, frames, fps)| SpriteSheetSpec {
+                    key: format!("{enemy}_{clip}"),
+                    path: format!("enemies/{enemy}/{clip}.png"),
+                    frame_width: frame.x,
+                    frame_height: frame.y,
+                    frames,
+                    fps,
+                    first_cell: UVec2::ZERO,
+                })
+        })
+        // The gunner's bullet, the one shot of its own.
+        .chain([SpriteSheetSpec {
+            key: "glyph_gunner_shot".into(),
+            path: "enemies/glyph_gunner/shot.png".into(),
+            frame_width: 20,
+            frame_height: 11,
+            frames: 1,
+            fps: 1.0,
+            first_cell: UVec2::ZERO,
+        }]);
+    horror.chain(eye_beast).chain(sci_fi).chain(packs).collect()
 }
