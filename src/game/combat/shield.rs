@@ -3,7 +3,9 @@
 //! One icon per layer rides above the enemy's health bar and watches
 //! `EnemyBody` rather than being told when its layer goes: the frame a blow
 //! takes `armor` below it, the break starts here and the icon despawns once
-//! it has played out.
+//! it has played out. A type with a shield sheet of its own
+//! (`<type>_shield`, frame 0 the shield and the rest its break) wears that
+//! instead of the shared one, drawn as tall as the shared one.
 
 use super::*;
 
@@ -34,12 +36,12 @@ pub(in crate::game) fn update_enemy_shields(
     enemies: ShieldedEnemiesQuery,
     mut icons: ShieldIconsQuery,
 ) {
-    let Some(sheet) = sheets.0.get(SHIELD_SHEET) else {
-        return;
-    };
-    // Frame 0 is the shield itself; the rest are the break.
-    let break_frames = sheet.frames.saturating_sub(1);
     for (icon_entity, mut transform, mut sprite, mut icon) in &mut icons {
+        let Some(sheet) = sheets.0.get(&icon.sheet) else {
+            continue;
+        };
+        // Frame 0 is the shield itself; the rest are the break.
+        let break_frames = sheet.frames.saturating_sub(1);
         let Ok((enemy, enemy_transform)) = enemies.get(icon.enemy) else {
             commands.entity(icon_entity).despawn();
             continue;
@@ -78,19 +80,22 @@ pub(in crate::game) fn update_enemy_shields(
 /// How far above the enemy's health bar the shield icons sit: the bar is six
 /// units tall around its own center, and an icon is sixteen.
 pub(in crate::game) const SHIELD_OFFSET_Y: f32 = 17.0;
+/// How tall an icon is drawn, whatever its sheet's frame.
+pub(in crate::game) const SHIELD_HEIGHT: f32 = 16.0;
 /// How far apart the icons of two layers stand: an icon is twenty-one wide.
 const SHIELD_SPACING_X: f32 = 22.0;
 
 impl EnemyShieldIcon {
     /// The icon of one of an enemy's `layers`, placed so the row they make
     /// is centered over the health bar.
-    pub(in crate::game) fn of_layer(enemy: Entity, layer: u8, layers: u8) -> Self {
+    pub(in crate::game) fn of_layer(enemy: Entity, layer: u8, layers: u8, sheet: &str) -> Self {
         Self {
             enemy,
             layer,
             offset_x: (f32::from(layer) - f32::from(layers.saturating_sub(1)) / 2.0)
                 * SHIELD_SPACING_X,
             breaking: None,
+            sheet: sheet.to_string(),
         }
     }
 }

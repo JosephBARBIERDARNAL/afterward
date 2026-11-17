@@ -160,7 +160,7 @@ pub struct EnemyTypeConfig {
     pub flight: Option<FlightConfig>,
     /// The effect sheet played over it as it dies, `size_h` across.
     #[serde(default)]
-    pub death_effect: Option<DeathEffectConfig>,
+    pub death_effect: Option<EffectConfig>,
 }
 
 /// A flying enemy: it sees all around it within its detection range, flies
@@ -175,7 +175,7 @@ pub struct FlightConfig {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct DeathEffectConfig {
+pub struct EffectConfig {
     pub sheet: String,
     pub size_h: f32,
 }
@@ -255,6 +255,12 @@ pub struct EnemyAttackConfig {
     pub shockwave: Option<ShockwaveConfig>,
     /// The patch of floor a `hazard` sets alight under its mark.
     pub hazard: Option<HazardConfig>,
+    /// The frame of its clip a `hits` attack's second blow or shot lands on;
+    /// left out, it comes a quarter second after the first.
+    pub second_strike_frame: Option<usize>,
+    /// The effect sheet played on the floor at the strike's far edge as it
+    /// lands, `size_h` across.
+    pub impact_effect: Option<EffectConfig>,
 }
 
 /// A low wave a strike sends along the floor the way the enemy faces, hurting
@@ -274,6 +280,16 @@ pub struct HazardConfig {
     pub size_h: SizeH,
     pub arm_s: f32,
     pub burn_s: f32,
+    /// Drawn as this sheet rising out of the floor instead of as fire.
+    pub art: Option<HazardArt>,
+}
+
+/// A sheet a hazard is drawn as, as wide as the patch: the frames before
+/// `rise_frame` are spread over the warning and the rest over the burn.
+#[derive(Debug, Clone, Deserialize)]
+pub struct HazardArt {
+    pub sheet: String,
+    pub rise_frame: usize,
 }
 
 /// The blast a type leaves where it dies: its body warns for `fuse_s`, then

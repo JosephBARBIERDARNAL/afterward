@@ -256,7 +256,7 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
     // a type the size given here, its body in the middle. Each clip is its
     // name, its frames and its pace.
     type Clips = &'static [(&'static str, usize, f32)];
-    let packs: [(&str, UVec2, Clips); 13] = [
+    let packs: [(&str, UVec2, Clips); 11] = [
         (
             "horned_brute",
             UVec2::new(60, 42),
@@ -314,7 +314,8 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             "crimson_duelist",
             UVec2::new(92, 35),
             &[
-                ("idle", 8, 10.0),
+                ("unarmed_idle", 8, 10.0),
+                ("idle", 5, 10.0),
                 ("walk", 8, 12.0),
                 ("attack", 21, 16.0),
                 ("guard", 5, 14.0),
@@ -335,22 +336,6 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
             ],
         ),
         (
-            "zweihander",
-            UVec2::new(250, 189),
-            &[
-                ("idle", 7, 10.0),
-                ("walk", 7, 10.0),
-                ("attack", 12, 16.0),
-                ("combo", 13, 16.0),
-                ("heavy", 20, 16.0),
-                ("guard", 9, 14.0),
-                ("counter", 6, 16.0),
-                ("roll", 7, 16.0),
-                ("hurt", 4, 12.0),
-                ("dead", 4, 8.0),
-            ],
-        ),
-        (
             "moon_blade",
             UVec2::new(194, 81),
             &[
@@ -359,7 +344,7 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
                 ("jump", 6, 12.0),
                 ("fall", 6, 12.0),
                 ("attack", 12, 16.0),
-                ("dash_slash", 14, 16.0),
+                ("shoot", 14, 16.0),
                 ("hurt", 2, 10.0),
                 ("dead", 6, 10.0),
             ],
@@ -379,11 +364,11 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
         ),
         (
             "jade_swordsman",
-            UVec2::new(104, 76),
+            UVec2::new(102, 76),
             &[
                 ("unarmed_idle", 8, 10.0),
                 ("draw", 16, 20.0),
-                ("idle", 8, 10.0),
+                ("idle", 4, 8.0),
                 ("walk", 8, 12.0),
                 ("attack", 12, 16.0),
                 ("thrust", 14, 16.0),
@@ -398,11 +383,11 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
         ),
         (
             "shadeflit",
-            UVec2::new(64, 42),
+            UVec2::new(122, 42),
             &[
                 ("idle", 6, 8.0),
                 ("walk", 6, 12.0),
-                ("attack", 8, 14.0),
+                ("attack", 7, 14.0),
                 ("hurt", 1, 8.0),
                 ("dead", 1, 1.0),
             ],
@@ -415,17 +400,6 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
                 ("walk", 16, 10.0),
                 ("attack", 16, 16.0),
                 ("hurt", 1, 8.0),
-                ("dead", 1, 1.0),
-            ],
-        ),
-        (
-            "void_gate",
-            UVec2::new(200, 59),
-            &[
-                ("idle", 1, 1.0),
-                ("walk", 1, 1.0),
-                ("attack", 1, 1.0),
-                ("hurt", 1, 1.0),
                 ("dead", 1, 1.0),
             ],
         ),
@@ -445,15 +419,49 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
                     first_cell: UVec2::ZERO,
                 })
         })
-        // The gunner's bullet, the one shot of its own.
-        .chain([SpriteSheetSpec {
-            key: "glyph_gunner_shot".into(),
-            path: "enemies/glyph_gunner/shot.png".into(),
-            frame_width: 20,
-            frame_height: 11,
-            frames: 1,
-            fps: 1.0,
-            first_cell: UVec2::ZERO,
-        }]);
+        // What the script cuts that is not a body: the gunner's bullet, the
+        // brute's spikes (spread over its hazard rather than played at this
+        // pace), and the warden's shield, thrown and worn.
+        .chain(
+            [
+                (
+                    "glyph_gunner_shot",
+                    "glyph_gunner/shot",
+                    UVec2::new(20, 11),
+                    1,
+                    1.0,
+                ),
+                (
+                    "horned_brute_spikes",
+                    "horned_brute/spikes",
+                    UVec2::new(104, 48),
+                    16,
+                    12.0,
+                ),
+                (
+                    "hooded_warden_shot",
+                    "hooded_warden/shot",
+                    UVec2::new(32, 31),
+                    8,
+                    12.0,
+                ),
+                (
+                    "hooded_warden_shield",
+                    "hooded_warden/shield",
+                    UVec2::new(32, 31),
+                    11,
+                    20.0,
+                ),
+            ]
+            .map(|(key, path, frame, frames, fps)| SpriteSheetSpec {
+                key: key.into(),
+                path: format!("enemies/{path}.png"),
+                frame_width: frame.x,
+                frame_height: frame.y,
+                frames,
+                fps,
+                first_cell: UVec2::ZERO,
+            }),
+        );
     horror.chain(eye_beast).chain(sci_fi).chain(packs).collect()
 }

@@ -109,16 +109,15 @@ impl EnemyTypeId {
             "wetlands_boss" => "wetlands_boss_idle",
             "hallokin" => "hallokin_idle",
             "blind_huntress" => "blind_huntress_idle",
-            "crimson_duelist" => "crimson_duelist_idle",
+            // Its sword trailing until it notices someone.
+            "crimson_duelist" => "crimson_duelist_unarmed_idle",
             "glyph_gunner" => "glyph_gunner_idle",
-            "zweihander" => "zweihander_idle",
             "moon_blade" => "moon_blade_idle",
             "antler_wisp" => "antler_wisp_idle",
             // Its sword put away until it notices someone, as the knight's.
             "jade_swordsman" => "jade_swordsman_unarmed_idle",
             "shadeflit" => "shadeflit_idle",
             "hooded_warden" => "hooded_warden_idle",
-            "void_gate" => "void_gate_idle",
             _ => "enemy_swordsman_idle",
         }
     }

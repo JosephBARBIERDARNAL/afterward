@@ -50,7 +50,7 @@ pub(super) use hitboxes::blow_area as melee_blow_area;
 pub(super) use hitboxes::player_hurtbox;
 pub(super) use player_melee::player_melee;
 pub(super) use projectiles::update_projectiles;
-pub(super) use shield::{SHIELD_OFFSET_Y, SHIELD_SHEET, update_enemy_shields};
+pub(super) use shield::{SHIELD_HEIGHT, SHIELD_OFFSET_Y, SHIELD_SHEET, update_enemy_shields};
 pub(super) use stealth::vanish;
 pub(super) use traps::{Hurts, hurt_by_devices};
 pub(super) use waves::{Arriving, raise_the_arriving, send_in_the_next_wave};

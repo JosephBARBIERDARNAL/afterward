@@ -312,7 +312,7 @@ pub(super) fn land_the_blow(
                 }
             }
             enemy.windup_remaining = 0.0;
-            enemy.combo_hit_pending = false;
+            enemy.combo_hit_pending = None;
             enemy.stance = None;
             enemy.countering = false;
             enemy.wounds = enemy.wounds.saturating_add(1);

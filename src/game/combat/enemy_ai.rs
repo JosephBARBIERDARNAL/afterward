@@ -269,7 +269,7 @@ pub(in crate::game) fn update_enemy_ai(
             if enemy.stance.is_some() {
                 enemy.hurt_timer = 0.0;
                 enemy.windup_remaining = 0.0;
-                enemy.combo_hit_pending = false;
+                enemy.combo_hit_pending = None;
                 enemy.countering = false;
             }
         }
@@ -349,16 +349,21 @@ pub(in crate::game) fn update_enemy_ai(
             // An attack that names the frame its strike lands on spreads the
             // frames before it over the wind-up, so the telegraph ends
             // exactly as it hits; the clip plays on by itself from there. A
-            // combo's second blow comes out of that follow-through.
-            let telegraph = match &attack.guard {
-                Some(guard) if enemy.countering => {
-                    Some((guard.counter_strike_frame, guard.counter_windup_s))
+            // combo's second blow comes out of that follow-through, its
+            // frames spread over the wait when it names the one it lands on.
+            let telegraph = match (&attack.guard, enemy.combo_hit_pending) {
+                (Some(guard), _) if enemy.countering => {
+                    Some((0, guard.counter_strike_frame, guard.counter_windup_s))
                 }
-                _ => attack.strike_frame.map(|frame| (frame, attack.windup_s)),
-            }
-            .filter(|_| !enemy.combo_hit_pending);
-            if let Some((strike_frame, windup_s)) = telegraph {
-                let frame = (1.0 - enemy.windup_remaining / windup_s) * strike_frame as f32;
+                (_, Some(wait_s)) => attack
+                    .strike_frame
+                    .zip(attack.second_strike_frame)
+                    .map(|(first, second)| (first, second, wait_s)),
+                (_, None) => attack.strike_frame.map(|frame| (0, frame, attack.windup_s)),
+            };
+            if let Some((from, to, span_s)) = telegraph {
+                let progress = 1.0 - enemy.windup_remaining / span_s;
+                let frame = from as f32 + progress * to.saturating_sub(from) as f32;
                 animation.hold_frame(&mut sprite, frame as usize);
             }
             // A blink's wind-up is the body fading out of where it stands.
@@ -428,11 +433,12 @@ pub(in crate::game) fn update_enemy_ai(
                     sounds.push(SoundCue::EnemyAttack(audio::EnemySoundStyle::from(
                         &enemy.type_id,
                     )));
+                    attack.tear_the_floor(&mut commands, &sheets, feet, enemy.facing);
                     let floor = surfaces
                         .floor_below(mark.feet.x, mark.feet.y + SLOPE_STRIDE)
                         .unwrap_or(mark.feet.y);
                     let half_width = hazard.size_h.width / 2.0 * H_WORLD_UNITS;
-                    Hazard {
+                    let patch = Hazard {
                         area: Rect::new(
                             mark.feet.x - half_width,
                             floor,
@@ -443,8 +449,17 @@ pub(in crate::game) fn update_enemy_ai(
                         arm_s: hazard.arm_s,
                         burn_s: hazard.burn_s,
                         elapsed_s: 0.0,
+                    };
+                    match hazard
+                        .art
+                        .as_ref()
+                        .and_then(|art| Some((sheets.0.get(&art.sheet)?, art.rise_frame)))
+                    {
+                        Some((sheet, rise_frame)) => {
+                            patch.lay_drawn(&mut commands, sheet, rise_frame)
+                        }
+                        None => patch.lay(&mut commands),
                     }
-                    .lay(&mut commands);
                     if attack.strike_frame.is_some() {
                         enemy.stance = Some((
                             Stance::Clip,
@@ -602,23 +617,43 @@ pub(in crate::game) fn update_enemy_ai(
                             RoomEntity,
                         ));
                     }
-                    if attack.hits > 1 {
-                        if enemy.combo_hit_pending {
-                            enemy.combo_hit_pending = false;
-                        } else {
-                            enemy.combo_hit_pending = true;
-                            enemy.windup_remaining = if player.invulnerability_timer > 0.0 {
-                                player.invulnerability_timer + 0.06
+                    attack.tear_the_floor(&mut commands, &sheets, strike_feet, enemy.facing);
+                }
+                // An attack of several hits throws the next once its clip
+                // comes to it: a blow waits out the player's flinch, so the
+                // two never land as one.
+                if attack.hits > 1 {
+                    if enemy.combo_hit_pending.is_some() {
+                        enemy.combo_hit_pending = None;
+                    } else {
+                        // As far into its clip as the frame it lands on, or a
+                        // quarter second; a second shot is not held back.
+                        let gap_s = attack.strike_frame.zip(attack.second_strike_frame).map_or(
+                            0.25,
+                            |(first, second)| {
+                                second.saturating_sub(first) as f32
+                                    * animation.timer.duration().as_secs_f32()
+                            },
+                        );
+                        let wait_s =
+                            if player.invulnerability_timer > 0.0 && !kind.contains("projectile") {
+                                let flinch_s = player.invulnerability_timer + 0.06;
+                                if attack.second_strike_frame.is_some() {
+                                    flinch_s.max(gap_s)
+                                } else {
+                                    flinch_s
+                                }
                             } else {
-                                0.25
+                                gap_s
                             };
-                        }
+                        enemy.windup_remaining = wait_s;
+                        enemy.combo_hit_pending = Some(wait_s);
                     }
                 }
                 // A clip with frames left after its last blow or its shot
                 // plays them out before the enemy moves again: its
                 // follow-through is the opening it leaves.
-                if attack.strike_frame.is_some() && !enemy.combo_hit_pending {
+                if attack.strike_frame.is_some() && enemy.combo_hit_pending.is_none() {
                     enemy.stance = Some((
                         Stance::Clip,
                         animation.frames.saturating_sub(animation.frame + 1) as f32

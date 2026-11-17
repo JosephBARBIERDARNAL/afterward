@@ -1,7 +1,7 @@
 //! Enemy bodies, their attacks, and their health bars.
 
 use super::*;
-use crate::data::{EnemyGuardConfig, HazardConfig, ShockwaveConfig};
+use crate::data::{EffectConfig, EnemyGuardConfig, HazardConfig, ShockwaveConfig};
 
 #[derive(Component)]
 pub(crate) struct EnemyBody {
@@ -36,7 +36,9 @@ pub(crate) struct EnemyBody {
     pub(crate) engaged: bool,
     pub(crate) attack_cooldown: f32,
     pub(crate) windup_remaining: f32,
-    pub(crate) combo_hit_pending: bool,
+    /// A combo's next hit is due, at the end of a wait this long, over
+    /// which its clip runs on to the frame that hit lands on.
+    pub(crate) combo_hit_pending: Option<f32>,
     pub(crate) active_attack: usize,
     pub(crate) next_attack: usize,
     pub(crate) hurt_timer: f32,
@@ -156,6 +158,9 @@ pub(crate) struct EnemyAttack {
     pub(crate) min_range_h: f32,
     pub(crate) shockwave: Option<ShockwaveConfig>,
     pub(crate) hazard: Option<HazardConfig>,
+    /// The frame of its clip the second of its `hits` lands on.
+    pub(crate) second_strike_frame: Option<usize>,
+    pub(crate) impact_effect: Option<EffectConfig>,
 }
 
 impl From<&EnemyAttackConfig> for EnemyAttack {
@@ -184,6 +189,35 @@ impl From<&EnemyAttackConfig> for EnemyAttack {
             min_range_h: config.min_range_h,
             shockwave: config.shockwave.clone(),
             hazard: config.hazard.clone(),
+            second_strike_frame: config.second_strike_frame,
+            impact_effect: config.impact_effect.clone(),
+        }
+    }
+}
+
+impl EnemyAttack {
+    /// Plays the attack's `impact_effect`, if it has one, on the floor at the
+    /// far edge of its strike from `feet`, the way the enemy faces.
+    pub(super) fn tear_the_floor(
+        &self,
+        commands: &mut Commands,
+        sheets: &SpriteSheets,
+        feet: Vec2,
+        facing: f32,
+    ) {
+        if let Some(effect) = &self.impact_effect {
+            play_effect(
+                commands,
+                sheets,
+                &effect.sheet,
+                Vec3::new(
+                    feet.x + facing * self.reach_h * H_WORLD_UNITS,
+                    feet.y + effect.size_h * H_WORLD_UNITS / 2.0,
+                    6.0,
+                ),
+                effect.size_h,
+                facing < 0.0,
+            );
         }
     }
 }
@@ -212,6 +246,9 @@ pub(crate) struct EnemyShieldIcon {
     /// Runs once that layer is gone, stepping through the break frames; the
     /// icon despawns when it finishes.
     pub(crate) breaking: Option<Timer>,
+    /// The sheet it is drawn from: the type's own `<type>_shield`, or the
+    /// shared one.
+    pub(crate) sheet: String,
 }
 
 #[derive(Component)]

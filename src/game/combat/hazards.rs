@@ -1,9 +1,11 @@
 //! Patches of the room that burn: the one a `hazard` attack lays under its
 //! mark and the blast a type with a `death_blast` leaves where it dies. Both
 //! warn before they hurt, go once they have burned, and are drawn as fire by
-//! the `Flame` they carry (`shaders/fire.rs`).
+//! the `Flame` they carry (`shaders/fire.rs`), or as a sheet rising out of the
+//! floor (`HazardRise`) when the attack names one.
 
 use super::*;
+use bevy::sprite::Anchor;
 
 /// A patch that warns for `arm_s`, then burns for `burn_s` and hurts the
 /// player standing in it, and goes once it has burned.
@@ -28,6 +30,34 @@ impl Hazard {
         }
     }
 
+    /// Lays the patch in the room drawn as `sheet`, as wide as the patch and
+    /// standing on its floor: `update_hazards` raises it.
+    pub(crate) fn lay_drawn(self, commands: &mut Commands, sheet: &SpriteSheet, rise_frame: usize) {
+        let scale = self.area.width() / sheet.frame_size.x;
+        commands.spawn((
+            Transform::from_xyz(self.area.center().x, self.area.min.y, 3.5)
+                .with_scale(Vec3::splat(scale)),
+            Sprite::from_atlas_image(
+                sheet.image.clone(),
+                TextureAtlas {
+                    layout: sheet.layout.clone(),
+                    index: 0,
+                },
+            ),
+            Anchor::BOTTOM_CENTER,
+            AnimatedSprite {
+                sheet: String::new(),
+                frame: 0,
+                frames: sheet.frames,
+                timer: Timer::from_seconds(1.0 / sheet.fps, TimerMode::Repeating),
+                looping: false,
+            },
+            HazardRise { rise_frame },
+            self,
+            RoomEntity,
+        ));
+    }
+
     /// Lays the patch in the room, cold: `update_hazards` heats it.
     pub(crate) fn lay(self, commands: &mut Commands) {
         commands.spawn((
@@ -43,6 +73,16 @@ impl Hazard {
         ));
     }
 }
+
+/// A patch drawn as a sheet: the frames before `rise_frame` are spread over
+/// its warning, the rest over its burn.
+#[derive(Component)]
+pub(crate) struct HazardRise {
+    rise_frame: usize,
+}
+
+/// The sheet a drawn patch rises in, and where it stands in it.
+type DrawnHazard<'a> = (&'a HazardRise, &'a mut Sprite, &'a mut AnimatedSprite);
 
 /// What may still hurt the player once the fight is won: the patches burning
 /// and the shots in the air.
@@ -76,7 +116,7 @@ pub(in crate::game) fn update_hazards(
     mut commands: Commands,
     resources: HazardResources,
     mut players: Query<(&Transform, &mut PlayerBody), Without<Hazard>>,
-    mut hazards: Query<(Entity, &mut Hazard, &mut Flame)>,
+    mut hazards: Query<(Entity, &mut Hazard, Option<&mut Flame>, Option<DrawnHazard>)>,
 ) {
     let HazardResources {
         time,
@@ -88,7 +128,7 @@ pub(in crate::game) fn update_hazards(
         return;
     };
     let player_box = player_hurtbox(player_transform.translation, &data);
-    for (entity, mut hazard, mut flame) in &mut hazards {
+    for (entity, mut hazard, flame, drawn) in &mut hazards {
         hazard.elapsed_s += time.delta_secs().min(0.05);
         if hazard.elapsed_s >= hazard.arm_s + hazard.burn_s {
             commands.entity(entity).despawn();
@@ -103,13 +143,25 @@ pub(in crate::game) fn update_hazards(
         };
         // Only a fire that has changed is written, so one burning steadily is
         // not drawn again every frame.
-        let stoked = Flame {
-            heat,
-            burning,
-            ..*flame
-        };
-        if *flame != stoked {
-            *flame = stoked;
+        if let Some(mut flame) = flame {
+            let stoked = Flame {
+                heat,
+                burning,
+                ..*flame
+            };
+            if *flame != stoked {
+                *flame = stoked;
+            }
+        }
+        if let Some((rise, mut sprite, mut animation)) = drawn {
+            let frame = if burning {
+                rise.rise_frame as f32
+                    + (hazard.elapsed_s - hazard.arm_s) / hazard.burn_s
+                        * animation.frames.saturating_sub(rise.rise_frame) as f32
+            } else {
+                heat * rise.rise_frame as f32
+            };
+            animation.hold_frame(&mut sprite, frame as usize);
         }
         if burning && !hazard.area.intersect(player_box).is_empty() {
             apply_player_damage(

@@ -113,6 +113,8 @@ mod tests {
             min_range_h: 0.0,
             shockwave: None,
             hazard: None,
+            second_strike_frame: None,
+            impact_effect: None,
         };
         let feet = Vec2::new(10.0, 5.0);
         assert_eq!(

@@ -170,6 +170,11 @@ mod tests {
                 let strikes = [
                     attack.clip.as_ref().map(|clip| (clip, attack.strike_frame)),
                     attack
+                        .clip
+                        .as_ref()
+                        .zip(attack.second_strike_frame)
+                        .map(|(clip, frame)| (clip, Some(frame))),
+                    attack
                         .guard
                         .as_ref()
                         .map(|guard| (&guard.counter_clip, Some(guard.counter_strike_frame))),

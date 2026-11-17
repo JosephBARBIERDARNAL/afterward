@@ -461,7 +461,7 @@ pub(super) fn spawn_enemies(
                     engaged: arriving,
                     attack_cooldown: 0.0,
                     windup_remaining: 0.0,
-                    combo_hit_pending: false,
+                    combo_hit_pending: None,
                     active_attack: 0,
                     next_attack: 0,
                     hurt_timer: 0.0,
@@ -520,19 +520,30 @@ pub(super) fn spawn_enemies(
             },
             RoomEntity,
         ));
-        let Some(shield) = sheets.0.get(combat::SHIELD_SHEET) else {
+        let own_shield = format!("{}_shield", spawn.type_id);
+        let shield_key = if sheets.0.contains_key(&own_shield) {
+            own_shield.as_str()
+        } else {
+            combat::SHIELD_SHEET
+        };
+        let Some(shield) = sheets.0.get(shield_key) else {
             continue;
         };
         for layer in 0..armor {
-            let icon = EnemyShieldIcon::of_layer(enemy, layer, armor);
+            let icon = EnemyShieldIcon::of_layer(enemy, layer, armor, shield_key);
             commands.spawn((
-                Sprite::from_atlas_image(
-                    shield.image.clone(),
-                    TextureAtlas {
-                        layout: shield.layout.clone(),
-                        index: 0,
-                    },
-                ),
+                Sprite {
+                    custom_size: Some(
+                        shield.frame_size * combat::SHIELD_HEIGHT / shield.frame_size.y,
+                    ),
+                    ..Sprite::from_atlas_image(
+                        shield.image.clone(),
+                        TextureAtlas {
+                            layout: shield.layout.clone(),
+                            index: 0,
+                        },
+                    )
+                },
                 Transform::from_translation(
                     bar_position + Vec3::new(icon.offset_x, combat::SHIELD_OFFSET_Y, 0.0),
                 ),

@@ -2,8 +2,7 @@
 """Cuts the character packs of `src/assets/packs/` into enemy sheets.
 
 Each pack ships its clips its own way: one strip per clip, one image per frame,
-a grid with a clip to a row, or (the Zweihander) a body and its effects drawn
-apart. `TYPES` names, for each enemy type, the frames of each of its clips, and
+or a grid with a clip to a row. `TYPES` names, for each enemy type, the frames of each of its clips, and
 this script lays every clip out the same way: one strip per clip in
 `src/assets/enemies/<type>/<clip>.png`, every frame of a type the same size,
 the body's middle (read off its first idle frame) in the middle of the frame,
@@ -12,7 +11,9 @@ figures facing right, as the game wants them.
 
 What it prints for each type is what `assets/monster_sheets.rs` and
 `enemies/enemy_types.yaml` need: the frame size, each clip's frames, and the
-padding and head square of its first idle frame.
+padding and head square of its first idle frame. `SHEETS` are the strips
+that are not a body (a shot, a shield, spikes): each is written as it is
+drawn, frame after frame.
 
 Run it with `just enemy-packs` after a pack or a clip changes. Needs
 ImageMagick.
@@ -38,26 +39,42 @@ def strip(path, width, count=None, first=0, row=0, height=None):
     height = height or int(size[1])
     count = count or int(size[0]) // width - first
     return [
-        [(source, f"{width}x{height}+{(first + i) * width}+{row * height}")]
+        [(source, f"{width}x{height}+{(first + i) * width}+{row * height}", [])]
         for i in range(count)
     ]
 
 
-def files(folder, first=1, last=None, name=None):
+def files(folder, first=1, last=None):
     """One image per frame, in the order of the number ending its name."""
     found = sorted(
-        (PACKS / folder).glob(name or "*.png"),
+        (PACKS / folder).glob("*.png"),
         key=lambda path: int(path.stem.rsplit("_", 1)[-1]),
     )
     found = [p for p in found if first <= int(p.stem.rsplit("_", 1)[-1])]
     if last is not None:
         found = [p for p in found if int(p.stem.rsplit("_", 1)[-1]) <= last]
-    return [[(path, None)] for path in found]
+    return [[(path, None, [])] for path in found]
 
 
-def over(body, effect):
-    """The body's frames with the effect's drawn over them, cell for cell."""
-    return [layers + fx for layers, fx in zip(body, effect)]
+def moved(frame, dx, *extra):
+    """A frame's layers moved `dx` px to the right, with `extra` layers (a
+    source of None: drawn by their arguments alone) over them."""
+    return [(source, crop, args + ["-roll", f"{dx:+d}+0"]) for source, crop, args in frame] + [
+        (None, None, layer) for layer in extra
+    ]
+
+
+def streak(size, start, end, colour="#E4ECF2"):
+    """A thin line from `start` to `end` on a clear frame of `size`."""
+    return [
+        "-size",
+        f"{size[0]}x{size[1]}",
+        "xc:none",
+        "-stroke",
+        colour,
+        "-draw",
+        f"line {start[0]},{start[1]} {end[0]},{end[1]}",
+    ]
 
 
 BOSS = "dark_fantasy_boss/dark fantasy big boss"
@@ -66,30 +83,43 @@ HALLOKIN = "shadow_series/SHADOW Series - Hallokin (free)/sprite sheet 9x12 (fre
 HUNTRESS = "shadow_series/SHADOW Series - The Blind Huntress/Sprite Sheet"
 DUELIST = "pixel_art_09/Enemy01"
 GUNNER = "pixel_art_09/Enemy02"
-ZWEI = "zweihander"
 MOON = "character_pack/Player"
 WISP = "pixel_art_05/PlayerAllAnim"
 JADE = "pixel_art_09/Player"
 SHADEFLIT = "shadow_series/SHADOW Series - Shadeflit (Free)"
-GATE = "shadow_series/SHADOW Series - Void Gate/SHADOW Series - Abyssal Gate.png"
-
-
-def zwei(clip):
-    return over(
-        strip(f"{ZWEI}/Player/Zweihander_{clip}.png", 256),
-        strip(f"{ZWEI}/fx/Zweihander_FX_{clip}.png", 256),
-    )
+SHIELD = "pixel_art_09/Shield"
 
 
 def wisp(first, last):
     return files(WISP, first, last)
 
 
+# Shadeflit has no attack: its thrust is its first standing frame drawn back,
+# then thrown forward with a streak running on from its spear's tip (at 87, 86
+# of the 277 x 161 cell, the spear rising 12 px over 51).
+SHADEFLIT_STANCE = strip(f"{SHADEFLIT}/idle.png", 277, 1)[0]
+SHADEFLIT_CELL = (277, 161)
+SHADEFLIT_THRUST = [
+    SHADEFLIT_STANCE,
+    moved(SHADEFLIT_STANCE, -3),
+    moved(SHADEFLIT_STANCE, -5),
+    moved(
+        SHADEFLIT_STANCE,
+        10,
+        streak(SHADEFLIT_CELL, (98, 86), (126, 79)),
+        streak(SHADEFLIT_CELL, (98, 87), (118, 82), "#8E9AA6"),
+    ),
+    moved(SHADEFLIT_STANCE, 11, streak(SHADEFLIT_CELL, (99, 86), (113, 83))),
+    moved(SHADEFLIT_STANCE, 7),
+    moved(SHADEFLIT_STANCE, 3),
+]
+
 # Every clip of every type: its frames, as a list of layers drawn one over the
-# other, each a source image and the cell of it (None for the whole image).
+# other, each a source image, the cell of it (None for the whole image) and
+# what is done to it after.
 TYPES = {
-    # The dark fantasy big boss: a horned brute that calls spikes out of the
-    # floor (`attack 2`; the spikes themselves, `attack 2a`-`2c`, are left).
+    # The dark fantasy big boss: a horned brute that strikes the floor
+    # (`attack 2`) and calls spikes up out of it (`SHEETS`).
     "horned_brute": {
         "idle": strip(f"{BOSS} idle.png", 80),
         "walk": strip(f"{BOSS} walk.png", 80),
@@ -129,6 +159,7 @@ TYPES = {
         # It slashes on its first frame: its first idle frame is the wind-up.
         "attack": strip(f"{HUNTRESS}/1 - Idle.png", 240, 1)
         + strip(f"{HUNTRESS}/10 - attack 1.png", 240),
+        # One wide cut, on its second frame.
         "combo": strip(f"{HUNTRESS}/11 - attack 3.png", 240),
         "dash_attack": strip(f"{HUNTRESS}/12 - dash attack.png", 240),
         "roll": strip(f"{HUNTRESS}/6 - dash.png", 240),
@@ -136,9 +167,12 @@ TYPES = {
         "dead": strip(f"{HUNTRESS}/15 - death.png", 240),
     },
     # PackCharacterPixelArt09's swordsman: no death of its own, so it dies
-    # staggering (its stun).
+    # staggering (its stun). It stands with its sword trailing on the floor
+    # until it notices the player; from then on it holds it out ahead, as its
+    # attack ends (frames 16-20).
     "crimson_duelist": {
-        "idle": files(f"{DUELIST}/Idle"),
+        "idle": files(f"{DUELIST}/Attack", 16, 20),
+        "unarmed_idle": files(f"{DUELIST}/Idle"),
         "walk": files(f"{DUELIST}/Run"),
         "attack": files(f"{DUELIST}/Attack"),
         # The parry is the guard raised (its first five frames) and the clash
@@ -156,20 +190,6 @@ TYPES = {
         "hurt": files(f"{GUNNER}/Hit", last=3),
         "dead": files(f"{GUNNER}/Hit"),
     },
-    # Zweihander Combat: a player pack, its swings and their trails drawn
-    # apart. No walk and no death: it walks in its stance and dies flinching.
-    "zweihander": {
-        "idle": strip(f"{ZWEI}/Player/Zweihander_Idle.png", 256),
-        "walk": strip(f"{ZWEI}/Player/Zweihander_Idle.png", 256),
-        "attack": zwei("Combo_01"),
-        "combo": zwei("Combo_02"),
-        "heavy": zwei("Heavy_Attack"),
-        "guard": strip(f"{ZWEI}/Player/Zweihander_Parry.png", 256),
-        "counter": zwei("Counter"),
-        "roll": zwei("Dash_Front"),
-        "hurt": zwei("Hit"),
-        "dead": zwei("Hit"),
-    },
     # CharacterPack: a player pack. No flinch and no death: it flinches in
     # its first idle frames and dies falling.
     "moon_blade": {
@@ -178,9 +198,9 @@ TYPES = {
         "jump": files(f"{MOON}/JumpUp"),
         "fall": files(f"{MOON}/JumpDown"),
         "attack": files(f"{MOON}/Attack01"),
-        # The pack's Shoot is a dash cut through the air; it cuts on its first
-        # frame, so two idle frames come first as its wind-up.
-        "dash_slash": files(f"{MOON}/Idle", last=2) + files(f"{MOON}/Shoot"),
+        # The pack's Shoot fires on its first frame, so two idle frames come
+        # first as its wind-up.
+        "shoot": files(f"{MOON}/Idle", last=2) + files(f"{MOON}/Shoot"),
         "hurt": files(f"{MOON}/Idle", last=2),
         "dead": files(f"{MOON}/JumpDown"),
     },
@@ -199,9 +219,10 @@ TYPES = {
     },
     # PackCharacterPixelArt09's hero: it stands with its sword put away
     # until it notices the player, and takes it out (`draw`) before anything
-    # else. A parry split as the duelist's is.
+    # else; then it holds it out ahead, as its attacks end (StopAttack's first
+    # frames), rather than lowered. A parry split as the duelist's is.
     "jade_swordsman": {
-        "idle": files(f"{JADE}/IdlewSword"),
+        "idle": files(f"{JADE}/StopAttack", last=4),
         "unarmed_idle": files(f"{JADE}/Idle"),
         "draw": files(f"{JADE}/TakeSword"),
         "walk": files(f"{JADE}/RunwSword"),
@@ -215,29 +236,24 @@ TYPES = {
         "hurt": files(f"{JADE}/HitwSword"),
         "dead": files(f"{JADE}/Death"),
     },
-    # Shadeflit: a spearman drawn only standing and running. It darts at the
-    # player in its run, spear first, and flinches and dies in its turn.
+    # Shadeflit: a spearman drawn only standing and running. It thrusts (made
+    # here, above), and flinches and dies in its turn.
     "shadeflit": {
         "idle": strip(f"{SHADEFLIT}/idle.png", 277),
         "walk": strip(f"{SHADEFLIT}/run.png", 277),
-        "attack": strip(f"{SHADEFLIT}/idle.png", 277, 2) + strip(f"{SHADEFLIT}/run.png", 277),
+        "attack": SHADEFLIT_THRUST,
         "hurt": strip(f"{SHADEFLIT}/run-turn.png", 277),
         "dead": strip(f"{SHADEFLIT}/run-turn.png", 277),
     },
-    # PackCharacterPixelArt09's NPC: a hooded figure drawn only standing, its
-    # glyphs flickering. It casts in that same loop.
+    # PackCharacterPixelArt09's NPC: a hooded figure drawn only standing,
+    # holding a shield, its glyphs flickering. It throws in that same loop;
+    # its shot and its armor are the pack's shield (`SHEETS`).
     "hooded_warden": {
         "idle": files("pixel_art_09/NPC01/Idle"),
         "walk": files("pixel_art_09/NPC01/Idle"),
         "attack": files("pixel_art_09/NPC01/Idle"),
         "hurt": files("pixel_art_09/NPC01/Idle", last=1),
         "dead": files("pixel_art_09/NPC01/Idle", last=1),
-    },
-    # The Void Gate: one still image, a stone arch that fires from its mouth
-    # and never moves.
-    "void_gate": {
-        clip: [[(PACKS / GATE, None)]]
-        for clip in ["idle", "walk", "attack", "hurt", "dead"]
     },
 }
 
@@ -246,6 +262,15 @@ def run(*args):
     return subprocess.run(
         ["magick", *map(str, args)], check=True, capture_output=True, text=True
     ).stdout
+
+
+def frame(layers):
+    """The arguments that draw one frame: its layers, one over the other."""
+    args = []
+    for source, crop, extra in layers:
+        drawn = [source] + (["-crop", crop] if crop else []) + ["+repage"] if source else []
+        args += ["(", *drawn, *extra, ")"]
+    return args + ["-background", "none", "-flatten"]
 
 
 def box(geometry):
@@ -264,12 +289,7 @@ with tempfile.TemporaryDirectory() as temp:
             flat[clip] = []
             for index, layers in enumerate(frames):
                 target = temp / f"{type_id}_{clip}_{index}.png"
-                args = []
-                for source, crop in layers:
-                    args += ["(", source] + (["-crop", crop] if crop else []) + ["+repage", ")"]
-                if len(layers) > 1:
-                    args += ["-background", "none", "-flatten"]
-                trim = run(*args, "-write", f"PNG32:{target}", "-format", "%@ %w %h", "info:")
+                trim = run(*frame(layers), "-write", f"PNG32:{target}", "-format", "%@ %w %h", "info:")
                 geometry, width, height = trim.split()
                 flat[clip].append(target)
                 if not geometry.startswith("0x0"):
@@ -317,5 +337,30 @@ with tempfile.TemporaryDirectory() as temp:
             f"head_px: {{ x: {reach - head // 2}, y: {top - top_all}, size: {head} }}"
         )
 
-# The gunner's bullet, its shot, as it ships.
-run(PACKS / GUNNER / "Enemy02_Bullet.png", "-strip", f"PNG32:{ASSETS / 'enemies/glyph_gunner/shot.png'}")
+# The strips that are not a body, each frame drawn as it is and laid after the
+# one before.
+SPIKES = [f"{BOSS} attack 2{variant}.png" for variant in "acb"]
+SHEETS = {
+    # The gunner's bullet, as it ships.
+    "glyph_gunner/shot.png": [[(PACKS / GUNNER / "Enemy02_Bullet.png", None, [])]],
+    # Three of the brute's spikes side by side, the tallest in the middle,
+    # in one 104 x 48 frame.
+    "horned_brute/spikes.png": [
+        [
+            (None, None, ["-size", "104x48", "xc:none"]),
+            *[
+                (PACKS / path, f"48x48+{frame * 48}+0", ["-repage", f"+{offset}+0"])
+                for path, offset in zip(SPIKES, (0, 28, 56))
+            ],
+        ]
+        for frame in range(16)
+    ],
+    # The warden's shot: the shield hovering, as it ships.
+    "hooded_warden/shot.png": files(f"{SHIELD}/Idle"),
+    # Its armor: the shield, then its break.
+    "hooded_warden/shield.png": files(f"{SHIELD}/Idle", last=1) + files(f"{SHIELD}/Break"),
+}
+for target, frames in SHEETS.items():
+    args = [arg for layers in frames for arg in ["(", *frame(layers), ")"]]
+    run(*args, "+append", "-strip", f"PNG32:{ASSETS / 'enemies' / target}")
+    print(f"{target}: {len(frames)} frames")

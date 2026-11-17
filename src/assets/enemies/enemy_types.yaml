@@ -868,11 +868,11 @@ types:
   # assets/monster_sheets.rs. Every number here is a first guess, read off the
   # sheets rather than played; only test room 999 holds them yet.
   #
-  # A horned brute (the dark fantasy big boss): it rears up and brings
-  # spikes up out of the floor under the player from across the room, and
-  # slams whoever stands close with the same move.
+  # A horned brute (the dark fantasy big boss): it pounds the floor, which
+  # tears up before it and sends a wave along it, and from across the room
+  # brings spikes up out of the floor under the player.
   horned_brute:
-    hurtbox_h: { width: 1.5, height: 2.2 }
+    hurtbox_h: { width: 1.1, height: 1.5 }
     health: 400
     material: polymer
     head_px: { x: 21, y: 4, size: 19 }
@@ -880,7 +880,7 @@ types:
     behavior: boss
     sprite:
       {
-        scale: 3,
+        scale: 2,
         top_padding_px: 4,
         bottom_padding_px: 0,
         origin_above_feet_px: 19,
@@ -894,25 +894,34 @@ types:
         min_range_h: 2.5
         cooldown_s: 2.4
         windup_s: 0.8
+        impact_effect: { sheet: vfx_meteor_impact, size_h: 1.2 }
         hazard:
-          size_h: { width: 2.2, height: 1.4 }
-          arm_s: 0.7
-          burn_s: 0.35
+          size_h: { width: 2.4, height: 1.2 }
+          arm_s: 0.6
+          burn_s: 0.55
+          art: { sheet: horned_brute_spikes, rise_frame: 4 }
       - kind: melee
         clip: attack
         strike_frame: 8
         damage: 18
-        hitbox_h: { x: -0.4, y: 0, width: 2.4, height: 1.6 }
+        hitbox_h: { x: -0.3, y: 0, width: 1.8, height: 1.2 }
         cooldown_s: 2
         windup_s: 0.8
+        impact_effect: { sheet: vfx_meteor_impact, size_h: 1.6 }
+        shockwave:
+          damage: 10
+          speed_h_s: 8
+          range_h: 6
+          size_h: { width: 0.6, height: 0.5 }
     phase_two:
       health_fraction_at_or_below: 0.5
       cooldown_multiplier: 0.7
-  # The Shadowed Wetlands Boss: its slash flies on along the floor as a wave,
-  # and from further off it curls into a ball and rolls at the player,
-  # unrolling into a slash.
+  # The Shadowed Wetlands Boss: its slash cuts twice (the low cut, then the
+  # arch over it) and the first flies on along the floor as a wave; from
+  # further off it curls into a ball and rolls at the player, unrolling into
+  # a slash.
   wetlands_boss:
-    hurtbox_h: { width: 1, height: 2 }
+    hurtbox_h: { width: 0.8, height: 1.5 }
     health: 500
     material: polymer
     head_px: { x: 104, y: 30, size: 28 }
@@ -920,31 +929,33 @@ types:
     behavior: boss
     sprite:
       {
-        scale: 2,
+        scale: 1.5,
         top_padding_px: 30,
         bottom_padding_px: 0,
         origin_above_feet_px: 28,
       }
     attacks:
-      - kind: melee
+      - kind: two_hit_melee_combo
         clip: attack
         strike_frame: 2
-        damage: 14
-        hitbox_h: { x: 0, y: 0, width: 2.6, height: 1.2 }
+        second_strike_frame: 6
+        hits: 2
+        damage_per_hit: 10
+        hitbox_h: { x: 0, y: 0, width: 2, height: 1.2 }
         cooldown_s: 1.8
         windup_s: 0.6
         shockwave:
-          damage: 10
+          damage: 8
           speed_h_s: 8
-          range_h: 7
-          size_h: { width: 0.8, height: 0.5 }
+          range_h: 6
+          size_h: { width: 0.6, height: 0.4 }
       - kind: telegraphed_lunge
         clip: roll_attack
         strike_frame: 9
         damage: 18
-        hitbox_h: { x: -0.5, y: 0, width: 3, height: 2 }
-        start_range_h: 6
-        min_range_h: 2.5
+        hitbox_h: { x: -0.4, y: 0, width: 2.3, height: 1.5 }
+        start_range_h: 5
+        min_range_h: 2.2
         cooldown_s: 2.2
         windup_s: 0.9
     phase_two:
@@ -983,10 +994,10 @@ types:
         hitbox_h: { x: 0, y: 0, width: 2.2, height: 0.6 }
         cooldown_s: 1.4
         windup_s: 0.4
-  # The Blind Huntress: a duellist that dashes in from a few H, cuts twice up
-  # close, and rolls out from under a beating.
+  # The Blind Huntress: a small, quick duellist that dashes in from a few H,
+  # cuts up close, and rolls out from under a beating.
   blind_huntress:
-    hurtbox_h: { width: 0.45, height: 1.05 }
+    hurtbox_h: { width: 0.35, height: 0.8 }
     health: 110
     material: polymer
     head_px: { x: 82, y: 7, size: 15 }
@@ -994,7 +1005,7 @@ types:
     behavior: melee_pursuit
     sprite:
       {
-        scale: 1.4,
+        scale: 1,
         top_padding_px: 7,
         bottom_padding_px: 2,
         origin_above_feet_px: 19,
@@ -1004,35 +1015,35 @@ types:
         clip: dash_attack
         strike_frame: 1
         damage: 11
-        hitbox_h: { x: -0.3, y: 0, width: 1.6, height: 1 }
+        hitbox_h: { x: -0.2, y: 0, width: 1.15, height: 0.75 }
         start_range_h: 3.5
         min_range_h: 1.8
         cooldown_s: 1.6
         windup_s: 0.5
-      - kind: two_hit_melee_combo
+      - kind: melee
         clip: combo
         strike_frame: 1
-        hits: 2
-        damage_per_hit: 7
-        hitbox_h: { x: -0.4, y: 0, width: 1.8, height: 1.4 }
-        cooldown_s: 1.5
+        damage: 11
+        hitbox_h: { x: -0.3, y: 0, width: 1.3, height: 1 }
+        cooldown_s: 1.4
         windup_s: 0.4
       - kind: melee
         clip: attack
         strike_frame: 1
         damage: 9
-        hitbox_h: { x: -0.2, y: 0, width: 1.5, height: 1 }
-        cooldown_s: 1.2
+        hitbox_h: { x: -0.15, y: 0, width: 1.1, height: 0.75 }
+        cooldown_s: 1.1
         windup_s: 0.35
     roll:
       after_wounds: 3
-      distance_h: 3.5
+      distance_h: 3
       duration_s: 0.45
       invulnerable_from_s: 0
       invulnerable_to_s: 0.4
   # A swordsman with a parry: its guard turns an ordinary blow aside and
   # answers it, so it is broken with a heavy blow or waited out. From a few H
-  # away it thrusts across the floor.
+  # away it thrusts across the floor. Its sword trails on the floor until it
+  # notices the player, and is held out ahead from then on.
   crimson_duelist:
     hurtbox_h: { width: 0.4, height: 1.05 }
     health: 90
@@ -1054,22 +1065,22 @@ types:
         damage: 12
         hitbox_h: { x: 0, y: 0, width: 2.4, height: 0.9 }
         start_range_h: 3.5
-        cooldown_s: 1.8
+        cooldown_s: 0.9
         windup_s: 0.6
       - kind: parry
         clip: guard
         strike_frame: 4
         damage: 12
         hitbox_h: { x: -0.4, y: 0, width: 1.8, height: 1.4 }
-        cooldown_s: 1.6
+        cooldown_s: 0.9
         windup_s: 0.3
         guard:
-          hold_s: 1
+          hold_s: 0.8
           counter_clip: counter
           counter_strike_frame: 1
           counter_windup_s: 0.3
   # A gunner with a pistol in each hand: it keeps its distance and fires its
-  # own bullet.
+  # own bullet, once from each gun.
   glyph_gunner:
     hurtbox_h: { width: 0.5, height: 1.1 }
     health: 60
@@ -1089,75 +1100,15 @@ types:
       kind: projectile
       clip: attack
       strike_frame: 10
-      damage: 9
+      second_strike_frame: 12
+      hits: 2
+      damage_per_hit: 8
       projectile_size_h: { width: 0.42, height: 0.23 }
       projectile_speed_h_s: 8
       cooldown_s: 1.8
       windup_s: 0.6
-  # The Zweihander (a player pack): an elite with a greatsword. A two-swing
-  # combo, a sweep, a heavy blow, and a parry it answers with a counter; it
-  # walks in its stance, and lunges through a beating.
-  zweihander:
-    hurtbox_h: { width: 0.6, height: 1.25 }
-    health: 240
-    material: metal
-    head_px: { x: 105, y: 69, size: 41 }
-    movement_speed_h_s: 1.8
-    behavior: melee_pursuit
-    procedural_movement:
-      bob_height_h: 0.05
-      cycles_per_h: 1
-      lean_degrees: 3
-    sprite:
-      {
-        scale: 0.75,
-        top_padding_px: 69,
-        bottom_padding_px: 37,
-        origin_above_feet_px: 41,
-      }
-    attacks:
-      - kind: two_hit_melee_combo
-        clip: attack
-        strike_frame: 3
-        hits: 2
-        damage_per_hit: 10
-        hitbox_h: { x: -0.4, y: 0, width: 2.4, height: 1.8 }
-        cooldown_s: 1.6
-        windup_s: 0.5
-      - kind: parry
-        clip: guard
-        strike_frame: 3
-        damage: 14
-        hitbox_h: { x: -0.6, y: 0, width: 2.6, height: 2 }
-        cooldown_s: 1.4
-        windup_s: 0.3
-        guard:
-          hold_s: 1.2
-          counter_clip: counter
-          counter_strike_frame: 1
-          counter_windup_s: 0.35
-      - kind: melee
-        clip: combo
-        strike_frame: 4
-        damage: 12
-        hitbox_h: { x: -0.6, y: 0, width: 2.6, height: 1.6 }
-        cooldown_s: 1.6
-        windup_s: 0.5
-      - kind: melee
-        clip: heavy
-        strike_frame: 4
-        damage: 20
-        hitbox_h: { x: -0.4, y: 0, width: 2.8, height: 2 }
-        cooldown_s: 2.2
-        windup_s: 0.9
-    roll:
-      after_wounds: 3
-      distance_h: 4
-      duration_s: 0.5
-      invulnerable_from_s: 0
-      invulnerable_to_s: 0.45
-  # The CharacterPack hero: a light blade that dashes through the player from
-  # a few H away and throws a crescent up close.
+  # The CharacterPack hero: a light blade that fires a fast shot from afar
+  # and cuts a wide crescent up close.
   moon_blade:
     hurtbox_h: { width: 0.45, height: 1 }
     health: 70
@@ -1173,24 +1124,24 @@ types:
         origin_above_feet_px: 11,
       }
     attacks:
-      - kind: lunge
-        clip: dash_slash
+      - kind: projectile
+        clip: shoot
         strike_frame: 2
-        damage: 10
-        hitbox_h: { x: -0.3, y: 0, width: 1.6, height: 1 }
-        start_range_h: 4
-        min_range_h: 2
-        cooldown_s: 1.6
-        windup_s: 0.5
+        damage: 8
+        projectile_size_h: { width: 0.4, height: 0.12 }
+        projectile_speed_h_s: 16
+        min_range_h: 3
+        cooldown_s: 1.4
+        windup_s: 0.4
       - kind: melee
         clip: attack
         strike_frame: 6
-        damage: 10
-        hitbox_h: { x: -0.2, y: 0, width: 1.9, height: 1.6 }
+        damage: 11
+        hitbox_h: { x: -0.6, y: 0, width: 2.6, height: 2.2 }
         cooldown_s: 1.3
         windup_s: 0.45
   # The PackCharacterPixelArt05 hero: an antlered wisp that throws a white
-  # orb from afar, then closes in and cuts.
+  # orb from afar, then closes in and cuts, or bursts the floor around it.
   antler_wisp:
     hurtbox_h: { width: 0.5, height: 0.9 }
     health: 70
@@ -1232,13 +1183,14 @@ types:
         cooldown_s: 2.4
         windup_s: 0.9
   # PackCharacterPixelArt09's hero: a swordsman that stands with its sword
-  # put away and takes it out on noticing the player. Three cuts, a heavy
-  # blow, a parry it answers, and a roll out of a beating.
+  # put away and takes it out on noticing the player, then holds it out
+  # ahead. Three cuts, a heavy blow, a parry it answers, and a roll out of a
+  # beating.
   jade_swordsman:
     hurtbox_h: { width: 0.45, height: 1.05 }
     health: 160
     material: polymer
-    head_px: { x: 44, y: 29, size: 17 }
+    head_px: { x: 43, y: 29, size: 17 }
     movement_speed_h_s: 2.6
     behavior: melee_pursuit
     sprite:
@@ -1254,7 +1206,7 @@ types:
         strike_frame: 5
         damage: 10
         hitbox_h: { x: -0.3, y: 0, width: 1.9, height: 1.5 }
-        cooldown_s: 1.3
+        cooldown_s: 0.9
         windup_s: 0.45
       - kind: telegraphed_lunge
         clip: thrust
@@ -1262,17 +1214,17 @@ types:
         damage: 12
         hitbox_h: { x: 0, y: 0, width: 2.4, height: 0.9 }
         start_range_h: 3.5
-        cooldown_s: 1.6
+        cooldown_s: 1.1
         windup_s: 0.55
       - kind: parry
         clip: guard
         strike_frame: 4
         damage: 12
         hitbox_h: { x: -0.4, y: 0, width: 1.8, height: 1.4 }
-        cooldown_s: 1.6
+        cooldown_s: 1
         windup_s: 0.3
         guard:
-          hold_s: 1
+          hold_s: 0.8
           counter_clip: counter
           counter_strike_frame: 1
           counter_windup_s: 0.3
@@ -1281,14 +1233,14 @@ types:
         strike_frame: 9
         damage: 11
         hitbox_h: { x: -0.4, y: 0, width: 2, height: 1.6 }
-        cooldown_s: 1.5
+        cooldown_s: 1
         windup_s: 0.6
       - kind: melee
         clip: heavy
         strike_frame: 6
         damage: 18
         hitbox_h: { x: -0.4, y: 0, width: 2.1, height: 1.8 }
-        cooldown_s: 2.2
+        cooldown_s: 1.6
         windup_s: 0.9
     roll:
       after_wounds: 3
@@ -1296,13 +1248,13 @@ types:
       duration_s: 0.5
       invulnerable_from_s: 0
       invulnerable_to_s: 0.45
-  # Shadeflit: a quick spearman that darts at the player from a few H away,
-  # spear first, and is frail once caught.
+  # Shadeflit: a quick spearman that darts in from a few H away and thrusts
+  # (a thrust the script makes from its standing frame), frail once caught.
   shadeflit:
     hurtbox_h: { width: 0.45, height: 1.05 }
     health: 45
     material: polymer
-    head_px: { x: 22, y: 1, size: 20 }
+    head_px: { x: 51, y: 1, size: 20 }
     movement_speed_h_s: 3.4
     behavior: melee_pursuit
     sprite:
@@ -1315,22 +1267,24 @@ types:
     attack:
       kind: lunge
       clip: attack
-      strike_frame: 2
+      strike_frame: 3
       damage: 10
       hitbox_h: { x: -0.2, y: 0, width: 1.7, height: 0.9 }
       start_range_h: 4
       cooldown_s: 1.4
       windup_s: 0.5
-  # PackCharacterPixelArt09's NPC: a hooded caster that hangs back and
-  # throws bolts, slow on its feet.
+  # PackCharacterPixelArt09's NPC, a shield-bearer: it walks in behind three
+  # layers of its own green shield (each soaks a blow whole, and breaks as
+  # the pack draws it), hangs back and throws a shield at the player.
   hooded_warden:
     hurtbox_h: { width: 0.5, height: 1.1 }
     health: 70
+    armor_layers: 3
     material: polymer
     head_px: { x: 13, y: 0, size: 27 }
     movement_speed_h_s: 1.2
     behavior: ranged_keep_distance
-    preferred_distance_h: 8
+    preferred_distance_h: 7
     sprite:
       {
         scale: 1,
@@ -1342,35 +1296,8 @@ types:
       kind: projectile
       clip: attack
       strike_frame: 8
-      damage: 8
-      projectile_size_h: { width: 0.3, height: 0.3 }
-      projectile_speed_h_s: 6.5
+      damage: 9
+      projectile_size_h: { width: 0.5, height: 0.5 }
+      projectile_speed_h_s: 6
       cooldown_s: 2
       windup_s: 0.6
-  # The Void Gate: a stone arch that never moves, firing from its mouth at
-  # whoever it sees. Tough, but it cannot follow anyone.
-  void_gate:
-    hurtbox_h: { width: 2.6, height: 1.2 }
-    health: 200
-    material: polymer
-    head_px: { x: 86, y: 0, size: 29 }
-    movement_speed_h_s: 0
-    # Too low to reach any floor: it never jumps.
-    jump_height_h: 0.1
-    behavior: ranged_keep_distance
-    preferred_distance_h: 8
-    sprite:
-      {
-        scale: 1,
-        top_padding_px: 0,
-        bottom_padding_px: 0,
-        origin_above_feet_px: 29,
-      }
-    attack:
-      kind: projectile
-      clip: attack
-      damage: 9
-      projectile_size_h: { width: 0.4, height: 0.4 }
-      projectile_speed_h_s: 7
-      cooldown_s: 1.6
-      windup_s: 0.7

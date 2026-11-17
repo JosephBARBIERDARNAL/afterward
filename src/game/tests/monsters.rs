@@ -25,13 +25,11 @@ fn every_monster_reaches_a_standing_player_and_a_shot_of_its_own_is_what_it_fire
         "blind_huntress",
         "crimson_duelist",
         "glyph_gunner",
-        "zweihander",
         "moon_blade",
         "antler_wisp",
         "jade_swordsman",
         "shadeflit",
         "hooded_warden",
-        "void_gate",
     ] {
         let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
         let mut data = GameData::load(&asset_root).expect("Chapter 1 data should load");
@@ -65,7 +63,7 @@ exit: {{ x_h: 45, y_h: 1 }}
             fps: 12.0,
         };
         // Every clip its attacks play, long enough for any strike frame.
-        let own_shot = ["eye_beast", "glyph_gunner"].contains(&monster);
+        let own_shot = ["eye_beast", "glyph_gunner", "hooded_warden"].contains(&monster);
         let clips = data.enemies.types[monster]
             .attack
             .iter()
