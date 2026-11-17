@@ -54,6 +54,15 @@ impl RoomConfig {
     pub(crate) const LAST_ID: u16 = 100;
     /// How many rooms a chapter holds, its boss last.
     pub(crate) const CHAPTER_ROOMS: u16 = 10;
+    /// The test room, outside the run: a sandbox the debug editor's playtest
+    /// can open, where the build window toggles every bonus and the waves
+    /// start over once they are down.
+    pub(crate) const TEST_ROOM_ID: u16 = 999;
+
+    /// Every room the game loads: the run's, then the test room.
+    pub(crate) fn ids() -> impl Iterator<Item = u16> {
+        (0..=Self::LAST_ID).chain([Self::TEST_ROOM_ID])
+    }
 
     /// Whether the room draws `layer` of its background profile `profile`.
     pub(crate) fn shows_layer(&self, profile: &str, layer: ProfileLayer) -> bool {

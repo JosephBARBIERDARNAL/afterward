@@ -278,6 +278,7 @@ type HudPieces = Or<(With<HealthBarFrame>, With<RoomCounter>)>;
 pub(super) fn update_hud(
     screen: Res<State<GameScreen>>,
     session: Res<RunSession>,
+    controls: Res<ControlBindings>,
     mut text_query: Query<&mut Text, With<HealthText>>,
     mut fill_query: Query<&mut Node, With<HealthFill>>,
     mut bar_visibility: Query<&mut Visibility, HudPieces>,
@@ -287,11 +288,18 @@ pub(super) fn update_hud(
         text.0 = format!("{:.0}/{:.0}", session.health, session.max_health);
     }
     for mut text in &mut counters {
-        text.0 = format!(
-            "{} / {} rooms",
-            session.rooms_cleared(),
-            RoomConfig::LAST_ID
-        );
+        text.0 = if session.in_the_test_room() {
+            format!(
+                "test room: {} for bonuses",
+                controls.primary_label(GameAction::ShowBuild)
+            )
+        } else {
+            format!(
+                "{} / {} rooms",
+                session.rooms_cleared(),
+                RoomConfig::LAST_ID
+            )
+        };
     }
     let health_fraction = if session.max_health > 0.0 {
         session.health / session.max_health

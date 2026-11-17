@@ -563,7 +563,7 @@ fn spawn_help(commands: &mut Commands) {
 /// The playtest settings: a row per setting (click to change it) and the
 /// buttons that play the room or go back to editing it.
 fn spawn_playtest(commands: &mut Commands) {
-    let names = ["Infinite health", "Enemies", "Starting bonuses"];
+    let names = ["Room", "Infinite health", "Enemies", "Starting bonuses"];
     commands
         .spawn((
             Node {

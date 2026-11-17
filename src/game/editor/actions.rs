@@ -20,7 +20,7 @@ pub(super) enum NewItem {
 }
 
 /// A playtest setting: the rows of the settings Cmd+R opens.
-pub(super) const PLAYTEST_ROWS: usize = 3;
+pub(super) const PLAYTEST_ROWS: usize = 4;
 
 #[derive(Message, Clone, Debug, PartialEq)]
 pub(super) enum EditorAction {
@@ -139,7 +139,11 @@ pub(super) fn run_actions(resources: EditorActionResources) {
                 EditorAction::PlaytestCancel | EditorAction::Escape => editor.playtest_row = None,
                 EditorAction::PlaytestStart | EditorAction::OpenPlaytest => {
                     editor.playtest_row = None;
-                    *start_room = StartRoom(editor.room_id);
+                    *start_room = StartRoom(if editor.playtest_in_test_room {
+                        RoomConfig::TEST_ROOM_ID
+                    } else {
+                        editor.room_id
+                    });
                     next_screen.set(screens::reset_run(
                         &mut session,
                         &data,
@@ -155,8 +159,9 @@ pub(super) fn run_actions(resources: EditorActionResources) {
                 EditorAction::PlaytestChange(row, step) => {
                     editor.playtest_row = Some(*row);
                     match row {
-                        0 => playtest.infinite_health = !playtest.infinite_health,
-                        1 => playtest.no_enemies = !playtest.no_enemies,
+                        0 => editor.playtest_in_test_room = !editor.playtest_in_test_room,
+                        1 => playtest.infinite_health = !playtest.infinite_health,
+                        2 => playtest.no_enemies = !playtest.no_enemies,
                         _ => {
                             let choices = STARTING_BONUSES;
                             let at = choices

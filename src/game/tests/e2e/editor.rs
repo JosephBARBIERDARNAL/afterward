@@ -254,10 +254,11 @@ fn a_playtest_is_played_the_way_its_settings_ask() {
     game.tap(KeyCode::PageDown);
     assert!(!game.data().rooms[&1].enemy_spawns.is_empty());
 
-    // Cmd+R opens the settings on their first row. Right turns infinite
-    // health on, Down and Right turn the enemies off, and Down and a Left
-    // (wrapping round from none) ask for every bonus.
+    // Cmd+R opens the settings on their first row, the room. Down and Right
+    // turn infinite health on, Down and Right turn the enemies off, and Down
+    // and a Left (wrapping round from none) ask for every bonus.
     command_presses(&mut game, KeyCode::KeyR, "r", 1);
+    game.tap(KeyCode::ArrowDown);
     game.tap(KeyCode::ArrowRight);
     game.tap(KeyCode::ArrowDown);
     game.tap(KeyCode::ArrowRight);
@@ -281,6 +282,62 @@ fn a_playtest_is_played_the_way_its_settings_ask() {
     game.run_seconds(1.0);
     assert_eq!(game.session().health, health, "a hit costs no health");
     assert_eq!(game.screen(), GameScreen::Playing);
+}
+
+#[test]
+fn the_test_room_toggles_any_bonus_and_starts_its_waves_over() {
+    let mut game = HeadlessGame::with_copied_data();
+    game.tap(KeyCode::KeyD);
+
+    // Right on the settings' first row asks for the test room.
+    command_presses(&mut game, KeyCode::KeyR, "r", 1);
+    game.tap(KeyCode::ArrowRight);
+    game.tap(KeyCode::Enter);
+    game.wait_for_screen(GameScreen::Playing, 10.0);
+    assert_eq!(game.session().room_id, RoomConfig::TEST_ROOM_ID);
+    assert!(game.session().owned_bonuses.is_empty());
+
+    // Tab lists every bonus. Enter turns the first on at its lowest rarity,
+    // Up raises it, Right and Enter turn the second on too, and Backspace
+    // turns them all off.
+    game.tap(KeyCode::Tab);
+    assert_eq!(game.screen(), GameScreen::Build);
+    let (first, second) = {
+        let bonuses = &game.data().bonuses.bonuses;
+        let rarities = bonuses[0].rarities.keys().copied().collect::<Vec<_>>();
+        ((bonuses[0].id.clone(), rarities), bonuses[1].id.clone())
+    };
+    game.tap(KeyCode::Enter);
+    assert_eq!(
+        game.session().owned_bonuses,
+        [BonusPick::new(&first.0, first.1[0])]
+    );
+    game.tap(KeyCode::ArrowUp);
+    assert_eq!(
+        game.session().owned_bonuses[0].rarity,
+        first.1[1 % first.1.len()]
+    );
+    game.tap(KeyCode::ArrowRight);
+    game.tap(KeyCode::Enter);
+    assert!(game.session().has_bonus(&second));
+    assert_eq!(game.session().owned_bonuses.len(), 2);
+    game.tap(KeyCode::Backspace);
+    assert!(game.session().owned_bonuses.is_empty());
+    game.tap(KeyCode::Tab);
+    assert_eq!(game.screen(), GameScreen::Playing);
+
+    // Its last wave down, the room is not cleared: the first comes back.
+    game.defeat_enemies();
+    game.run_seconds(0.1);
+    assert_ne!(game.session().wave, 0);
+    let mut waited_s = 0.0;
+    while game.session().wave != 0 {
+        assert!(waited_s < 5.0, "the first wave should have come back");
+        game.run_seconds(0.1);
+        waited_s += 0.1;
+    }
+    assert!(!game.session().room_cleared);
+    assert!(!game.enemies().is_empty());
 }
 
 #[test]

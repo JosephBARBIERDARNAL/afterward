@@ -39,6 +39,7 @@ use bevy::{
 use std::{
     fs,
     path::{Path, PathBuf},
+    sync::atomic::{AtomicUsize, Ordering},
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
@@ -88,8 +89,14 @@ impl HeadlessGame {
         let nanos = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .map_or(0, |elapsed| elapsed.as_nanos());
-        let copy =
-            std::env::temp_dir().join(format!("afterward-e2e-{}-{nanos}", std::process::id()));
+        // Tests run side by side, and the clock may not tell apart two that
+        // start together: the count does, so none shares another's copy.
+        static COPIES: AtomicUsize = AtomicUsize::new(0);
+        let count = COPIES.fetch_add(1, Ordering::Relaxed);
+        let copy = std::env::temp_dir().join(format!(
+            "afterward-e2e-{}-{nanos}-{count}",
+            std::process::id()
+        ));
         let mut pending = vec![PathBuf::from("config"), PathBuf::from("rooms")];
         pending.extend(
             [

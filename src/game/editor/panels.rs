@@ -177,15 +177,24 @@ pub(super) fn refresh_panels(
             }
         }
         Part::PlaytestTitle => Look {
-            text: Some(format!("Playtest room {:02}", editor.room_id)),
+            text: Some(if editor.playtest_in_test_room {
+                String::from("Playtest the test room")
+            } else {
+                format!("Playtest room {:02}", editor.room_id)
+            }),
             ..default()
         },
         Part::PlaytestValue(row) => {
             let on_off = |on: bool| String::from(if on { "on" } else { "off" });
             Look {
                 text: Some(match row {
-                    0 => on_off(session.playtest.infinite_health),
-                    1 => on_off(!session.playtest.no_enemies),
+                    0 => String::from(if editor.playtest_in_test_room {
+                        "test room"
+                    } else {
+                        "this room"
+                    }),
+                    1 => on_off(session.playtest.infinite_health),
+                    2 => on_off(!session.playtest.no_enemies),
                     _ => match session.playtest.starting_bonuses {
                         0 => String::from("none"),
                         usize::MAX => String::from("all"),

@@ -273,7 +273,12 @@ impl Plugin for GamePlugin {
         .add_systems(
             Update,
             (
-                build_window::navigate_build_window.run_if(in_state(GameScreen::Build)),
+                (
+                    build_window::navigate_build_window,
+                    build_window::toggle_test_room_bonuses,
+                )
+                    .chain()
+                    .run_if(in_state(GameScreen::Build)),
                 build_window::update_build_window,
                 glossary::update_glossary,
                 bonus_text::write_descriptions.after(bonus_screen::update_bonus_screen),

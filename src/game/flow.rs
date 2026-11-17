@@ -13,7 +13,9 @@ pub(super) fn room_clear_check(
     mut sounds: ResMut<SoundQueue>,
     mut players: Query<&mut PlayerBody>,
 ) {
-    if session.room_cleared || session.health <= 0.0 {
+    // The test room is never cleared: `combat::send_in_the_next_wave` starts
+    // its waves over.
+    if session.room_cleared || session.health <= 0.0 || session.in_the_test_room() {
         return;
     }
     if enemies.iter().any(|enemy| enemy.health > 0.0) {

@@ -161,7 +161,12 @@ impl RunSession {
                     .contains(&((id - 1) % chapter_rooms + 1))
         };
         let chapter = |id: u16| id.saturating_sub(1) / chapter_rooms;
-        let ids = data.rooms.keys().copied().collect::<Vec<_>>();
+        let ids = data
+            .rooms
+            .keys()
+            .copied()
+            .filter(|id| *id != RoomConfig::TEST_ROOM_ID)
+            .collect::<Vec<_>>();
         let mut order = Vec::with_capacity(ids.len());
         for id in &ids {
             let next = if fixed(*id) {
@@ -185,6 +190,11 @@ impl RunSession {
             order.swap(at, own);
         }
         self.room_order = order;
+    }
+
+    /// Whether the room being played is the test room, outside the run.
+    pub(crate) fn in_the_test_room(&self) -> bool {
+        self.room_id == RoomConfig::TEST_ROOM_ID
     }
 
     pub(crate) fn has_bonus(&self, id: &str) -> bool {
@@ -254,6 +264,22 @@ impl RunSession {
         self.max_health += effect("max_health_increase");
         self.health += effect("max_health_increase");
         self.rerolls = self.rerolls.saturating_add(effect("extra_rerolls") as u8);
+    }
+
+    /// Gives an owned bonus back, taking back what it gave once when it was
+    /// taken: the test room's way to turn one off.
+    pub(crate) fn give_up(&mut self, data: &GameData, id: &str) {
+        let Some(at) = self.owned_bonuses.iter().position(|owned| owned.id == id) else {
+            return;
+        };
+        let pick = self.owned_bonuses.remove(at);
+        let Some(bonus) = data.bonuses.bonus(&pick.id) else {
+            return;
+        };
+        let effect = |key| bonus.effect(pick.rarity, key).unwrap_or_default();
+        self.max_health -= effect("max_health_increase");
+        self.health = self.health.min(self.max_health);
+        self.rerolls = self.rerolls.saturating_sub(effect("extra_rerolls") as u8);
     }
 
     /// Whether the room being played has anyone to fight. One that does not
@@ -458,8 +484,8 @@ mod tests {
             sorted.sort_unstable();
             assert_eq!(
                 sorted,
-                data.rooms.keys().copied().collect::<Vec<_>>(),
-                "every room is played once"
+                (0..=RoomConfig::LAST_ID).collect::<Vec<_>>(),
+                "every room of the run is played once, and the test room never"
             );
             assert_eq!(
                 session.room_place(),

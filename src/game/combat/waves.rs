@@ -1,6 +1,7 @@
 //! The later waves of a room's enemies. `wave` on a room spawn says which one
 //! it arrives with: wave 0 stands there as the room opens, and each wave
-//! after it rises out of the floor once everyone before it is down.
+//! after it rises out of the floor once everyone before it is down. In the
+//! test room the first wave comes back after the last.
 
 use super::*;
 
@@ -23,12 +24,12 @@ pub(in crate::game) fn send_in_the_next_wave(
     enemies: Query<&EnemyBody>,
 ) {
     let room = &data.rooms[&session.room_id];
-    let next = room
-        .enemy_spawns
-        .iter()
-        .map(|spawn| spawn.wave)
-        .filter(|wave| *wave > session.wave)
-        .min();
+    let waves = room.enemy_spawns.iter().map(|spawn| spawn.wave);
+    let later = waves.clone().filter(|wave| *wave > session.wave).min();
+    // The test room is never cleared: its last wave down, the first comes
+    // back, as into a fresh room.
+    let starts_over = later.is_none() && session.in_the_test_room();
+    let next = later.or_else(|| waves.min().filter(|_| starts_over));
     let Some(next) = next.filter(|_| {
         session.has_enemies(&data)
             && session.health > 0.0
@@ -43,6 +44,12 @@ pub(in crate::game) fn send_in_the_next_wave(
     }
     session.wave_wait_s = 0.0;
     session.wave = next;
+    if starts_over {
+        session.health = session.max_health;
+        session.untouched = true;
+        session.room_ward_used = false;
+        session.deflector_used = false;
+    }
     world::spawn_enemies(&mut commands, room, &data, &sheets, Some(next));
     sounds.push(SoundCue::EnemiesAppear);
 }

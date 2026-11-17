@@ -1,0 +1,109 @@
+# Room coordinates use H from the lower-left. Platform and decoration `rect_h`
+# give each block's lower-left corner and size; player, enemy, and exit y
+# values mark the feet baseline on a platform top.
+room_id: 999
+chapter_id: 1
+size:
+  width_h: 36
+  height_h: 13.5
+background_profiles: [sci_fi_industrial]
+hidden_background_layers: [sci_fi_industrial/4, sci_fi_industrial/5]
+player_spawn:
+  x_h: 3
+  y_h: 1
+# Solid platforms: land on their top, stop against their sides, bump
+# your head on their underside. They stop shots too.
+platforms:
+  - label: left wall
+    material: sci_fi_dark_rivets
+    rect_h: { x: 0, y: 0, width: 0.5, height: 13.5 }
+  - label: left wall face
+    material: sci_fi_trim_wall_right
+    rect_h: { x: 0.5, y: 1, width: 0.5, height: 12.5 }
+  - label: floor base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 0, y: 0, width: 36, height: 0.5 }
+  - label: floor trim
+    material: sci_fi_green_edge
+    rect_h: { x: 1, y: 0.5, width: 34, height: 0.5 }
+  - label: right wall face
+    material: sci_fi_trim_wall_left
+    rect_h: { x: 35, y: 1, width: 0.5, height: 12.5 }
+  - label: right wall
+    material: sci_fi_dark_rivets
+    rect_h: { x: 35.5, y: 0, width: 0.5, height: 13.5 }
+  - label: low ledge trim, climbed from the floor
+    material: sci_fi_green_edge
+    rect_h: { x: 6, y: 3, width: 4, height: 0.5 }
+  - label: low ledge underside
+    material: sci_fi_trim_ceiling
+    rect_h: { x: 6, y: 2.5, width: 4, height: 0.5 }
+  - label: walkway trim, for the slam
+    material: sci_fi_green_edge
+    rect_h: { x: 12, y: 5.5, width: 5, height: 0.5 }
+  - label: walkway underside
+    material: sci_fi_trim_ceiling
+    rect_h: { x: 12, y: 5, width: 5, height: 0.5 }
+  - label: cover base
+    material: sci_fi_dark_rivets
+    rect_h: { x: 19.5, y: 1, width: 1.5, height: 1 }
+  - label: cover trim
+    material: sci_fi_green_edge
+    rect_h: { x: 19.5, y: 2, width: 1.5, height: 0.5 }
+  - label: tall pillar, to cling to and run up
+    material: sci_fi_dark_rivets
+    rect_h: { x: 25, y: 1, width: 1.5, height: 8 }
+  - label: tall pillar top
+    material: sci_fi_green_edge
+    rect_h: { x: 25, y: 9, width: 1.5, height: 0.5 }
+  - label: high shelf trim, up the ladder
+    material: sci_fi_green_edge
+    rect_h: { x: 30, y: 8, width: 5, height: 0.5 }
+  - label: high shelf underside
+    material: sci_fi_trim_ceiling
+    rect_h: { x: 30, y: 7.5, width: 5, height: 0.5 }
+# Decorations: non-solid panels behind the platforms or in front of the bodies.
+decorations: []
+# Props: sprites standing on a spot (the middle of their bottom edge).
+props: []
+devices:
+  - label: up to the high shelf
+    kind: ladder
+    position_h: { x: 29.5, y: 1 }
+    height_h: 7.5
+enemy_spawns:
+  - label: fodder
+    type_id: blade_unit
+    position_h: { x: 12, y: 1 }
+    facing: left
+  - label: fodder
+    type_id: blade_unit
+    position_h: { x: 16, y: 1 }
+    facing: left
+  - label: shooter on the walkway
+    type_id: rifle_unit
+    position_h: { x: 14.5, y: 6 }
+    facing: left
+  - label: the tough one, armored
+    type_id: heavy_unit
+    position_h: { x: 18, y: 1 }
+    facing: left
+    armor_layers: 2
+    wave: 1
+  - label: the elite
+    type_id: dark_blade_unit
+    position_h: { x: 23, y: 1 }
+    facing: left
+    wave: 1
+  - label: fodder
+    type_id: blade_unit
+    position_h: { x: 8, y: 3.5 }
+    facing: right
+    wave: 1
+# The bonus item: never laid here, as the test room's waves start over.
+bonus:
+  x_h: 32
+  y_h: 1
+exit:
+  x_h: 33.5
+  y_h: 1

@@ -8,6 +8,10 @@
 //! (`glossary.rs`). It opens from the bonus screen too, so a choice is made
 //! knowing what the build already does, and closing it then goes back to the
 //! offers.
+//!
+//! In the test room it lists every bonus instead, the ones owned lit, and
+//! turns them on and off (`toggle_test_room_bonuses`), so a bonus can be
+//! tried alone or with others without earning it.
 
 use super::*;
 use crate::game::{
@@ -63,6 +67,12 @@ pub(super) struct BuildGrid;
 #[derive(Component)]
 #[require(Outline)]
 pub(super) struct BuildChip(pub(super) usize);
+
+/// The name on a chip, by its place in `BuildFocus::order`: coloured each
+/// frame, since the test room turns its bonus on and off and changes its
+/// rarity.
+#[derive(Component)]
+pub(super) struct ChipName(usize);
 
 #[derive(Component, Clone, Copy)]
 pub(super) enum DetailSpan {
@@ -217,18 +227,36 @@ pub(super) fn open_build_window(
     mut focus: ResMut<BuildFocus>,
     grids: Query<Entity, With<BuildGrid>>,
 ) {
-    let owned = session.owned(&data).collect::<Vec<_>>();
-    focus.order = owned
-        .iter()
-        .map(|(bonus, rarity)| BonusPick::new(&bonus.id, *rarity))
-        .collect();
-    focus.index = focus.index.min(owned.len().saturating_sub(1));
+    focus.order = if session.in_the_test_room() {
+        // Every bonus, at the rarity it is owned at, else at its lowest.
+        data.bonuses
+            .bonuses
+            .iter()
+            .filter_map(|bonus| {
+                session
+                    .owned_bonuses
+                    .iter()
+                    .find(|owned| owned.id == bonus.id)
+                    .cloned()
+                    .or_else(|| {
+                        let rarity = bonus.rarities.keys().next()?;
+                        Some(BonusPick::new(&bonus.id, *rarity))
+                    })
+            })
+            .collect()
+    } else {
+        session
+            .owned(&data)
+            .map(|(bonus, rarity)| BonusPick::new(&bonus.id, rarity))
+            .collect()
+    };
+    focus.index = focus.index.min(focus.order.len().saturating_sub(1));
     let Ok(grid) = grids.single() else {
         return;
     };
     commands.entity(grid).despawn_children();
     commands.entity(grid).with_children(|grid| {
-        if owned.is_empty() {
+        if focus.order.is_empty() {
             grid.spawn((
                 Text::new("No bonus yet: clear a room to earn one."),
                 TextFont {
@@ -238,7 +266,10 @@ pub(super) fn open_build_window(
                 TextColor(MUTED),
             ));
         }
-        for (index, (bonus, rarity)) in owned.iter().enumerate() {
+        for (index, pick) in focus.order.iter().enumerate() {
+            let Some(bonus) = data.bonuses.bonus(&pick.id) else {
+                continue;
+            };
             grid.spawn((
                 Node {
                     padding: UiRect::axes(px(10), px(6)),
@@ -256,18 +287,21 @@ pub(super) fn open_build_window(
                     font_size: FontSize::Px(CHIP_FONT_PX),
                     ..default()
                 },
-                TextColor(Color::from(data.bonuses.rarities[*rarity].color)),
+                TextColor(MUTED),
                 FontRole::Display,
+                ChipName(index),
                 Pickable::IGNORE,
             ));
         }
     });
 }
 
-/// Walks the focus with the arrows, or puts it where the pointer is.
+/// Walks the focus with the arrows, or puts it where the pointer is. In the
+/// test room only Left and Right walk it: Up and Down change the rarity.
 pub(super) fn navigate_build_window(
     keys: Res<ButtonInput<KeyCode>>,
     controls: Res<ControlBindings>,
+    session: Res<RunSession>,
     mut focus: ResMut<BuildFocus>,
     mut sounds: ResMut<SoundQueue>,
     chips: Query<&BuildChip>,
@@ -286,17 +320,118 @@ pub(super) fn navigate_build_window(
         focus.index = chip.0;
     } else if [GameAction::NavigateUp, GameAction::MoveLeft]
         .into_iter()
+        .skip(usize::from(session.in_the_test_room()))
         .any(|action| controls.just_pressed(action, &keys))
     {
         focus.index = (before + count - 1) % count;
     } else if [GameAction::NavigateDown, GameAction::MoveRight]
         .into_iter()
+        .skip(usize::from(session.in_the_test_room()))
         .any(|action| controls.just_pressed(action, &keys))
     {
         focus.index = (before + 1) % count;
     }
     if focus.index != before {
         sounds.push(SoundCue::UiMove);
+    }
+}
+
+/// What presses a chip of the test room's build window: the keys, and a
+/// click on it.
+#[derive(SystemParam)]
+pub(super) struct ChipInput<'w, 's> {
+    keys: Res<'w, ButtonInput<KeyCode>>,
+    controls: Res<'w, ControlBindings>,
+    pointer_clicks: MessageReader<'w, 's, PointerClick>,
+    chips: Query<'w, 's, &'static BuildChip>,
+}
+
+/// The test room's build window turns bonuses on and off: a click on a
+/// chip, or Confirm or Interact on the focused one, toggles it; Up and Down
+/// change the rarity it is (or will be) owned at; Backspace gives every bonus
+/// back.
+pub(super) fn toggle_test_room_bonuses(
+    input: ChipInput,
+    data: Res<GameData>,
+    mut session: ResMut<RunSession>,
+    mut focus: ResMut<BuildFocus>,
+    mut sounds: ResMut<SoundQueue>,
+) {
+    let ChipInput {
+        keys,
+        controls,
+        mut pointer_clicks,
+        chips,
+    } = input;
+    let clicked = pointer_clicks
+        .read()
+        .filter(|click| click.button == PointerButton::Primary)
+        .filter_map(|click| chips.get(click.entity).ok())
+        .last();
+    if !session.in_the_test_room() {
+        return;
+    }
+    if keys.just_pressed(KeyCode::Backspace) {
+        let owned = session
+            .owned_bonuses
+            .iter()
+            .map(|owned| owned.id.clone())
+            .collect::<Vec<_>>();
+        for id in owned {
+            session.give_up(&data, &id);
+        }
+        sounds.push(SoundCue::UiCancel);
+        return;
+    }
+    if let Some(chip) = clicked {
+        focus.index = chip.0;
+    }
+    let index = focus.index;
+    let Some(pick) = focus.order.get(index).cloned() else {
+        return;
+    };
+    let step = if controls.just_pressed(GameAction::NavigateUp, &keys) {
+        1
+    } else if controls.just_pressed(GameAction::NavigateDown, &keys) {
+        -1
+    } else {
+        0
+    };
+    if step != 0 {
+        let Some(bonus) = data.bonuses.bonus(&pick.id) else {
+            return;
+        };
+        let rarities = bonus.rarities.keys().copied().collect::<Vec<_>>();
+        let at = rarities
+            .iter()
+            .position(|rarity| *rarity == pick.rarity)
+            .unwrap_or_default() as isize;
+        let rarity = rarities[(at + step).rem_euclid(rarities.len() as isize) as usize];
+        if rarity == pick.rarity {
+            return;
+        }
+        let repicked = BonusPick::new(&pick.id, rarity);
+        if session.has_bonus(&pick.id) {
+            session.give_up(&data, &pick.id);
+            session.take(&data, repicked.clone());
+        }
+        focus.order[index] = repicked;
+        sounds.push(SoundCue::UiMove);
+        return;
+    }
+    let toggled = clicked.is_some()
+        || [GameAction::Confirm, GameAction::Interact]
+            .into_iter()
+            .any(|action| controls.just_pressed(action, &keys));
+    if !toggled {
+        return;
+    }
+    if session.has_bonus(&pick.id) {
+        session.give_up(&data, &pick.id);
+        sounds.push(SoundCue::UiCancel);
+    } else {
+        session.take(&data, pick);
+        sounds.push(SoundCue::UiConfirm);
     }
 }
 
@@ -309,6 +444,7 @@ pub(super) struct BuildWindowResources<'w, 's> {
     controls: Res<'w, ControlBindings>,
     players: Query<'w, 's, &'static PlayerBody>,
     enemies: Query<'w, 's, &'static EnemyBody>,
+    names: Query<'w, 's, (&'static ChipName, &'static mut TextColor), Without<DetailSpan>>,
 }
 
 /// What the bonus is doing, in words, and whether it is at work right now:
@@ -353,6 +489,7 @@ pub(super) fn update_build_window(
         controls,
         players,
         enemies,
+        mut names,
     } = resources;
     let visible = *screen.get() == GameScreen::Build;
     for mut visibility in &mut roots {
@@ -390,7 +527,9 @@ pub(super) fn update_build_window(
             continue;
         };
         let lit = chip.0 == focus.index;
-        let working = state_of(bonus, &at_work, &session).1;
+        // In the test room, a bonus owned is one at work.
+        let working = state_of(bonus, &at_work, &session).1
+            || (session.in_the_test_room() && session.has_bonus(&bonus.id));
         // A bonus at work is edged in its rarity's colour, the rest are
         // muted; either comes up to full strength under the focus.
         let edge = if working { rarity_color(rarity) } else { MUTED };
@@ -407,6 +546,18 @@ pub(super) fn update_build_window(
         };
     }
 
+    // A bonus the test room lists but the run does not own is muted.
+    for (name, mut color) in &mut names {
+        let Some(pick) = focus.order.get(name.0) else {
+            continue;
+        };
+        color.0 = if session.has_bonus(&pick.id) {
+            rarity_color(pick.rarity)
+        } else {
+            MUTED
+        };
+    }
+
     let focused = focus.focused(&data);
     for (kind, mut span, mut color) in &mut spans {
         let (content, tint) = match (focused, kind) {
@@ -417,7 +568,19 @@ pub(super) fn update_build_window(
             ),
             (Some((bonus, rarity)), DetailSpan::Name) => (bonus.name.clone(), rarity_color(rarity)),
             (Some((bonus, _)), DetailSpan::State) => (
-                state_of(bonus, &at_work, &session).0,
+                if session.in_the_test_room() {
+                    let owned = if session.has_bonus(&bonus.id) {
+                        "ON"
+                    } else {
+                        "OFF"
+                    };
+                    format!(
+                        "{owned}: CLICK OR ENTER TO TOGGLE, UP/DOWN FOR THE RARITY, \
+                         BACKSPACE TO TURN ALL OFF"
+                    )
+                } else {
+                    state_of(bonus, &at_work, &session).0
+                },
                 Color::from(data.bonuses.synergy.color),
             ),
         };

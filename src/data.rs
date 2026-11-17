@@ -64,7 +64,7 @@ impl GameData {
         let mut rooms = BTreeMap::new();
 
         // Room 0 is the run's empty opening room; the ten chapters are 1..=100.
-        for room_id in 0..=RoomConfig::LAST_ID {
+        for room_id in RoomConfig::ids() {
             let room: RoomConfig = read_yaml(&RoomConfig::file_path(asset_root, room_id))?;
             rooms.insert(room.room_id, room);
         }
@@ -430,10 +430,12 @@ impl GameData {
             }
         }
 
-        if !self.rooms.keys().copied().eq(0..=RoomConfig::LAST_ID) {
+        if !self.rooms.keys().copied().eq(RoomConfig::ids()) {
             return Err(InvalidGameData::from(format!(
-                "the room data must contain the opening room 0 and rooms 1 through {}",
-                RoomConfig::LAST_ID
+                "the room data must contain the opening room 0, rooms 1 through {} and the \
+                 test room {}",
+                RoomConfig::LAST_ID,
+                RoomConfig::TEST_ROOM_ID
             )));
         }
 
@@ -939,7 +941,7 @@ mod tests {
         let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
         let data = GameData::load(&asset_root).expect("Chapter 1 YAML should be valid");
 
-        assert_eq!(data.rooms.len(), 101);
+        assert_eq!(data.rooms.len(), 102);
         assert_eq!(
             data.surfaces.materials.len(),
             8,

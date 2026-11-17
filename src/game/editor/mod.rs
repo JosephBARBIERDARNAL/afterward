@@ -590,6 +590,9 @@ struct RoomEditor {
     /// The playtest settings are open, on this row: Cmd+R asks how the room
     /// should be played before it plays it.
     playtest_row: Option<usize>,
+    /// The playtest opens the test room (`RoomConfig::TEST_ROOM_ID`) rather
+    /// than the room being edited.
+    playtest_in_test_room: bool,
     /// The editor opened this frame: the key that opened it (D in a menu)
     /// must not also act as an editor shortcut.
     just_opened: bool,
@@ -629,6 +632,7 @@ impl Default for RoomEditor {
             pointer_over_panel: false,
             overlays: Overlays::default(),
             playtest_row: None,
+            playtest_in_test_room: false,
             just_opened: false,
             problem: None,
             view_dirty: true,
