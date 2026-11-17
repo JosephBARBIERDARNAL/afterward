@@ -175,3 +175,54 @@ fn the_build_window_lists_the_run_and_closes_with_its_key_or_escape() {
     game.tap(KeyCode::Escape);
     assert_eq!(game.screen(), GameScreen::Playing, "Escape does not pause");
 }
+
+/// The build window opens from the bonus screen too, so the choice is made
+/// knowing what the owned bonuses do: Tab opens it on the first, a click on an
+/// owned bonus opens it on that one, and closing it goes back to the same
+/// offers, which can still be chosen.
+#[test]
+fn the_build_window_opens_over_the_offers_and_closes_back_to_them() {
+    let mut game = HeadlessGame::new();
+    game.start_run();
+    game.defeat_enemies();
+    game.take_bonus();
+    assert_eq!(game.screen(), GameScreen::Bonus);
+    let offers = game.session().offered_bonuses.clone();
+    let owned = game.session().owned_bonuses.clone();
+    assert!(!owned.is_empty(), "room 0 paid out a bonus");
+
+    game.tap(KeyCode::Tab);
+    assert_eq!(game.screen(), GameScreen::Build);
+    let focus = |game: &HeadlessGame| game.app.world().resource::<BuildFocus>().index;
+    assert_eq!(focus(&game), 0);
+    game.tap(KeyCode::Escape);
+    assert_eq!(
+        game.screen(),
+        GameScreen::Bonus,
+        "Escape goes back to the choice"
+    );
+    assert_eq!(
+        game.session().offered_bonuses,
+        offers,
+        "the offers are untouched"
+    );
+
+    let chip = {
+        let world = game.app.world_mut();
+        world
+            .query::<(Entity, &OwnedChip)>()
+            .iter(world)
+            .max_by_key(|(_, chip)| chip.0)
+            .map(|(entity, chip)| (entity, chip.0))
+    };
+    let (entity, index) = chip.expect("the owned bonuses are listed under the offers");
+    game.click_mouse_on(entity, Vec2::new(640.0, 600.0));
+    assert_eq!(game.screen(), GameScreen::Build);
+    assert_eq!(focus(&game), index, "the window opens on the bonus clicked");
+    game.tap(KeyCode::Tab);
+    assert_eq!(game.screen(), GameScreen::Bonus, "its key goes back too");
+
+    game.tap(KeyCode::Digit1);
+    game.wait_for_screen(GameScreen::Playing, 2.0);
+    assert_eq!(game.session().owned_bonuses.last(), offers.first());
+}

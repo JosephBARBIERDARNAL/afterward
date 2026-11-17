@@ -1,12 +1,13 @@
 use super::*;
 use crate::game::{
     bonus_text::Description,
+    build_window::BuildFocus,
     ui_style::{
         ACTIVE_BORDER, CARD_BACKGROUND, CARD_HIGHLIGHT_BACKGROUND, DIMMED_EDGE_ALPHA, MUTED,
         focus_ring, key_badge, overlay_root, title,
     },
 };
-use bevy::text::FontSize;
+use bevy::{picking::hover::Hovered, text::FontSize};
 
 #[derive(Component)]
 pub(super) struct BonusScreenRoot;
@@ -72,6 +73,12 @@ pub(super) struct OfferDescription(usize);
 /// the choice is made knowing the build it joins.
 #[derive(Component)]
 pub(super) struct OwnedBonuses;
+
+/// An owned bonus listed under the offers, by its place in the build: clicked,
+/// it opens the build window on that bonus, described in full.
+#[derive(Component)]
+#[require(Outline, Hovered)]
+pub(super) struct OwnedChip(pub(super) usize);
 
 const DESCRIPTION_FONT_PX: f32 = 17.0;
 
@@ -207,18 +214,45 @@ pub(super) fn spawn_bonus_screen(mut commands: Commands) {
                                 Pickable::IGNORE,
                             ));
                         });
-                    parent.spawn((
-                        Text::new("YOUR BONUSES"),
-                        TextFont {
-                            font_size: FontSize::Px(14.0),
-                            ..default()
-                        },
-                        TextColor(MUTED),
-                        Node {
+                    // The build is only named here: its key (or a click on
+                    // one of them) opens the build window over the offers,
+                    // where each is described in full.
+                    parent
+                        .spawn(Node {
+                            flex_direction: FlexDirection::Row,
+                            align_items: AlignItems::Center,
+                            column_gap: px(10),
                             margin: UiRect::top(px(10)),
                             ..default()
-                        },
-                    ));
+                        })
+                        .with_children(|row| {
+                            row.spawn(key_badge(28.0)).with_child((
+                                Text::default(),
+                                TextFont {
+                                    font_size: FontSize::Px(13.0),
+                                    ..default()
+                                },
+                                TextColor(Color::WHITE),
+                                BonusLabel::Key(GameAction::ShowBuild),
+                                Pickable::IGNORE,
+                            ));
+                            row.spawn((
+                                Text::new("YOUR BONUSES"),
+                                TextFont {
+                                    font_size: FontSize::Px(14.0),
+                                    ..default()
+                                },
+                                TextColor(Color::WHITE),
+                            ))
+                            .with_child((
+                                TextSpan::new("   SEE WHAT EACH ONE DOES"),
+                                TextFont {
+                                    font_size: FontSize::Px(14.0),
+                                    ..default()
+                                },
+                                TextColor(MUTED),
+                            ));
+                        });
                     parent.spawn((
                         Node {
                             flex_direction: FlexDirection::Row,
@@ -282,7 +316,7 @@ pub(super) fn list_owned_bonuses(
                 TextColor(MUTED),
             ));
         }
-        for (bonus, rarity) in session.owned(&data) {
+        for (index, (bonus, rarity)) in session.owned(&data).enumerate() {
             list.spawn((
                 Node {
                     padding: UiRect::axes(px(8), px(4)),
@@ -292,6 +326,7 @@ pub(super) fn list_owned_bonuses(
                 },
                 BackgroundColor(CARD_BACKGROUND),
                 BorderColor::all(MUTED),
+                OwnedChip(index),
             ))
             .with_child((
                 Text::new(bonus.name.clone()),
@@ -301,9 +336,45 @@ pub(super) fn list_owned_bonuses(
                 },
                 TextColor(Color::from(data.bonuses.rarities[rarity].color)),
                 FontRole::Display,
+                Pickable::IGNORE,
             ));
         }
     });
+}
+
+/// A click on an owned bonus opens the build window on it, over the offers;
+/// pointing at one rings it, so it reads as something to click.
+pub(super) fn open_owned_bonus(
+    session: Res<RunSession>,
+    mut focus: ResMut<BuildFocus>,
+    mut next_screen: ResMut<NextState<GameScreen>>,
+    mut sounds: ResMut<SoundQueue>,
+    mut rings: Query<(&Hovered, &mut Outline), With<OwnedChip>>,
+    mut pointer_clicks: MessageReader<PointerClick>,
+    chips: Query<&OwnedChip>,
+) {
+    for (hovered, mut outline) in &mut rings {
+        *outline = focus_ring(if hovered.get() {
+            Color::WHITE
+        } else {
+            Color::NONE
+        });
+    }
+    let Some(chip) = pointer_clicks
+        .read()
+        .filter(|click| click.button == PointerButton::Primary)
+        .filter_map(|click| chips.get(click.entity).ok())
+        .last()
+    else {
+        return;
+    };
+    if session.bonus_chosen_hold_remaining_s > 0.0 {
+        return;
+    }
+    focus.index = chip.0;
+    focus.over_the_offers = true;
+    next_screen.set(GameScreen::Build);
+    sounds.push(SoundCue::UiConfirm);
 }
 
 #[derive(SystemParam)]

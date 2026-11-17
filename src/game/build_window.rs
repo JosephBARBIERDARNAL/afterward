@@ -5,7 +5,9 @@
 //! taken at, and edged in it while it is at work; the one under the focus
 //! (pointed at, or walked to with the arrows) is described in full below the
 //! chips, and its words are explained at the bottom right like an offer's
-//! (`glossary.rs`).
+//! (`glossary.rs`). It opens from the bonus screen too, so a choice is made
+//! knowing what the build already does, and closing it then goes back to the
+//! offers.
 
 use super::*;
 use crate::game::{
@@ -19,11 +21,26 @@ use crate::game::{
 use bevy::text::FontSize;
 
 /// The owned bonuses in the order the window lays them out (the order they
-/// were taken in), and which of them the focus is on.
+/// were taken in), and which of them the focus is on. Whoever opens the
+/// window sets `index` (the bonus it opens on) and `over_the_offers`.
 #[derive(Resource, Default)]
 pub(super) struct BuildFocus {
     pub(super) order: Vec<BonusPick>,
     pub(super) index: usize,
+    /// Opened from the bonus screen, which closing it goes back to, rather
+    /// than from the fight.
+    pub(super) over_the_offers: bool,
+}
+
+impl BuildFocus {
+    /// The screen the window was opened from, and closes back to.
+    pub(super) fn opened_from(&self) -> GameScreen {
+        if self.over_the_offers {
+            GameScreen::Bonus
+        } else {
+            GameScreen::Playing
+        }
+    }
 }
 
 impl BuildFocus {
@@ -63,6 +80,10 @@ const DESCRIPTION_FONT_PX: f32 = 16.0;
 /// The key that closes the window, on its badge.
 #[derive(Component)]
 pub(super) struct BuildKeyLabel;
+
+/// What closing the window goes back to, beside that key.
+#[derive(Component)]
+pub(super) struct BuildCloseLabel;
 
 const CHIP_FONT_PX: f32 = 15.0;
 
@@ -173,7 +194,8 @@ pub(super) fn spawn_build_window(mut commands: Commands) {
                             Pickable::IGNORE,
                         ));
                         row.spawn((
-                            Text::new("CLOSE"),
+                            Text::default(),
+                            BuildCloseLabel,
                             TextFont {
                                 font_size: FontSize::Px(16.0),
                                 ..default()
@@ -187,7 +209,7 @@ pub(super) fn spawn_build_window(mut commands: Commands) {
 }
 
 /// Lays the chips out for the build the run owns now, with the focus on the
-/// first of them.
+/// one it was opened on.
 pub(super) fn open_build_window(
     mut commands: Commands,
     data: Res<GameData>,
@@ -196,13 +218,11 @@ pub(super) fn open_build_window(
     grids: Query<Entity, With<BuildGrid>>,
 ) {
     let owned = session.owned(&data).collect::<Vec<_>>();
-    *focus = BuildFocus {
-        order: owned
-            .iter()
-            .map(|(bonus, rarity)| BonusPick::new(&bonus.id, *rarity))
-            .collect(),
-        index: 0,
-    };
+    focus.order = owned
+        .iter()
+        .map(|(bonus, rarity)| BonusPick::new(&bonus.id, *rarity))
+        .collect();
+    focus.index = focus.index.min(owned.len().saturating_sub(1));
     let Ok(grid) = grids.single() else {
         return;
     };
@@ -322,7 +342,8 @@ pub(super) fn update_build_window(
     )>,
     mut spans: Query<(&DetailSpan, &mut TextSpan, &mut TextColor)>,
     mut descriptions: Query<&mut Description, With<DetailDescription>>,
-    mut key_labels: Query<&mut Text, With<BuildKeyLabel>>,
+    mut key_labels: Query<&mut Text, (With<BuildKeyLabel>, Without<BuildCloseLabel>)>,
+    mut close_labels: Query<&mut Text, With<BuildCloseLabel>>,
 ) {
     let BuildWindowResources {
         screen,
@@ -419,6 +440,16 @@ pub(super) fn update_build_window(
         let key = controls.primary_label(GameAction::ShowBuild);
         if label.0 != key {
             label.0 = key;
+        }
+    }
+    let close = if focus.over_the_offers {
+        "BACK TO THE CHOICE"
+    } else {
+        "CLOSE"
+    };
+    for mut label in &mut close_labels {
+        if label.0 != close {
+            label.0 = close.to_owned();
         }
     }
 }

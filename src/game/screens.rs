@@ -1,6 +1,7 @@
 use super::*;
 use crate::game::{
-    controls::TypedLetters, interface::ScreenLabel, menus::MenuPressed, prologue::Prologue,
+    build_window::BuildFocus, controls::TypedLetters, interface::ScreenLabel, menus::MenuPressed,
+    prologue::Prologue,
 };
 use bevy::window::{MonitorSelection, PrimaryWindow, WindowMode};
 use bevy::{app::AppExit, input::keyboard::KeyboardInput};
@@ -61,6 +62,7 @@ pub(super) struct ScreenInputResources<'w> {
     settings_return: ResMut<'w, SettingsReturn>,
     prologue: ResMut<'w, Prologue>,
     pending_leave: ResMut<'w, PendingLeave>,
+    build: ResMut<'w, BuildFocus>,
     sounds: ResMut<'w, SoundQueue>,
 }
 
@@ -89,6 +91,7 @@ pub(super) fn handle_screen_input(
         mut settings_return,
         mut prologue,
         mut pending_leave,
+        mut build,
         mut sounds,
     } = resources;
     let screen = *screen.get();
@@ -109,16 +112,22 @@ pub(super) fn handle_screen_input(
     }
 
     // Pausing and resuming belong to no button, and neither does the build
-    // window, which its own key opens and closes (and Escape closes too).
+    // window, which its own key opens and closes (and Escape closes too). It
+    // opens from the fight and from the bonus screen, until a bonus has been
+    // chosen there, and closes back to whichever it was.
     let showing_build = controls.just_pressed(GameAction::ShowBuild, &keys);
     match screen {
-        GameScreen::Playing if showing_build => {
+        GameScreen::Playing | GameScreen::Bonus
+            if showing_build && session.bonus_chosen_hold_remaining_s <= 0.0 =>
+        {
+            build.index = 0;
+            build.over_the_offers = screen == GameScreen::Bonus;
             next_screen.set(GameScreen::Build);
             sounds.push(SoundCue::UiConfirm);
             return;
         }
         GameScreen::Build if showing_build || leaving => {
-            next_screen.set(GameScreen::Playing);
+            next_screen.set(build.opened_from());
             sounds.push(SoundCue::UiCancel);
             return;
         }

@@ -398,7 +398,8 @@ impl Plugin for GamePlugin {
         )
         .add_systems(
             Update,
-            flow::handle_bonus_input.run_if(in_state(GameScreen::Bonus)),
+            (flow::handle_bonus_input, bonus_screen::open_owned_bonus)
+                .run_if(in_state(GameScreen::Bonus)),
         )
         .add_systems(
             Update,

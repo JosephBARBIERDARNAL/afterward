@@ -1,4 +1,5 @@
 use super::*;
+use crate::game::build_window::BuildFocus;
 use bevy::{
     app::AppExit,
     render::view::screenshot::{Screenshot, ScreenshotCaptured, save_to_disk},
@@ -54,6 +55,7 @@ impl Plugin for VisualWalkthroughPlugin {
             // The pause menu is only opened when the menus were asked for.
             pause_shown: self.scope != WalkthroughScope::Menus,
             build_shown: false,
+            offers_build_shown: false,
         })
         .add_systems(Startup, initialize_visual_walkthrough)
         .add_systems(
@@ -83,6 +85,8 @@ struct VisualWalkthrough {
     pause_shown: bool,
     /// The build window has had its shot, on the first door of the walk.
     build_shown: bool,
+    /// And once over the first bonus screen, looked at before choosing.
+    offers_build_shown: bool,
 }
 
 #[derive(Clone, Copy, Eq, PartialEq)]
@@ -111,6 +115,7 @@ struct VisualWalkthroughResources<'w, 's> {
     enemies: Query<'w, 's, Entity, With<EnemyBody>>,
     players: Query<'w, 's, &'static mut Transform, With<PlayerBody>>,
     keys: ResMut<'w, ButtonInput<KeyCode>>,
+    build: ResMut<'w, BuildFocus>,
 }
 
 fn initialize_visual_walkthrough(
@@ -146,6 +151,7 @@ fn drive_visual_walkthrough(resources: VisualWalkthroughResources) {
         enemies,
         mut players,
         mut keys,
+        mut build,
     } = resources;
     let scene = VisualScene {
         screen: *screen.get(),
@@ -230,6 +236,9 @@ fn drive_visual_walkthrough(resources: VisualWalkthroughResources) {
             GameScreen::Controls => String::from("controls"),
             GameScreen::RoomClear => format!("room_{:03}_clear", scene.room_id),
             GameScreen::Bonus => format!("room_{:03}_bonus", scene.room_id),
+            GameScreen::Build if build.over_the_offers => {
+                format!("room_{:03}_bonus-build", scene.room_id)
+            }
             GameScreen::Build => String::from("build"),
             GameScreen::BossIntro => format!("room_{:03}_boss-intro", scene.room_id),
             GameScreen::Transitioning => format!("room_{:03}_transition", scene.room_id),
@@ -290,9 +299,11 @@ fn drive_visual_walkthrough(resources: VisualWalkthroughResources) {
         // Once, with the first bonus owned: the window listing the build.
         GameScreen::Playing if scene.door_open && !walkthrough.build_shown => {
             walkthrough.build_shown = true;
+            build.index = 0;
+            build.over_the_offers = false;
             next_screen.set(GameScreen::Build);
         }
-        GameScreen::Build => next_screen.set(GameScreen::Playing),
+        GameScreen::Build => next_screen.set(build.opened_from()),
         GameScreen::Playing if scene.door_open => {
             if let (Some(room), Ok(mut player)) =
                 (data.rooms.get(&scene.room_id), players.single_mut())
@@ -334,6 +345,12 @@ fn drive_visual_walkthrough(resources: VisualWalkthroughResources) {
             for entity in &enemies {
                 commands.entity(entity).despawn();
             }
+        }
+        GameScreen::Bonus if !walkthrough.offers_build_shown => {
+            walkthrough.offers_build_shown = true;
+            build.index = 0;
+            build.over_the_offers = true;
+            next_screen.set(GameScreen::Build);
         }
         GameScreen::Bonus => {
             keys.release_all();

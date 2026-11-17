@@ -11,6 +11,7 @@ use super::super::*;
 use crate::game::{
     audio::{AudioClass, ManagedAudio},
     bonus_pickup::BonusPickup,
+    bonus_screen::OwnedChip,
     build_window::{BuildChip, BuildFocus},
     combat::CombatProjectile,
     glossary::Glossary,
