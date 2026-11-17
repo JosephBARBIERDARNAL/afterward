@@ -69,6 +69,9 @@ GUNNER = "pixel_art_09/Enemy02"
 ZWEI = "zweihander"
 MOON = "character_pack/Player"
 WISP = "pixel_art_05/PlayerAllAnim"
+JADE = "pixel_art_09/Player"
+SHADEFLIT = "shadow_series/SHADOW Series - Shadeflit (Free)"
+GATE = "shadow_series/SHADOW Series - Void Gate/SHADOW Series - Abyssal Gate.png"
 
 
 def zwei(clip):
@@ -183,15 +186,58 @@ TYPES = {
     },
     # PackCharacterPixelArt05: a player pack drawn as one run of 199 frames,
     # its clips the tags of its .aseprite (Idle 1-8, Run 10-17, Dash 19-28,
-    # Attack01 30-47, Attack02 48-68, Death 95-128). No flinch: its first
-    # idle frames.
+    # Attack01 30-47, Attack02 48-68, Attack03 69-94, Death 95-128;
+    # Attack04, 129-198, is left). No flinch: its first idle frames.
     "antler_wisp": {
         "idle": wisp(1, 8),
         "walk": wisp(10, 17),
         "attack": wisp(30, 47),
         "cast": wisp(48, 68),
+        "burst": wisp(69, 94),
         "hurt": wisp(1, 2),
         "dead": wisp(95, 128),
+    },
+    # PackCharacterPixelArt09's hero: it stands with its sword put away
+    # until it notices the player, and takes it out (`draw`) before anything
+    # else. A parry split as the duelist's is.
+    "jade_swordsman": {
+        "idle": files(f"{JADE}/IdlewSword"),
+        "unarmed_idle": files(f"{JADE}/Idle"),
+        "draw": files(f"{JADE}/TakeSword"),
+        "walk": files(f"{JADE}/RunwSword"),
+        "attack": files(f"{JADE}/Attack01"),
+        "thrust": files(f"{JADE}/Attack02"),
+        "sweep": files(f"{JADE}/Attack03"),
+        "heavy": files(f"{JADE}/AttackHard"),
+        "guard": files(f"{JADE}/Parry", last=5),
+        "counter": files(f"{JADE}/Parry", first=6),
+        "roll": files(f"{JADE}/RollSword"),
+        "hurt": files(f"{JADE}/HitwSword"),
+        "dead": files(f"{JADE}/Death"),
+    },
+    # Shadeflit: a spearman drawn only standing and running. It darts at the
+    # player in its run, spear first, and flinches and dies in its turn.
+    "shadeflit": {
+        "idle": strip(f"{SHADEFLIT}/idle.png", 277),
+        "walk": strip(f"{SHADEFLIT}/run.png", 277),
+        "attack": strip(f"{SHADEFLIT}/idle.png", 277, 2) + strip(f"{SHADEFLIT}/run.png", 277),
+        "hurt": strip(f"{SHADEFLIT}/run-turn.png", 277),
+        "dead": strip(f"{SHADEFLIT}/run-turn.png", 277),
+    },
+    # PackCharacterPixelArt09's NPC: a hooded figure drawn only standing, its
+    # glyphs flickering. It casts in that same loop.
+    "hooded_warden": {
+        "idle": files("pixel_art_09/NPC01/Idle"),
+        "walk": files("pixel_art_09/NPC01/Idle"),
+        "attack": files("pixel_art_09/NPC01/Idle"),
+        "hurt": files("pixel_art_09/NPC01/Idle", last=1),
+        "dead": files("pixel_art_09/NPC01/Idle", last=1),
+    },
+    # The Void Gate: one still image, a stone arch that fires from its mouth
+    # and never moves.
+    "void_gate": {
+        clip: [[(PACKS / GATE, None)]]
+        for clip in ["idle", "walk", "attack", "hurt", "dead"]
     },
 }
 

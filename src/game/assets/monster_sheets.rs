@@ -256,7 +256,7 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
     // a type the size given here, its body in the middle. Each clip is its
     // name, its frames and its pace.
     type Clips = &'static [(&'static str, usize, f32)];
-    let packs: [(&str, UVec2, Clips); 9] = [
+    let packs: [(&str, UVec2, Clips); 13] = [
         (
             "horned_brute",
             UVec2::new(60, 42),
@@ -372,8 +372,61 @@ pub(super) fn sprites() -> Vec<SpriteSheetSpec> {
                 ("walk", 8, 16.0),
                 ("attack", 18, 20.0),
                 ("cast", 21, 20.0),
+                ("burst", 26, 20.0),
                 ("hurt", 2, 10.0),
                 ("dead", 34, 20.0),
+            ],
+        ),
+        (
+            "jade_swordsman",
+            UVec2::new(104, 76),
+            &[
+                ("unarmed_idle", 8, 10.0),
+                ("draw", 16, 20.0),
+                ("idle", 8, 10.0),
+                ("walk", 8, 12.0),
+                ("attack", 12, 16.0),
+                ("thrust", 14, 16.0),
+                ("sweep", 13, 16.0),
+                ("heavy", 10, 14.0),
+                ("guard", 5, 14.0),
+                ("counter", 5, 14.0),
+                ("roll", 11, 20.0),
+                ("hurt", 9, 14.0),
+                ("dead", 17, 12.0),
+            ],
+        ),
+        (
+            "shadeflit",
+            UVec2::new(64, 42),
+            &[
+                ("idle", 6, 8.0),
+                ("walk", 6, 12.0),
+                ("attack", 8, 14.0),
+                ("hurt", 1, 8.0),
+                ("dead", 1, 1.0),
+            ],
+        ),
+        (
+            "hooded_warden",
+            UVec2::new(52, 54),
+            &[
+                ("idle", 16, 10.0),
+                ("walk", 16, 10.0),
+                ("attack", 16, 16.0),
+                ("hurt", 1, 8.0),
+                ("dead", 1, 1.0),
+            ],
+        ),
+        (
+            "void_gate",
+            UVec2::new(200, 59),
+            &[
+                ("idle", 1, 1.0),
+                ("walk", 1, 1.0),
+                ("attack", 1, 1.0),
+                ("hurt", 1, 1.0),
+                ("dead", 1, 1.0),
             ],
         ),
     ];

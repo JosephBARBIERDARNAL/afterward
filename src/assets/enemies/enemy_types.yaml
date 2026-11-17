@@ -1222,3 +1222,155 @@ types:
         hitbox_h: { x: -0.4, y: 0, width: 1.8, height: 1.4 }
         cooldown_s: 1.3
         windup_s: 0.45
+      # A pillar of light, then the floor bursts all round it: step away
+      # while the orb hangs over it.
+      - kind: melee
+        clip: burst
+        strike_frame: 13
+        damage: 12
+        hitbox_h: { x: -1.6, y: 0, width: 3.2, height: 1.2 }
+        cooldown_s: 2.4
+        windup_s: 0.9
+  # PackCharacterPixelArt09's hero: a swordsman that stands with its sword
+  # put away and takes it out on noticing the player. Three cuts, a heavy
+  # blow, a parry it answers, and a roll out of a beating.
+  jade_swordsman:
+    hurtbox_h: { width: 0.45, height: 1.05 }
+    health: 160
+    material: polymer
+    head_px: { x: 44, y: 29, size: 17 }
+    movement_speed_h_s: 2.6
+    behavior: melee_pursuit
+    sprite:
+      {
+        scale: 1.5,
+        top_padding_px: 29,
+        bottom_padding_px: 13,
+        origin_above_feet_px: 17,
+      }
+    attacks:
+      - kind: melee
+        clip: attack
+        strike_frame: 5
+        damage: 10
+        hitbox_h: { x: -0.3, y: 0, width: 1.9, height: 1.5 }
+        cooldown_s: 1.3
+        windup_s: 0.45
+      - kind: telegraphed_lunge
+        clip: thrust
+        strike_frame: 6
+        damage: 12
+        hitbox_h: { x: 0, y: 0, width: 2.4, height: 0.9 }
+        start_range_h: 3.5
+        cooldown_s: 1.6
+        windup_s: 0.55
+      - kind: parry
+        clip: guard
+        strike_frame: 4
+        damage: 12
+        hitbox_h: { x: -0.4, y: 0, width: 1.8, height: 1.4 }
+        cooldown_s: 1.6
+        windup_s: 0.3
+        guard:
+          hold_s: 1
+          counter_clip: counter
+          counter_strike_frame: 1
+          counter_windup_s: 0.3
+      - kind: melee
+        clip: sweep
+        strike_frame: 9
+        damage: 11
+        hitbox_h: { x: -0.4, y: 0, width: 2, height: 1.6 }
+        cooldown_s: 1.5
+        windup_s: 0.6
+      - kind: melee
+        clip: heavy
+        strike_frame: 6
+        damage: 18
+        hitbox_h: { x: -0.4, y: 0, width: 2.1, height: 1.8 }
+        cooldown_s: 2.2
+        windup_s: 0.9
+    roll:
+      after_wounds: 3
+      distance_h: 3.5
+      duration_s: 0.5
+      invulnerable_from_s: 0
+      invulnerable_to_s: 0.45
+  # Shadeflit: a quick spearman that darts at the player from a few H away,
+  # spear first, and is frail once caught.
+  shadeflit:
+    hurtbox_h: { width: 0.45, height: 1.05 }
+    health: 45
+    material: polymer
+    head_px: { x: 22, y: 1, size: 20 }
+    movement_speed_h_s: 3.4
+    behavior: melee_pursuit
+    sprite:
+      {
+        scale: 1.4,
+        top_padding_px: 1,
+        bottom_padding_px: 0,
+        origin_above_feet_px: 20,
+      }
+    attack:
+      kind: lunge
+      clip: attack
+      strike_frame: 2
+      damage: 10
+      hitbox_h: { x: -0.2, y: 0, width: 1.7, height: 0.9 }
+      start_range_h: 4
+      cooldown_s: 1.4
+      windup_s: 0.5
+  # PackCharacterPixelArt09's NPC: a hooded caster that hangs back and
+  # throws bolts, slow on its feet.
+  hooded_warden:
+    hurtbox_h: { width: 0.5, height: 1.1 }
+    health: 70
+    material: polymer
+    head_px: { x: 13, y: 0, size: 27 }
+    movement_speed_h_s: 1.2
+    behavior: ranged_keep_distance
+    preferred_distance_h: 8
+    sprite:
+      {
+        scale: 1,
+        top_padding_px: 0,
+        bottom_padding_px: 0,
+        origin_above_feet_px: 27,
+      }
+    attack:
+      kind: projectile
+      clip: attack
+      strike_frame: 8
+      damage: 8
+      projectile_size_h: { width: 0.3, height: 0.3 }
+      projectile_speed_h_s: 6.5
+      cooldown_s: 2
+      windup_s: 0.6
+  # The Void Gate: a stone arch that never moves, firing from its mouth at
+  # whoever it sees. Tough, but it cannot follow anyone.
+  void_gate:
+    hurtbox_h: { width: 2.6, height: 1.2 }
+    health: 200
+    material: polymer
+    head_px: { x: 86, y: 0, size: 29 }
+    movement_speed_h_s: 0
+    # Too low to reach any floor: it never jumps.
+    jump_height_h: 0.1
+    behavior: ranged_keep_distance
+    preferred_distance_h: 8
+    sprite:
+      {
+        scale: 1,
+        top_padding_px: 0,
+        bottom_padding_px: 0,
+        origin_above_feet_px: 29,
+      }
+    attack:
+      kind: projectile
+      clip: attack
+      damage: 9
+      projectile_size_h: { width: 0.4, height: 0.4 }
+      projectile_speed_h_s: 7
+      cooldown_s: 1.6
+      windup_s: 0.7

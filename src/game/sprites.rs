@@ -114,6 +114,11 @@ impl EnemyTypeId {
             "zweihander" => "zweihander_idle",
             "moon_blade" => "moon_blade_idle",
             "antler_wisp" => "antler_wisp_idle",
+            // Its sword put away until it notices someone, as the knight's.
+            "jade_swordsman" => "jade_swordsman_unarmed_idle",
+            "shadeflit" => "shadeflit_idle",
+            "hooded_warden" => "hooded_warden_idle",
+            "void_gate" => "void_gate_idle",
             _ => "enemy_swordsman_idle",
         }
     }

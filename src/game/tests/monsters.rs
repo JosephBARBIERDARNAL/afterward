@@ -28,6 +28,10 @@ fn every_monster_reaches_a_standing_player_and_a_shot_of_its_own_is_what_it_fire
         "zweihander",
         "moon_blade",
         "antler_wisp",
+        "jade_swordsman",
+        "shadeflit",
+        "hooded_warden",
+        "void_gate",
     ] {
         let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
         let mut data = GameData::load(&asset_root).expect("Chapter 1 data should load");
@@ -81,6 +85,16 @@ exit: {{ x_h: 45, y_h: 1 }}
             [
                 (String::from("player_idle"), sheet(1)),
                 (format!("{monster}_idle"), sheet(4)),
+                // The first stance of one that stands unarmed until it notices
+                // anyone.
+                (
+                    monster
+                        .parse::<EnemyTypeId>()
+                        .expect("a type id")
+                        .idle_sheet()
+                        .to_string(),
+                    sheet(4),
+                ),
             ]
             .into_iter()
             .chain(clips)

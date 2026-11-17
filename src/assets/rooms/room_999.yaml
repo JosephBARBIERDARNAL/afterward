@@ -150,6 +150,26 @@ enemy_spawns:
     position_h: { x: 22, y: 1 }
     facing: left
     wave: 7
+  - label: sword drawn on sight
+    type_id: jade_swordsman
+    position_h: { x: 20, y: 1 }
+    facing: left
+    wave: 8
+  - label: darting spear
+    type_id: shadeflit
+    position_h: { x: 16, y: 1 }
+    facing: left
+    wave: 8
+  - label: hooded caster on the walkway
+    type_id: hooded_warden
+    position_h: { x: 14.5, y: 6 }
+    facing: left
+    wave: 9
+  - label: the gate on the high shelf
+    type_id: void_gate
+    position_h: { x: 32.5, y: 8.5 }
+    facing: left
+    wave: 9
 # The bonus item: never laid here, as the test room's waves start over.
 bonus:
   x_h: 32
