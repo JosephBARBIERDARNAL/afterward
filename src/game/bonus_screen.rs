@@ -393,6 +393,7 @@ pub(super) fn update_bonus_screen(
         &mut BorderColor,
         &mut BackgroundColor,
         &mut Outline,
+        &mut UiTransform,
     )>,
     mut labels: Query<(&BonusLabel, &mut Text, &mut TextColor)>,
     mut spans: Query<(&BonusSpan, &mut TextSpan, &mut TextColor), Without<BonusLabel>>,
@@ -432,7 +433,12 @@ pub(super) fn update_bonus_screen(
         })
     };
 
-    for (choice, mut border, mut background, mut outline) in &mut boxes {
+    // A choice made flares while the screen holds: how far through the hold.
+    let hold_s = data.gameplay.room_flow.bonus_chosen_hold_s;
+    let picked = (session.bonus_chosen_hold_remaining_s > 0.0 && hold_s > 0.0)
+        .then(|| 1.0 - session.bonus_chosen_hold_remaining_s / hold_s);
+    let flare = &data.gameplay.effects.bonus_pick;
+    for (choice, mut border, mut background, mut outline, mut transform) in &mut boxes {
         let enabled = matches!(choice, BonusChoice::Offer(_)) || can_reroll;
         let lit = enabled && session.selected_choice == *choice;
         // A box keeps its rarity's colour either way, and only comes up to
@@ -453,6 +459,30 @@ pub(super) fn update_bonus_screen(
         } else {
             CARD_BACKGROUND
         };
+        transform.scale = Vec2::ONE;
+        let Some(progress) = picked else {
+            continue;
+        };
+        if matches!(choice, BonusChoice::Offer(index) if session.chosen_offers.contains(index)) {
+            // The box taken swells and settles, washed in its rarity's
+            // colour, while a ring of it spreads out from its edge and fades.
+            let swell = (progress * std::f32::consts::PI).sin();
+            transform.scale = Vec2::splat(1.0 + (flare.pulse_scale - 1.0) * swell);
+            *border = BorderColor::all(color);
+            background.0 = CARD_HIGHLIGHT_BACKGROUND.mix(&color, 0.3 * (1.0 - progress));
+            *outline = Outline {
+                width: px(1.0 + 3.0 * (1.0 - progress)),
+                offset: px(flare.ring_px * progress),
+                color: color.with_alpha(1.0 - progress),
+            };
+        } else {
+            // The others step back.
+            *border = BorderColor::all(
+                color.with_alpha(color.alpha() * DIMMED_EDGE_ALPHA * (1.0 - progress)),
+            );
+            *outline = focus_ring(Color::NONE);
+            background.0 = CARD_BACKGROUND;
+        }
     }
     for (label, mut text, mut color) in &mut labels {
         let (content, label_color) = match label {

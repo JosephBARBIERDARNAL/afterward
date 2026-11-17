@@ -216,7 +216,24 @@ pub(super) fn handle_bonus_input(
     let Some(chosen_pick) = session.offered_bonuses.get(chosen_index).cloned() else {
         return;
     };
+    // Lion's Share takes the whole choice: the other offers come with it.
+    let takes_every_offer = data
+        .bonuses
+        .bonus(&chosen_pick.id)
+        .is_some_and(|bonus| bonus.has_effect("takes_every_offer"));
+    session.chosen_offers = if takes_every_offer {
+        (0..session.offered_bonuses.len()).collect()
+    } else {
+        vec![chosen_index]
+    };
     session.take(&data, chosen_pick);
+    if takes_every_offer {
+        for (index, pick) in session.offered_bonuses.clone().into_iter().enumerate() {
+            if index != chosen_index {
+                session.take(&data, pick);
+            }
+        }
+    }
     droplet_on(chosen);
     sounds.push(SoundCue::BonusSelected);
     // The build is worn for a moment: the player comes back into the room

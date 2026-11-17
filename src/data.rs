@@ -236,6 +236,10 @@ impl GameData {
         if self.gameplay.room_flow.clear_animation_s <= 0.0
             || self.gameplay.room_flow.bonus_reroll_animation_s <= 0.0
             || self.gameplay.room_flow.bonus_chosen_hold_s < 0.0
+            || self.gameplay.effects.bonus_pick.ring_px.is_nan()
+            || self.gameplay.effects.bonus_pick.ring_px < 0.0
+            || self.gameplay.effects.bonus_pick.pulse_scale.is_nan()
+            || self.gameplay.effects.bonus_pick.pulse_scale <= 0.0
             || self.gameplay.room_flow.boss_intro_duration_s <= 0.0
             || self.gameplay.room_flow.room_transition_duration_s <= 0.0
             || self.gameplay.room_flow.room_pan_speed_h_s <= 0.0

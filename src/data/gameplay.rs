@@ -414,6 +414,7 @@ pub struct EffectsConfig {
     pub glow: GlowConfig,
     pub flood: FloodConfig,
     pub ripple: RippleConfig,
+    pub bonus_pick: BonusPickConfig,
     pub hazard: HazardLookConfig,
     pub bolt: BoltLookConfig,
     pub telegraph: TelegraphConfig,
@@ -474,6 +475,15 @@ pub struct HazardLookConfig {
     pub warning_color: HexColor,
     pub burn_color: HexColor,
     pub pixels_per_h: f32,
+}
+
+/// How the box of a chosen bonus flares while the bonus screen holds.
+#[derive(Debug, Deserialize)]
+pub struct BonusPickConfig {
+    /// How far the ring spreads out from the chosen box's edge, in pixels.
+    pub ring_px: f32,
+    /// How much the chosen box swells at the height of its flare.
+    pub pulse_scale: f32,
 }
 
 /// The droplet that falls where a button is hovered, selected with an arrow,

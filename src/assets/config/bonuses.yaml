@@ -446,6 +446,12 @@ bonuses:
     description: Blows deal {per_combo:%} more damage for every combo you own.
     effects: { per_combo: 0.08 }
     rarities: { legendary: {} }
+  # The whole choice: the two other offers come with it.
+  - id: lions_share
+    name: Lion's Share
+    description: Take the two other bonuses offered beside this one as well.
+    effects: { takes_every_offer: 1 }
+    rarities: { legendary: {} }
   # Combos: what two bonuses already owned do together.
   - id: open_wound
     name: Open Wound

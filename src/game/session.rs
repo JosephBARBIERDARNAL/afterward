@@ -92,6 +92,9 @@ pub(crate) struct RunSession {
     /// What is left of the hold the bonus screen keeps after a bonus is
     /// chosen, so the droplet lands on the box before the room comes back.
     pub(crate) bonus_chosen_hold_remaining_s: f32,
+    /// The places of the offers taken on the bonus screen, which flare while
+    /// it holds: the one chosen, or every one under Lion's Share.
+    pub(crate) chosen_offers: Vec<usize>,
     /// The last wave of the room's enemies to have arrived: `wave` of a room
     /// spawn, 0 as the room opens.
     pub(crate) wave: u8,
@@ -362,6 +365,7 @@ impl Default for RunSession {
             selected_choice: bonus_screen::BonusChoice::Offer(0),
             bonus_reroll_animation_remaining_s: 0.0,
             bonus_chosen_hold_remaining_s: 0.0,
+            chosen_offers: Vec::new(),
             wave: 0,
             wave_wait_s: 0.0,
             untouched: true,

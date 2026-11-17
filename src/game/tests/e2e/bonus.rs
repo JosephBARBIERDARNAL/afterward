@@ -1,4 +1,5 @@
 use super::*;
+use crate::game::bonus_screen::BonusChoice;
 
 #[test]
 fn a_reroll_replaces_every_offer_and_the_keyboard_picks_the_second() {
@@ -225,4 +226,45 @@ fn the_build_window_opens_over_the_offers_and_closes_back_to_them() {
     game.tap(KeyCode::Digit1);
     game.wait_for_screen(GameScreen::Playing, 2.0);
     assert_eq!(game.session().owned_bonuses.last(), offers.first());
+}
+
+/// Lion's Share takes the whole choice: picking it takes the two offers
+/// beside it too, and every box of them flares while the screen holds.
+#[test]
+fn lions_share_takes_every_offer_and_each_box_flares() {
+    let mut game = HeadlessGame::new();
+    game.start_run();
+    game.defeat_enemies();
+    game.take_bonus();
+    let mut offers = game.session().offered_bonuses.clone();
+    offers[1] = BonusPick::new("lions_share", BonusRarity::Legendary);
+    game.app
+        .world_mut()
+        .resource_mut::<RunSession>()
+        .offered_bonuses
+        .clone_from(&offers);
+
+    game.tap(KeyCode::Digit2);
+    assert_eq!(
+        game.screen(),
+        GameScreen::Bonus,
+        "the screen holds a moment"
+    );
+    assert_eq!(game.session().chosen_offers, [0, 1, 2]);
+    game.run_seconds(game.data().gameplay.room_flow.bonus_chosen_hold_s / 2.0);
+    let swollen = {
+        let world = game.app.world_mut();
+        world
+            .query::<(&BonusChoice, &UiTransform)>()
+            .iter(world)
+            .filter(|(_, transform)| transform.scale.x > 1.0)
+            .count()
+    };
+    assert_eq!(swollen, 3, "every box taken swells");
+    game.wait_for_screen(GameScreen::Playing, 2.0);
+    let owned = &game.session().owned_bonuses;
+    assert!(
+        offers.iter().all(|offer| owned.contains(offer)),
+        "every offer is owned: {owned:?}"
+    );
 }

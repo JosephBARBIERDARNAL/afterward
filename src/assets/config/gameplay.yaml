@@ -200,8 +200,9 @@ room_flow:
   clear_animation_s: 0.5
   bonus_reroll_animation_s: 0.8
   # How long the bonus screen stays up after a bonus is chosen, so the droplet
-  # has time to land on the box that was pressed before the room comes back.
-  bonus_chosen_hold_s: 0.35
+  # has time to land on the box that was pressed, and the box to flare
+  # (`effects.bonus_pick`), before the room comes back.
+  bonus_chosen_hold_s: 0.6
   boss_intro_duration_s: 0.9
   room_transition_duration_s: 0.8
   # Room entrance, played every time a room opens: the player walks in from
@@ -435,6 +436,12 @@ effects:
   # The droplet that falls where a button is hovered, selected with an arrow,
   # or clicked: the drop goes in, the surface flashes, and rings spread out of
   # the impact.
+  # The box of a chosen bonus flares while the screen holds: a ring in its
+  # rarity's colour spreads `ring_px` out from its edge and fades, and the box
+  # swells to `pulse_scale` and back. The boxes not chosen dim.
+  bonus_pick:
+    ring_px: 22
+    pulse_scale: 1.05
   ripple:
     # How far the rings reach from the spot the droplet lands on, in pixels,
     # and how long the whole splash takes.
