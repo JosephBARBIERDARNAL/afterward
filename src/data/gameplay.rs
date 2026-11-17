@@ -341,6 +341,8 @@ pub struct WallConfig {
     /// Seconds after a wall jump during which movement input is ignored, so
     /// the player actually leaves the wall instead of sticking to it.
     pub control_lock_s: f32,
+    /// How fast Wall Runner carries the player up a wall.
+    pub run_speed_h_s: f32,
 }
 
 /// How tall the effect a landed blow plays is drawn, by what the blow was:

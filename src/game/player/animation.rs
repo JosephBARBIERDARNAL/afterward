@@ -102,6 +102,10 @@ impl PlayerSprite<'_> {
             }
             return;
         }
+        if player.wall_running {
+            self.play("player_wall_run", true);
+            return;
+        }
         if player.wall_cling.is_some() {
             self.play("player_wall_slide", true);
             return;

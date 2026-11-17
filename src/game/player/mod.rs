@@ -183,6 +183,7 @@ pub(super) fn update_player(
         player.velocity = Vec2::new(0.0, up_down * climb_speed);
         player.grounded = false;
         player.wall_cling = None;
+        player.wall_running = false;
         player.jumps_used = 0;
         player.air_dashes_used = 0;
         player.jump_buffer_s = 0.0;
@@ -329,6 +330,15 @@ pub(super) fn update_player(
             player.velocity.y = wall_tuning.jump_impulse_h_s * H_WORLD_UNITS;
             player.velocity.x = -wall * wall_tuning.jump_push_h_s * H_WORLD_UNITS;
             player.facing = -wall;
+            // Vault: pushing off a wall run empowers the next blow.
+            if player.wall_running && session.has_bonus("vault") && player.empowered.is_none() {
+                player.empowered = Some((
+                    "vault",
+                    session.bonus_effect(&data, "vault", "empowered_blow_multiplier"),
+                ));
+                tells.write(BonusTell::new("vault", TellAt::Player));
+            }
+            player.wall_running = false;
             player.wall_cling = None;
             player.wall_control_lock_s = wall_tuning.control_lock_s;
             player.jumps_used = 0;
@@ -407,7 +417,16 @@ pub(super) fn update_player(
         player.velocity.y = 0.0;
     } else {
         player.velocity.y -= tuning.gravity_h_s2 * H_WORLD_UNITS * dt;
-        if player.wall_cling.is_some() {
+        if player.wall_running {
+            // Wall Runner carries the player up the wall once their jump
+            // has slowed below its pace, as far as it has height left for:
+            // the height a jump gives is the jump's own.
+            let rise = (wall_tuning.run_speed_h_s * H_WORLD_UNITS).min(player.wall_run_left / dt);
+            if player.velocity.y < rise {
+                player.velocity.y = rise;
+                player.wall_run_left = (player.wall_run_left - rise * dt).max(0.0);
+            }
+        } else if player.wall_cling.is_some() {
             player.velocity.y = player
                 .velocity
                 .y
@@ -500,14 +519,35 @@ pub(super) fn update_player(
             player.action = None;
         }
     }
+    // Wall Runner runs a body pressed into a true wall up it, while it has
+    // height left; once spent, the body clings and slides as any other.
+    let was_wall_running = player.wall_running;
+    player.wall_running = pressed_into_side
+        && ledge.is_none()
+        && alive
+        && !player.slamming
+        && player.strike.is_none()
+        && player.wall_run_left > 0.0;
+    if player.wall_running && !was_wall_running {
+        player.jump_held = false;
+        if matches!(
+            player.action,
+            Some(PlayerAction::Land | PlayerAction::WallJump)
+        ) {
+            player.action = None;
+        }
+    }
     player.wall_cling =
-        (pressed_into_side && ledge.is_none() && player.velocity.y <= 0.0).then_some(direction);
+        (pressed_into_side && ledge.is_none() && (player.wall_running || player.velocity.y <= 0.0))
+            .then_some(direction);
 
     if player.grounded || player.wall_cling.is_some() {
         player.air_dashes_used = 0;
     }
     if player.grounded {
         player.jumps_used = 0;
+        player.wall_run_left =
+            session.bonus_effect(&data, "wall_runner", "wall_run_h") * H_WORLD_UNITS;
         if !was_grounded {
             sounds.push(SoundCue::Landing);
             if player.slamming {

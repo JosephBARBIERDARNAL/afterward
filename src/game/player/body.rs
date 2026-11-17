@@ -49,6 +49,11 @@ pub(crate) struct PlayerBody {
     /// Clinging to a platform's side in mid-air, and which way that wall lies
     /// (-1 for a wall on the player's left).
     pub(crate) wall_cling: Option<f32>,
+    /// Running up the wall clung to, under Wall Runner.
+    pub(crate) wall_running: bool,
+    /// How much higher Wall Runner may still carry the player up a wall
+    /// before they next stand, in world units.
+    pub(crate) wall_run_left: f32,
     /// The ladder the player is climbing: its column, in world units.
     pub(crate) climbing: Option<Rect>,
     /// Climbing over the edge of a platform, while it lasts.
@@ -104,6 +109,8 @@ impl Default for PlayerBody {
             dash_origin: None,
             crouching: false,
             wall_cling: None,
+            wall_running: false,
+            wall_run_left: 0.0,
             climbing: None,
             ledge_climb: None,
             wall_control_lock_s: 0.0,

@@ -131,6 +131,16 @@ pub(crate) fn lines(
         add(bonus, format!("next blow x{multiplier:.1}"), None);
     }
     let fraction = |left: f32, full: f32| (full > 0.0).then(|| (left / full).clamp(0.0, 1.0));
+    // The height Wall Runner has left before the player next stands.
+    if !player.grounded && player.wall_run_left > 0.0 {
+        let full = session.bonus_effect(data, "wall_runner", "wall_run_h");
+        let left = player.wall_run_left / H_WORLD_UNITS;
+        add(
+            "wall_runner",
+            format!("{left:.1} H up a wall"),
+            fraction(left, full),
+        );
+    }
     if player.chain_reaction_timer > 0.0 {
         let full = session.bonus_effect(data, "chain_reaction", "kill_damage_duration_s");
         add(

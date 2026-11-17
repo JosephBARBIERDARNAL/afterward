@@ -22,6 +22,7 @@ mod slam_and_dash;
 mod slopes;
 mod variable_jump;
 mod wall_jump;
+mod wall_run;
 
 #[test]
 fn projectiles_collide_with_platforms_along_their_travel_path() {
