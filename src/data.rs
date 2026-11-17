@@ -329,6 +329,7 @@ impl GameData {
             || jumping.cooldown_s < 0.0
             || !jumping.level_change_threshold_h.is_finite()
             || jumping.level_change_threshold_h <= 0.0
+            || !(jumping.ledge_margin_h >= 0.0 && jumping.ledge_margin_h.is_finite())
         {
             return Err(InvalidGameData::from(
                 "enemy jumping tuning values must be finite and positive",

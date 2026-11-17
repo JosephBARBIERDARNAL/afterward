@@ -288,6 +288,7 @@ pub(super) fn land_the_blow(
                 enemy_transform.translation.y = enemy.home_y;
             } else {
                 enemy.knockback_velocity = away * melee.knockback_h_s;
+                enemy.launched = blow.launch.is_some();
                 if let Some(launch) = &blow.launch {
                     enemy.knockback_velocity *= launch.knockback_multiplier;
                     let body = enemy.hurtbox(&enemy_transform);

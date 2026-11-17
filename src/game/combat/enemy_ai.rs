@@ -93,16 +93,27 @@ pub(in crate::game) fn update_enemy_ai(
                     HALF_BODY_WIDTH,
                     data.rooms[&session.room_id].size.width_h * H_WORLD_UNITS - HALF_BODY_WIDTH,
                 );
-            transform.translation.x = surfaces.blocked_x(
-                transform.translation.x,
-                wanted_x,
-                enemy.home_y - enemy.feet_offset,
-            );
-            enemy.knockback_velocity = move_towards(
-                enemy.knockback_velocity,
-                0.0,
-                blows::KNOCKBACK_DRAG_H_S2 * dt,
-            );
+            let feet_y = enemy.home_y - enemy.feet_offset;
+            let shoved_x = surfaces.blocked_x(transform.translation.x, wanted_x, feet_y);
+            // And at the lip of the floor it stands on, so a blow never
+            // knocks it down a level: only Battering Ram's throw carries it
+            // over.
+            if enemy.grounded
+                && !enemy.launched
+                && surfaces
+                    .standing_on(shoved_x, feet_y, SLOPE_STRIDE)
+                    .is_none()
+            {
+                enemy.knockback_velocity = 0.0;
+            } else {
+                transform.translation.x = shoved_x;
+                enemy.knockback_velocity = move_towards(
+                    enemy.knockback_velocity,
+                    0.0,
+                    blows::KNOCKBACK_DRAG_H_S2 * dt,
+                );
+            }
+            enemy.launched &= enemy.knockback_velocity.abs() > 0.01;
         }
         let sees_player = if enemy.flight.is_some() {
             flight::sees(
@@ -617,6 +628,12 @@ pub(in crate::game) fn update_enemy_ai(
             .filter(|_| should_approach)
             .and_then(|platform| route.plan(platform, &surfaces));
         let mut waiting = false;
+        // Walking to a takeoff is walking to the lip on purpose.
+        let ledge_margin = if matches!(plan, Some(JumpPlan::WalkTo(_))) {
+            0.0
+        } else {
+            direction * jumping.ledge_margin_h * H_WORLD_UNITS
+        };
         match plan {
             Some(JumpPlan::Leap(arc)) if enemy.jump_cooldown == 0.0 => {
                 enemy.vertical_velocity = arc.vertical_velocity;
@@ -646,9 +663,11 @@ pub(in crate::game) fn update_enemy_ai(
             }
         }
         // Platform sides stop an enemy as they stop the player, and so does a
-        // ledge: it keeps to the floor it stands on. It only steps off on its
-        // way to a player standing below, onto a floor that is not too far
-        // down and no lower than the player's own level.
+        // ledge: it keeps to the floor it stands on, and short of its lip by
+        // `ledge_margin_h`, so a blow from behind does not find it teetering
+        // there. It only steps off on its way to a player standing below,
+        // onto a floor that is not too far down and no lower than the
+        // player's own level.
         let next_x = surfaces.blocked_x(
             feet.x,
             (feet.x + direction * enemy.movement_speed_h_s * H_WORLD_UNITS * dt).clamp(
@@ -657,10 +676,13 @@ pub(in crate::game) fn update_enemy_ai(
             ),
             feet.y,
         );
-        let keeps_its_floor = surfaces.standing_on(next_x, feet.y, SLOPE_STRIDE).is_some();
+        let ahead_x = next_x + ledge_margin;
+        let keeps_its_floor = surfaces
+            .standing_on(ahead_x, feet.y, SLOPE_STRIDE + ledge_margin.abs())
+            .is_some();
         let drops_after_the_player = should_approach
             && mark.grounded
-            && surfaces.floor_below(next_x, feet.y).is_some_and(|floor| {
+            && surfaces.floor_below(ahead_x, feet.y).is_some_and(|floor| {
                 feet.y - floor <= jumping.max_drop_h * H_WORLD_UNITS
                     && floor >= mark.feet.y - level_change_threshold
             });

@@ -33,6 +33,11 @@ jumping:
   cooldown_s: 0.6
   level_change_threshold_h: 1
   max_drop_h: 5
+  # A walking enemy stops this far short of a ledge's lip (unless it is
+  # stepping off after a player below, or walking to a takeoff): a blow from
+  # behind should not find it teetering there. A blow's shove stops at the
+  # lip itself; only Battering Ram's throw carries a body over.
+  ledge_margin_h: 0.6
 # Hitboxes, in H (B in debug builds draws them all over the game):
 # - hurtbox_h: where bullets hit the enemy, centered on it, from its feet up.
 # - an attack's hitbox_h: where its strike (or a slam's landing) hurts the

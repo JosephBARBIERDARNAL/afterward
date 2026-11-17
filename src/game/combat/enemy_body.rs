@@ -43,6 +43,9 @@ pub(crate) struct EnemyBody {
     /// What is left of the flare a blow that wounded it left on its sprite.
     pub(crate) flash_s: f32,
     pub(crate) knockback_velocity: f32,
+    /// The shove under way is Battering Ram's throw, which may carry it off
+    /// the floor it stands on; any other stops at the lip.
+    pub(crate) launched: bool,
     pub(crate) phase_two: Option<(f32, f32)>,
     pub(crate) phase_two_announced: bool,
     pub(crate) marked_timer: f32,

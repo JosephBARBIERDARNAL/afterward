@@ -90,9 +90,32 @@ exit: { x_h: 45, y_h: 1 }
         app.update();
     }
     let brink = stands_at_h(&mut app);
+    let margin = app
+        .world()
+        .resource::<GameData>()
+        .enemies
+        .jumping
+        .ledge_margin_h;
     assert!(
-        (brink.y - 5.0).abs() < 0.01 && (19.5..=20.5).contains(&brink.x),
-        "the enemy should hold the brink of its ledge, but stands at {brink} H"
+        (brink.y - 5.0).abs() < 0.01
+            && (20.0 + margin - 0.3..=20.0 + margin + 0.3).contains(&brink.x),
+        "the enemy should hold short of the brink of its ledge, but stands at {brink} H"
+    );
+
+    // A blow shoving it toward the gap stops it at the lip, not over it.
+    let world = app.world_mut();
+    world
+        .query::<&mut EnemyBody>()
+        .single_mut(world)
+        .expect("one enemy")
+        .knockback_velocity = -12.0;
+    for _ in 0..20 {
+        app.update();
+    }
+    let shoved = stands_at_h(&mut app);
+    assert!(
+        (shoved.y - 5.0).abs() < 0.01,
+        "a shove stops at the lip of the ledge, but the enemy fell to {shoved} H"
     );
 
     // The player drops to the floor under it: now the way to them is down.

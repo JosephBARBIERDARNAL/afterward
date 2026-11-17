@@ -57,6 +57,9 @@ pub struct EnemyJumpingConfig {
     /// The deepest drop an enemy steps off a ledge into, after a player
     /// standing below.
     pub max_drop_h: f32,
+    /// How far short of a ledge's lip a walking enemy stops, so a blow from
+    /// behind does not find it teetering there.
+    pub ledge_margin_h: f32,
 }
 
 #[derive(Debug, Clone, Eq, Ord, PartialEq, PartialOrd)]
