@@ -1,5 +1,5 @@
 use super::*;
-use crate::data::{Backdrop, ProfileLayer, RoomConfig};
+use crate::data::{Backdrop, EnemySpawnConfig, EnemySplitConfig, ProfileLayer, RoomConfig};
 use bevy::{image::ImageLoaderSettings, sprite::Anchor};
 
 const ENEMY_SPRITE_SCALE: f32 = 0.62;
@@ -348,210 +348,232 @@ pub(super) fn spawn_enemies(
         .collect::<Vec<_>>();
     let last_index = spawns.len().saturating_sub(1).max(1) as f32;
     for (index, spawn) in spawns.into_iter().enumerate() {
-        let profile = &data.enemies.types[&spawn.type_id];
-        let key = spawn.type_id.idle_sheet();
-        let sheet = &sheets.0[key];
-        let scale = match (&profile.sprite, &*spawn.type_id) {
-            (Some(sprite), _) => sprite.scale,
-            // Pixel art, so a whole number: 31 px of knight stand 1.9 H tall.
-            (None, "black_knight") => 3.0,
-            (None, _) => ENEMY_SPRITE_SCALE,
-        };
-        // Source pixels: empty rows above and below the figure, and the height
-        // of the entity origin above the feet. Combat and AI measure from that
-        // origin, so it sits mid-body rather than mid-frame for padded sheets.
-        let (frame_top_padding_px, frame_bottom_padding_px, origin_above_feet_px) =
-            match (&profile.sprite, &*spawn.type_id) {
-                (Some(sprite), _) => (
-                    sprite.top_padding_px,
-                    sprite.bottom_padding_px,
-                    sprite.origin_above_feet_px,
-                ),
-                (None, "blade_unit" | "dark_blade_unit") => (61.0, 0.0, sheet.frame_size.y / 2.0),
-                (None, "rifle_unit" | "dark_rifle_unit") => (56.0, 0.0, sheet.frame_size.y / 2.0),
-                (None, "heavy_unit" | "dark_heavy_unit") => (51.0, 0.0, sheet.frame_size.y / 2.0),
-                (None, "black_knight") => (31.0, 0.0, 16.0),
-                (None, _) => (0.0, 0.0, sheet.frame_size.y / 2.0),
-            };
-        let attacks = if profile.attacks.is_empty() {
-            profile
-                .attack
-                .iter()
-                .map(EnemyAttack::from)
-                .collect::<Vec<_>>()
-        } else {
-            profile
-                .attacks
-                .iter()
-                .map(EnemyAttack::from)
-                .collect::<Vec<_>>()
-        };
-        let health = profile.health;
-        let armor = spawn.armor_layers + profile.armor_layers;
-        let phase_two = profile
-            .phase_two
-            .as_ref()
-            .map(|phase| (phase.health_fraction_at_or_below, phase.cooldown_multiplier));
-        let feet_offset = origin_above_feet_px * scale;
-        let visible_top_offset = (sheet.frame_size.y
-            - frame_top_padding_px
-            - frame_bottom_padding_px
-            - origin_above_feet_px)
-            * scale;
-        let home_y = spawn.position_h.y_h * H_WORLD_UNITS + feet_offset;
-        let facing = f32::from(spawn.facing);
-        let enemy = commands
-            .spawn((
-                Sprite {
-                    // An idle enemy watches the way the room points it.
-                    flip_x: facing < 0.0,
-                    ..Sprite::from_atlas_image(
-                        sheet.image.clone(),
-                        TextureAtlas {
-                            layout: sheet.layout.clone(),
-                            index: 0,
-                        },
-                    )
-                },
-                Anchor(Vec2::new(
-                    0.0,
-                    (frame_bottom_padding_px + origin_above_feet_px) / sheet.frame_size.y - 0.5,
-                )),
-                Transform::from_xyz(spawn.position_h.x_h * H_WORLD_UNITS, home_y, 3.0)
-                    .with_scale(Vec3::splat(scale)),
-                AnimatedSprite {
-                    sheet: key.to_string(),
-                    frame: 0,
-                    frames: sheet.frames,
-                    timer: Timer::from_seconds(1.0 / sheet.fps, TimerMode::Repeating),
-                    looping: true,
-                },
-                EnemyBody {
-                    type_id: spawn.type_id.clone(),
-                    material: profile.material,
-                    armor,
-                    health,
-                    max_health: health,
-                    movement_speed_h_s: profile.movement_speed_h_s,
-                    home_y,
-                    feet_offset,
-                    visible_top_offset,
-                    hurtbox_size: Vec2::new(profile.hurtbox_h.width, profile.hurtbox_h.height)
-                        * H_WORLD_UNITS,
-                    vertical_velocity: 0.0,
-                    grounded: true,
-                    jump_height_h: profile
-                        .jump_height_h
-                        .unwrap_or(data.enemies.jumping.jump_height_h),
-                    jump_cooldown: 0.0,
-                    jump: None,
-                    behavior: profile.behavior.clone(),
-                    flight: profile.flight,
-                    procedural_movement: profile.procedural_movement.as_ref().map(|movement| {
-                        ProceduralMovementState {
-                            phase_radians: 0.0,
-                            bob_height_h: movement.bob_height_h,
-                            cycles_per_h: movement.cycles_per_h,
-                            lean_radians: movement.lean_degrees.to_radians(),
-                        }
-                    }),
-                    preferred_distance_h: profile.preferred_distance_h,
-                    attacks,
-                    facing,
-                    engaged: arriving,
-                    attack_cooldown: 0.0,
-                    windup_remaining: 0.0,
-                    combo_hit_pending: None,
-                    active_attack: 0,
-                    next_attack: 0,
-                    hurt_timer: 0.0,
-                    flash_s: 0.0,
-                    knockback_velocity: 0.0,
-                    launched: false,
-                    last_seen: None,
-                    phase_two,
-                    phase_two_announced: false,
-                    marked_timer: 0.0,
-                    movement_sound_timer: 0.0,
-                    stance: arriving
-                        .then_some((combat::Stance::Clip, data.gameplay.room_flow.waves.arrive_s)),
-                    countering: false,
-                    wounds: 0,
-                },
-                room_intro::EnemyEntrance {
-                    base_scale: Vec3::splat(scale),
-                    delay_s: index as f32 / last_index * appear_spread_s,
-                },
-                RoomEntity,
-            ))
-            .id();
-        if arriving {
-            commands
-                .entity(enemy)
-                .insert(combat::Arriving(Timer::from_seconds(
-                    data.gameplay.room_flow.waves.arrive_s,
-                    TimerMode::Once,
-                )));
-        }
-        let bar_position = Vec3::new(
-            spawn.position_h.x_h * H_WORLD_UNITS,
-            home_y + visible_top_offset + 6.0,
-            5.0,
+        spawn_enemy(
+            commands,
+            spawn,
+            data,
+            sheets,
+            arriving,
+            index as f32 / last_index * appear_spread_s,
+            None,
         );
-        commands.spawn((
-            Sprite::from_color(Color::BLACK, Vec2::new(52.0, 6.0)),
-            Transform::from_translation(bar_position - Vec3::Z * 0.1),
-            EnemyHealthBarBackground { enemy },
-            RoomEntity,
-        ));
-        commands.spawn((
-            Sprite::from_color(
-                if armor > 0 {
-                    combat::SHIELDED_HEALTH_BAR
-                } else {
-                    combat::HEALTH_BAR
-                },
-                Vec2::new(48.0, 4.0),
+    }
+}
+
+/// One enemy of a room, with its health bar and its armor's icons. An
+/// `arriving` one rises out of the floor already knowing where the player
+/// is; one `born_of_a_split` is a piece of another that fell.
+pub(super) fn spawn_enemy(
+    commands: &mut Commands,
+    spawn: &EnemySpawnConfig,
+    data: &GameData,
+    sheets: &SpriteSheets,
+    arriving: bool,
+    delay_s: f32,
+    born_of_a_split: Option<&EnemySplitConfig>,
+) -> Entity {
+    let profile = &data.enemies.types[&spawn.type_id];
+    let key = spawn.type_id.idle_sheet();
+    let sheet = &sheets.0[key];
+    let scale = match (&profile.sprite, &*spawn.type_id) {
+        (Some(sprite), _) => sprite.scale,
+        (None, _) => ENEMY_SPRITE_SCALE,
+    };
+    // Source pixels: empty rows above and below the figure, and the height
+    // of the entity origin above the feet. Combat and AI measure from that
+    // origin, so it sits mid-body rather than mid-frame for padded sheets.
+    let (frame_top_padding_px, frame_bottom_padding_px, origin_above_feet_px) =
+        match (&profile.sprite, &*spawn.type_id) {
+            (Some(sprite), _) => (
+                sprite.top_padding_px,
+                sprite.bottom_padding_px,
+                sprite.origin_above_feet_px,
             ),
-            Transform::from_translation(bar_position),
-            EnemyHealthBar {
-                enemy,
+            (None, "blade_unit" | "dark_blade_unit") => (61.0, 0.0, sheet.frame_size.y / 2.0),
+            (None, "rifle_unit" | "dark_rifle_unit") => (56.0, 0.0, sheet.frame_size.y / 2.0),
+            (None, "heavy_unit" | "dark_heavy_unit") => (51.0, 0.0, sheet.frame_size.y / 2.0),
+            (None, _) => (0.0, 0.0, sheet.frame_size.y / 2.0),
+        };
+    let attacks = if profile.attacks.is_empty() {
+        profile
+            .attack
+            .iter()
+            .map(EnemyAttack::from)
+            .collect::<Vec<_>>()
+    } else {
+        profile
+            .attacks
+            .iter()
+            .map(EnemyAttack::from)
+            .collect::<Vec<_>>()
+    };
+    // One born of another's fall has its share of the health, and does not
+    // come apart again.
+    let health = profile.health * born_of_a_split.map_or(1.0, |split| split.health_fraction);
+    let armor = spawn.armor_layers + profile.armor_layers;
+    let phase_two = profile
+        .phase_two
+        .as_ref()
+        .map(|phase| (phase.health_fraction_at_or_below, phase.cooldown_multiplier));
+    let feet_offset = origin_above_feet_px * scale;
+    let visible_top_offset = (sheet.frame_size.y
+        - frame_top_padding_px
+        - frame_bottom_padding_px
+        - origin_above_feet_px)
+        * scale;
+    let home_y = spawn.position_h.y_h * H_WORLD_UNITS + feet_offset;
+    let facing = f32::from(spawn.facing);
+    let enemy = commands
+        .spawn((
+            Sprite {
+                // An idle enemy watches the way the room points it.
+                flip_x: facing < 0.0,
+                ..Sprite::from_atlas_image(
+                    sheet.image.clone(),
+                    TextureAtlas {
+                        layout: sheet.layout.clone(),
+                        index: 0,
+                    },
+                )
+            },
+            Anchor(Vec2::new(
+                0.0,
+                (frame_bottom_padding_px + origin_above_feet_px) / sheet.frame_size.y - 0.5,
+            )),
+            Transform::from_xyz(spawn.position_h.x_h * H_WORLD_UNITS, home_y, 3.0)
+                .with_scale(Vec3::splat(scale)),
+            AnimatedSprite {
+                sheet: key.to_string(),
+                frame: 0,
+                frames: sheet.frames,
+                timer: Timer::from_seconds(1.0 / sheet.fps, TimerMode::Repeating),
+                looping: true,
+            },
+            EnemyBody {
+                type_id: spawn.type_id.clone(),
+                material: profile.material,
+                armor,
+                health,
                 max_health: health,
+                movement_speed_h_s: profile.movement_speed_h_s,
+                home_y,
+                feet_offset,
+                visible_top_offset,
+                hurtbox_size: Vec2::new(profile.hurtbox_h.width, profile.hurtbox_h.height)
+                    * H_WORLD_UNITS,
+                vertical_velocity: 0.0,
+                grounded: true,
+                jump_height_h: profile
+                    .jump_height_h
+                    .unwrap_or(data.enemies.jumping.jump_height_h),
+                jump_cooldown: 0.0,
+                jump: None,
+                behavior: profile.behavior.clone(),
+                flight: profile.flight,
+                procedural_movement: profile.procedural_movement.as_ref().map(|movement| {
+                    ProceduralMovementState {
+                        phase_radians: 0.0,
+                        bob_height_h: movement.bob_height_h,
+                        cycles_per_h: movement.cycles_per_h,
+                        lean_radians: movement.lean_degrees.to_radians(),
+                    }
+                }),
+                preferred_distance_h: profile.preferred_distance_h,
+                attacks,
+                facing,
+                engaged: arriving,
+                attack_cooldown: 0.0,
+                windup_remaining: 0.0,
+                combo_hit_pending: None,
+                active_attack: 0,
+                next_attack: 0,
+                hurt_timer: 0.0,
+                flash_s: 0.0,
+                knockback_velocity: 0.0,
+                launched: false,
+                last_seen: None,
+                phase_two,
+                phase_two_announced: false,
+                marked_timer: 0.0,
+                movement_sound_timer: 0.0,
+                stance: arriving
+                    .then_some((combat::Stance::Clip, data.gameplay.room_flow.waves.arrive_s)),
+                countering: false,
+                wounds: 0,
+                splits: born_of_a_split.is_none(),
+            },
+            room_intro::EnemyEntrance {
+                base_scale: Vec3::splat(scale),
+                delay_s,
             },
             RoomEntity,
-        ));
-        let own_shield = format!("{}_shield", spawn.type_id);
-        let shield_key = if sheets.0.contains_key(&own_shield) {
-            own_shield.as_str()
-        } else {
-            combat::SHIELD_SHEET
-        };
-        let Some(shield) = sheets.0.get(shield_key) else {
-            continue;
-        };
-        for layer in 0..armor {
-            let icon = EnemyShieldIcon::of_layer(enemy, layer, armor, shield_key);
-            commands.spawn((
-                Sprite {
-                    custom_size: Some(
-                        shield.frame_size * combat::SHIELD_HEIGHT / shield.frame_size.y,
-                    ),
-                    ..Sprite::from_atlas_image(
-                        shield.image.clone(),
-                        TextureAtlas {
-                            layout: shield.layout.clone(),
-                            index: 0,
-                        },
-                    )
-                },
-                Transform::from_translation(
-                    bar_position + Vec3::new(icon.offset_x, combat::SHIELD_OFFSET_Y, 0.0),
-                ),
-                icon,
-                RoomEntity,
-            ));
-        }
+        ))
+        .id();
+    if arriving {
+        commands
+            .entity(enemy)
+            .insert(combat::Arriving(Timer::from_seconds(
+                data.gameplay.room_flow.waves.arrive_s,
+                TimerMode::Once,
+            )));
     }
+    let bar_position = Vec3::new(
+        spawn.position_h.x_h * H_WORLD_UNITS,
+        home_y + visible_top_offset + 6.0,
+        5.0,
+    );
+    commands.spawn((
+        Sprite::from_color(Color::BLACK, Vec2::new(52.0, 6.0)),
+        Transform::from_translation(bar_position - Vec3::Z * 0.1),
+        EnemyHealthBarBackground { enemy },
+        RoomEntity,
+    ));
+    commands.spawn((
+        Sprite::from_color(
+            if armor > 0 {
+                combat::SHIELDED_HEALTH_BAR
+            } else {
+                combat::HEALTH_BAR
+            },
+            Vec2::new(48.0, 4.0),
+        ),
+        Transform::from_translation(bar_position),
+        EnemyHealthBar {
+            enemy,
+            max_health: health,
+        },
+        RoomEntity,
+    ));
+    let own_shield = format!("{}_shield", spawn.type_id);
+    let shield_key = if sheets.0.contains_key(&own_shield) {
+        own_shield.as_str()
+    } else {
+        combat::SHIELD_SHEET
+    };
+    let Some(shield) = sheets.0.get(shield_key) else {
+        return enemy;
+    };
+    for layer in 0..armor {
+        let icon = EnemyShieldIcon::of_layer(enemy, layer, armor, shield_key);
+        commands.spawn((
+            Sprite {
+                custom_size: Some(shield.frame_size * combat::SHIELD_HEIGHT / shield.frame_size.y),
+                ..Sprite::from_atlas_image(
+                    shield.image.clone(),
+                    TextureAtlas {
+                        layout: shield.layout.clone(),
+                        index: 0,
+                    },
+                )
+            },
+            Transform::from_translation(
+                bar_position + Vec3::new(icon.offset_x, combat::SHIELD_OFFSET_Y, 0.0),
+            ),
+            icon,
+            RoomEntity,
+        ));
+    }
+    enemy
 }
 
 pub(super) fn cleanup_room(

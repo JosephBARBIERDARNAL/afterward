@@ -57,9 +57,8 @@ player:
     buffer_s: 0.2
     # The shove a blow gives a body with no armor up, away from the player.
     # It slows at a constant drag, so the distance it carries a body grows
-    # with the square of this speed.
+    # with the square of this speed. A boss is never shoved, nor stopped.
     knockback_h_s: 1.55
-    boss_knockback_h_s: 1.1
     # What a landed blow does to the moment. The whole game holds still for
     # `freeze_s` (`kill_freeze_s` when the blow kills), the camera is thrown
     # `shake_h` off its mark (`heavy_shake_h` for the chain's last blow, a

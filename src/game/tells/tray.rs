@@ -141,6 +141,16 @@ pub(crate) fn lines(
             fraction(left, full),
         );
     }
+    // The dash coming back sooner, while Second Wind shortens the wait.
+    if player.dash_cooldown_s > 0.0 {
+        let full = data.gameplay.player.dash.cooldown_s
+            * session.bonus_effect(data, "second_wind", "dash_cooldown_multiplier");
+        add(
+            "second_wind",
+            format!("dash in {:.2}s", player.dash_cooldown_s),
+            fraction(player.dash_cooldown_s, full),
+        );
+    }
     if player.chain_reaction_timer > 0.0 {
         let full = session.bonus_effect(data, "chain_reaction", "kill_damage_duration_s");
         add(

@@ -290,12 +290,6 @@ bonuses:
       rare: { execute_damage_multiplier: 1.36 }
       epic: { execute_damage_multiplier: 1.42 }
       legendary: { execute_damage_multiplier: 1.5 }
-  - id: air_step
-    name: Air Step
-    description: Dash once more in mid-air before landing.
-    synergies: [aftershock, double_jump]
-    effects: { extra_air_dashes: 1 }
-    rarities: { uncommon: {} }
   - id: steadfast
     name: Steadfast
     description: Increase maximum health by {max_health_increase}, and heal as much.
@@ -419,7 +413,7 @@ bonuses:
   - id: wall_runner
     name: Wall Runner
     description: Pressed into a wall in mid-air, run up it, as high as {wall_run_h} H each time you leave the ground.
-    synergies: [double_jump, air_step]
+    synergies: [double_jump]
     rarities:
       rare: { wall_run_h: 2.5 }
       epic: { wall_run_h: 3.5 }
@@ -431,7 +425,7 @@ bonuses:
   - id: smoke_step
     name: Smoke Step
     description: A dash hides you for {vanish_s} seconds, once every {vanish_cooldown_s} seconds.
-    synergies: [slippery, air_step]
+    synergies: [slippery]
     rarities:
       rare: { vanish_s: 1.2, vanish_cooldown_s: 9 }
       epic: { vanish_s: 1.5, vanish_cooldown_s: 8 }
@@ -623,6 +617,16 @@ bonuses:
       rare: { dash_invulnerability_multiplier: 1.56 }
       epic: { dash_invulnerability_multiplier: 1.64 }
       legendary: { dash_invulnerability_multiplier: 1.8 }
+  - id: second_wind
+    name: Second Wind
+    description: Wait {dash_cooldown_multiplier:-%} less between one dash and the next.
+    synergies: [aftershock, slippery, smoke_step]
+    rarities:
+      common: { dash_cooldown_multiplier: 0.75 }
+      uncommon: { dash_cooldown_multiplier: 0.68 }
+      rare: { dash_cooldown_multiplier: 0.6 }
+      epic: { dash_cooldown_multiplier: 0.5 }
+      legendary: { dash_cooldown_multiplier: 0.35 }
   - id: overcharge
     name: Overcharge
     description: The heavy blow comes out {heavy_speed_multiplier:+%} faster and deals {heavy_damage_multiplier:+%} more damage.

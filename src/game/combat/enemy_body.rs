@@ -63,6 +63,9 @@ pub(crate) struct EnemyBody {
     pub(crate) countering: bool,
     /// The blows that have wounded it with no armor up since it last rolled.
     pub(crate) wounds: u8,
+    /// Whether it comes apart into more of its type as it falls (its type's
+    /// `split`): not once it is itself one of the pieces.
+    pub(crate) splits: bool,
 }
 
 /// What holds an enemy where a boss's extra clips need it held.

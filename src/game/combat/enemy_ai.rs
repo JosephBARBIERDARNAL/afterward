@@ -320,9 +320,13 @@ pub(in crate::game) fn update_enemy_ai(
             enemy.play_out("draw", &mut sprite, &mut animation, &sheets);
         }
         // Beaten on for long enough, it rolls through whoever is doing it
-        // and comes up at their back.
+        // and comes up at their back, once the attack in hand is through (a
+        // boss is not stopped by the blows that wound it).
         if let Some(roll) = &data.enemies.types[&enemy.type_id].roll
             && enemy.wounds >= roll.after_wounds
+            && enemy.windup_remaining == 0.0
+            && enemy.combo_hit_pending.is_none()
+            && !enemy.countering
         {
             enemy.wounds = 0;
             enemy.stance = Some((

@@ -8,6 +8,7 @@ pub(super) use body::{LedgeClimb, PlayerAction, PlayerBody, Strike, Thrown};
 
 #[derive(SystemParam)]
 pub(super) struct PlayerUpdateResources<'w, 's> {
+    commands: Commands<'w, 's>,
     time: Res<'w, Time>,
     screen: Res<'w, State<GameScreen>>,
     keys: Res<'w, ButtonInput<KeyCode>>,
@@ -32,6 +33,7 @@ pub(super) fn update_player(
     )>,
 ) {
     let PlayerUpdateResources {
+        mut commands,
         time,
         screen,
         keys,
@@ -67,8 +69,11 @@ pub(super) fn update_player(
         .map(|elapsed_s| elapsed_s + dt)
         .filter(|elapsed_s| *elapsed_s < dash.duration_s);
     player.dash_ended = was_dashing && player.dash_s.is_none();
+    // Second Wind shortens the wait for the next dash.
+    let dash_cooldown_s = dash.cooldown_s
+        * session.bonus_multiplier(&data, "second_wind", "dash_cooldown_multiplier");
     player.dash_cooldown_s = if player.dash_ended {
-        dash.cooldown_s
+        dash_cooldown_s
     } else {
         (player.dash_cooldown_s - dt).max(0.0)
     };
@@ -228,31 +233,27 @@ pub(super) fn update_player(
     }
 
     // Dash: the way the player steers, else away from the wall they cling
-    // to, else the way they face. In mid-air only `air_dashes` of them (Air
-    // Step adds one) until something holds the player up again. It cuts a
-    // blow in hand short: `combat/player_melee.rs` lets the blow go once its
-    // clip is no longer the one playing.
-    let air_dashes = dash.air_dashes
-        + if session.has_bonus("air_step") {
-            session.bonus_effect(&data, "air_step", "extra_air_dashes") as u8
-        } else {
-            0
-        };
+    // to, else the way they face. In mid-air only `air_dashes` of them until
+    // something holds the player up again. It cuts a blow in hand short:
+    // `combat/player_melee.rs` lets the blow go once its clip is no longer
+    // the one playing.
     if tapped(GameAction::Dash)
         && player.dash_s.is_none()
         && player.dash_cooldown_s == 0.0
         && !player.slamming
-        && (player.grounded || player.air_dashes_used < air_dashes)
+        && (player.grounded || player.air_dashes_used < dash.air_dashes)
     {
         if !player.grounded {
             player.air_dashes_used += 1;
-            // The dash Air Step adds shows the air it pushed off.
-            if player.air_dashes_used > dash.air_dashes {
-                tells.write(
-                    BonusTell::new("air_step", TellAt::Spot(transform.translation))
-                        .with(TellEffect::new("air_burst", 0.8)),
-                );
-            }
+            // A dash in mid-air shows the air it pushed off.
+            combat::play_effect(
+                &mut commands,
+                &sheets,
+                "vfx_air_burst",
+                transform.translation.with_z(6.5),
+                0.8,
+                false,
+            );
         }
         let way = if direction != 0.0 {
             direction.signum()
@@ -444,6 +445,17 @@ pub(super) fn update_player(
     let x = platforms.blocked_x(previous_x, wanted_x, reach_feet);
     if x != wanted_x {
         player.velocity.x = 0.0;
+    }
+    // A dash run into a wall (or the room's edge) ends there and hands the
+    // player back at once, rather than holding them against it until its
+    // clip has played out.
+    if player.dash_s.is_some() && x != previous_x + dx {
+        player.dash_s = None;
+        player.dash_ended = true;
+        player.dash_cooldown_s = dash_cooldown_s;
+        if matches!(player.action, Some(PlayerAction::Dash { .. })) {
+            player.action = None;
+        }
     }
     transform.translation.x = x;
 

@@ -161,6 +161,18 @@ pub struct EnemyTypeConfig {
     /// The effect sheet played over it as it dies, `size_h` across.
     #[serde(default)]
     pub death_effect: Option<EffectConfig>,
+    /// What it comes apart into as it falls; left out, it simply dies.
+    pub split: Option<EnemySplitConfig>,
+}
+
+/// Felled, an enemy comes apart into `count` more of its own type, each with
+/// `health_fraction` of its health and standing `spread_h` further to one
+/// side or the other of where it fell, and those do not split again.
+#[derive(Debug, Deserialize)]
+pub struct EnemySplitConfig {
+    pub count: u8,
+    pub health_fraction: f32,
+    pub spread_h: f32,
 }
 
 /// A flying enemy: it sees all around it within its detection range, flies

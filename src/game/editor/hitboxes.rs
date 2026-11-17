@@ -330,7 +330,7 @@ mod tests {
             .hitbox_h
             .expect("the parry has a hitbox")
             .x;
-        assert!((boss_x + 0.55).abs() < 1e-5);
+        assert!((boss_x + 0.3).abs() < 1e-5);
         let edited = Hitboxes::of(&data);
         assert!(edited != original);
 

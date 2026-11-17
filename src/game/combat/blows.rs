@@ -3,6 +3,7 @@
 //! sounds the same however it was thrown.
 
 use super::*;
+use crate::data::{EnemySpawnConfig, Facing, SpawnPosition};
 
 pub(super) type MeleeEnemiesQuery<'w, 's> = Query<
     'w,
@@ -115,7 +116,7 @@ pub(super) fn land_the_blow(
     let keystones =
         (1.0 + session.keystone(data, "arsenal")) * (1.0 + session.keystone(data, "harmony"));
 
-    for (entity, mut enemy, mut enemy_transform, mut sprite, mut animation) in enemies.iter_mut() {
+    for (entity, mut enemy, enemy_transform, mut sprite, mut animation) in enemies.iter_mut() {
         if enemy.health <= 0.0
             || enemy
                 .hurtbox(&enemy_transform)
@@ -286,35 +287,35 @@ pub(super) fn land_the_blow(
                 boost: boost * blow.boost,
             },
         );
-        if !armored {
+        // A boss is never interrupted: like a body with armor up, it takes
+        // the wound and carries on with what it was doing.
+        let interrupted = !armored && enemy.behavior != "boss";
+        if interrupted {
             // Shoved away from the player, whichever side of them it stood.
             let away = if enemy_transform.translation.x == blow.from_x {
                 player.facing
             } else {
                 (enemy_transform.translation.x - blow.from_x).signum()
             };
-            if enemy.behavior == "boss" {
-                enemy.knockback_velocity = away * melee.boss_knockback_h_s;
-                enemy_transform.translation.y = enemy.home_y;
-            } else {
-                enemy.knockback_velocity = away * melee.knockback_h_s;
-                enemy.launched = blow.launch.is_some();
-                if let Some(launch) = &blow.launch {
-                    enemy.knockback_velocity *= launch.knockback_multiplier;
-                    let body = enemy.hurtbox(&enemy_transform);
-                    let near = if away < 0.0 { body.min.x } else { body.max.x };
-                    thrown.push(Rect::new(
-                        near,
-                        body.min.y,
-                        near + away * launch.reach_h * H_WORLD_UNITS,
-                        body.max.y,
-                    ));
-                }
+            enemy.knockback_velocity = away * melee.knockback_h_s;
+            enemy.launched = blow.launch.is_some();
+            if let Some(launch) = &blow.launch {
+                enemy.knockback_velocity *= launch.knockback_multiplier;
+                let body = enemy.hurtbox(&enemy_transform);
+                let near = if away < 0.0 { body.min.x } else { body.max.x };
+                thrown.push(Rect::new(
+                    near,
+                    body.min.y,
+                    near + away * launch.reach_h * H_WORLD_UNITS,
+                    body.max.y,
+                ));
             }
             enemy.windup_remaining = 0.0;
             enemy.combo_hit_pending = None;
             enemy.stance = None;
             enemy.countering = false;
+        }
+        if !armored {
             enemy.wounds = enemy.wounds.saturating_add(1);
         }
         let style = audio::EnemySoundStyle::from(&enemy.type_id);
@@ -328,7 +329,7 @@ pub(super) fn land_the_blow(
                 melee.impact.flash_brightness,
                 melee.impact.flash_brightness,
             );
-            if !armored {
+            if interrupted {
                 enemy.hurt_timer = blow.flinch_s;
                 set_enemy_animation(&mut sprite, &mut animation, sheets, &enemy.type_id, "hurt");
             }
@@ -345,6 +346,41 @@ pub(super) fn land_the_blow(
             let middle = enemy.hurtbox(&enemy_transform).center();
             if let Some(blast) = &profile.death_blast {
                 Hazard::death_blast(blast, middle).lay(commands);
+            }
+            // A type that comes apart stands its pieces up where it fell,
+            // to either side of it, rising as a wave does.
+            if enemy.splits
+                && let Some(split) = &profile.split
+            {
+                let feet_h = (enemy.home_y - enemy.feet_offset) / H_WORLD_UNITS;
+                let x_h = enemy_transform.translation.x / H_WORLD_UNITS;
+                for piece in 0..split.count {
+                    let side = if piece % 2 == 0 { -1.0 } else { 1.0 };
+                    let spread_h = split.spread_h * f32::from(piece / 2 + 1);
+                    world::spawn_enemy(
+                        commands,
+                        &EnemySpawnConfig {
+                            label: None,
+                            type_id: enemy.type_id.clone(),
+                            position_h: SpawnPosition {
+                                x_h: x_h + side * spread_h,
+                                y_h: feet_h,
+                            },
+                            facing: if side < 0.0 {
+                                Facing::Right
+                            } else {
+                                Facing::Left
+                            },
+                            armor_layers: 0,
+                            wave: session.wave,
+                        },
+                        data,
+                        sheets,
+                        true,
+                        0.0,
+                        Some(split),
+                    );
+                }
             }
             if let Some(effect) = &profile.death_effect {
                 play_effect(

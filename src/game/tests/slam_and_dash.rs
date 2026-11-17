@@ -6,7 +6,7 @@ use bevy::{prelude::MinimalPlugins, state::app::StatesPlugin, time::TimeUpdateSt
 
 /// Attack with Down held in mid-air drives the player at the floor and breaks
 /// it to both sides, and Dash carries them through anything that would hit,
-/// on the ground and once in mid-air.
+/// on the ground and once in mid-air, ending early against a wall.
 #[test]
 fn the_slam_breaks_the_floor_and_the_dash_carries_the_player_through_a_shot() {
     let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
@@ -281,4 +281,30 @@ exit: { x_h: 22, y_h: 1 }
             "it spends the one air dash the player has before landing"
         );
     }
+
+    // A dash run into a wall ends there, and the player is free at once.
+    for _ in 0..30 {
+        step(&mut app, &[]);
+    }
+    {
+        let mut transform = app
+            .world_mut()
+            .get_mut::<Transform>(player)
+            .expect("the player should remain spawned");
+        transform.translation.x = HALF_BODY_WIDTH + 2.0;
+    }
+    app.world_mut()
+        .get_mut::<PlayerBody>(player)
+        .expect("the player should remain spawned")
+        .facing = -1.0;
+    step(&mut app, &[KeyCode::KeyL]);
+    step(&mut app, &[]);
+    let body = app
+        .world()
+        .get::<PlayerBody>(player)
+        .expect("the player should remain spawned");
+    assert!(
+        body.dash_s.is_none() && body.action.is_none(),
+        "a dash into the room's edge ends as it meets it"
+    );
 }

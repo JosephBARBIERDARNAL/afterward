@@ -219,8 +219,6 @@ pub struct MeleeConfig {
     pub buffer_s: f32,
     /// The shove a blow gives a body with no armor up.
     pub knockback_h_s: f32,
-    /// The shove it gives the boss instead.
-    pub boss_knockback_h_s: f32,
     pub impact: ImpactConfig,
     pub steps: Vec<MeleeComboStep>,
     /// The heavy blows, by how many of `steps` came before: the ones with no

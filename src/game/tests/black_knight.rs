@@ -252,6 +252,7 @@ exit: { x_h: 45, y_h: 1 }
 
     let mut health_when_it_rolled = None;
     let mut rolled_out = false;
+    let mut free_frames = 0;
     for _ in 0..400 {
         app.update();
         let (knight, transform) = knights
@@ -287,14 +288,175 @@ exit: { x_h: 45, y_h: 1 }
                 );
                 break;
             }
-            _ => assert!(
-                knight.wounds < after_wounds || knight.hurt_timer > 0.0,
-                "the knight should roll as soon as its flinch lets it"
-            ),
+            // A boss is not stopped by a blow: it rolls once the clip or
+            // the attack it has in hand is through, the frame after it ends.
+            _ => {
+                let busy = knight.stance.is_some() || knight.windup_remaining > 0.0;
+                free_frames = if knight.wounds >= after_wounds && !busy {
+                    free_frames + 1
+                } else {
+                    0
+                };
+                assert!(
+                    free_frames <= 1,
+                    "the knight should roll as soon as what it has in hand lets it"
+                );
+            }
         }
     }
     assert!(
         rolled_out,
         "the knight should roll once it has been wounded {after_wounds} times"
     );
+}
+
+#[test]
+fn a_knight_carries_on_through_a_blow_and_comes_apart_as_it_falls() {
+    let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
+    let mut data = GameData::load(&asset_root).expect("Chapter 1 data should load");
+    // The same flat hall: the knight stands to the player's right.
+    *data.rooms.get_mut(&1).expect("room 1 should exist") = yaml_serde::from_str(
+        "
+room_id: 1
+chapter_id: 1
+size: { width_h: 48, height_h: 13.5 }
+background_profiles: [city_teal_evening]
+player_spawn: { x_h: 10, y_h: 1 }
+platforms:
+  - { material: city_pavement, rect_h: { x: 0, y: 0, width: 48, height: 1 } }
+enemy_spawns:
+  - { type_id: black_knight, position_h: { x: 11, y: 1 } }
+bonus: { x_h: 43, y_h: 1 }
+exit: { x_h: 45, y_h: 1 }
+",
+    )
+    .expect("the test layout should parse");
+    let knight = &data.enemies.types["black_knight"];
+    let full_health = knight.health;
+    let split = knight
+        .split
+        .as_ref()
+        .expect("the Black Knight should split");
+    let (pieces, piece_health) = (
+        usize::from(split.count),
+        full_health * split.health_fraction,
+    );
+    let mut sheets = data
+        .player_animations
+        .keyed()
+        .into_iter()
+        .map(|(key, clip)| {
+            (
+                key,
+                SpriteSheet {
+                    image: Handle::default(),
+                    layout: Handle::default(),
+                    frame_size: Vec2::new(128.0, 128.0),
+                    frames: clip.frames,
+                    fps: clip.fps,
+                },
+            )
+        })
+        .collect::<BTreeMap<_, _>>();
+    sheets.insert(
+        String::from("black_knight_unarmed_idle"),
+        SpriteSheet {
+            image: Handle::default(),
+            layout: Handle::default(),
+            frame_size: Vec2::new(150.0, 62.0),
+            frames: 1,
+            fps: 1.0,
+        },
+    );
+
+    let mut app = App::new();
+    app.add_plugins((MinimalPlugins, StatesPlugin))
+        .insert_state(GameScreen::Playing)
+        .insert_resource(data)
+        .insert_resource(SpriteSheets(sheets))
+        .insert_resource(TimeUpdateStrategy::ManualDuration(Duration::from_millis(
+            20,
+        )))
+        .insert_resource(RunSession {
+            room_id: 1,
+            ..default()
+        })
+        .insert_resource(RandomState(0x6b6e_6967_6874_2121))
+        .init_resource::<SoundQueue>()
+        .add_message::<BonusTell>()
+        .init_resource::<ControlBindings>()
+        .insert_resource(PreferencesDir(None))
+        .init_resource::<ButtonInput<KeyCode>>()
+        .add_systems(Startup, controls::initialize_control_bindings)
+        .add_systems(
+            Startup,
+            |mut commands: Commands, data: Res<GameData>, sheets: Res<SpriteSheets>| {
+                let room = &data.rooms[&1];
+                world::spawn_room_platforms(&mut commands, room, &data);
+                world::spawn_player(&mut commands, room, &data, &sheets);
+                world::spawn_enemies(&mut commands, room, &data, &sheets, None);
+            },
+        )
+        .add_systems(
+            Update,
+            (
+                player::update_player,
+                combat::player_melee,
+                combat::update_enemy_ai,
+                combat::update_enemy_platform_physics,
+            )
+                .chain(),
+        );
+    app.update();
+
+    // A knight winding up is struck: it takes the wound and winds on.
+    let mut knights = app.world_mut().query::<&mut EnemyBody>();
+    {
+        let mut knight = knights
+            .single_mut(app.world_mut())
+            .expect("the layout should spawn only the knight");
+        knight.engaged = true;
+        knight.attack_cooldown = 30.0;
+        knight.windup_remaining = 2.0;
+    }
+    app.world_mut()
+        .resource_mut::<ButtonInput<KeyCode>>()
+        .press(KeyCode::KeyJ);
+    let mut wounded = false;
+    for _ in 0..60 {
+        app.update();
+        let knight = knights
+            .single(app.world())
+            .expect("the knight should remain spawned");
+        if knight.health < full_health {
+            assert!(
+                knight.hurt_timer == 0.0 && knight.windup_remaining > 0.0,
+                "a blow neither makes the boss flinch nor drops its wind-up"
+            );
+            wounded = true;
+            break;
+        }
+    }
+    assert!(wounded, "the chain should reach the knight");
+
+    // Felled, it stands two more knights up where it fell, who do not split.
+    knights
+        .single_mut(app.world_mut())
+        .expect("the knight should remain spawned")
+        .health = 1.0;
+    for _ in 0..60 {
+        app.update();
+        if knights.iter(app.world()).count() > 1 {
+            break;
+        }
+    }
+    let standing = knights
+        .iter(app.world())
+        .filter(|knight| knight.health > 0.0)
+        .collect::<Vec<_>>();
+    assert_eq!(standing.len(), pieces, "the knight should come apart");
+    for piece in standing {
+        assert_eq!(piece.health, piece_health);
+        assert!(!piece.splits, "a piece of a knight falls for good");
+    }
 }
