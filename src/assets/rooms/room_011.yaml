@@ -283,12 +283,12 @@ props:
     position_h: { x: 47.25, y: 17.5 }
     colorway: dusk
   - prop: sci_fi_crate_stack
-    position_h: { x: 25.25, y: 2.5 }
+    position_h: { x: 26.5, y: 2.5 }
     solid: false
     opacity: 0.8
     colorway: dusk
   - prop: sci_fi_barrel
-    position_h: { x: 33, y: 1 }
+    position_h: { x: 28, y: 1 }
     solid: false
     opacity: 0.8
     colorway: dusk

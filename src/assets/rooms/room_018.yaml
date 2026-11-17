@@ -272,7 +272,7 @@ props:
     position_h: { x: 29.5, y: 12 }
     colorway: dusk
   - prop: sci_fi_crate_stack
-    position_h: { x: 3, y: 15 }
+    position_h: { x: 8.75, y: 15 }
     solid: false
     opacity: 0.8
     colorway: dusk
@@ -313,7 +313,7 @@ devices:
     speed_h_s: 3.5
     colorway: dusk
   - kind: terminal
-    position_h: { x: 2.75, y: 9.5 }
+    position_h: { x: 2, y: 9.5 }
     text: WATER TOWER 3. THE TANK IS FULL. IT ALWAYS IS.
     colorway: dusk
 enemy_spawns:

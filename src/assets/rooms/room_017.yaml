@@ -247,11 +247,6 @@ props:
     solid: false
     opacity: 0.8
     colorway: dusk
-  - prop: sci_fi_small_crate
-    position_h: { x: 50, y: 2 }
-    solid: false
-    opacity: 0.8
-    colorway: dusk
 # Devices: traps, moving and folding platforms, buttons, doors and
 # ladders, each standing on a spot (the middle of its bottom edge).
 devices:

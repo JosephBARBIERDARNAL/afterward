@@ -93,7 +93,7 @@ props:
     mirrored: true
     opacity: 0.8
   - prop: sci_fi_barrel
-    position_h: { x: 22.75, y: 3.5 }
+    position_h: { x: 23.75, y: 3.5 }
     solid: false
     opacity: 0.8
   - prop: sci_fi_small_crate

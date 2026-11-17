@@ -127,6 +127,9 @@ props:
     solid: false
     opacity: 0.8
     colorway: dusk
+  - prop: sci_fi_green_slab
+    position_h: { x: 16, y: 4.25 }
+    colorway: dusk
 # Devices: traps, moving and folding platforms, buttons, doors and
 # ladders, each standing on a spot (the middle of its bottom edge).
 devices:
@@ -140,18 +143,11 @@ devices:
     size: large
     travel_x_h: 12.5
     travel_y_h: 0
-    speed_h_s: 2
+    speed_h_s: 3
     colorway: dusk
   - label: west perch
     kind: folding_platform
     position_h: { x: 5.5, y: 3 }
-    color: steel
-    stand_s: 0.6
-    return_s: 2.5
-    colorway: dusk
-  - label: east perch
-    kind: folding_platform
-    position_h: { x: 26.5, y: 3 }
     color: steel
     stand_s: 0.6
     return_s: 2.5

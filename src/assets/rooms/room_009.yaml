@@ -246,22 +246,26 @@ props:
     prop: sci_fi_steel_block
     position_h: { x: 61.25, y: 6.5 }
   - prop: sci_fi_crate_stack
-    position_h: { x: 7.5, y: 1 }
+    position_h: { x: 9.25, y: 1 }
     solid: false
     opacity: 0.8
   - prop: sci_fi_barrel
-    position_h: { x: 29, y: 3 }
+    position_h: { x: 27.75, y: 3 }
     solid: false
     opacity: 0.8
   - prop: sci_fi_small_crate
-    position_h: { x: 37, y: 1 }
+    position_h: { x: 37.5, y: 1 }
     solid: false
-    mirrored: true
     opacity: 0.8
   - prop: sci_fi_pipe_vertical
     position_h: { x: 0.5, y: 10 }
   - prop: sci_fi_pipe_vertical
     position_h: { x: 61.5, y: 7.25 }
+  - prop: sci_fi_crate_stack
+    position_h: { x: 11.5, y: 10 }
+    solid: false
+    mirrored: true
+    opacity: 0.8
 # Devices: traps, moving and folding platforms, buttons, doors and
 # ladders, each standing on a spot (the middle of its bottom edge).
 devices:
@@ -339,6 +343,14 @@ enemy_spawns:
     position_h: { x: 6, y: 8 }
     facing: right
     armor_layers: 2
+    wave: 2
+  - type_id: blade_unit
+    position_h: { x: 15, y: 10 }
+    facing: right
+    wave: 2
+  - type_id: blade_unit
+    position_h: { x: 16.5, y: 10 }
+    facing: right
     wave: 2
 # The bonus item, lying beside the door once every enemy is down.
 bonus:

@@ -383,13 +383,8 @@ props:
     prop: sci_fi_steel_block
     position_h: { x: 33.25, y: 22.5 }
     colorway: dusk
-  - prop: sci_fi_barrel
-    position_h: { x: 29, y: 1 }
-    solid: false
-    opacity: 0.8
-    colorway: dusk
   - prop: sci_fi_small_crate
-    position_h: { x: 30, y: 1 }
+    position_h: { x: 32.5, y: 1 }
     solid: false
     opacity: 0.8
     colorway: dusk

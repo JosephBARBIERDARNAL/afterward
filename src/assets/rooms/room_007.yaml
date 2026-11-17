@@ -446,13 +446,13 @@ props:
     prop: sci_fi_steel_block
     position_h: { x: 33.25, y: 34.5 }
   - prop: sci_fi_crate_stack
-    position_h: { x: 30, y: 1 }
+    position_h: { x: 29, y: 8 }
     solid: false
-    mirrored: true
     opacity: 0.8
   - prop: sci_fi_small_crate
-    position_h: { x: 4, y: 21 }
+    position_h: { x: 1.75, y: 21 }
     solid: false
+    mirrored: true
     opacity: 0.8
   - prop: sci_fi_pipe_vertical
     position_h: { x: 0.5, y: 26 }

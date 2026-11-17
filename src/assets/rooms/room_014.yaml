@@ -198,7 +198,7 @@ props:
     opacity: 0.8
     colorway: dusk
   - prop: sci_fi_crate_stack
-    position_h: { x: 29, y: 5 }
+    position_h: { x: 28, y: 5 }
     solid: false
     opacity: 0.8
     colorway: dusk
@@ -211,15 +211,6 @@ devices:
   - kind: terminal
     position_h: { x: 5.5, y: 1 }
     text: FURNACE 2. NEVER LET IT GO OUT.
-    colorway: dusk
-  - label: the turret on the east catwalk
-    kind: turret
-    position_h: { x: 33, y: 5 }
-    facing: left
-    interval_s: 2.6
-    offset_s: 1
-    shot_speed_h_s: 9
-    damage: 7
     colorway: dusk
 enemy_spawns:
   - type_id: catto_rust
