@@ -242,9 +242,16 @@ impl GameData {
             || self.gameplay.room_flow.room_intro.early_start_s < 0.0
             || self.gameplay.room_flow.room_gap_h <= 0.0
             || self.gameplay.room_flow.exit_side != "right"
+            || self
+                .gameplay
+                .room_flow
+                .fixed_room_places
+                .iter()
+                .any(|place| !(1..=RoomConfig::CHAPTER_ROOMS).contains(place))
         {
             return Err(InvalidGameData::from(
-                "Chapter 1 room flow requires a positive clear animation and right-side exits",
+                "Chapter 1 room flow requires a positive clear animation, right-side exits \
+                 and fixed room places within a chapter",
             ));
         }
         let door = &self.gameplay.room_flow.exit_door;
@@ -562,9 +569,9 @@ impl GameData {
         // checked (consistent IDs, known references, a room at least one
         // viewport in size, blocks with a positive size).
         for (room_id, room) in &self.rooms {
-            if room.room_id != *room_id || room.next_room_id != room.room_id + 1 {
+            if room.room_id != *room_id {
                 return Err(InvalidGameData::from(format!(
-                    "room {room_id} has an inconsistent room_id or next_room_id"
+                    "room {room_id} has an inconsistent room_id"
                 )));
             }
             if room.size.width_h.is_nan()

@@ -1,10 +1,21 @@
 use super::*;
+use crate::game::interface::RoomCounter;
 
 #[test]
 fn a_run_goes_from_the_menu_through_combat_the_bonus_and_the_door_to_room_two() {
     let mut game = HeadlessGame::new();
+    // The top right counts the rooms of the run cleared so far.
+    let counter = |game: &mut HeadlessGame| {
+        let world = game.app.world_mut();
+        world
+            .query_filtered::<&Text, With<RoomCounter>>()
+            .single(world)
+            .map(|text| text.0.clone())
+            .expect("one room counter")
+    };
     game.start_run();
     assert_eq!(game.session().room_id, 1);
+    assert_eq!(counter(&mut game), "0 / 100 rooms", "room 0 is not counted");
     let roster = game.data().rooms[&1]
         .enemy_spawns
         .iter()
@@ -38,6 +49,12 @@ fn a_run_goes_from_the_menu_through_combat_the_bonus_and_the_door_to_room_two() 
         Some(0),
         "clearing the room alone leaves the door locked"
     );
+    game.app.update();
+    assert_eq!(
+        counter(&mut game),
+        "1 / 100 rooms",
+        "clearing it bumps the count"
+    );
     game.take_bonus();
     let offers = game.session().offered_bonuses.clone();
     assert_eq!(offers.len(), 3);
@@ -69,7 +86,11 @@ fn a_run_goes_from_the_menu_through_combat_the_bonus_and_the_door_to_room_two() 
     );
     game.wait_for_screen(GameScreen::RoomIntro, 5.0);
     game.wait_for_screen(GameScreen::Playing, 10.0);
-    assert_eq!(game.session().room_id, 2);
+    // The rooms of a chapter after its first are played in an order drawn
+    // for the run.
+    let second = game.session().room_order[2];
+    assert_eq!(game.session().room_id, second);
+    assert_eq!(counter(&mut game), "1 / 100 rooms");
     assert_eq!(
         game.session().owned_bonuses,
         [carried, offers[2..].to_vec()].concat(),
@@ -79,12 +100,16 @@ fn a_run_goes_from_the_menu_through_combat_the_bonus_and_the_door_to_room_two() 
         game.session().health >= health,
         "health carries over between rooms"
     );
-    let roster = game.data().rooms[&2]
+    let roster = game.data().rooms[&second]
         .enemy_spawns
         .iter()
         .filter(|spawn| spawn.wave == 0)
         .count();
-    assert_eq!(game.enemies().len(), roster, "room 2's first wave spawns");
+    assert_eq!(
+        game.enemies().len(),
+        roster,
+        "the second room's first wave spawns"
+    );
 }
 
 #[test]

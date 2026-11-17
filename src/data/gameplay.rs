@@ -389,6 +389,8 @@ pub struct RoomFlowConfig {
     pub bonus_pickup: BonusPickupConfig,
     pub interact: InteractConfig,
     pub bonus_rerolls_per_run: u8,
+    /// The places of a chapter (1 to 10) whose room is never shuffled.
+    pub fixed_room_places: Vec<u16>,
 }
 
 /// The words the city is entered on, between the opening room and room 1.

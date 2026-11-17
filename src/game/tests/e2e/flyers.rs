@@ -17,7 +17,6 @@ enemy_spawns:
 {enemies}
 bonus: {{ x_h: 20, y_h: 1 }}
 exit: {{ x_h: 22, y_h: 1 }}
-next_room_id: 2
 "
     ))
     .expect("the hall should parse")

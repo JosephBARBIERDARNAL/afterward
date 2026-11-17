@@ -21,7 +21,7 @@ pub(super) fn update_screen_text(
         GameScreen::Transitioning | GameScreen::TransitioningOut => data
             .rooms
             .get(&session.room_id)
-            .filter(|room| data.rooms.contains_key(&room.next_room_id))
+            .filter(|_| data.rooms.contains_key(&session.next_room_id()))
             .map_or_else(|| String::from("CHAPTER ONE COMPLETE"), |_| String::new()),
         // Menus are drawn as cards by `menus::update_menu`.
         GameScreen::MainMenu
@@ -330,6 +330,7 @@ pub(super) fn reset_run(
         rerolls: data.gameplay.room_flow.bonus_rerolls_per_run,
         ..default()
     };
+    session.draw_room_order(data, random);
     session.grant_starting_bonuses(data, random);
     GameScreen::RoomIntro
 }

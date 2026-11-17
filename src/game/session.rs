@@ -1,6 +1,7 @@
 //! The current run: room, health, and the bonus build.
 
 use super::*;
+use crate::data::RoomConfig;
 
 /// How hard a run was asked to be. Nothing reads it yet: the choice is made
 /// before the run opens, remembered for the next one, and changes nothing.
@@ -48,6 +49,9 @@ pub(crate) struct Playtest {
     /// How many bonuses, drawn at random, a run opens with: every one of
     /// them when there are no more than that.
     pub(crate) starting_bonuses: usize,
+    /// The rooms follow one another by their ids rather than in an order
+    /// shuffled for the run: what a walkthrough of a stretch of rooms needs.
+    pub(crate) authored_order: bool,
 }
 
 /// A bonus at the rarity it was drawn at: one offered on the bonus screen,
@@ -70,6 +74,9 @@ impl BonusPick {
 #[derive(Resource, Debug)]
 pub(crate) struct RunSession {
     pub(crate) room_id: u16,
+    /// The run's rooms in the order they are played, room 0 first, drawn as
+    /// the run starts (`draw_room_order`). Left empty, rooms follow their ids.
+    pub(crate) room_order: Vec<u16>,
     pub(crate) playtest: Playtest,
     /// What the player asked for on the difficulty screen; it outlives a run,
     /// so the next one opens on the same choice.
@@ -109,6 +116,74 @@ pub(crate) struct RunSession {
 }
 
 impl RunSession {
+    /// Where the room being played stands in the run, room 0 being place 0.
+    pub(crate) fn room_place(&self) -> u16 {
+        self.room_order
+            .iter()
+            .position(|id| *id == self.room_id)
+            .map_or(self.room_id, |place| place as u16)
+    }
+
+    /// The room the door of the one being played leads into: one past the
+    /// last room of the run leads out of it.
+    pub(crate) fn next_room_id(&self) -> u16 {
+        let next = self.room_place() + 1;
+        self.room_order
+            .get(usize::from(next))
+            .copied()
+            .unwrap_or(next)
+    }
+
+    /// How many rooms of the run (room 0 aside) are behind the player: those
+    /// before the room being played, and that one once it is cleared.
+    pub(crate) fn rooms_cleared(&self) -> u16 {
+        let place = self.room_place();
+        place.saturating_sub(1) + u16::from(self.room_cleared && place > 0)
+    }
+
+    /// Draws the order the run plays its rooms in: room 0, then each chapter
+    /// with its rooms at `fixed_room_places` where they are and the others
+    /// shuffled among themselves. A run started further in (`--room 7`, the
+    /// editor's playtest) has its start room at that room's own place, so it
+    /// goes on from there as a run reaching it would.
+    pub(crate) fn draw_room_order(&mut self, data: &GameData, random: &mut RandomState) {
+        let chapter_rooms = RoomConfig::CHAPTER_ROOMS;
+        let fixed = |id: u16| {
+            id == 0
+                || self.playtest.authored_order
+                || data
+                    .gameplay
+                    .room_flow
+                    .fixed_room_places
+                    .contains(&((id - 1) % chapter_rooms + 1))
+        };
+        let chapter = |id: u16| id.saturating_sub(1) / chapter_rooms;
+        let ids = data.rooms.keys().copied().collect::<Vec<_>>();
+        let mut order = Vec::with_capacity(ids.len());
+        for id in &ids {
+            let next = if fixed(*id) {
+                *id
+            } else {
+                let left = ids
+                    .iter()
+                    .copied()
+                    .filter(|other| {
+                        chapter(*other) == chapter(*id) && !fixed(*other) && !order.contains(other)
+                    })
+                    .collect::<Vec<_>>();
+                left[random.index(left.len())]
+            };
+            order.push(next);
+        }
+        if let (Some(at), Some(own)) = (
+            order.iter().position(|id| *id == self.room_id),
+            ids.iter().position(|id| *id == self.room_id),
+        ) {
+            order.swap(at, own);
+        }
+        self.room_order = order;
+    }
+
     pub(crate) fn has_bonus(&self, id: &str) -> bool {
         self.owned_bonuses.iter().any(|owned| owned.id == id)
     }
@@ -275,6 +350,7 @@ impl Default for RunSession {
     fn default() -> Self {
         Self {
             room_id: 0,
+            room_order: Vec::new(),
             playtest: Playtest::default(),
             difficulty: Difficulty::default(),
             health: 100.0,
@@ -354,5 +430,47 @@ mod tests {
             None,
             "a keystone counting every bonus works with any build"
         );
+    }
+
+    #[test]
+    fn a_run_shuffles_each_chapter_but_its_fixed_rooms() {
+        let data = GameData::load(&Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets"))
+            .expect("the game data should be valid");
+        let mut random = RandomState(987);
+        let mut moved = false;
+        for start in [0, 7] {
+            let mut session = RunSession {
+                room_id: start,
+                ..default()
+            };
+            session.draw_room_order(&data, &mut random);
+            let order = &session.room_order;
+            let mut sorted = order.clone();
+            sorted.sort_unstable();
+            assert_eq!(
+                sorted,
+                data.rooms.keys().copied().collect::<Vec<_>>(),
+                "every room is played once"
+            );
+            assert_eq!(
+                session.room_place(),
+                start,
+                "a run opens on its start room's own place"
+            );
+            for (place, id) in order.iter().enumerate() {
+                let place = place as u16;
+                let in_chapter = (place.max(1) - 1) % RoomConfig::CHAPTER_ROOMS + 1;
+                if place == 0 || [1, 5, 10].contains(&in_chapter) {
+                    assert_eq!(*id, place, "room {place} stays where it is");
+                }
+                assert_eq!(
+                    id.max(&1).saturating_sub(1) / RoomConfig::CHAPTER_ROOMS,
+                    place.max(1).saturating_sub(1) / RoomConfig::CHAPTER_ROOMS,
+                    "a room is only shuffled within its chapter"
+                );
+                moved |= *id != place;
+            }
+        }
+        assert!(moved, "some room is shuffled");
     }
 }

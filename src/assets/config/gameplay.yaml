@@ -282,6 +282,10 @@ room_flow:
     prompt_key_px: 34
     prompt_margin_px: 36
   bonus_rerolls_per_run: 3
+  # A run plays each chapter's ten rooms in an order drawn as it starts: the
+  # rooms at these places of a chapter (its first, its middle and its boss)
+  # stay where they are, and the others are shuffled among themselves.
+  fixed_room_places: [1, 5, 10]
 
 # The words the city is entered on, typed out over the water between the
 # opening room and room 1. `characters_per_s` is how fast they are written and

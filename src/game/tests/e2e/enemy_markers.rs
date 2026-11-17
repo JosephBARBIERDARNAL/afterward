@@ -16,7 +16,6 @@ enemy_spawns:
   - { type_id: rifle_unit, position_h: { x: 44, y: 1 } }
 bonus: { x_h: 40, y_h: 1 }
 exit: { x_h: 46, y_h: 1 }
-next_room_id: 2
 ";
 
 #[test]

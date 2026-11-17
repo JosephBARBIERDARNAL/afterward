@@ -36,7 +36,6 @@ enemy_spawns:
   - {{ type_id: {monster}, position_h: {{ x: 17, y: 1 }} }}
 bonus: {{ x_h: 43, y_h: 1 }}
 exit: {{ x_h: 45, y_h: 1 }}
-next_room_id: 2
 "
         ))
         .expect("the test layout should parse");

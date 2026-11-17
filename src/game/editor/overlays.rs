@@ -180,7 +180,6 @@ platforms:
 enemy_spawns: []
 bonus: { x_h: 43, y_h: 1 }
 exit: { x_h: 45, y_h: 1 }
-next_room_id: 4
 ",
         )
         .expect("the test layout should parse");

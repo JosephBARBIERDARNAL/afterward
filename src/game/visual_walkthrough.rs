@@ -120,8 +120,12 @@ struct VisualWalkthroughResources<'w, 's> {
 
 fn initialize_visual_walkthrough(
     walkthrough: Res<VisualWalkthrough>,
+    mut session: ResMut<RunSession>,
     mut windows: Query<&mut Window, With<PrimaryWindow>>,
 ) {
+    // A stretch of rooms is walked in the order of their ids, not in the
+    // order a run would shuffle them into.
+    session.playtest.authored_order = true;
     if let Err(error) = fs::create_dir_all(&walkthrough.output_dir) {
         error!(
             "Could not create visual walkthrough output directory {}: {error}",

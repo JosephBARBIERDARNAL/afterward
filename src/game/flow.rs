@@ -349,7 +349,7 @@ pub(super) fn update_room_transition(
     if !timer.0.is_finished() {
         return;
     }
-    let next_room_id = data.rooms[&session.room_id].next_room_id;
+    let next_room_id = session.next_room_id();
     if !data.rooms.contains_key(&next_room_id) {
         timer.0 = Timer::from_seconds(
             data.gameplay.room_flow.room_transition_duration_s / 2.0,

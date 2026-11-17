@@ -46,13 +46,14 @@ pub struct RoomConfig {
     /// Where the room's bonus item lies once every enemy is down.
     pub bonus: SpawnPosition,
     pub exit: SpawnPosition,
-    pub next_room_id: u16,
 }
 
 impl RoomConfig {
     /// The last room of a run: ten chapters of ten rooms after the opening
     /// room 0.
     pub(crate) const LAST_ID: u16 = 100;
+    /// How many rooms a chapter holds, its boss last.
+    pub(crate) const CHAPTER_ROOMS: u16 = 10;
 
     /// Whether the room draws `layer` of its background profile `profile`.
     pub(crate) fn shows_layer(&self, profile: &str, layer: ProfileLayer) -> bool {

@@ -27,7 +27,6 @@ enemy_spawns:
   - { type_id: blade_unit, position_h: { x: 8, y: 1 } }
 bonus: { x_h: 43, y_h: 1 }
 exit: { x_h: 45, y_h: 1 }
-next_room_id: 4
 ",
     )
     .expect("the test layout should parse");
@@ -139,7 +138,6 @@ enemy_spawns:
   - { type_id: black_knight, position_h: { x: 18, y: 1 } }
 bonus: { x_h: 44, y_h: 1 }
 exit: { x_h: 46, y_h: 1 }
-next_room_id: 11
 ",
     )
     .expect("the test layout should parse");

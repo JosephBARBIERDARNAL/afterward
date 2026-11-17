@@ -96,7 +96,7 @@ impl Display for RoomConfig {
         writeln!(formatter, "exit:")?;
         writeln!(formatter, "  x_h: {}", self.exit.x_h)?;
         writeln!(formatter, "  y_h: {}", self.exit.y_h)?;
-        writeln!(formatter, "next_room_id: {}", self.next_room_id)
+        Ok(())
     }
 }
 
@@ -375,7 +375,6 @@ platforms:
 enemy_spawns: []
 bonus: { x_h: 20, y_h: 1 }
 exit: { x_h: 22, y_h: 1 }
-next_room_id: 4
 ",
         )
         .expect("a color fill parses");
@@ -408,7 +407,6 @@ platforms:
 enemy_spawns: []
 bonus: { x_h: 20, y_h: 1 }
 exit: { x_h: 22, y_h: 1 }
-next_room_id: 4
 ",
         )
         .expect("a turned platform parses");
@@ -441,7 +439,6 @@ devices:
 enemy_spawns: []
 bonus: { x_h: 20, y_h: 1 }
 exit: { x_h: 22, y_h: 1 }
-next_room_id: 4
 ",
         )
         .expect("a device with some of its values left out parses");
@@ -494,7 +491,6 @@ platforms:
 enemy_spawns: []
 bonus: { x_h: 20, y_h: 1 }
 exit: { x_h: 22, y_h: 1 }
-next_room_id: 4
 ",
         )
         .expect("a faded sky parses");
@@ -536,7 +532,6 @@ props:
 enemy_spawns: []
 bonus: { x_h: 20, y_h: 1 }
 exit: { x_h: 22, y_h: 1 }
-next_room_id: 4
 ",
         )
         .expect("props parse");
@@ -571,7 +566,6 @@ enemy_spawns:
   - { type_id: blade_unit, position_h: { x: 14, y: 1 }, armor_layers: 2 }
 bonus: { x_h: 20, y_h: 1 }
 exit: { x_h: 22, y_h: 1 }
-next_room_id: 4
 ",
         )
         .expect("a spawn facing right parses");
