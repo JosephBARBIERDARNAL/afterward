@@ -36,28 +36,17 @@ fn a_reroll_replaces_every_offer_and_the_keyboard_picks_the_second() {
     let animation_s = game.data().gameplay.room_flow.bonus_reroll_animation_s;
     game.run_seconds(animation_s + 0.1);
     game.tap(KeyCode::ArrowDown);
-    let droplets = |game: &mut HeadlessGame| {
-        game.app
-            .world_mut()
-            .query_filtered::<Entity, With<Ripple>>()
-            .iter(game.app.world())
-            .count()
-    };
-    let walking_there = droplets(&mut game);
+    assert_eq!(game.brackets(), 1, "the brackets snap onto the box reached");
     game.tap(KeyCode::Enter);
-    // The choice holds the screen up for a moment, with a droplet falling on
+    // The choice holds the screen up for a moment, with a spark thrown on
     // the box that was pressed; it goes with the screen.
     assert_eq!(game.screen(), GameScreen::Bonus);
-    assert_eq!(
-        droplets(&mut game),
-        walking_there + 1,
-        "a droplet falls on the chosen bonus"
-    );
+    assert_eq!(game.strikes(), 1, "a spark is thrown on the chosen bonus");
     game.wait_for_screen(GameScreen::Playing, 2.0);
     assert_eq!(
-        droplets(&mut game),
+        game.brackets() + game.strikes(),
         0,
-        "and none is left hanging over the room"
+        "and nothing is left hanging over the room"
     );
     assert_eq!(
         game.session().owned_bonuses.last(),

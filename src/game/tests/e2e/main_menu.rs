@@ -1,26 +1,26 @@
 use super::*;
 
 #[test]
-fn the_flood_shows_only_while_the_main_menu_is_up() {
+fn the_skyline_shows_only_while_the_main_menu_is_up() {
     let mut game = HeadlessGame::new();
     assert_eq!(game.screen(), GameScreen::MainMenu);
 
-    // The water is one quad, laid under wherever the camera stands.
-    let water = |game: &mut HeadlessGame| {
+    // The skyline hangs from one root, laid under wherever the camera stands.
+    let skyline = |game: &mut HeadlessGame| {
         let world = game.app.world_mut();
         world
-            .query_filtered::<(&Visibility, &Transform), With<Flood>>()
+            .query_filtered::<(&Visibility, &Transform), With<Skyline>>()
             .single(world)
             .map(|(visibility, transform)| (*visibility, transform.translation.truncate()))
-            .expect("the menu water is laid at startup")
+            .expect("the skyline is laid at startup")
     };
-    assert_eq!(water(&mut game).0, Visibility::Visible);
+    assert_eq!(skyline(&mut game).0, Visibility::Visible);
 
     game.start_run();
     assert_eq!(
-        water(&mut game).0,
+        skyline(&mut game).0,
         Visibility::Hidden,
-        "the water goes once the run starts"
+        "the skyline goes once the run starts"
     );
 
     game.tap(KeyCode::Escape);
@@ -28,7 +28,7 @@ fn the_flood_shows_only_while_the_main_menu_is_up() {
     game.tap(KeyCode::KeyM);
     assert_eq!(game.screen(), GameScreen::MainMenu);
     game.app.update();
-    let (visibility, place) = water(&mut game);
+    let (visibility, place) = skyline(&mut game);
     assert_eq!(
         visibility,
         Visibility::Visible,
@@ -45,24 +45,24 @@ fn the_flood_shows_only_while_the_main_menu_is_up() {
 }
 
 #[test]
-fn the_main_menu_opens_the_settings_and_comes_back_over_its_water() {
+fn the_main_menu_opens_the_settings_and_comes_back_over_its_skyline() {
     let mut game = HeadlessGame::new();
     assert_eq!(game.screen(), GameScreen::MainMenu);
 
-    let water_shown = |game: &mut HeadlessGame| {
+    let skyline_shown = |game: &mut HeadlessGame| {
         let world = game.app.world_mut();
         *world
-            .query_filtered::<&Visibility, With<Flood>>()
+            .query_filtered::<&Visibility, With<Skyline>>()
             .single(world)
-            .expect("the menu water is laid at startup")
+            .expect("the skyline is laid at startup")
     };
 
     game.tap(KeyCode::KeyS);
     assert_eq!(game.screen(), GameScreen::Settings);
     assert_eq!(
-        water_shown(&mut game),
+        skyline_shown(&mut game),
         Visibility::Visible,
-        "the settings stand over the menu's water"
+        "the settings stand over the menu's skyline"
     );
 
     // The same settings the pause menu opens: the sliders answer to the same
@@ -82,7 +82,7 @@ fn the_main_menu_opens_the_settings_and_comes_back_over_its_water() {
     );
     game.tap(KeyCode::KeyC);
     assert_eq!(game.screen(), GameScreen::Controls);
-    assert_eq!(water_shown(&mut game), Visibility::Visible);
+    assert_eq!(skyline_shown(&mut game), Visibility::Visible);
     game.tap(KeyCode::Escape);
     assert_eq!(game.screen(), GameScreen::Settings);
 
@@ -99,9 +99,9 @@ fn the_main_menu_opens_the_settings_and_comes_back_over_its_water() {
     game.tap(KeyCode::KeyS);
     assert_eq!(game.screen(), GameScreen::Settings);
     assert_eq!(
-        water_shown(&mut game),
+        skyline_shown(&mut game),
         Visibility::Hidden,
-        "over a run there is no menu water"
+        "over a run there is no menu skyline"
     );
     game.tap(KeyCode::Escape);
     assert_eq!(game.screen(), GameScreen::Paused);

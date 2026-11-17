@@ -1,7 +1,7 @@
 use super::*;
 use crate::game::{
     bonus_screen::BonusChoice,
-    ripple::{Splash, Spot},
+    touch::{Spot, Touch},
 };
 
 pub(super) fn room_clear_check(
@@ -88,7 +88,7 @@ pub(super) fn handle_bonus_input(
     choices: Query<(Entity, &BonusChoice)>,
     mut pointer_overs: MessageReader<PointerOver>,
     mut pointer_clicks: MessageReader<PointerClick>,
-    mut splashes: MessageWriter<Splash>,
+    mut touches: MessageWriter<Touch>,
 ) {
     let BonusInputResources {
         time,
@@ -106,7 +106,7 @@ pub(super) fn handle_bonus_input(
             choices
                 .get(over.entity)
                 .ok()
-                .map(|(_, choice)| (*choice, over.pointer.position))
+                .map(|(entity, choice)| (entity, *choice, over.pointer.position))
         })
         .last();
     let clicked = pointer_clicks
@@ -116,10 +116,10 @@ pub(super) fn handle_bonus_input(
             choices
                 .get(click.entity)
                 .ok()
-                .map(|(_, choice)| (*choice, click.pointer.position))
+                .map(|(entity, choice)| (entity, *choice, click.pointer.position))
         })
         .last();
-    // A bonus has been chosen and the screen is only still up for the droplet
+    // A bonus has been chosen and the screen is only still up for the spark
     // to land on the box that was pressed; nothing else is listened to.
     if session.bonus_chosen_hold_remaining_s > 0.0 {
         session.bonus_chosen_hold_remaining_s =
@@ -141,8 +141,8 @@ pub(super) fn handle_bonus_input(
 
     let can_reroll = reroll_available(&session, &data);
     let previous_choice = session.selected_choice;
-    if let Some((choice, _)) =
-        hovered.filter(|(choice, _)| *choice != BonusChoice::Reroll || can_reroll)
+    if let Some((_, choice, _)) =
+        hovered.filter(|(_, choice, _)| *choice != BonusChoice::Reroll || can_reroll)
     {
         session.selected_choice = choice;
     } else if controls.just_pressed(GameAction::NavigateUp, &keys) {
@@ -153,34 +153,29 @@ pub(super) fn handle_bonus_input(
     if session.selected_choice != previous_choice {
         sounds.push(SoundCue::UiMove);
     }
-    // A droplet falls on the box touched: where the mouse landed on it, or in
-    // its middle when an arrow walked there.
-    let moved = session.selected_choice != previous_choice;
-    if let Some((_, at)) = clicked.or_else(|| hovered.filter(|_| moved)) {
-        splashes.write(Splash(Spot::Pointer(at)));
-    } else if moved {
-        splashes.write_batch(
+    // The brackets snap onto the box the focus reached.
+    if session.selected_choice != previous_choice {
+        touches.write_batch(
             choices
                 .iter()
                 .find(|(_, choice)| **choice == session.selected_choice)
-                .map(|(entity, _)| Splash(Spot::Middle(entity))),
+                .map(|(entity, _)| Touch::Lock(entity)),
         );
     }
 
-    // Pressing a box drops a droplet on it too: a click already dropped one
-    // exactly where it landed, so this is the one a key press owes the box.
-    let mut droplet_on = |choice: BonusChoice| {
-        if clicked.is_none() {
-            splashes.write_batch(
-                choices
-                    .iter()
-                    .find(|(_, pressed)| **pressed == choice)
-                    .map(|(entity, _)| Splash(Spot::Middle(entity))),
-            );
-        }
+    // Pressing a box throws a spark on it: where the click landed, or in its
+    // middle for a key.
+    let mut strike = |choice: BonusChoice| {
+        let spot = clicked.map(|(_, _, at)| Spot::Pointer(at)).or_else(|| {
+            choices
+                .iter()
+                .find(|(_, pressed)| **pressed == choice)
+                .map(|(entity, _)| Spot::Middle(entity))
+        });
+        touches.write_batch(spot.map(Touch::Strike));
     };
 
-    let chosen = if let Some((choice, _)) = clicked {
+    let chosen = if let Some((_, choice, _)) = clicked {
         choice
     } else if controls.just_pressed(GameAction::RerollBonus, &keys) {
         BonusChoice::Reroll
@@ -202,7 +197,7 @@ pub(super) fn handle_bonus_input(
             return;
         }
         session.rerolls -= 1;
-        droplet_on(BonusChoice::Reroll);
+        strike(BonusChoice::Reroll);
         sounds.push(SoundCue::BonusRerolled);
         session.offered_bonuses =
             draw_bonus_offers(&data, &session, &mut random, &session.previous_offers);
@@ -236,7 +231,7 @@ pub(super) fn handle_bonus_input(
             }
         }
     }
-    droplet_on(chosen);
+    strike(chosen);
     sounds.push(SoundCue::BonusSelected);
     // The build is worn for a moment: the player comes back into the room
     // wrapped in the glow of what they just took.

@@ -738,6 +738,13 @@ impl GameData {
             }
         }
 
+        let skyline = &self.gameplay.effects.skyline;
+        if !self.backgrounds.profiles.contains_key(&skyline.profile) {
+            return Err(InvalidGameData::from(format!(
+                "the skyline names unknown background profile {}",
+                skyline.profile
+            )));
+        }
         for profile in self.backgrounds.profiles.values() {
             let mut assets = vec![profile.backdrop.as_str()];
             assets.extend(profile.layers.iter().map(|layer| layer.asset.as_str()));

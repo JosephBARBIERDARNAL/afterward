@@ -203,8 +203,8 @@ health_pickup:
 room_flow:
   clear_animation_s: 0.5
   bonus_reroll_animation_s: 0.8
-  # How long the bonus screen stays up after a bonus is chosen, so the droplet
-  # has time to land on the box that was pressed, and the box to flare
+  # How long the bonus screen stays up after a bonus is chosen, so the spark
+  # thrown on the box that was pressed plays out, and the box flares
   # (`effects.bonus_pick`), before the room comes back.
   bonus_chosen_hold_s: 0.6
   boss_intro_duration_s: 0.9
@@ -292,10 +292,10 @@ room_flow:
   # stay where they are, and the others are shuffled among themselves.
   fixed_room_places: [1, 5, 10]
 
-# The words the city is entered on, typed out over the water between the
-# opening room and room 1. `characters_per_s` is how fast they are written and
-# `veil_fade_s` how long the water takes to rise over the room and to drain
-# away again. They stand until the player presses the Enter button under them;
+# The words the city is entered on, typed out over the skyline the main menu
+# stands over (`effects.skyline`), between the opening room and room 1.
+# `characters_per_s` is how fast they are written and `veil_fade_s` how long
+# the skyline takes to rise over the room and to fade away again. They stand until the player presses the Enter button under them;
 # pressing it while they are still being written finishes them at once.
 prologue:
   characters_per_s: 26
@@ -409,37 +409,17 @@ effects:
     speed_color: "#58AD68"
     power_color: "#D74444"
     insight_color: "#E6D772"
-  # The flood the city drowned in, and the water the main menu is drawn over:
-  # a web of cold light wandering over deep wine cells, quantized to a pixel
-  # grid and to the four tones below.
-  flood:
-    # How many water pixels fit in one H; the game's own art is 64 px per H.
-    pixels_per_h: 32
-    # How wide one cell of the web is, in H.
-    cell_h: 2.4
-    # How many turns a cell's point circles in a second, how fast the whole
-    # field drifts across the screen in H per second, and how far a slow wave
-    # bends the borders, in cells.
-    churn: 0.03
-    drift_h_s: 0.07
-    wobble: 0.3
-    # How thick the lit borders of the web are, and the fainter veins crossing
-    # a cell, in cells.
-    web_width: 0.07
-    vein_width: 0.07
-    # How far the ordered dither spreads one tone into the next.
-    dither: 0.1
-    # The four tones, darkest first: the heart of a cell, its body, the lighter
-    # water towards its border, and the lit web itself. Hot in hue and dark in
-    # value, so the flood never competes with the action; the light on it is
-    # cold.
-    depth_color: "#0F0514"
-    cell_color: "#2A0E2B"
-    crest_color: "#4A1F4A"
-    foam_color: "#7FE6E8"
-  # The droplet that falls where a button is hovered, selected with an arrow,
-  # or clicked: the drop goes in, the surface flashes, and rings spread out of
-  # the impact.
+  # The city the main menu, the difficulty, the screen a run ends on and the
+  # prologue stand over: `profile`'s sky and layers, drawn through the same
+  # breathing lights as a room's, panning slowly by as if seen from a moving
+  # train. Each layer slides `drift_h_s` times its own parallax, so the far
+  # towers crawl and the near ones pass.
+  skyline:
+    profile: sci_fi_industrial
+    drift_h_s: 2.5
+    # How far a dark veil over the whole skyline draws it down, so the menus
+    # stand out against it.
+    dim: 0.3
   # The player hidden from the enemies, drawn as liquid glass: a clear body
   # of `fill_color` at `fill_opacity`, edged and glinting in `rim_color`, its
   # rows rippling `ripple_px` art pixels sideways. The sprite comes back
@@ -456,28 +436,24 @@ effects:
   bonus_pick:
     ring_px: 22
     pulse_scale: 1.05
-  ripple:
-    # How far the rings reach from the spot the droplet lands on, in pixels,
-    # and how long the whole splash takes.
-    radius_px: 108
-    duration_s: 0.8
-    # How much of that the droplet spends falling in, before the impact.
-    fall: 0.3
-    # How many water pixels the splash is across, so it reads as pixel art at
-    # any window size.
-    pixels: 68
-    # How thick a ring is, in ripple radii, and how long after one ring the
-    # next is born, as a fraction of the spread.
-    ring_width: 0.07
-    ring_interval: 0.16
-    # How far the ordered dither spreads one tone into the next.
-    dither: 0.08
-    # The two tones, and how much of the card below each one covers. Cold and
-    # bright: the light on the flood, carried onto the menu.
-    crest_color: "#3C93A6"
-    crest_opacity: 0.4
-    foam_color: "#A6F6F2"
-    foam_opacity: 0.72
+  # What touching a button shows: hovering it or reaching it with an arrow
+  # snaps four corner brackets onto it from `snap_px` outside its corners to
+  # `gap_px` outside them over `snap_s`, and they fade out over the last
+  # `fade_s` of `lock_s` (a new touch takes them off the last button at once);
+  # pressing it throws the spark a landed blow throws (`effect_hit_spark`
+  # from frame `strike_first_frame`), `strike_px` across, where the mouse
+  # pressed or in the middle of the button a key pressed.
+  touch:
+    bracket_color: "#88D660"
+    arm_px: 14
+    thickness_px: 3
+    snap_px: 18
+    gap_px: 5
+    snap_s: 0.12
+    lock_s: 0.7
+    fade_s: 0.25
+    strike_px: 128
+    strike_first_frame: 1
 
 # While a wave is being fought, every one of its enemies out of view is
 # pointed at by a ring on the edge of the screen, in its direction, with its

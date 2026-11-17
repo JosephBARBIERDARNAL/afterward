@@ -17,8 +17,9 @@ use crate::game::{
     glossary::Glossary,
     interact::{InteractPrompt, InteractVerb},
     menus::{MenuAction, MenuButton},
-    ripple::Ripple,
-    shaders::{Flood, GlowAttached},
+    shaders::GlowAttached,
+    skyline::Skyline,
+    touch::{Brackets, Strike},
 };
 use bevy::{
     audio::{AudioPlugin, AudioSource},
@@ -292,10 +293,16 @@ impl HeadlessGame {
             .count()
     }
 
-    /// How many droplets are falling over the menus.
-    fn droplets(&mut self) -> usize {
+    /// How many sets of brackets are locked on a button: one at most.
+    fn brackets(&mut self) -> usize {
         let world = self.app.world_mut();
-        world.query::<&Ripple>().iter(world).count()
+        world.query::<&Brackets>().iter(world).count()
+    }
+
+    /// How many sparks a pressed button is throwing.
+    fn strikes(&mut self) -> usize {
+        let world = self.app.world_mut();
+        world.query::<&Strike>().iter(world).count()
     }
 
     /// Presses and releases `code` over two frames.

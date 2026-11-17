@@ -374,8 +374,8 @@ pub struct HealthPickupConfig {
 pub struct RoomFlowConfig {
     pub clear_animation_s: f32,
     pub bonus_reroll_animation_s: f32,
-    /// How long the bonus screen holds after a choice, for the droplet to land
-    /// on the box that was pressed.
+    /// How long the bonus screen holds after a choice, for the box that was
+    /// pressed to flare.
     pub bonus_chosen_hold_s: f32,
     pub boss_intro_duration_s: f32,
     pub room_transition_duration_s: f32,
@@ -400,7 +400,7 @@ pub struct RoomFlowConfig {
 pub struct PrologueConfig {
     /// How fast the text is written out.
     pub characters_per_s: f32,
-    /// How long the water takes to rise over the room, and to drain away.
+    /// How long the skyline takes to rise over the room, and to fade away.
     pub veil_fade_s: f32,
     /// The typing heard while the words are written.
     pub typing_sound: AudioAsset,
@@ -408,14 +408,15 @@ pub struct PrologueConfig {
     pub lines: Vec<String>,
 }
 
-/// What the shaders in `src/game/shaders/` and `src/game/ripple.rs` are tuned
-/// with.
+/// What the shaders in `src/game/shaders/`, the skyline behind the menus
+/// (`src/game/skyline.rs`) and a touched button (`src/game/touch.rs`) are
+/// tuned with.
 #[derive(Debug, Deserialize)]
 pub struct EffectsConfig {
     pub city_lights: CityLightsConfig,
     pub glow: GlowConfig,
-    pub flood: FloodConfig,
-    pub ripple: RippleConfig,
+    pub skyline: SkylineConfig,
+    pub touch: TouchConfig,
     pub bonus_pick: BonusPickConfig,
     pub hazard: HazardLookConfig,
     pub bolt: BoltLookConfig,
@@ -504,29 +505,27 @@ pub struct BonusPickConfig {
     pub pulse_scale: f32,
 }
 
-/// The droplet that falls where a button is hovered, selected with an arrow,
-/// or clicked.
+/// What touching a button shows: corner brackets snapping onto one hovered or
+/// reached with an arrow, and a blow's spark where one is pressed.
 #[derive(Debug, Deserialize)]
-pub struct RippleConfig {
-    /// How far the rings reach from the spot the droplet lands on, in pixels,
-    /// and how long the whole splash takes.
-    pub radius_px: f32,
-    pub duration_s: f32,
-    /// How much of that run the droplet spends falling in, before the impact.
-    pub fall: f32,
-    /// How many water pixels the splash is across.
-    pub pixels: f32,
-    /// How thick a ring is, in ripple radii, and how long after one ring the
-    /// next is born, as a fraction of the spread.
-    pub ring_width: f32,
-    pub ring_interval: f32,
-    /// How far the ordered dither spreads one tone into the next.
-    pub dither: f32,
-    /// The two tones, and how much of the card below each one covers.
-    pub crest_color: HexColor,
-    pub crest_opacity: f32,
-    pub foam_color: HexColor,
-    pub foam_opacity: f32,
+pub struct TouchConfig {
+    /// The brackets' colour, how long each arm is and how thick, in pixels.
+    pub bracket_color: HexColor,
+    pub arm_px: f32,
+    pub thickness_px: f32,
+    /// How far outside the button's corners they start and where they come
+    /// to rest, in pixels, and how long the snap takes.
+    pub snap_px: f32,
+    pub gap_px: f32,
+    pub snap_s: f32,
+    /// How long they stay on the button, and the last stretch of that over
+    /// which they fade out.
+    pub lock_s: f32,
+    pub fade_s: f32,
+    /// How wide the spark of a press is drawn, in pixels, and the frame of
+    /// `effect_hit_spark` it starts on.
+    pub strike_px: f32,
+    pub strike_first_frame: usize,
 }
 
 /// The breathing lit windows and stars of the background layers.
@@ -544,32 +543,17 @@ pub struct CityLightsConfig {
     pub period_s: f32,
 }
 
-/// The flood: the water the city drowned in, and the water the main menu
-/// is drawn over.
+/// The city the screens standing over no room are drawn over, and the
+/// prologue writes its words over.
 #[derive(Debug, Deserialize)]
-pub struct FloodConfig {
-    /// How many water pixels fit in one H.
-    pub pixels_per_h: f32,
-    /// How wide one cell of the web is, in H.
-    pub cell_h: f32,
-    /// How many turns a cell's point circles in a second, how fast the whole
-    /// field drifts across the screen in H per second, and how far a slow wave
-    /// bends the borders, in cells.
-    pub churn: f32,
+pub struct SkylineConfig {
+    /// The background profile it is drawn from.
+    pub profile: String,
+    /// How fast it pans by, in H per second: each layer slides that times its
+    /// own parallax.
     pub drift_h_s: f32,
-    pub wobble: f32,
-    /// How thick the lit borders of the web are, and the fainter veins
-    /// crossing a cell, in cells.
-    pub web_width: f32,
-    pub vein_width: f32,
-    /// How far the ordered dither spreads one tone into the next.
-    pub dither: f32,
-    /// The four tones, darkest first: the heart of a cell, its body, the
-    /// lighter water towards its border, and the lit web itself.
-    pub depth_color: HexColor,
-    pub cell_color: HexColor,
-    pub crest_color: HexColor,
-    pub foam_color: HexColor,
+    /// How opaque the dark veil drawn over it is.
+    pub dim: f32,
 }
 
 /// The pool of light behind anything the player should walk towards.

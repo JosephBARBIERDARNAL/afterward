@@ -66,7 +66,7 @@ fn a_run_goes_from_the_menu_through_combat_the_bonus_and_the_door_to_room_two() 
 
     let carried = game.session().owned_bonuses.clone();
     game.tap(KeyCode::Digit3);
-    // The screen holds for the droplet to land on the box that was pressed
+    // The screen holds for the spark thrown on the box that was pressed
     // before it hands the room back.
     assert_eq!(game.screen(), GameScreen::Bonus);
     game.wait_for_screen(GameScreen::Playing, 2.0);

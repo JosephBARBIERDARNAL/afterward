@@ -5,11 +5,12 @@
 //! `screens::handle_screen_input` performs alongside the letter shortcuts, so
 //! a click and a shortcut reach exactly the same code.
 //!
-//! Every move of the focus drops a droplet on the button reached: where the
-//! mouse touched it, or in its middle when an arrow walked there.
+//! Every move of the focus snaps brackets onto the button reached, and every
+//! press throws a spark on the button pressed: where the mouse clicked, or in
+//! its middle when a key pressed it.
 
 use super::*;
-use crate::game::ripple::{Splash, Spot, UiPointer};
+use crate::game::touch::{Spot, Touch, UiPointer};
 
 /// A menu button the player pressed.
 #[derive(Message, Clone, Copy)]
@@ -47,7 +48,7 @@ pub(in crate::game) fn navigate_menus(
     input: MenuInput,
     mut pointer_overs: MessageReader<PointerOver>,
     mut pointer_clicks: MessageReader<PointerClick>,
-    mut splashes: MessageWriter<Splash>,
+    mut touches: MessageWriter<Touch>,
     mut presses: MessageWriter<MenuPressed>,
 ) {
     let MenuInput {
@@ -80,7 +81,12 @@ pub(in crate::game) fn navigate_menus(
         return;
     }
 
-    let aimed_at = |entity, at| buttons.get(entity).ok().map(|(_, button)| (*button, at));
+    let aimed_at = |entity, at| {
+        buttons
+            .get(entity)
+            .ok()
+            .map(|(entity, button)| (entity, *button, at))
+    };
     let pointed_at = pointer_overs
         .read()
         .filter_map(|over| aimed_at(over.entity, over.pointer.position))
@@ -90,37 +96,40 @@ pub(in crate::game) fn navigate_menus(
         .filter(|click| click.button == PointerButton::Primary)
         .filter_map(|click| aimed_at(click.entity, click.pointer.position))
         .last();
-    let middle_of = |index: usize| {
+    let button_at = |index: usize| {
         buttons
             .iter()
             .find(|(_, button)| button.index == index)
-            .map(|(entity, _)| Splash(Spot::Middle(entity)))
+            .map(|(entity, _)| entity)
     };
 
-    // Pointing at a button walks the focus straight to it, and a droplet falls
-    // exactly where the mouse touched. Only a button the pointer newly reached
-    // splashes, so resting on one does not splash over and over — a click
-    // always does, even on the button already under the pointer.
-    if let Some((button, at)) = pointed_at.filter(|(button, _)| button.index != standing_on) {
+    // Pointing at a button walks the focus straight to it, and the brackets
+    // snap onto it. Only a button the pointer newly reached is locked onto, so
+    // resting on one does not snap over and over.
+    if let Some((entity, button, _)) =
+        pointed_at.filter(|(_, button, _)| button.index != standing_on)
+    {
         focus.point_at(button.index);
         sounds.push(SoundCue::UiMove);
-        if clicked.is_none() {
-            splashes.write(Splash(Spot::Pointer(at)));
-        }
+        touches.write(Touch::Lock(entity));
     }
-    if let Some((button, at)) = clicked {
+    // A click throws its spark where it landed, even on the button already
+    // under the pointer.
+    if let Some((entity, button, at)) = clicked {
+        if button.index != focus.index {
+            touches.write(Touch::Lock(entity));
+        }
         focus.point_at(button.index);
-        splashes.write(Splash(Spot::Pointer(at)));
+        touches.write(Touch::Strike(Spot::Pointer(at)));
     }
 
-    // The arrows walk the list, and the droplet falls in the middle of the
-    // button they reach.
+    // The arrows walk the list, and the brackets follow them.
     let step = isize::from(controls.just_pressed(GameAction::NavigateDown, &keys))
         - isize::from(controls.just_pressed(GameAction::NavigateUp, &keys));
     if step != 0 {
         focus.walk(step, actions.len());
         sounds.push(SoundCue::UiMove);
-        splashes.write_batch(middle_of(focus.index));
+        touches.write_batch(button_at(focus.index).map(Touch::Lock));
     }
     let standing_on = focus.index;
 
@@ -146,7 +155,7 @@ pub(in crate::game) fn navigate_menus(
     // A click presses the button it landed on, and a click inside a volume bar
     // also says where along it to set that volume. The confirm key presses the
     // button the focus is standing on, which is what its badge promises.
-    let pressed = if let Some((button, at)) = clicked {
+    let pressed = if let Some((_, button, at)) = clicked {
         Some(MenuPressed {
             action: button.action,
             along_bar: match button.action {
@@ -165,7 +174,8 @@ pub(in crate::game) fn navigate_menus(
     } else if controls.just_pressed(GameAction::Interact, &keys)
         || controls.just_pressed(GameAction::Confirm, &keys)
     {
-        splashes.write_batch(middle_of(standing_on));
+        touches
+            .write_batch(button_at(standing_on).map(|entity| Touch::Strike(Spot::Middle(entity))));
         actions.get(standing_on).map(|action| MenuPressed {
             action: *action,
             along_bar: None,

@@ -33,7 +33,7 @@ impl AudioMix {
                 | GameScreen::ConfirmLeave
                 | GameScreen::Settings
                 | GameScreen::Controls
-        ) && !settings_return.over_the_flood(screen);
+        ) && !settings_return.over_the_skyline(screen);
         Self {
             music: match screen {
                 _ if over_a_paused_run => audio.paused_music_volume_multiplier,

@@ -39,7 +39,6 @@ mod pause_blur;
 mod player;
 mod prologue;
 mod random;
-mod ripple;
 mod room_art;
 mod room_intro;
 mod room_pan;
@@ -48,8 +47,10 @@ mod screens;
 mod session;
 mod settings;
 mod shaders;
+mod skyline;
 mod sprites;
 mod tells;
+mod touch;
 mod ui_style;
 mod visual_walkthrough;
 mod world;
@@ -156,7 +157,7 @@ impl Plugin for GamePlugin {
             shaders::ShaderPlugin,
             devices::DevicesPlugin,
         ))
-        .add_plugins(ripple::RipplePlugin)
+        .add_plugins(touch::TouchPlugin)
         .register_asset_loader(audio::MusicStreamLoader)
         .init_state::<GameScreen>()
         .insert_resource(RunSession {
@@ -200,6 +201,7 @@ impl Plugin for GamePlugin {
                 build_window::spawn_build_window,
                 menus::spawn_menu,
                 prologue::spawn_prologue_text,
+                skyline::spawn_the_skyline.after(shaders::initialize_shaded_quads),
                 assets::load_sprites,
                 colorways::paint_colorways,
                 settings::initialize_settings,
@@ -331,7 +333,7 @@ impl Plugin for GamePlugin {
                 shaders::dress_the_hidden_player.after(player::update_player),
                 shaders::attach_glows,
                 interact::show_the_interact_prompt,
-                shaders::show_the_flood,
+                (skyline::show_the_skyline, skyline::slide_the_skyline),
             ),
         )
         .add_systems(
@@ -505,7 +507,7 @@ enum GameScreen {
     Build,
     BossIntro,
     Transitioning,
-    /// The words the city is entered on, written over the water.
+    /// The words the city is entered on, written over the skyline.
     Prologue,
     RoomLoading,
     /// The camera sliding out of one room and into the next.

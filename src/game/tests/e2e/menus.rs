@@ -1,5 +1,5 @@
 //! Walking the menus and pressing their buttons, with the keyboard and with
-//! the mouse, and the droplet that falls on whatever was touched.
+//! the mouse, and the brackets and sparks that show whatever was touched.
 
 use super::*;
 
@@ -64,33 +64,32 @@ fn the_mouse_points_at_a_button_and_a_click_presses_it() {
 }
 
 #[test]
-fn a_droplet_falls_on_every_button_touched_and_dries_up_after_it() {
+fn brackets_lock_onto_the_button_reached_and_a_press_throws_a_spark() {
     let mut game = HeadlessGame::new();
-    assert_eq!(game.droplets(), 0, "an untouched menu is still water");
+    assert_eq!(game.brackets(), 0, "an untouched menu shows nothing");
 
-    // An arrow onto another button drops one, and so does the confirm key on
-    // the button it reaches.
+    // An arrow onto another button locks onto it, and the next one moves the
+    // brackets there rather than adding a second set.
     game.tap(KeyCode::ArrowDown);
-    assert_eq!(game.droplets(), 1);
+    assert_eq!(game.brackets(), 1);
     game.tap(KeyCode::ArrowDown);
-    assert_eq!(game.droplets(), 2);
+    assert_eq!(game.brackets(), 1, "the brackets move rather than stack");
 
-    // Pointing at a button the mouse is already on does not splash again.
+    // Pointing at a new button locks onto it the same way, and a click on
+    // one throws a spark too.
     let quit = game.menu_button(MenuAction::Quit);
     game.point_mouse_at(quit, Vec2::new(420.0, 460.0));
-    let after_pointing = game.droplets();
-    assert!(after_pointing > 2, "reaching a new button splashes");
-    game.point_mouse_at(quit, Vec2::new(420.0, 460.0));
-    assert_eq!(
-        game.droplets(),
-        after_pointing,
-        "resting on the same button does not"
-    );
+    assert_eq!(game.brackets(), 1);
+    assert_eq!(game.strikes(), 0, "pointing is not pressing");
+    let settings = game.menu_button(MenuAction::OpenSettings);
+    game.click_mouse_on(settings, Vec2::new(420.0, 300.0));
+    assert_eq!(game.screen(), GameScreen::Settings);
+    assert_eq!(game.strikes(), 1, "a click throws a spark");
 
-    // They all dry up once they have played out.
-    let ripple = &game.data().gameplay.effects.ripple;
-    game.run_seconds(ripple.duration_s + 0.2);
-    assert_eq!(game.droplets(), 0);
+    // Both go once they have played out.
+    let lock_s = game.data().gameplay.effects.touch.lock_s;
+    game.run_seconds(lock_s + 0.2);
+    assert_eq!(game.brackets() + game.strikes(), 0);
 }
 
 #[test]

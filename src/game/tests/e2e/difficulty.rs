@@ -3,23 +3,23 @@
 use super::*;
 
 #[test]
-fn begin_asks_for_a_difficulty_over_the_water_and_opens_on_the_one_already_chosen() {
+fn begin_asks_for_a_difficulty_over_the_skyline_and_opens_on_the_one_already_chosen() {
     let mut game = HeadlessGame::new();
-    let water_shown = |game: &mut HeadlessGame| {
+    let skyline_shown = |game: &mut HeadlessGame| {
         let world = game.app.world_mut();
         *world
-            .query_filtered::<&Visibility, With<Flood>>()
+            .query_filtered::<&Visibility, With<Skyline>>()
             .single(world)
-            .expect("the menu water is laid at startup")
+            .expect("the skyline is laid at startup")
     };
 
     // Begin asks rather than starting: no run has opened yet.
     game.tap(KeyCode::Enter);
     assert_eq!(game.screen(), GameScreen::Difficulty);
     assert_eq!(
-        water_shown(&mut game),
+        skyline_shown(&mut game),
         Visibility::Visible,
-        "the question stands over the same water as the menu"
+        "the question stands over the same skyline as the menu"
     );
 
     // Escape goes back to the menu, with nothing chosen and nothing begun.

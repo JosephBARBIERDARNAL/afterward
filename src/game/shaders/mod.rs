@@ -1,6 +1,6 @@
 //! The game's 2D material shaders, drawn on `Mesh2d` quads: the background
-//! layers' breathing city lights, the aura a `Glowing` thing wears, and the
-//! flood the main menu is drawn over. The full-screen pass that muffles the
+//! layers' breathing city lights, the aura a `Glowing` thing wears, fire,
+//! shots, and the hidden player's glass. The full-screen pass that muffles the
 //! view behind a menu lives in `pause_blur.rs`.
 
 use super::*;
@@ -13,16 +13,12 @@ use bevy::{
 mod bolt;
 mod city_lights;
 mod fire;
-mod flood;
 mod glass;
 mod glow;
 
 pub(super) use bolt::Bolt;
 pub(super) use city_lights::CityLightsMaterial;
 pub(super) use fire::Flame;
-#[cfg(test)]
-pub(super) use flood::Flood;
-pub(super) use flood::show_the_flood;
 pub(super) use glass::dress_the_hidden_player;
 #[cfg(test)]
 pub(super) use glow::GlowAttached;
@@ -35,15 +31,11 @@ impl Plugin for ShaderPlugin {
         app.add_plugins((
             Material2dPlugin::<CityLightsMaterial>::default(),
             Material2dPlugin::<glow::GlowMaterial>::default(),
-            Material2dPlugin::<flood::FloodMaterial>::default(),
             Material2dPlugin::<fire::FireMaterial>::default(),
             Material2dPlugin::<bolt::BoltMaterial>::default(),
             Material2dPlugin::<glass::GlassMaterial>::default(),
         ))
-        .add_systems(
-            Startup,
-            (initialize_shaded_quads, flood::spawn_the_flood).chain(),
-        )
+        .add_systems(Startup, initialize_shaded_quads)
         .add_systems(
             Update,
             (
@@ -60,7 +52,7 @@ impl Plugin for ShaderPlugin {
 #[derive(Resource)]
 pub(super) struct ShadedQuad(pub(super) Handle<Mesh>);
 
-fn initialize_shaded_quads(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
+pub(super) fn initialize_shaded_quads(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
     commands.insert_resource(ShadedQuad(meshes.add(Rectangle::new(1.0, 1.0))));
 }
 
@@ -70,7 +62,6 @@ pub(super) struct ShaderAssets<'w> {
     pub(super) quad: Res<'w, ShadedQuad>,
     pub(super) city_lights: ResMut<'w, Assets<CityLightsMaterial>>,
     glows: ResMut<'w, Assets<glow::GlowMaterial>>,
-    flood: ResMut<'w, Assets<flood::FloodMaterial>>,
     fires: ResMut<'w, Assets<fire::FireMaterial>>,
     bolts: ResMut<'w, Assets<bolt::BoltMaterial>>,
     glasses: ResMut<'w, Assets<glass::GlassMaterial>>,
@@ -81,19 +72,15 @@ mod tests {
     use super::*;
     use std::path::Path;
 
-    /// The ripple is a UI material rather than a 2D one, and lives beside this
-    /// module, but it is a material all the same and answers to the same check.
     #[test]
     fn every_material_points_at_a_shader_that_is_there() {
         let asset_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/assets");
         for path in [
             city_lights::SHADER_PATH,
-            flood::SHADER_PATH,
             glow::SHADER_PATH,
             fire::SHADER_PATH,
             bolt::SHADER_PATH,
             glass::SHADER_PATH,
-            crate::game::ripple::SHADER_PATH,
         ] {
             assert!(
                 asset_root.join(path).is_file(),

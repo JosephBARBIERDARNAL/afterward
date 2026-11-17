@@ -5,7 +5,7 @@ use crate::game::{
 };
 
 /// The door out of the opening room leads through the words the city is
-/// entered on: the water rises over the room, the lines are written out with
+/// entered on: the skyline rises over the room, the lines are written out with
 /// the typing heard under them, and they stand until the player presses the
 /// button that walks in.
 #[test]
@@ -23,9 +23,9 @@ fn the_city_is_spoken_for_before_the_run_walks_into_it() {
     let lines = game.data().gameplay.prologue.lines.join("\n\n");
     game.run_seconds(game.data().gameplay.prologue.veil_fade_s + 0.5);
     assert_eq!(
-        game.water_shown(),
+        game.skyline_shown(),
         Visibility::Visible,
-        "the words are written over the water"
+        "the words are written over the skyline"
     );
     assert!(
         game.app.world().resource::<Prologue>().veil > 0.9,
@@ -72,9 +72,9 @@ fn the_city_is_spoken_for_before_the_run_walks_into_it() {
     game.wait_for_screen(GameScreen::Playing, 15.0);
     assert_eq!(game.session().room_id, 1);
     assert_eq!(
-        game.water_shown(),
+        game.skyline_shown(),
         Visibility::Hidden,
-        "and the water drains away behind them"
+        "and the skyline fades away behind them"
     );
     assert!(
         !game.way_in_shown(),
@@ -84,12 +84,12 @@ fn the_city_is_spoken_for_before_the_run_walks_into_it() {
 }
 
 impl HeadlessGame {
-    fn water_shown(&mut self) -> Visibility {
+    fn skyline_shown(&mut self) -> Visibility {
         let world = self.app.world_mut();
         *world
-            .query_filtered::<&Visibility, With<Flood>>()
+            .query_filtered::<&Visibility, With<Skyline>>()
             .single(world)
-            .expect("the water is laid at startup")
+            .expect("the skyline is laid at startup")
     }
 
     fn typing_sounds(&mut self) -> usize {

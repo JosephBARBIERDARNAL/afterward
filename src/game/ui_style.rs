@@ -8,7 +8,7 @@ use bevy::{
     text::FontSize,
 };
 
-// The cards are semi-transparent, so the water behind the main menu (and the
+// The cards are semi-transparent, so the skyline behind the main menu (and the
 // blurred room behind the other menus) shows through them.
 pub(super) const CARD_BACKGROUND: Color = Color::srgba(0.03, 0.035, 0.07, 0.7);
 pub(super) const CARD_HIGHLIGHT_BACKGROUND: Color = Color::srgba(0.17, 0.19, 0.3, 0.94);

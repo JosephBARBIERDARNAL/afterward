@@ -49,6 +49,11 @@ impl CityLightsMaterial {
             layer,
         }
     }
+
+    /// Draws the layer `opacity` opaque, for a backdrop that fades in and out.
+    pub(in crate::game) fn set_opacity(&mut self, opacity: f32) {
+        self.settings.tint.w = opacity;
+    }
 }
 
 impl Material2d for CityLightsMaterial {

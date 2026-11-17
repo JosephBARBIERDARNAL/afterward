@@ -71,10 +71,10 @@ impl PlayerSettings {
 pub(super) struct SettingsReturn(pub(super) GameScreen);
 
 impl SettingsReturn {
-    /// Whether `screen` is drawn over the flood rather than over a room: the
+    /// Whether `screen` is drawn over the skyline rather than over a room: the
     /// main menu and the difficulty it opens, the screen a run ends on, and
     /// the settings and controls screens when the main menu opened them.
-    pub(super) fn over_the_flood(self, screen: GameScreen) -> bool {
+    pub(super) fn over_the_skyline(self, screen: GameScreen) -> bool {
         match screen {
             GameScreen::MainMenu | GameScreen::Difficulty | GameScreen::Dead => true,
             GameScreen::Settings | GameScreen::Controls => self.0 == GameScreen::MainMenu,
