@@ -60,6 +60,9 @@ pub struct EnemyJumpingConfig {
     /// How far short of a ledge's lip a walking enemy stops, so a blow from
     /// behind does not find it teetering there.
     pub ledge_margin_h: f32,
+    /// How near the spot it last saw a hidden player an enemy hunting them
+    /// comes before it stands down there.
+    pub search_reach_h: f32,
 }
 
 #[derive(Debug, Clone, Eq, Ord, PartialEq, PartialOrd)]

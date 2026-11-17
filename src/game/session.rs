@@ -222,7 +222,10 @@ impl RunSession {
     /// Whether a bonus may still be offered: not one already owned, and not
     /// one that builds on bonuses the run has yet to take.
     pub(crate) fn may_be_offered(&self, bonus: &BonusConfig) -> bool {
-        !self.has_bonus(&bonus.id) && bonus.requires.iter().all(|id| self.has_bonus(id))
+        !self.has_bonus(&bonus.id)
+            && bonus.requires.iter().all(|id| self.has_bonus(id))
+            && (bonus.requires_any.is_empty()
+                || bonus.requires_any.iter().any(|id| self.has_bonus(id)))
     }
 
     /// Whether the pool can still offer a choice of two. A run is longer
@@ -278,7 +281,7 @@ impl RunSession {
             return 0;
         }
         self.owned(data)
-            .filter(|(owned, _)| !owned.requires.is_empty())
+            .filter(|(owned, _)| owned.is_combo())
             .count()
     }
 
@@ -303,9 +306,11 @@ impl RunSession {
     /// so it is not singled out.
     pub(crate) fn synergy(&self, data: &GameData, bonus: &BonusConfig) -> Option<String> {
         let owned = self.owned(data).map(|(owned, _)| owned);
-        if !bonus.requires.is_empty() {
+        if bonus.is_combo() {
             let parts = owned
-                .filter(|owned| bonus.requires.contains(&owned.id))
+                .filter(|owned| {
+                    bonus.requires.contains(&owned.id) || bonus.requires_any.contains(&owned.id)
+                })
                 .map(|owned| owned.name.as_str())
                 .collect::<Vec<_>>();
             return Some(format!("COMBO: {}", parts.join(" + ")));

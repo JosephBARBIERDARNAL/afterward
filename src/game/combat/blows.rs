@@ -133,13 +133,23 @@ pub(super) fn land_the_blow(
             continue;
         }
         connected = true;
-        // Opportunist pays for a blow on a body that had not noticed anyone.
-        let unaware = if enemy.engaged {
+        // Opportunist pays for a blow on a body that had not noticed anyone,
+        // and under Ambush every body counts as one while the player is
+        // hidden, for more again.
+        let ambush = player.invisible_s > 0.0 && session.has_bonus("ambush");
+        let unaware = if enemy.engaged && !ambush {
             1.0
         } else {
             session.bonus_multiplier(data, "opportunist", "unaware_damage_multiplier")
+                * if ambush {
+                    session.bonus_effect(data, "ambush", "hidden_damage_multiplier")
+                } else {
+                    1.0
+                }
         };
-        if unaware > 1.0 {
+        if ambush {
+            commands.write_message(BonusTell::new("ambush", at(&enemy_transform)));
+        } else if unaware > 1.0 {
             commands.write_message(BonusTell::new("opportunist", at(&enemy_transform)));
         }
         if data.enemies.damage_triggers_combat {

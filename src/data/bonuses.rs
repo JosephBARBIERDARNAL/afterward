@@ -217,6 +217,10 @@ pub struct BonusConfig {
     /// two of them do together.
     #[serde(default)]
     pub requires: Vec<String>,
+    /// Bonuses of which the run must own at least one before this one is
+    /// offered, on top of `requires`: what any of them does with another.
+    #[serde(default)]
+    pub requires_any: Vec<String>,
     /// The bonuses this one works with, without needing them: owning one of
     /// them (or being offered one of them while owning this) weighs it
     /// heavier in the draw, and the bonus screen names the ones owned.
@@ -229,6 +233,11 @@ pub struct BonusConfig {
 }
 
 impl BonusConfig {
+    /// Whether the bonus builds on others the run must own: a combo.
+    pub(crate) fn is_combo(&self) -> bool {
+        !self.requires.is_empty() || !self.requires_any.is_empty()
+    }
+
     /// What a choice holds once at most: the bonus's family, else the bonus.
     pub(crate) fn kind(&self) -> &str {
         self.family.as_deref().unwrap_or(&self.id)

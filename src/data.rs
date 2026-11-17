@@ -452,6 +452,7 @@ impl GameData {
             bonus
                 .requires
                 .iter()
+                .chain(&bonus.requires_any)
                 .chain(&bonus.synergies)
                 .any(|named| !bonus_ids.contains(&named.as_str()))
         }) {

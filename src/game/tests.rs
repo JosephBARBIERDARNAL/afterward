@@ -20,6 +20,7 @@ mod procedural_movement;
 mod punch_sounds;
 mod slam_and_dash;
 mod slopes;
+mod stealth;
 mod variable_jump;
 mod wall_jump;
 mod wall_run;

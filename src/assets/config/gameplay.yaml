@@ -440,6 +440,16 @@ effects:
   # The droplet that falls where a button is hovered, selected with an arrow,
   # or clicked: the drop goes in, the surface flashes, and rings spread out of
   # the impact.
+  # The player hidden from the enemies, drawn as liquid glass: a clear body
+  # of `fill_color` at `fill_opacity`, edged and glinting in `rim_color`, its
+  # rows rippling `ripple_px` art pixels sideways. The sprite comes back
+  # through the glass over the last `fade_out_s` of the hiding.
+  glass:
+    fill_color: "#9FD8FF"
+    fill_opacity: 0.18
+    rim_color: "#E8F8FF"
+    ripple_px: 1
+    fade_out_s: 0.35
   # The box of a chosen bonus flares while the screen holds: a ring in its
   # rarity's colour spreads `ring_px` out from its edge and fades, and the box
   # swells to `pulse_scale` and back. The boxes not chosen dim.

@@ -47,6 +47,9 @@ glossary:
   - term: Wall
     words: [wall]
     definition: The side of a platform too tall to climb over. Pressed into it in mid-air you cling and slide down it, and Jump pushes you off.
+  - term: Hidden
+    words: [hidden, hides, hiding, vanishing]
+    definition: Out of every enemy's sight. One hunting you walks to where it last saw you and stands down; none notices you until it ends. A blow already on its way still lands.
   - term: Wind-up
     words: [wind-up, wind-ups]
     definition: The moment an enemy warms up before it strikes.
@@ -421,6 +424,77 @@ bonuses:
       rare: { wall_run_h: 2.5 }
       epic: { wall_run_h: 3.5 }
       legendary: { wall_run_h: 5 }
+  # Out of sight: each of these hides you from every enemy for `vanish_s`
+  # (`combat/stealth.rs`), then waits `vanish_cooldown_s` before it can again.
+  # An enemy hunting you walks to where it last saw you and stands down there;
+  # a blow already on its way still lands.
+  - id: smoke_step
+    name: Smoke Step
+    description: A dash hides you for {vanish_s} seconds, once every {vanish_cooldown_s} seconds.
+    synergies: [slippery, air_step]
+    rarities:
+      rare: { vanish_s: 1.2, vanish_cooldown_s: 9 }
+      epic: { vanish_s: 1.5, vanish_cooldown_s: 8 }
+      legendary: { vanish_s: 2, vanish_cooldown_s: 7 }
+  - id: unseen_entry
+    name: Unseen Entry
+    description: As each wave arrives you are hidden for {vanish_s} seconds, once every {vanish_cooldown_s} seconds.
+    rarities:
+      uncommon: { vanish_s: 1.5, vanish_cooldown_s: 10 }
+      rare: { vanish_s: 2, vanish_cooldown_s: 9 }
+      epic: { vanish_s: 2.5, vanish_cooldown_s: 8 }
+      legendary: { vanish_s: 3, vanish_cooldown_s: 7 }
+  - id: fade
+    name: Fade
+    description: Taking damage hides you for {vanish_s} seconds, once every {vanish_cooldown_s} seconds.
+    synergies: [retaliation]
+    rarities:
+      uncommon: { vanish_s: 1.2, vanish_cooldown_s: 12 }
+      rare: { vanish_s: 1.5, vanish_cooldown_s: 11 }
+      epic: { vanish_s: 1.8, vanish_cooldown_s: 10 }
+      legendary: { vanish_s: 2.2, vanish_cooldown_s: 9 }
+  - id: vanishing_kill
+    name: Vanishing Kill
+    description: A kill hides you for {vanish_s} seconds, once every {vanish_cooldown_s} seconds.
+    synergies: [chain_reaction]
+    rarities:
+      rare: { vanish_s: 1, vanish_cooldown_s: 10 }
+      epic: { vanish_s: 1.3, vanish_cooldown_s: 9 }
+      legendary: { vanish_s: 1.6, vanish_cooldown_s: 8 }
+  # What hiding does with another bonus: each is offered once the run owns
+  # the bonus it names and any one of the four above.
+  - id: ambush
+    name: Ambush
+    description: While hidden, every enemy counts as one that has not noticed you, and Opportunist's bonus grows {hidden_damage_multiplier:+%} more.
+    requires: [opportunist]
+    requires_any: [smoke_step, unseen_entry, fade, vanishing_kill]
+    rarities:
+      rare: { hidden_damage_multiplier: 1.2 }
+      epic: { hidden_damage_multiplier: 1.3 }
+      legendary: { hidden_damage_multiplier: 1.4 }
+  - id: phantom
+    name: Phantom
+    description: Vanishing leaves a Decoy double where you stood, and every enemy hunting you turns on it.
+    requires: [decoy]
+    requires_any: [smoke_step, unseen_entry, fade, vanishing_kill]
+    rarities: { rare: {} }
+  - id: shadow_climb
+    name: Shadow Climb
+    description: Running up a wall hides you for {vanish_s} seconds, once every {vanish_cooldown_s} seconds.
+    requires: [wall_runner]
+    requires_any: [smoke_step, unseen_entry, fade, vanishing_kill]
+    rarities:
+      rare: { vanish_s: 1.5, vanish_cooldown_s: 8 }
+      epic: { vanish_s: 2, vanish_cooldown_s: 7 }
+  - id: cloak_and_dagger
+    name: Cloak and Dagger
+    description: Vanishing makes your next blow deal {empowered_blow_multiplier:+%} more damage.
+    requires: [riposte]
+    requires_any: [smoke_step, unseen_entry, fade, vanishing_kill]
+    rarities:
+      rare: { empowered_blow_multiplier: 1.4 }
+      epic: { empowered_blow_multiplier: 1.5 }
+      legendary: { empowered_blow_multiplier: 1.65 }
   # Keystones: each grows with the bonuses the run already owns, so it pays
   # more the later it is taken.
   - id: arsenal

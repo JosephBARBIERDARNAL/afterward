@@ -38,6 +38,9 @@ jumping:
   # behind should not find it teetering there. A blow's shove stops at the
   # lip itself; only Battering Ram's throw carries a body over.
   ledge_margin_h: 0.6
+  # An enemy hunting a hidden player walks to where it last saw them, and
+  # stands down once this near the spot.
+  search_reach_h: 0.6
 # Hitboxes, in H (B in debug builds draws them all over the game):
 # - hurtbox_h: where bullets hit the enemy, centered on it, from its feet up.
 # - an attack's hitbox_h: where its strike (or a slam's landing) hurts the

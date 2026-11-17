@@ -69,6 +69,8 @@ pub(in crate::game) fn update_enemy_ai(
         decoy: None,
     };
     player.invulnerability_timer = (player.invulnerability_timer - dt).max(0.0);
+    // A hidden player is seen by no one (`stealth.rs`).
+    let hidden = player.invisible_s > 0.0;
 
     for (entity, mut enemy, mut transform, mut sprite, mut animation) in &mut enemies {
         // The flare a wound left goes out by itself, on the dead as well.
@@ -115,16 +117,17 @@ pub(in crate::game) fn update_enemy_ai(
             }
             enemy.launched &= enemy.knockback_velocity.abs() > 0.01;
         }
-        let sees_player = if enemy.flight.is_some() {
-            flight::sees(
-                &data,
-                &surfaces,
-                enemy.hurtbox(&transform).center(),
-                player_box.center(),
-            )
-        } else {
-            enemy.sees_player(&transform, player_box, &data.enemies.detection, &surfaces)
-        };
+        let sees_player = !hidden
+            && if enemy.flight.is_some() {
+                flight::sees(
+                    &data,
+                    &surfaces,
+                    enemy.hurtbox(&transform).center(),
+                    player_box.center(),
+                )
+            } else {
+                enemy.sees_player(&transform, player_box, &data.enemies.detection, &surfaces)
+            };
         if !enemy.engaged && sees_player {
             enemy.engaged = true;
             sounds.push(SoundCue::enemy_idle(&enemy.type_id));
@@ -139,9 +142,44 @@ pub(in crate::game) fn update_enemy_ai(
             }
             continue;
         }
+        if !hidden {
+            enemy.last_seen = Some(player_mark.feet);
+        }
         // Decoy's double stands in for the player: an engaged enemy walks at
-        // and swings at whichever of the two is nearer to it.
-        let mark = player_mark.nearest_to(transform.translation.x, &decoys, &data);
+        // and swings at whichever of the two is nearer to it. Once the player
+        // is hidden, a double is all it can see; without one, it hunts the
+        // spot it last saw the player on, and stands down there.
+        let mut mark = if hidden {
+            Mark {
+                feet: Vec2::new(f32::INFINITY, player_mark.feet.y),
+                ..player_mark
+            }
+            .nearest_to(transform.translation.x, &decoys, &data)
+        } else {
+            player_mark.nearest_to(transform.translation.x, &decoys, &data)
+        };
+        let searching = hidden && mark.decoy.is_none();
+        if searching {
+            let busy = enemy.windup_remaining > 0.0 || enemy.stance.is_some() || !enemy.grounded;
+            match enemy.last_seen {
+                Some(spot)
+                    if busy
+                        || (enemy.flight.is_none()
+                            && (spot.x - transform.translation.x).abs()
+                                > jumping.search_reach_h * H_WORLD_UNITS) =>
+                {
+                    // Where it last saw them, the real player still the one a
+                    // blow already on its way lands on.
+                    mark.feet = spot;
+                    mark.grounded = true;
+                }
+                _ => {
+                    enemy.engaged = false;
+                    enemy.last_seen = None;
+                    continue;
+                }
+            }
+        }
         let dx = mark.feet.x - transform.translation.x;
         let distance_h = dx.abs() / H_WORLD_UNITS;
         enemy.facing = if dx < 0.0 { -1.0 } else { 1.0 };
@@ -611,7 +649,13 @@ pub(in crate::game) fn update_enemy_ai(
             .standing_on(feet.x, feet.y, SLOPE_STRIDE)
             .filter(|_| enemy.grounded)
             .map(|(platform, _)| platform);
-        let should_approach = distance_h > maximum_distance || other_level;
+        // One hunting a hidden player walks right up to the spot it last saw
+        // them on.
+        let should_approach = if searching {
+            distance_h > jumping.search_reach_h * 0.5
+        } else {
+            distance_h > maximum_distance || other_level
+        };
         // A shot that is ready is fired from wherever the enemy stands, however
         // close the player is, and it never backs away: it holds its ground.
         let mut direction = dx.signum();
@@ -719,7 +763,7 @@ pub(in crate::game) fn update_enemy_ai(
             // Held where it stands with the player out of its reach, only a
             // shot is worth throwing.
             let in_reach = distance_h <= maximum_distance || attack.kind.contains("projectile");
-            if enemy.attack_cooldown <= 0.0 && !other_level && in_reach {
+            if enemy.attack_cooldown <= 0.0 && !other_level && in_reach && !searching {
                 enemy.movement_sound_timer = 0.0;
                 enemy.active_attack = chosen;
                 enemy.next_attack = (chosen + 1) % enemy.attacks.len();

@@ -28,6 +28,7 @@ pub(in crate::game) fn clear_room_combat_effects(
     // gives back.
     for mut player in &mut players {
         player.empowered = None;
+        player.invisible_s = 0.0;
         player.chain_reaction_timer = 0.0;
         player.sated_fury_timer = 0.0;
         player.rhythm_stacks = 0;

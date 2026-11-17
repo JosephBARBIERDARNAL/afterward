@@ -14,6 +14,7 @@ mod bolt;
 mod city_lights;
 mod fire;
 mod flood;
+mod glass;
 mod glow;
 
 pub(super) use bolt::Bolt;
@@ -22,6 +23,7 @@ pub(super) use fire::Flame;
 #[cfg(test)]
 pub(super) use flood::Flood;
 pub(super) use flood::show_the_flood;
+pub(super) use glass::dress_the_hidden_player;
 #[cfg(test)]
 pub(super) use glow::GlowAttached;
 pub(super) use glow::{Glowing, attach_glows, light_the_unlocked_door};
@@ -36,6 +38,7 @@ impl Plugin for ShaderPlugin {
             Material2dPlugin::<flood::FloodMaterial>::default(),
             Material2dPlugin::<fire::FireMaterial>::default(),
             Material2dPlugin::<bolt::BoltMaterial>::default(),
+            Material2dPlugin::<glass::GlassMaterial>::default(),
         ))
         .add_systems(
             Startup,
@@ -70,6 +73,7 @@ pub(super) struct ShaderAssets<'w> {
     flood: ResMut<'w, Assets<flood::FloodMaterial>>,
     fires: ResMut<'w, Assets<fire::FireMaterial>>,
     bolts: ResMut<'w, Assets<bolt::BoltMaterial>>,
+    glasses: ResMut<'w, Assets<glass::GlassMaterial>>,
 }
 
 #[cfg(test)]
@@ -88,6 +92,7 @@ mod tests {
             glow::SHADER_PATH,
             fire::SHADER_PATH,
             bolt::SHADER_PATH,
+            glass::SHADER_PATH,
             crate::game::ripple::SHADER_PATH,
         ] {
             assert!(

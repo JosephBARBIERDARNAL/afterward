@@ -419,6 +419,7 @@ pub struct EffectsConfig {
     pub bonus_pick: BonusPickConfig,
     pub hazard: HazardLookConfig,
     pub bolt: BoltLookConfig,
+    pub glass: GlassLookConfig,
     pub telegraph: TelegraphConfig,
     pub tells: TellsConfig,
 }
@@ -477,6 +478,21 @@ pub struct HazardLookConfig {
     pub warning_color: HexColor,
     pub burn_color: HexColor,
     pub pixels_per_h: f32,
+}
+
+/// How the hidden player is drawn (`shaders/glass.wgsl`).
+#[derive(Debug, Deserialize)]
+pub struct GlassLookConfig {
+    /// The colour the clear body is filled with, and how much of it shows.
+    pub fill_color: HexColor,
+    pub fill_opacity: f32,
+    /// The colour of the light edging it, and of the glint.
+    pub rim_color: HexColor,
+    /// How far a row of it ripples sideways, in art pixels.
+    pub ripple_px: f32,
+    /// How long before the hiding ends the sprite starts coming back
+    /// through the glass.
+    pub fade_out_s: f32,
 }
 
 /// How the box of a chosen bonus flares while the bonus screen holds.

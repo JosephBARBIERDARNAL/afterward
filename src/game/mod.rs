@@ -323,6 +323,7 @@ impl Plugin for GamePlugin {
                 camera::update_background_parallax,
                 interface::update_hud,
                 enemy_markers::update_enemy_markers.after(camera::follow_camera),
+                shaders::dress_the_hidden_player.after(player::update_player),
                 shaders::attach_glows,
                 interact::show_the_interact_prompt,
                 shaders::show_the_flood,
@@ -345,6 +346,9 @@ impl Plugin for GamePlugin {
                 // Before the melee and the AI: it takes the spot the dash
                 // `update_player` just set off from, and the AI then marks
                 // the double it left standing there.
+                // Before the double is planted: Phantom leaves one where the
+                // player vanished.
+                combat::vanish,
                 combat::plant_decoy,
                 combat::player_melee,
                 combat::update_enemy_ai,

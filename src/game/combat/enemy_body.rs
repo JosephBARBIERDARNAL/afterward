@@ -46,6 +46,9 @@ pub(crate) struct EnemyBody {
     /// The shove under way is Battering Ram's throw, which may carry it off
     /// the floor it stands on; any other stops at the lip.
     pub(crate) launched: bool,
+    /// Where it last saw the player's feet, which it hunts while they are
+    /// hidden (`stealth.rs`).
+    pub(crate) last_seen: Option<Vec2>,
     pub(crate) phase_two: Option<(f32, f32)>,
     pub(crate) phase_two_announced: bool,
     pub(crate) marked_timer: f32,

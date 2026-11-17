@@ -72,6 +72,12 @@ pub(crate) struct PlayerBody {
     pub(crate) rhythm_stacks: u8,
     pub(crate) chain_reaction_timer: f32,
     pub(crate) sated_fury_timer: f32,
+    /// What is left of the player's hiding from the enemies
+    /// (`combat/stealth.rs`): none of them can see the player meanwhile.
+    pub(crate) invisible_s: f32,
+    /// How long each bonus that hides the player still waits before it can
+    /// again.
+    pub(crate) vanish_cooldowns: BTreeMap<&'static str, f32>,
     /// The bonus that has made the next blow to connect heavier (Riposte or
     /// Retaliation), and what that blow is multiplied by.
     pub(crate) empowered: Option<(&'static str, f32)>,
@@ -122,6 +128,8 @@ impl Default for PlayerBody {
             rhythm_stacks: 0,
             chain_reaction_timer: 0.0,
             sated_fury_timer: 0.0,
+            invisible_s: 0.0,
+            vanish_cooldowns: BTreeMap::new(),
             empowered: None,
             action: None,
             action_animation_timer: 0.0,
